@@ -6,7 +6,7 @@ export default function NotificationsPage() {
     <>
       <CustomerPageHeader
         title="Notifications"
-        description="Search and review account notifications."
+        description="What do I need to know right now? Security first, then money that needs attention."
       />
       <NotificationCenter />
     </>

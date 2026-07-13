@@ -29,8 +29,10 @@ export type {
   LedgerPostingInput,
   LedgerTransactionRecord,
   WalletBalanceRecord,
+  WalletLedgerEventRecord,
   WalletRecord,
 } from "./ledger-repository";
+export { pickPrimaryWalletLedgerEvents } from "./ledger-repository";
 export type { EmailMessageRecord } from "./notification-repository";
 export type {
   AdminEntityNoteRecord,

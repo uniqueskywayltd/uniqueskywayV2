@@ -34,6 +34,53 @@ export interface WalletBalanceRecord {
   lastEntryAt: Date | null;
 }
 
+export interface WalletLedgerEventRecord {
+  transactionId: string;
+  transactionType: string;
+  referenceType: string;
+  referenceId: string;
+  description: string | null;
+  postedAt: Date;
+  amountMinor: bigint;
+  direction: "debit" | "credit";
+  currency: string;
+  walletCategory: "pending" | "available" | "locked" | "reserved" | "withdrawn";
+}
+
+const WALLET_CATEGORY_PRIORITY: Record<WalletLedgerEventRecord["walletCategory"], number> = {
+  available: 0,
+  pending: 1,
+  reserved: 2,
+  locked: 3,
+  withdrawn: 4,
+};
+
+/** Prefer the customer-facing leg when a posting touches multiple wallet categories. */
+export function pickPrimaryWalletLedgerEvents(
+  rows: WalletLedgerEventRecord[],
+  limit: number,
+): WalletLedgerEventRecord[] {
+  const byTransaction = new Map<string, WalletLedgerEventRecord>();
+
+  for (const row of rows) {
+    const existing = byTransaction.get(row.transactionId);
+    if (!existing) {
+      byTransaction.set(row.transactionId, row);
+      continue;
+    }
+
+    const existingRank = WALLET_CATEGORY_PRIORITY[existing.walletCategory] ?? 99;
+    const nextRank = WALLET_CATEGORY_PRIORITY[row.walletCategory] ?? 99;
+    if (nextRank < existingRank) {
+      byTransaction.set(row.transactionId, row);
+    }
+  }
+
+  return [...byTransaction.values()]
+    .sort((left, right) => right.postedAt.getTime() - left.postedAt.getTime())
+    .slice(0, limit);
+}
+
 export class LedgerRepository extends BaseDrizzleRepository {
   constructor(db: AppDatabaseExecutor) {
     super("ledger", db);
@@ -260,6 +307,36 @@ export class LedgerRepository extends BaseDrizzleRepository {
     `)) as unknown as WalletBalanceRecord[];
 
     return rows[0] ?? null;
+  }
+
+  async listWalletLedgerEvents(
+    userId: string,
+    currency: string,
+    limit = 50,
+  ): Promise<WalletLedgerEventRecord[]> {
+    const rows = (await this.db.execute(sql`
+      select
+        lt.id as "transactionId",
+        lt.transaction_type as "transactionType",
+        lt.reference_type as "referenceType",
+        lt.reference_id as "referenceId",
+        lt.description as "description",
+        lt.posted_at as "postedAt",
+        le.amount_minor as "amountMinor",
+        le.direction as "direction",
+        le.currency as "currency",
+        wal.category as "walletCategory"
+      from public.ledger_transactions lt
+      inner join public.ledger_entries le on le.ledger_transaction_id = lt.id
+      inner join public.wallet_account_links wal on wal.ledger_account_id = le.account_id
+      inner join public.wallets w on w.id = wal.wallet_id
+      where w.user_id = ${userId}
+        and w.currency = ${currency}
+      order by lt.posted_at desc, lt.id desc, le.created_at desc
+      limit ${Math.min(Math.max(limit, 1), 200) * 8}
+    `)) as unknown as WalletLedgerEventRecord[];
+
+    return pickPrimaryWalletLedgerEvents(rows, limit);
   }
 
   async postLedgerTransaction(

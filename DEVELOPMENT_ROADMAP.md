@@ -579,24 +579,43 @@ Do **not** implement all of Wave A in one pass. Execute and freeze:
 
 **Wave A.5 Review:** PASS (98.6 / 100). Merged, tagged `v3.0.0`, frozen under `DEC-0029`.
 
-**Next:** Wave B — Customer Money Experience (`v3.1.0`) via Design → Approve → Implement. Do not casually reopen frozen Wave A routes.
+**Next:** Wave B Customer Money Experience certified and frozen at `v3.1.0` (`DEC-0043`). Growth/polish trains follow under Design → Approve → Implement.
 
 Auth visual polish and branded auth/security emails may land in A1–A5 where they touch the public shell or certification—without expanding into Wave B money UX.
 
-### Wave B - Money Experience
+### Wave B - Money Experience (`v3.1.0`)
 
-Same Design → Approve → Implement discipline (`DEC-0027`). Scope after Wave A Stage 2 is certified:
+**Philosophy:** *What happens after I sign in?*  
+**UX constitution:** `CUSTOMER_EXPERIENCE_PRINCIPLES.md`  
+**Governance:** Design → Approve → Implement (`DEC-0027`, `EP-026`)
 
-- Customer dashboard / money home
-- Wallet overview
-- Deposit UX + success + status tracking
-- Withdrawal UX + success + status tracking
-- Portfolio list + investment details
-- Customer ledger
-- Financial lifecycle emails + in-app notification wiring
-- Honest Accrued ≠ Credited ≠ Withdrawable language
+#### Stage 1 — UX & Design (no production code)
+
+Deliver and approve as one package:
+
+| Document | Role |
+| --- | --- |
+| `WAVE_B_UX_SPECIFICATION.md` | Screen journeys, IA, dashboard as home-screen north star |
+| `FINANCIAL_VISUALIZATION_GUIDE.md` | Money, progress, charts, NY time, Accrued/Credited/Withdrawable visuals |
+| `FINANCIAL_MICROCOPY_GUIDE.md` | Authenticated financial writing voice (labels, statuses, emails, errors) |
+| `EMPTY_STATES_GUIDE.md` | Educating empty/first-use states |
+| `STATUS_SYSTEM.md` | Customer labels, tones, explanations, next steps for domain statuses |
+
+Must also cover: notifications, mobile behaviour, loading/error recovery, financial psychology, celebration moments, and trust after login — under `CUSTOMER_EXPERIENCE_PRINCIPLES.md` + `EP-029` (one primary question per screen).
+
+#### Stage 2 — Implementation (sprint-bounded)
+
+| Sprint | Scope | Exit |
+| --- | --- | --- |
+| **B1** | Dashboard / money nav shells + widget framework | **Certified** — `SPRINT_B1_CERTIFICATION.md` (`DEC-0034`) |
+| **B2** | Portfolio, investment cards/detail, progress, NY settlement visualization | **Certified** — `SPRINT_B2_CERTIFICATION.md` (`DEC-0036`/`DEC-0037`); principles `DEC-0035` |
+| **B3** | Wallet, deposit/withdrawal journeys, ledger, transaction history | **Certified** — `SPRINT_B3_CERTIFICATION.md` (`DEC-0039`/`DEC-0040`); principles `DEC-0038` |
+| **B4** | Notifications, financial timeline/activity, referral summary, help | **Certified** — `SPRINT_B4_CERTIFICATION.md` (`DEC-0042`); principles `DEC-0041` |
+| **B5** | Certification package (+ `FINANCIAL_DASHBOARD_PRINCIPLES.md`), a11y, performance, security, tag `v3.1.0` | **Certified** — `SPRINT_B5_CERTIFICATION.md` / `WAVE_B_CERTIFICATION.md` (`DEC-0043`) |
 
 All Wave B screens consume certified engines/APIs. No new ledger, ROI, deposit, withdrawal, webhook, or Paystack behavior without ADR + recertification.
+
+Honest language required: **Accrued ≠ Credited ≠ Withdrawable**.
 
 ### Wave C - Growth & Support
 
@@ -698,13 +717,14 @@ From Milestone 5 onward, prefer **release trains** (versioned customer experienc
 | 2 Investment Platform | `v2.1.0` | Frozen |
 | 3 Money Platform | `v2.2.0` | Frozen |
 | 4 Administration | `v2.3.0` | Frozen |
-| 5 Customer Experience | `v3.0.0` | Wave A frozen (`DEC-0029`); Wave B next |
+| 5 Customer Experience | `v3.0.0` / `v3.1.0` | Wave A frozen (`DEC-0029`); Wave B frozen (`DEC-0043`) |
 
 ## Current Build Order Summary
 
-1. `main` at **`v3.0.0`** includes certified/frozen Investment (`v2.1.0`), Money Movement (`v2.2.0`), Administrative Platform (`v2.3.0`), and public Wave A.
-2. Public Wave A is frozen under **`DEC-0029`**. Do not casually redesign A1–A5 surfaces.
-3. Begin **Wave B — Customer Money Experience (`v3.1.0`)** only after UX Design → Approve (`DEC-0027`).
-4. Subsequent trains: `v3.1.0` money experience → `v3.2.0` growth → `v3.3.0` mobile/delight.
-5. Do not reopen investment-engine, money-movement, admin-platform, or public Wave A behavioral/UX freezes without ADR, regression tests, and recertification.
-6. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
+1. `main` at **`v3.1.0`** includes certified/frozen Investment (`v2.1.0`), Money Movement (`v2.2.0`), Administrative Platform (`v2.3.0`), public Wave A (`v3.0.0`), and Customer Money Experience Wave B.
+2. Public Wave A is frozen under **`DEC-0029`**. Authenticated Wave B is frozen under **`DEC-0043`**.
+3. Customer money UX constitutions: portfolio, wallet, notification, financial dashboard principles + `CUSTOMER_EXPERIENCE_PRINCIPLES.md`.
+4. Next: Growth & Support / polish trains (`v3.2.0`+) under Design → Approve → Implement. Do not casually reopen Wave A or Wave B.
+5. Subsequent trains: `v3.2.0` growth → `v3.3.0` mobile/delight.
+6. Do not reopen investment-engine, money-movement, admin-platform, public Wave A, or Wave B freezes without ADR, regression tests, and recertification.
+7. Keep Paystack as the sole provider until a superseding provider ADR is accepted.

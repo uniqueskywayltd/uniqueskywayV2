@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Bell, Search } from "lucide-react";
 
 import {
@@ -8,30 +9,40 @@ import {
   AlertDescription,
   Badge,
   Button,
-  Card,
-  CardContent,
   EmptyState,
   Input,
+  Skeleton,
+  StatusChip,
 } from "@/components/ui";
 import { DateDisplay } from "@/components/ui/display";
+import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
+import type { CustomerNotification } from "@/features/customer/types";
+import { cn } from "@/lib/utils";
 
-import { getCustomerJson, postCustomerJson } from "../api-client";
-import type { CustomerNotification } from "../types";
+const CATEGORIES = [
+  { id: "all", label: "All" },
+  { id: "financial", label: "Financial" },
+  { id: "security", label: "Security" },
+  { id: "system", label: "System" },
+] as const;
 
 export function NotificationCenter() {
   const [notifications, setNotifications] = useState<CustomerNotification[]>([]);
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<(typeof CATEGORIES)[number]["id"]>("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [markingAll, setMarkingAll] = useState(false);
 
   const endpoint = useMemo(() => {
     const params = new URLSearchParams();
     if (query.trim()) params.set("query", query.trim());
     if (unreadOnly) params.set("unreadOnly", "true");
+    if (category !== "all") params.set("category", category);
     return `/api/customer/notifications${params.size ? `?${params.toString()}` : ""}`;
-  }, [query, unreadOnly]);
+  }, [query, unreadOnly, category]);
 
   useEffect(() => {
     let active = true;
@@ -41,6 +52,7 @@ export function NotificationCenter() {
       if (!active) return;
       if (result.error) setError(result.error);
       else {
+        setError(null);
         setNotifications(result.data?.notifications ?? []);
         setUnreadCount(result.data?.unreadCount ?? 0);
       }
@@ -54,24 +66,50 @@ export function NotificationCenter() {
 
   async function markRead(notificationId: string) {
     const result = await postCustomerJson("/api/customer/notifications/read", { notificationId });
-    if (result.error) setError(result.error);
-    else {
-      setNotifications((current) =>
-        current.map((notification) =>
-          notification.id === notificationId
-            ? { ...notification, readAt: new Date().toISOString() }
-            : notification,
-        ),
-      );
-      setUnreadCount((current) => Math.max(0, current - 1));
+    if (result.error) {
+      setError(result.error);
+      return;
     }
+    setNotifications((current) =>
+      current.map((notification) =>
+        notification.id === notificationId
+          ? { ...notification, readAt: new Date().toISOString() }
+          : notification,
+      ),
+    );
+    setUnreadCount((current) => Math.max(0, current - 1));
   }
+
+  async function markAllRead() {
+    setMarkingAll(true);
+    const result = await postCustomerJson<{ updatedCount?: number }>(
+      "/api/customer/notifications/read",
+      { markAll: true },
+    );
+    setMarkingAll(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    setNotifications((current) =>
+      current.map((notification) => ({
+        ...notification,
+        readAt: notification.readAt ?? new Date().toISOString(),
+      })),
+    );
+    setUnreadCount(0);
+  }
+
+  const today = notifications.filter((item) => item.isToday);
+  const earlier = notifications.filter((item) => !item.isToday);
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <p className="sr-only">Primary question: What do I need to know right now?</p>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -88,7 +126,42 @@ export function NotificationCenter() {
           Unread
           {unreadCount > 0 ? <Badge variant="secondary">{unreadCount}</Badge> : null}
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={markingAll || unreadCount === 0}
+          onClick={() => void markAllRead()}
+        >
+          {markingAll ? "Marking…" : "Mark all read"}
+        </Button>
       </div>
+
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Notification categories">
+        {CATEGORIES.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={category === item.id}
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-sm",
+              category === item.id
+                ? "border-foreground bg-foreground text-background"
+                : "border-border text-muted-foreground hover:text-foreground",
+            )}
+            onClick={() => setCategory(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <p className="text-sm text-muted-foreground">
+        Priority: Security → money failures → money success → system.{" "}
+        <Link href="/account/preferences" className="underline underline-offset-2">
+          Notification preferences
+        </Link>
+      </p>
 
       {error ? (
         <Alert variant="destructive">
@@ -96,43 +169,88 @@ export function NotificationCenter() {
         </Alert>
       ) : null}
 
-      {loaded && notifications.length === 0 ? (
+      {!loaded ? (
+        <Skeleton className="h-40 w-full rounded-xl" aria-label="Loading notifications" />
+      ) : notifications.length === 0 ? (
         <EmptyState
           icon={Bell}
-          title="No notifications"
-          description="Account updates will appear here."
+          title="You're all caught up"
+          description="Financial, security, and system updates appear here when something needs your attention."
+          action={
+            <Button asChild variant="outline">
+              <Link href="/account/help">Open Help Center</Link>
+            </Button>
+          }
         />
-      ) : null}
-
-      <div className="space-y-3">
-        {notifications.map((notification) => (
-          <Card key={notification.id}>
-            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-sm font-semibold">{notification.title}</h2>
-                  {!notification.readAt ? <Badge variant="info">Unread</Badge> : null}
-                  <Badge variant="outline">{notification.priority}</Badge>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">{notification.body}</p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  <DateDisplay value={notification.createdAt} />
-                </p>
-              </div>
-              {!notification.readAt ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void markRead(notification.id)}
-                >
-                  Mark read
-                </Button>
-              ) : null}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      ) : (
+        <div className="space-y-6">
+          <NotificationGroup title="Today" items={today} onMarkRead={markRead} />
+          <NotificationGroup title="Earlier" items={earlier} onMarkRead={markRead} />
+        </div>
+      )}
     </div>
   );
+}
+
+function NotificationGroup({
+  title,
+  items,
+  onMarkRead,
+}: {
+  title: string;
+  items: CustomerNotification[];
+  onMarkRead: (id: string) => Promise<void>;
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+        {title}
+      </h2>
+      <ul className="divide-y divide-border/70 rounded-xl border border-border/80">
+        {items.map((notification) => (
+          <li key={notification.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground">{notification.title}</h3>
+                {!notification.readAt ? <Badge variant="info">Unread</Badge> : null}
+                <StatusChip tone={priorityTone(notification.priority)}>
+                  {notification.priority}
+                </StatusChip>
+                {notification.category ? (
+                  <Badge variant="outline">{notification.category}</Badge>
+                ) : null}
+              </div>
+              <p className="text-sm text-muted-foreground">{notification.body}</p>
+              <p className="text-xs text-muted-foreground">
+                <DateDisplay value={notification.createdAt} />
+              </p>
+              {notification.href ? (
+                <Button asChild variant="link" className="h-auto px-0">
+                  <Link href={notification.href}>Open related item</Link>
+                </Button>
+              ) : null}
+            </div>
+            {!notification.readAt ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void onMarkRead(notification.id)}
+              >
+                Mark read
+              </Button>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function priorityTone(priority: string) {
+  if (priority === "critical" || priority === "warning") return "restricted" as const;
+  if (priority === "success") return "matured" as const;
+  return "pending" as const;
 }

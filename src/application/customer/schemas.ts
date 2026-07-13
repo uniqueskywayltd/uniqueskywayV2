@@ -38,10 +38,14 @@ export const updateCustomerPreferencesInputSchema = z.object({
 export const listNotificationsInputSchema = z.object({
   query: z.string().trim().max(120).optional(),
   unreadOnly: z.boolean().optional(),
+  category: z.enum(["all", "financial", "security", "system"]).optional(),
 });
 
 export const markNotificationReadInputSchema = z.object({
-  notificationId: z.string().uuid(),
+  notificationId: z.string().uuid().optional(),
+  markAll: z.boolean().optional(),
+}).refine((value) => Boolean(value.markAll) || Boolean(value.notificationId), {
+  message: "Provide notificationId or markAll.",
 });
 
 export type UpdateCustomerProfileInput = z.infer<typeof updateCustomerProfileInputSchema>;

@@ -86,6 +86,20 @@ export class NotificationRepository extends BaseDrizzleRepository {
     return singleRow(rows, "markNotificationRead");
   }
 
+  async markAllNotificationsRead(
+    context: DrizzleTransactionContext,
+    userId: string,
+    readAt: Date,
+  ): Promise<number> {
+    const rows = await context.db
+      .update(notifications)
+      .set({ readAt })
+      .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)))
+      .returning({ id: notifications.id });
+
+    return rows.length;
+  }
+
   async createNotificationDelivery(
     context: DrizzleTransactionContext,
     values: InferInsertModel<typeof notificationDeliveries>,

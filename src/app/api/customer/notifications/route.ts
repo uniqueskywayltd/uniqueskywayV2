@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     const input = listNotificationsInputSchema.parse({
       query: searchParams.get("query") ?? undefined,
       unreadOnly: searchParams.get("unreadOnly") === "true" ? true : undefined,
+      category: searchParams.get("category") ?? undefined,
     });
     const service = await createCustomerExperienceService();
     const result = await service.listNotifications(input);

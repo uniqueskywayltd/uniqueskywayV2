@@ -21,10 +21,10 @@ export async function POST(request: NextRequest) {
     const input = await parseJson(request, markNotificationReadInputSchema);
     const service = await createCustomerExperienceService();
     const notification = await service.markNotificationRead(
-      input.notificationId,
+      input,
       createAuditContext(context),
     );
-    return jsonOk({ notification }, context.requestId);
+    return jsonOk(notification, context.requestId);
   } catch (error) {
     return jsonError(error, context.requestId);
   }

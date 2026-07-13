@@ -1,4 +1,7 @@
 export { CustomerExperienceService } from "./customer-experience-service";
+export { CustomerPortfolioService } from "./portfolio-service";
+export { CustomerWalletService } from "./wallet-service";
+export { CustomerReferralService } from "./referral-service";
 export type {
   AvatarUploadInput,
   CustomerExperienceServiceDependencies,

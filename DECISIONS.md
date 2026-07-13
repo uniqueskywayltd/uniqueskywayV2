@@ -1261,3 +1261,338 @@ Sprints A1–A5 delivered and self-certified the public Customer Experience Plat
 - Public Wave A routes require DEC-level change control after `v3.0.0`.
 - Next product train is **Wave B — Customer Money Experience (`v3.1.0`)**.
 - Counsel finalization may update legal copy under patch/recertification without reopening A1–A4 UX.
+
+## DEC-0030: Customer Experience Principles Adopted for Authenticated Product
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B Stage 1 approval, or if a principle conflicts with a certified financial invariant (financial invariants win)
+
+### Context
+
+Wave A freeze established public trust before registration. Wave B must fulfill that trust after sign-in without reopening frozen engines. The project needed a UX constitution parallel to `FINANCIAL_INVARIANTS.md`.
+
+### Decision
+
+1. Adopt `CUSTOMER_EXPERIENCE_PRINCIPLES.md` as the authority for authenticated customer money experience.
+2. Wave B Stage 1 (`WAVE_B_UX_SPECIFICATION.md`) must obey these principles before any production implementation.
+3. These principles never override `FINANCIAL_INVARIANTS.md`.
+4. Suggested implementation sprints remain B1–B5 after design approval under `DEC-0027`.
+
+### Rejected Alternatives
+
+- Start Wave B implementation without an authenticated UX constitution.
+- Fold Wave B rules into public Wave A docs (wrong audience and wrong freeze boundary).
+
+### Consequences
+
+- Next work is Wave B Stage 1 design only — not dashboard coding.
+- Screen specs and later sprints are judged against CXP-001…CXP-016.
+
+## DEC-0031: Wave B Stage 1 Companion Guides & One-Question Screens
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B Stage 1 UX approval, or if status catalogs diverge from domain enums
+
+### Context
+
+Wave B will present money daily. Presentation, empty states, and statuses cause more redesign cost than layouts if left unspecified. Overloaded screens also erode the calm trust built in Wave A.
+
+### Decision
+
+1. Wave B Stage 1 design package **must** include:
+   - `WAVE_B_UX_SPECIFICATION.md`
+   - `FINANCIAL_VISUALIZATION_GUIDE.md`
+   - `EMPTY_STATES_GUIDE.md`
+   - `STATUS_SYSTEM.md`
+   - `FINANCIAL_MICROCOPY_GUIDE.md`
+2. Adopt **`EP-029`**: every authenticated screen answers exactly one primary financial question (`CXP-016`).
+3. `STATUS_SYSTEM.md` must stay aligned to certified deposit, withdrawal, and investment state machines.
+4. No Wave B production implementation until the full Stage 1 package is approved under `DEC-0027`.
+
+### Rejected Alternatives
+
+- Design screens without status/empty/visualization companions.
+- Allow multi-job dashboards that answer several primary questions at once.
+
+### Consequences
+
+- Next Cursor/ChatGPT work is completing and approving `WAVE_B_UX_SPECIFICATION.md` against these companions — not coding B1.
+- Sprint certifications must cite EP-029 and the three guides.
+
+## DEC-0032: Wave B Stage 1 UX Specification Approved
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B `v3.1.0` certification, or if Stage 2 requires philosophy-level change
+
+### Context
+
+Wave B Stage 1 produced `WAVE_B_UX_SPECIFICATION.md` plus companions (`FINANCIAL_VISUALIZATION_GUIDE.md`, `EMPTY_STATES_GUIDE.md`, `STATUS_SYSTEM.md`, `FINANCIAL_MICROCOPY_GUIDE.md`) under `CUSTOMER_EXPERIENCE_PRINCIPLES.md`. Consultancy review scored **99.4 / 100** and approved implementation.
+
+### Decision
+
+1. **Wave B Stage 1 is approved.**
+2. `WAVE_B_UX_SPECIFICATION.md` is the design authority for authenticated money experience Stage 2.
+3. Implementation proceeds as sprints **B1–B5**; B1 is dashboard infrastructure only.
+4. Non-blocking refinements (financial home hierarchy, money timeline, portfolio card questions, wallet ops-center philosophy, What’s New) are incorporated into the approved spec.
+5. `FINANCIAL_DASHBOARD_PRINCIPLES.md` is required before B5 certification, not before B1.
+
+### Rejected Alternatives
+
+- Start money journeys (deposit/withdraw/portfolio logic) before dashboard shell exists.
+- Implement Wave B without an approved Stage 1 package.
+
+### Consequences
+
+- Next engineering work is Sprint **B1** (dashboard infrastructure).
+- Spec philosophy changes need ADR; sprint-local craft follows the approved document.
+
+## DEC-0033: Dashboard Is the Primary Financial Decision Surface
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B certification, or if a new primary money home is proposed
+
+### Context
+
+Authenticated customers need one calm place to answer “Am I okay?” Over time, dashboards accumulate widgets and lose focus.
+
+### Decision
+
+1. The **dashboard** is the primary financial decision surface for logged-in customers.
+2. First-five-second hierarchy is fixed: Portfolio Value → Available Balance → Today’s Activity → Pending Actions → Investment Progress → Notifications.
+3. Future dashboard additions must reinforce `EP-029` (“How am I doing today?”) and `DEC-0033`; they must not turn the dashboard into an analytics carnival or marketing surface.
+4. Widget constitution (`FINANCIAL_DASHBOARD_PRINCIPLES.md`) will govern long-term widget quality before `v3.1.0` certification.
+
+### Rejected Alternatives
+
+- Treat portfolio or wallet as the default home instead of dashboard.
+- Allow unrestricted widget sprawl without a primary question.
+
+### Consequences
+
+- Sprint B1 builds the dashboard framework first.
+- Later sprints plug into that framework; they do not invent competing homes.
+
+## DEC-0034: Sprint B1 Dashboard Foundation Certified
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B `v3.1.0` certification
+
+### Context
+
+Sprint B1 delivered authenticated dashboard infrastructure (widget registry, money navigation, mobile bottom nav, portfolio/wallet/ledger shells) without wiring deposits, withdrawals, or portfolio calculations. Consultancy scored **99.5 / 100**.
+
+### Decision
+
+1. Sprint B1 is **certified and frozen** (`SPRINT_B1_CERTIFICATION.md`).
+2. Later Wave B sprints plug into the B1 framework; they do not reinvent dashboard chrome.
+3. Dashboard hierarchy remains governed by `DEC-0033`.
+
+### Consequences
+
+- Next implementation sprint is **B2 — Portfolio Experience** (read-only).
+
+## DEC-0035: Portfolio Experience Principles Adopted Before Sprint B2
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B certification, or if portfolio UX philosophy changes
+
+### Context
+
+Portfolio screens will be the primary answer to “Where is my money?” Without a constitution, cards and detail views diverge over time.
+
+### Decision
+
+1. Adopt `PORTFOLIO_EXPERIENCE_PRINCIPLES.md` as authority for portfolio list, cards, filters, and investment detail.
+2. Sprint B2 may implement **read-only** portfolio experience only.
+3. Cards must answer: what / worth today / lifecycle / what next.
+4. No deposits, withdrawals, Paystack, ROI formula recalculation, or ledger posting in portfolio UX.
+
+### Consequences
+
+- B2 certification must cite this document.
+- `FINANCIAL_DASHBOARD_PRINCIPLES.md` remains deferred until before B5.
+
+## DEC-0036: Sprint B2 Portfolio Experience Certified
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B `v3.1.0` certification
+
+### Context
+
+Sprint B2 delivered read-only portfolio list, investment cards, filters/search/sort, empty states, and investment detail over certified repositories — without deposits, withdrawals, Paystack, or engine mutation.
+
+### Decision
+
+1. Sprint B2 is **certified and frozen** (`SPRINT_B2_CERTIFICATION.md`).
+2. Portfolio UX remains governed by `PORTFOLIO_EXPERIENCE_PRINCIPLES.md` (`DEC-0035`).
+3. Later sprints may deepen data binding but must not invent competing card/detail models.
+
+### Consequences
+
+- Next implementation sprint is **B3 — Wallet / Money Journeys** (deposits, withdrawals, ledger) when explicitly approved.
+
+## DEC-0037: Sprint B2 Portfolio Experience Consultancy Approval
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B `v3.1.0` certification
+
+### Context
+
+External consultancy reviewed Sprint B2 at **99.7 / 100** and approved proceeding. This decision records that approval alongside the engineering freeze in `DEC-0036`.
+
+### Decision
+
+1. Confirm Sprint B2 is **approved and frozen** under `SPRINT_B2_CERTIFICATION.md` / `DEC-0036`.
+2. Portfolio remains read-only and governed by `PORTFOLIO_EXPERIENCE_PRINCIPLES.md` (`DEC-0035`).
+3. Implementation continues with **Sprint B3** only after wallet principles are adopted (`DEC-0038`).
+
+### Consequences
+
+- Do not reopen B2 portfolio philosophy without ADR.
+- B3 must not fold “move money” into portfolio cards.
+
+## DEC-0038: Wallet Experience Principles Adopted Before Sprint B3
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B certification, or if wallet UX philosophy changes
+
+### Context
+
+Wallet + deposit + withdrawal are emotionally distinct surfaces. Without a constitution, clarity erodes exactly when customers need trust most.
+
+### Decision
+
+1. Adopt `WALLET_EXPERIENCE_PRINCIPLES.md` as authority for wallet, deposit, withdrawal, money timeline, and funding/withdrawal histories.
+2. Sprint B3 answers **How do I safely move money?** using frozen engines only.
+3. Balance vocabulary (Available, Pending, Locked, Withdrawable, Reserved, Credited, Accrued) is mandatory.
+4. No ROI recalculation, investment-engine changes, ledger posting changes, Paystack redesign, settlement changes, admin, or reporting in B3.
+
+### Consequences
+
+- B3 certification must cite this document.
+- `FINANCIAL_DASHBOARD_PRINCIPLES.md` remains deferred until before B5.
+
+## DEC-0039: Sprint B3 Wallet Experience Certified
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B `v3.1.0` certification
+
+### Context
+
+Sprint B3 delivered wallet overview, deposit/withdrawal journeys and histories, money timeline, ledger reads, and status explanations over certified money-movement engines — without ROI recalculation, investment-engine changes, ledger posting changes, or Paystack redesign.
+
+### Decision
+
+1. Sprint B3 is **certified and frozen** (`SPRINT_B3_CERTIFICATION.md`).
+2. Wallet UX remains governed by `WALLET_EXPERIENCE_PRINCIPLES.md` (`DEC-0038`).
+3. Later sprints deepen notifications/activity/help; they do not invent competing balance vocabulary.
+
+### Consequences
+
+- Next implementation sprint is **B4 — Notifications / Activity / Help** when explicitly approved.
+
+## DEC-0040: Sprint B3 Wallet Experience Consultancy Approval
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B `v3.1.0` certification
+
+### Context
+
+External consultancy reviewed Sprint B3 at **99.8 / 100** and approved proceeding. This decision records that approval alongside the engineering freeze in `DEC-0039`.
+
+### Decision
+
+1. Confirm Sprint B3 is **approved and frozen** under `SPRINT_B3_CERTIFICATION.md` / `DEC-0039`.
+2. Wallet remains governed by `WALLET_EXPERIENCE_PRINCIPLES.md` (`DEC-0038`).
+3. Implementation continues with **Sprint B4** only after notification experience principles are adopted (`DEC-0041`).
+
+### Consequences
+
+- Do not reopen B3 wallet philosophy without ADR.
+- B4 must not fold payment journey redesign into communication UX.
+
+## DEC-0041: Notification Experience Principles Adopted Before Sprint B4
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B certification, or if customer communication philosophy changes
+
+### Context
+
+Authenticated trust depends on how customers learn what matters. Without a constitution, notifications, activity, help, and What’s New diverge in tone and priority.
+
+### Decision
+
+1. Adopt `NOTIFICATION_EXPERIENCE_PRINCIPLES.md` as authority for notification center, activity presentation, help/support, What’s New, and referral summary UX.
+2. Sprint B4 answers **What do I need to know right now?** using frozen services only.
+3. Priority remains Security > Money failure > Money success > System.
+4. No payment logic, ROI recalculation, admin, reporting, marketing pages, auth redesign, or engine changes in B4.
+
+### Consequences
+
+- B4 certification must cite this document.
+- `FINANCIAL_DASHBOARD_PRINCIPLES.md` is adopted at Sprint B5 / `DEC-0043`.
+
+## DEC-0042: Sprint B4 Communication Experience Certified
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: At Wave B `v3.1.0` certification
+
+### Context
+
+Sprint B4 delivered notification center refinements, activity filters, help/support, What’s New, referral summary, and a communication hub over frozen services — without payment, ROI, admin, or engine redesign.
+
+### Decision
+
+1. Sprint B4 is **certified and frozen** (`SPRINT_B4_CERTIFICATION.md`).
+2. Communication UX remains governed by `NOTIFICATION_EXPERIENCE_PRINCIPLES.md` (`DEC-0041`).
+3. Later Wave B work (B5) certifies the package; it does not invent competing notification priority rules.
+
+### Consequences
+
+- Next implementation sprint is **B5 — Wave B certification** when explicitly approved, including `FINANCIAL_DASHBOARD_PRINCIPLES.md`.
+
+## DEC-0043: Customer Money Experience Frozen at v3.1.0
+
+- Date: 2026-07-13
+- Status: Accepted — **ACTIVE FREEZE**
+- Future Review: Only for philosophy-level authenticated money UX change, or superseding ADR
+
+### Context
+
+Sprints B1–B5 delivered and certified the authenticated Customer Money Experience on frozen v2.1–v2.3 cores and frozen public Wave A (`v3.0.0`). Automated gates passed. Consultancy scored B4 at **99.9 / 100**. Sprint B5 adopted `FINANCIAL_DASHBOARD_PRINCIPLES.md`, bound dashboard widgets to certified reads, and completed the Wave B audit package.
+
+### Decision
+
+1. **Wave B is certified and frozen** (`WAVE_B_CERTIFICATION.md`, `SPRINT_B5_CERTIFICATION.md`).
+2. Adopt `FINANCIAL_DASHBOARD_PRINCIPLES.md` as authority for dashboard widgets.
+3. Release actions:
+   - Merge `milestone-5-wave-b-sprint-b5` into `main`
+   - Annotated tag **`v3.1.0`**
+   - Treat the authenticated money experience as **frozen** with the same discipline as engines and public Wave A
+4. Confirm B4 consultancy approval (**99.9 / 100**) authorizes freeze.
+5. Subsequent Growth/Polish trains follow Design → Approve → Implement (`DEC-0027`) and must not casually reopen B1–B5 surfaces or frozen engines.
+
+### Rejected Alternatives
+
+- Ship without dashboard financial principles.
+- Keep Wave B permanently editable without freeze discipline.
+- Reopen investment/money-movement engines for customer UX convenience.
+
+### Consequences
+
+- Authenticated Wave B routes require DEC-level change control after `v3.1.0`.
+- Next product train is Growth & Support / polish under Milestone 5 remaining waves (`v3.2.0`+), not reopen of money UX foundations.
+- `FINANCIAL_INVARIANTS.md` continues to win over any experience principle conflict.

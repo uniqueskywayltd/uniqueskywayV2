@@ -4,23 +4,19 @@ import type { MouseEventHandler, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Activity, Bell, ChevronDown, Menu, Palette, ShieldCheck, UserRound } from "lucide-react";
+import { Bell, ChevronDown, Menu } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, Button, Skeleton } from "@/components/ui";
 import { BrandMark } from "@/components/layout/brand-mark";
+import {
+  CUSTOMER_MOBILE_BOTTOM_NAV,
+  CUSTOMER_PRIMARY_NAV,
+} from "@/features/customer/navigation";
 import { cn } from "@/lib/utils";
 
 import { getCustomerJson } from "../api-client";
 import type { CustomerSummary } from "../types";
-
-const CUSTOMER_NAVIGATION = [
-  { label: "Profile", href: "/account/profile", icon: UserRound },
-  { label: "Security", href: "/account/security", icon: ShieldCheck },
-  { label: "Notifications", href: "/account/notifications", icon: Bell },
-  { label: "Activity", href: "/account/activity", icon: Activity },
-  { label: "Preferences", href: "/account/preferences", icon: Palette },
-] as const;
 
 export interface CustomerShellProps {
   children: ReactNode;
@@ -64,23 +60,18 @@ export function CustomerShell({ children }: CustomerShellProps) {
       .join("");
   }, [summary]);
 
+  const moneyNav = CUSTOMER_PRIMARY_NAV.filter((item) => item.group === "money");
+  const accountNav = CUSTOMER_PRIMARY_NAV.filter((item) => item.group === "account");
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-sidebar lg:flex lg:flex-col">
         <div className="border-b p-5">
           <BrandMark />
         </div>
-        <nav className="flex-1 space-y-1 p-3" aria-label="Customer navigation">
-          {CUSTOMER_NAVIGATION.map((item) => (
-            <CustomerNavLink
-              key={item.href}
-              href={item.href}
-              label={item.label}
-              active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
-              icon={item.icon}
-              {...notificationBadgeProps(item.href, summary?.unreadNotificationCount)}
-            />
-          ))}
+        <nav className="flex-1 space-y-6 overflow-y-auto p-3" aria-label="Customer navigation">
+          <NavGroup label="Money" items={moneyNav} pathname={pathname} summary={summary} />
+          <NavGroup label="Account" items={accountNav} pathname={pathname} summary={summary} />
         </nav>
         <div className="border-t p-4">
           {loaded && summary ? (
@@ -147,24 +138,100 @@ export function CustomerShell({ children }: CustomerShellProps) {
           {mobileOpen ? (
             <nav
               id="customer-mobile-navigation"
-              className="space-y-1 border-t p-3 lg:hidden"
+              className="max-h-[70vh] space-y-4 overflow-y-auto border-t p-3 lg:hidden"
               aria-label="Customer mobile navigation"
             >
-              {CUSTOMER_NAVIGATION.map((item) => (
-                <CustomerNavLink
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
-                  icon={item.icon}
-                  onNavigate={() => setMobileOpen(false)}
-                  {...notificationBadgeProps(item.href, summary?.unreadNotificationCount)}
-                />
-              ))}
+              <NavGroup
+                label="Money"
+                items={moneyNav}
+                pathname={pathname}
+                summary={summary}
+                onNavigate={() => setMobileOpen(false)}
+              />
+              <NavGroup
+                label="Account"
+                items={accountNav}
+                pathname={pathname}
+                summary={summary}
+                onNavigate={() => setMobileOpen(false)}
+              />
             </nav>
           ) : null}
         </header>
-        <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:py-8">{children}</main>
+        <main className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 sm:px-6 lg:py-8 lg:pb-8">
+          {children}
+        </main>
+      </div>
+
+      <nav
+        className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur lg:hidden"
+        aria-label="Primary mobile destinations"
+      >
+        <ul className="grid grid-cols-5 gap-1 px-1 py-2">
+          {CUSTOMER_MOBILE_BOTTOM_NAV.map((item) => {
+            const Icon = item.icon;
+            const active =
+              item.href === "/account"
+                ? pathname.startsWith("/account")
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex flex-col items-center gap-1 rounded-md px-1 py-2 text-[11px] font-medium text-muted-foreground",
+                    active && "text-foreground",
+                  )}
+                >
+                  <Icon className="size-4" aria-hidden="true" />
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </div>
+  );
+}
+
+function NavGroup({
+  label,
+  items,
+  pathname,
+  summary,
+  onNavigate,
+}: {
+  label: string;
+  items: ReadonlyArray<(typeof CUSTOMER_PRIMARY_NAV)[number]>;
+  pathname: string;
+  summary: CustomerSummary | null;
+  onNavigate?: MouseEventHandler<HTMLAnchorElement>;
+}) {
+  return (
+    <div>
+      <p className="px-3 pb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        {label}
+      </p>
+      <div className="space-y-1">
+        {items.map((item) => {
+            const badgeProps = notificationBadgeProps(
+              item.href,
+              summary?.unreadNotificationCount,
+            );
+            return (
+              <CustomerNavLink
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+                icon={item.icon}
+                {...(onNavigate ? { onNavigate } : {})}
+                {...badgeProps}
+              />
+            );
+          })}
       </div>
     </div>
   );
@@ -181,7 +248,7 @@ function CustomerNavLink({
   href: string;
   label: string;
   active: boolean;
-  icon: typeof UserRound;
+  icon: (typeof CUSTOMER_PRIMARY_NAV)[number]["icon"];
   badge?: number;
   onNavigate?: MouseEventHandler<HTMLAnchorElement>;
 }) {

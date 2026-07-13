@@ -53,6 +53,7 @@ export async function patchCustomerJson<TData>(
 export async function postCustomerJson<TData>(
   url: string,
   body: Record<string, unknown>,
+  options?: { idempotencyKey?: string },
 ): Promise<ApiResult<TData>> {
   const csrfToken = await getCsrfToken();
   if (!csrfToken) return { error: "Security token could not be created." };
@@ -63,6 +64,7 @@ export async function postCustomerJson<TData>(
     headers: {
       "content-type": "application/json",
       "x-csrf-token": csrfToken,
+      ...(options?.idempotencyKey ? { "idempotency-key": options.idempotencyKey } : {}),
     },
     body: JSON.stringify(body),
   });

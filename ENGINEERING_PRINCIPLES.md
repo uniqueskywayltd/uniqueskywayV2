@@ -270,6 +270,43 @@ Through `v2.3.0`, Unique Sky Way prioritized certified platform subsystems (engi
 
 From `v3.0.0`, Customer Experience work prioritizes trust, journey, and product UX **on top of** frozen financial logic. Product obsession must never reopen frozen engines without ADR, regression tests, and recertification.
 
+### EP-028: Authenticated Experience Obeys Customer Experience Principles
+
+From Wave B onward, authenticated customer product work must obey `CUSTOMER_EXPERIENCE_PRINCIPLES.md` (`DEC-0030`).
+
+Especially:
+
+- Money before decoration
+- Balances reconcile with the ledger
+- Accrued ≠ Credited ≠ Withdrawable
+- Clear statuses and recoverable errors
+- No client-side financial math
+
+Wave UX specifications may refine screens; they may not violate these principles.
+
+### EP-029: One Primary Financial Question Per Authenticated Screen
+
+Every authenticated customer screen must answer **exactly one** primary financial question.
+
+Examples:
+
+| Screen | Primary question |
+| --- | --- |
+| Dashboard | How am I doing today? |
+| Portfolio | Where is my money invested? |
+| Investment detail | How is this investment progressing? |
+| Wallet | How much is available to use? |
+| Deposit | How do I add funds safely? |
+| Withdrawal | How do I get my money? |
+| Ledger | What exactly happened? |
+| Notifications | Did anything important happen? |
+| Activity | What have I done recently? |
+| Profile / security | Is my account secure? |
+
+If a screen needs two primary questions, split it. Secondary links are allowed; secondary jobs are not.
+
+Companion authorities for Wave B Stage 1: `FINANCIAL_VISUALIZATION_GUIDE.md`, `FINANCIAL_MICROCOPY_GUIDE.md`, `EMPTY_STATES_GUIDE.md`, `STATUS_SYSTEM.md`.
+
 ## Decision Lenses
 
 When evaluating multiple valid designs, prefer the design that is:

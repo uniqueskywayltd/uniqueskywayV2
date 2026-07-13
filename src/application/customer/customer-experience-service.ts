@@ -14,9 +14,16 @@ import type {
 
 import type {
   ListNotificationsInput,
+  MarkNotificationReadInput,
   UpdateCustomerPreferencesInput,
   UpdateCustomerProfileInput,
 } from "./schemas";
+import {
+  classifyNotificationType,
+  isNewYorkToday,
+  resolveNotificationHref,
+  sortPresentedNotifications,
+} from "./communication-presentation";
 
 const AVATAR_BUCKET = "customer-avatars";
 const AVATAR_CONTENT_TYPE = "image/webp";
@@ -204,24 +211,66 @@ export class CustomerExperienceService {
       userId: appUser.id,
       ...(input.query ? { query: input.query } : {}),
       ...(input.unreadOnly === undefined ? {} : { unreadOnly: input.unreadOnly }),
+      limit: 100,
     };
 
-    const [notifications, unreadCount] = await Promise.all([
+    const [rows, unreadCount] = await Promise.all([
       this.deps.notificationRepository.listNotificationsByUserId(notificationQuery),
       this.deps.notificationRepository.countUnreadNotificationsByUserId(appUser.id),
     ]);
 
-    return { notifications, unreadCount };
+    let notifications = rows.map((notification) => {
+      const category = classifyNotificationType(notification.type);
+      return {
+        id: notification.id,
+        type: notification.type,
+        title: notification.title,
+        body: notification.body,
+        priority: notification.priority,
+        category,
+        data: notification.data,
+        href: resolveNotificationHref(notification.type, notification.data),
+        readAt: notification.readAt,
+        createdAt: notification.createdAt,
+        isToday: isNewYorkToday(notification.createdAt),
+      };
+    });
+
+    if (input.category && input.category !== "all") {
+      notifications = notifications.filter((item) => item.category === input.category);
+    }
+
+    return {
+      notifications: sortPresentedNotifications(notifications),
+      unreadCount,
+    };
   }
 
-  async markNotificationRead(notificationId: string, context: RequestAuditContext) {
+  async markNotificationRead(input: MarkNotificationReadInput, context: RequestAuditContext) {
     const appUser = await this.requireCurrentAppUser();
 
     return this.deps.transactionManager.runInTransaction(async (tx) => {
+      if (input.markAll) {
+        const updated = await this.deps.notificationRepository.markAllNotificationsRead(
+          tx,
+          appUser.id,
+          new Date(),
+        );
+        await this.appendAudit(
+          tx,
+          appUser.id,
+          "customer.notifications_mark_all_read",
+          "notification",
+          appUser.id,
+          context,
+        );
+        return { markAll: true as const, updatedCount: updated, notification: null };
+      }
+
       const notification = await this.deps.notificationRepository.markNotificationRead(
         tx,
         appUser.id,
-        notificationId,
+        input.notificationId!,
         new Date(),
       );
       await this.appendAudit(
@@ -232,7 +281,7 @@ export class CustomerExperienceService {
         notification.id,
         context,
       );
-      return notification;
+      return { markAll: false as const, updatedCount: 1, notification };
     });
   }
 
@@ -403,9 +452,13 @@ function toAuditActivity(record: {
   targetType: string;
   createdAt: Date;
 }) {
+  const financial = /deposit|withdrawal|investment|ledger|wallet|payment|roi/i.test(
+    `${record.action} ${record.targetType}`,
+  );
   return {
     id: `audit:${record.id}`,
     type: "audit",
+    category: financial ? ("financial" as const) : ("account" as const),
     title: formatAction(record.action),
     detail: record.targetType,
     createdAt: record.createdAt,
@@ -421,6 +474,7 @@ function toSecurityActivity(record: {
   return {
     id: `security:${record.id}`,
     type: "security",
+    category: "security" as const,
     title: formatAction(record.eventType),
     detail: record.severity,
     createdAt: record.createdAt,

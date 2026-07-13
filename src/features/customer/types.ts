@@ -65,13 +65,18 @@ export interface CustomerNotification {
   title: string;
   body: string;
   priority: string;
+  category?: "financial" | "security" | "system";
+  href?: string | null;
+  data?: Record<string, unknown>;
   readAt: string | Date | null;
   createdAt: string | Date;
+  isToday?: boolean;
 }
 
 export interface CustomerActivity {
   id: string;
   type: string;
+  category?: "financial" | "security" | "account";
   title: string;
   detail: string;
   createdAt: string | Date;

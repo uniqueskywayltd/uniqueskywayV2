@@ -12,7 +12,28 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-(none — Wave A released as `v3.0.0`)
+(none)
+
+## v3.1.0 - 2026-07-13
+
+Status: Certified Customer Experience Platform — Customer Money Experience (frozen under `DEC-0043`).
+
+Included:
+
+- Completed Milestone 5 Wave B (sprints B1–B5): dashboard financial home, portfolio, wallet/deposit/withdrawal/ledger, notifications/activity/help/referrals/What’s New, and certification package.
+- Adopted experience constitutions: portfolio, wallet, notification, and financial dashboard principles alongside `CUSTOMER_EXPERIENCE_PRINCIPLES.md`.
+- Bound dashboard widgets to certified customer reads (`FINANCIAL_DASHBOARD_PRINCIPLES.md`).
+- Audit package: customer experience, dashboard, portfolio, wallet, communication, performance, accessibility, security, and money experience report (`WAVE_B_CERTIFICATION.md`).
+- Frozen cores preserved: Investment `v2.1.0`, Money Movement `v2.2.0`, Admin `v2.3.0`, Public Wave A `v3.0.0`.
+
+Verification:
+
+- Lint, typecheck, unit tests (186), `db:check`, production build, and e2e (36) passed.
+
+Scope certification:
+
+- Authenticated Wave B is frozen under `DEC-0043`. Changes require ADR-level justification and recertification.
+- Next train: Growth & Support / polish under Design → Approve → Implement (`v3.2.0`+).
 
 ## v3.0.0 - 2026-07-13
 

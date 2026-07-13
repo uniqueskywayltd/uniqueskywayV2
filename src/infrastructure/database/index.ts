@@ -58,6 +58,8 @@ export type {
   SettlementRunRecord,
   UserRecord,
   WalletBalanceRecord,
+  WalletLedgerEventRecord,
   WalletRecord,
   WithdrawalRequestRecord,
 } from "./repositories";
+export { pickPrimaryWalletLedgerEvents } from "./repositories";

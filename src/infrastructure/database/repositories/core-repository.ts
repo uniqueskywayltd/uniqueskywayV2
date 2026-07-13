@@ -261,6 +261,11 @@ export class CoreRepository extends BaseDrizzleRepository {
     return rows[0] ?? null;
   }
 
+  async findInvestmentPlanById(id: string): Promise<InvestmentPlanRecord | null> {
+    const rows = await this.db.select().from(investmentPlans).where(eq(investmentPlans.id, id)).limit(1);
+    return rows[0] ?? null;
+  }
+
   async searchCustomers(query: SearchCustomersQuery): Promise<SearchCustomersResult> {
     const conditions = [];
 
