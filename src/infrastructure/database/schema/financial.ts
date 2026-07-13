@@ -24,6 +24,7 @@ import {
   ledgerOwnerTypeEnum,
   ledgerTransactionTypeEnum,
   paymentProviderEventStatusEnum,
+  principalReturnPolicyEnum,
   referralCodeStatusEnum,
   referralRewardStatusEnum,
   referralStatusEnum,
@@ -181,7 +182,14 @@ export const investments = pgTable(
     currency: varchar("currency", { length: 3 }).notNull(),
     principalMinor: bigint("principal_minor", { mode: "bigint" }).notNull(),
     dailyRoiBps: integer("daily_roi_bps").notNull(),
+    totalRoiBps: integer("total_roi_bps"),
+    promisedRoiMinor: bigint("promised_roi_minor", { mode: "bigint" }),
     termDays: integer("term_days").notNull(),
+    principalReturnPolicy: principalReturnPolicyEnum("principal_return_policy")
+      .notNull()
+      .default("return_at_maturity"),
+    calculationVersion: varchar("calculation_version", { length: 40 }).notNull().default("roi-v1"),
+    idempotencyKey: varchar("idempotency_key", { length: 180 }),
     startAt: timestamp("start_at", { withTimezone: true }),
     firstSettlementDate: date("first_settlement_date"),
     maturityDate: date("maturity_date"),
@@ -193,8 +201,17 @@ export const investments = pgTable(
     activatedAt: timestamp("activated_at", { withTimezone: true }),
     maturedAt: timestamp("matured_at", { withTimezone: true }),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    fundingLedgerTransactionId: uuid("funding_ledger_transaction_id").references(
+      () => ledgerTransactions.id,
+      { onDelete: "restrict" },
+    ),
+    maturityLedgerTransactionId: uuid("maturity_ledger_transaction_id").references(
+      () => ledgerTransactions.id,
+      { onDelete: "restrict" },
+    ),
   },
   (table) => [
+    uniqueIndex("investments_idempotency_key_uidx").on(table.idempotencyKey),
     index("investments_user_id_idx").on(table.userId),
     index("investments_status_idx").on(table.status),
     index("investments_maturity_date_idx").on(table.maturityDate),
@@ -345,17 +362,26 @@ export const settlementItems = pgTable(
     investmentId: uuid("investment_id")
       .notNull()
       .references(() => investments.id, { onDelete: "restrict" }),
+    earningDate: date("earning_date").notNull(),
     settlementDate: date("settlement_date").notNull(),
     grossRoiMicroMinor: bigint("gross_roi_micro_minor", { mode: "bigint" }).notNull(),
-    postedRoiMinor: bigint("posted_roi_minor", { mode: "bigint" }).notNull(),
-    roundingResidualMicroMinor: bigint("rounding_residual_micro_minor", {
+    previousResidualMicroMinor: bigint("previous_residual_micro_minor", {
       mode: "bigint",
     }).notNull(),
+    postedRoiMinor: bigint("posted_roi_minor", { mode: "bigint" }).notNull(),
+    nextResidualMicroMinor: bigint("next_residual_micro_minor", {
+      mode: "bigint",
+    }).notNull(),
+    calculationVersion: varchar("calculation_version", { length: 40 }).notNull().default("roi-v1"),
     ledgerTransactionId: uuid("ledger_transaction_id").references(() => ledgerTransactions.id, {
       onDelete: "restrict",
     }),
     status: settlementItemStatusEnum("status").notNull(),
     reason: text("reason"),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

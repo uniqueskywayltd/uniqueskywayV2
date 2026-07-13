@@ -34,13 +34,17 @@ export interface SettlementItem {
   id: SettlementItemId;
   settlementRunId: SettlementRunId;
   investmentId: InvestmentId;
+  earningDate: NewYorkDateString;
   settlementDate: NewYorkDateString;
   grossRoiMicroMinor: MicroMinorUnitAmount;
+  previousResidualMicroMinor: MicroMinorUnitAmount;
   postedRoiMinor: MinorUnitAmount;
-  roundingResidualMicroMinor: MicroMinorUnitAmount;
+  nextResidualMicroMinor: MicroMinorUnitAmount;
+  calculationVersion: string;
   ledgerTransactionId: LedgerTransactionId | null;
   status: SettlementItemStatus;
   reason: string | null;
+  metadata: Record<string, unknown>;
   createdAt: IsoDateTimeString;
 }
 

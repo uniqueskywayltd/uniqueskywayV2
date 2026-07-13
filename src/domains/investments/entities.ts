@@ -9,6 +9,8 @@ import type {
 } from "@/domains/shared";
 import type { UserId } from "@/domains/identity";
 import type { InvestmentPlanVersionId } from "@/domains/investment-plans";
+import type { PrincipalReturnPolicy } from "@/domains/investment-plans";
+import type { LedgerTransactionId } from "@/domains/ledger";
 
 export type InvestmentId = EntityId<"Investment">;
 export type RoiScheduleItemId = EntityId<"RoiScheduleItem">;
@@ -24,7 +26,12 @@ export interface Investment {
   currency: CurrencyCode;
   principalMinor: MinorUnitAmount;
   dailyRoiBps: BasisPoints;
+  totalRoiBps: BasisPoints | null;
+  promisedRoiMinor: MinorUnitAmount | null;
   termDays: number;
+  principalReturnPolicy: PrincipalReturnPolicy;
+  calculationVersion: string;
+  idempotencyKey: string | null;
   startAt: IsoDateTimeString | null;
   firstSettlementDate: NewYorkDateString | null;
   maturityDate: NewYorkDateString | null;
@@ -34,6 +41,8 @@ export interface Investment {
   activatedAt: IsoDateTimeString | null;
   maturedAt: IsoDateTimeString | null;
   cancelledAt: IsoDateTimeString | null;
+  fundingLedgerTransactionId: LedgerTransactionId | null;
+  maturityLedgerTransactionId: LedgerTransactionId | null;
 }
 
 export interface RoiScheduleItem {

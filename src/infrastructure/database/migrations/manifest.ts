@@ -8,7 +8,8 @@ export interface DatabaseMigration {
     | "admin"
     | "indexes"
     | "seed"
-    | "customer_experience";
+    | "customer_experience"
+    | "investment_engine";
   fileName: string;
 }
 
@@ -52,5 +53,10 @@ export const databaseMigrations = [
     id: "202607130501_customer_experience",
     phase: "customer_experience",
     fileName: "202607130501_customer_experience.sql",
+  },
+  {
+    id: "202607130601_investment_engine",
+    phase: "investment_engine",
+    fileName: "202607130601_investment_engine.sql",
   },
 ] as const satisfies readonly DatabaseMigration[];

@@ -11,7 +11,7 @@ async function readMigrationSql(fileName: string) {
 
 describe("database constraints and integrity migrations", () => {
   it("splits migrations into logical files instead of one giant migration", () => {
-    expect(databaseMigrations).toHaveLength(8);
+    expect(databaseMigrations).toHaveLength(9);
     expect(databaseMigrations.map((migration) => migration.fileName)).toEqual([
       "202607120301_identity.sql",
       "202607120302_core.sql",
@@ -21,6 +21,7 @@ describe("database constraints and integrity migrations", () => {
       "202607120306_indexes.sql",
       "202607120307_seed.sql",
       "202607130501_customer_experience.sql",
+      "202607130601_investment_engine.sql",
     ]);
   });
 
@@ -73,5 +74,20 @@ describe("database constraints and integrity migrations", () => {
     expect(sql).not.toContain("ledger_entries");
     expect(sql).not.toContain("wallet_balances");
     expect(sql).not.toContain("investments");
+  });
+
+  it("adds Phase 6 investment engine snapshot and settlement explanation fields", async () => {
+    const sql = await readMigrationSql("202607130601_investment_engine.sql");
+
+    expect(sql).toContain("promised_roi_minor");
+    expect(sql).toContain("principal_return_policy");
+    expect(sql).toContain("investments_idempotency_key_uidx");
+    expect(sql).toContain(
+      "rename column rounding_residual_micro_minor to next_residual_micro_minor",
+    );
+    expect(sql).toContain("previous_residual_micro_minor");
+    expect(sql).toContain("calculation_version");
+    expect(sql).not.toContain("deposit_intents");
+    expect(sql).not.toContain("withdrawal_requests");
   });
 });

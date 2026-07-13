@@ -7,5 +7,17 @@ export { OperationsRepository } from "./operations-repository";
 export { PaymentRepository } from "./payment-repository";
 export { ReferralRepository } from "./referral-repository";
 export { SettlementRepository } from "./settlement-repository";
-export type { LedgerPostingInput, WalletBalanceRecord } from "./ledger-repository";
+export type { InvestmentRecord, RoiScheduleItemRecord } from "./investment-repository";
+export type {
+  LedgerAccountRecord,
+  LedgerPostingInput,
+  LedgerTransactionRecord,
+  WalletBalanceRecord,
+  WalletRecord,
+} from "./ledger-repository";
 export type { EmailMessageRecord } from "./notification-repository";
+export type {
+  RoiLedgerEntryRecord,
+  SettlementItemRecord,
+  SettlementRunRecord,
+} from "./settlement-repository";

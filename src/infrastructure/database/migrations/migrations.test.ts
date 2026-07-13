@@ -78,6 +78,7 @@ describe("database migration runner", () => {
       "indexes",
       "seed",
       "customer_experience",
+      "investment_engine",
     ]);
   });
 

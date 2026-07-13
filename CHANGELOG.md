@@ -15,6 +15,10 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 Added:
 
 - Added `ENGINEERING_PRINCIPLES.md` as the decision lens for future engineering trade-offs, code review, financial work, and Phase 6 boundaries.
+- Added Phase 6 investment engine domain math, New York calendar handling, ledger posting validation, settlement reconciliation helpers, and mathematical ROI proof.
+- Added Phase 6 investment engine application service for investment activation, ROI settlement, live earnings previews, maturity principal release, and reconciliation without deposits or withdrawals.
+- Added Phase 6 database migration for investment term snapshots, investment idempotency, settlement residual explanation fields, and calculation versioning.
+- Added financial tests for ROI residuals, promised ROI exactness, New York DST boundaries, ledger balancing, settlement orchestration, maturity release, idempotency, and reconciliation.
 
 ## v2.0.1 - 2026-07-13
 

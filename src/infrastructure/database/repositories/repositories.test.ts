@@ -36,14 +36,12 @@ describe("database repositories", () => {
       },
       entries: [
         {
-          ledgerTransactionId: "ledger_txn_1",
           accountId: "platform_roi_expense",
           direction: "debit",
           amountMinor: 100n,
           currency: "USD",
         },
         {
-          ledgerTransactionId: "ledger_txn_1",
           accountId: "customer_available_cash",
           direction: "credit",
           amountMinor: 100n,
@@ -54,6 +52,16 @@ describe("database repositories", () => {
 
     expect(tx.insert).toHaveBeenCalledTimes(2);
     expect(insertedValues).toHaveLength(2);
+    expect(insertedValues[1]).toEqual([
+      expect.objectContaining({
+        ledgerTransactionId: "ledger_txn_1",
+        accountId: "platform_roi_expense",
+      }),
+      expect.objectContaining({
+        ledgerTransactionId: "ledger_txn_1",
+        accountId: "customer_available_cash",
+      }),
+    ]);
     expect(result.transaction).toBe(transactionRow);
     expect(result.entries).toBe(entryRows);
   });

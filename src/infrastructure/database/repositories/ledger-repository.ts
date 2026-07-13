@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import {
@@ -19,7 +19,7 @@ export type LedgerEntryRecord = InferSelectModel<typeof ledgerEntries>;
 
 export interface LedgerPostingInput {
   transaction: InferInsertModel<typeof ledgerTransactions>;
-  entries: Array<InferInsertModel<typeof ledgerEntries>>;
+  entries: Array<Omit<InferInsertModel<typeof ledgerEntries>, "ledgerTransactionId">>;
 }
 
 export interface WalletBalanceRecord {
@@ -128,6 +128,49 @@ export class LedgerRepository extends BaseDrizzleRepository {
     return rows[0] ?? null;
   }
 
+  async findWalletByUserCurrency(userId: string, currency: string): Promise<WalletRecord | null> {
+    const rows = await this.db
+      .select()
+      .from(wallets)
+      .where(and(eq(wallets.userId, userId), eq(wallets.currency, currency)))
+      .limit(1);
+
+    return rows[0] ?? null;
+  }
+
+  async lockWalletByUserCurrency(
+    context: DrizzleTransactionContext,
+    userId: string,
+    currency: string,
+  ): Promise<void> {
+    await context.db.execute(sql`
+      select id
+      from public.wallets
+      where user_id = ${userId}
+        and currency = ${currency}
+      for update
+    `);
+  }
+
+  async findWalletAccountByCategory(input: {
+    walletId: string;
+    category: "pending" | "available" | "locked" | "reserved" | "withdrawn";
+  }): Promise<LedgerAccountRecord | null> {
+    const rows = await this.db
+      .select({ account: ledgerAccounts })
+      .from(walletAccountLinks)
+      .innerJoin(ledgerAccounts, eq(walletAccountLinks.ledgerAccountId, ledgerAccounts.id))
+      .where(
+        and(
+          eq(walletAccountLinks.walletId, input.walletId),
+          eq(walletAccountLinks.category, input.category),
+        ),
+      )
+      .limit(1);
+
+    return rows[0]?.account ?? null;
+  }
+
   async findWalletBalance(walletId: string): Promise<WalletBalanceRecord | null> {
     const rows = (await this.db.execute(sql`
       select
@@ -148,6 +191,55 @@ export class LedgerRepository extends BaseDrizzleRepository {
     return rows[0] ?? null;
   }
 
+  async findWalletBalanceByUserCurrency(
+    userId: string,
+    currency: string,
+  ): Promise<WalletBalanceRecord | null> {
+    const rows = (await this.db.execute(sql`
+      select
+        wallet_id as "walletId",
+        user_id as "userId",
+        currency,
+        pending_balance_minor as "pendingBalanceMinor",
+        available_balance_minor as "availableBalanceMinor",
+        locked_balance_minor as "lockedBalanceMinor",
+        reserved_balance_minor as "reservedBalanceMinor",
+        withdrawn_balance_minor as "withdrawnBalanceMinor",
+        last_entry_at as "lastEntryAt"
+      from public.wallet_balances
+      where user_id = ${userId}
+        and currency = ${currency}
+      limit 1
+    `)) as unknown as WalletBalanceRecord[];
+
+    return rows[0] ?? null;
+  }
+
+  async findWalletBalanceByUserCurrencyInTransaction(
+    context: DrizzleTransactionContext,
+    userId: string,
+    currency: string,
+  ): Promise<WalletBalanceRecord | null> {
+    const rows = (await context.db.execute(sql`
+      select
+        wallet_id as "walletId",
+        user_id as "userId",
+        currency,
+        pending_balance_minor as "pendingBalanceMinor",
+        available_balance_minor as "availableBalanceMinor",
+        locked_balance_minor as "lockedBalanceMinor",
+        reserved_balance_minor as "reservedBalanceMinor",
+        withdrawn_balance_minor as "withdrawnBalanceMinor",
+        last_entry_at as "lastEntryAt"
+      from public.wallet_balances
+      where user_id = ${userId}
+        and currency = ${currency}
+      limit 1
+    `)) as unknown as WalletBalanceRecord[];
+
+    return rows[0] ?? null;
+  }
+
   async postLedgerTransaction(
     context: DrizzleTransactionContext,
     input: LedgerPostingInput,
@@ -157,7 +249,15 @@ export class LedgerRepository extends BaseDrizzleRepository {
       .values(input.transaction)
       .returning();
     const transaction = singleRow(transactionRows, "postLedgerTransaction.transaction");
-    const entryRows = await context.db.insert(ledgerEntries).values(input.entries).returning();
+    const entryRows = await context.db
+      .insert(ledgerEntries)
+      .values(
+        input.entries.map((entry) => ({
+          ...entry,
+          ledgerTransactionId: transaction.id,
+        })),
+      )
+      .returning();
 
     return { transaction, entries: entryRows };
   }
