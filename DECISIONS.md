@@ -1618,3 +1618,30 @@ After freezing `v3.1.0`, the platform has a complete certified customer path fro
 
 - Implementation prompts should carry architecture, UX decisions, constraints, and acceptance criteria already decided.
 - Roadmap language prefers experience trains: Growth → International → Mobile → Ecosystem.
+
+## DEC-0045: Milestone 6 Stage 1 Design Package (proposed)
+
+- Date: 2026-07-13
+- Status: **Proposed** — awaiting consultancy approval (no Stage 2 until Accepted)
+- Future Review: Upon Stage 1 approve / reject / revise
+
+### Context
+
+After freezing `v3.1.0` and adopting `PLATFORM_CONSTITUTION.md`, the next train is Growth Experience (`v3.2.0`), framed internally as a Customer Success Platform answering **Why should I keep coming back?**
+
+### Decision (pending approval)
+
+1. Adopt the Stage 1 pack as the design authority for Milestone 6 once consultancy marks this DEC **Accepted**:
+   - `GROWTH_EXPERIENCE_SPECIFICATION.md`
+   - `CUSTOMER_SUCCESS_FRAMEWORK.md`
+   - `ENGAGEMENT_PRINCIPLES.md`
+   - `REFERRAL_EXPERIENCE_PRINCIPLES.md`
+   - `STATEMENT_EXPERIENCE_GUIDE.md`
+   - `CUSTOMER_EDUCATION_GUIDE.md`
+2. Explicitly forbid casino engagement, fake streaks, and new financial engines in this train.
+3. Prefer calm retention; money home from Wave B remains primary.
+
+### Consequences (when accepted)
+
+- Stage 2 sprints G1–G5 may begin only after explicit approval.
+- Older Wave C/D roadmap blurbs defer to the Growth Stage 1 pack.

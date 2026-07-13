@@ -617,32 +617,31 @@ All Wave B screens consume certified engines/APIs. No new ledger, ROI, deposit, 
 
 Honest language required: **Accrued ≠ Credited ≠ Withdrawable**.
 
-### Wave C - Growth & Support
+### Milestone 6 — Growth Experience / Customer Success Platform (`v3.2.0`)
 
-Same Design → Approve → Implement discipline:
+Supersedes earlier “Wave C / Wave D” blurbs for growth, education, statements, and help polish.
 
-- Referral hub (privacy-safe)
-- Help center / in-app help
-- Onboarding checklist for unfunded accounts
-- Customer education surfaces
+North-star question: **Why should I keep coming back?**  
+Internal framing: **Customer Success Platform** (retention through clarity — not marketing noise).
 
-### Wave D - Polish
+#### Stage 1 — Design only (DRAFT)
 
-Same Design → Approve → Implement discipline:
+| Document | Role |
+| --- | --- |
+| `GROWTH_EXPERIENCE_SPECIFICATION.md` | Master Stage 1 specification |
+| `CUSTOMER_SUCCESS_FRAMEWORK.md` | Success definition & anti-patterns |
+| `ENGAGEMENT_PRINCIPLES.md` | Calm retention / milestones / insights |
+| `REFERRAL_EXPERIENCE_PRINCIPLES.md` | Privacy-safe referral hub |
+| `STATEMENT_EXPERIENCE_GUIDE.md` | Ledger-honest statements & exports |
+| `CUSTOMER_EDUCATION_GUIDE.md` | Learn surfaces & voice |
 
-- Charts
-- PWA install improvements
-- Customer KYC UX
-- Saved payout destinations
-- Statement exports
-- Optional live chat / push/SMS only after earlier waves are solid
+**No implementation until Stage 1 is approved.** No new financial engines. Frozen `v2.x` / `v3.0.0` / `v3.1.0` remain frozen.
 
-Exit criteria for `v3.0.0`:
+#### Stage 2 — Implementation (after approval; provisional sprints G1–G5)
 
-- Customer can discover, trust, fund, invest, track, and withdraw through production-grade UX on frozen engines.
-- No frozen-core behavioral changes without ADR.
-- `LEGACY_FEATURE_EXTRACTION.md` REMOVE list is honored (no FOMO theater, NFTs, loan novelty, fake social proof).
-- Each wave has an approved UX specification before production implementation (`DEC-0027`).
+See `GROWTH_EXPERIENCE_SPECIFICATION.md` §5: Success Center + Education/Help → Referrals → Statements → Milestones/insights → Certification & tag `v3.2.0`.
+
+Historical exit criteria for Milestone 5 money path still hold: honor `LEGACY_FEATURE_EXTRACTION.md` REMOVE list; Design → Approve → Implement (`DEC-0027`).
 
 ## Phase 11 - Production Hardening
 

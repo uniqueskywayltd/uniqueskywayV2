@@ -15,6 +15,7 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 Added:
 
 - Adopted `PLATFORM_CONSTITUTION.md` (`DEC-0044`) and aligned long-term trains: Growth (`v3.2.0`), International (`v3.3.0`), Mobile (`v3.4.0`), Ecosystem (`v4.0.0`).
+- Drafted Milestone 6 Stage 1 design pack (Customer Success / Growth Experience): `GROWTH_EXPERIENCE_SPECIFICATION.md` plus success, engagement, referral, statement, and education companions — awaiting approval before any implementation.
 
 ## v3.1.0 - 2026-07-13
 
