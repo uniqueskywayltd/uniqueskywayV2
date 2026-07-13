@@ -143,7 +143,7 @@ export class AdminFinancialOpsService {
   constructor(private readonly deps: AdminFinancialOpsServiceDependencies) {}
 
   async searchDeposits(filters: SearchDepositsInput): Promise<SearchDepositsResultView> {
-    await requireAdminActor(this.deps, "admin.deposits.read");
+    await requireAdminActor(this.deps, "deposits.read");
     return this.deps.paymentRepository.searchDepositIntents({
       ...(filters.q ? { q: filters.q } : {}),
       ...(filters.status ? { status: filters.status } : {}),
@@ -156,7 +156,7 @@ export class AdminFinancialOpsService {
   }
 
   async getDepositDetails(depositId: string): Promise<DepositDetailsView> {
-    await requireAdminActor(this.deps, "admin.deposits.read");
+    await requireAdminActor(this.deps, "deposits.read");
 
     const deposit = await this.deps.paymentRepository.findDepositIntentById(depositId);
     if (!deposit) {
@@ -172,12 +172,12 @@ export class AdminFinancialOpsService {
   }
 
   async getDepositTimeline(depositId: string, limit = 50): Promise<AuditLogRecord[]> {
-    await requireAdminActor(this.deps, "admin.deposits.read");
+    await requireAdminActor(this.deps, "deposits.read");
     return this.deps.operationsRepository.listAuditLogsByTarget("deposit_intent", depositId, limit);
   }
 
   async getDepositStatusHistory(depositId: string, limit = 50): Promise<AuditLogRecord[]> {
-    await requireAdminActor(this.deps, "admin.deposits.read");
+    await requireAdminActor(this.deps, "deposits.read");
     const timeline = await this.deps.operationsRepository.listAuditLogsByTarget(
       "deposit_intent",
       depositId,
@@ -187,7 +187,7 @@ export class AdminFinancialOpsService {
   }
 
   async listDepositNotes(depositId: string, limit = 50): Promise<AdminEntityNoteRecord[]> {
-    await requireAdminActor(this.deps, "admin.deposits.read");
+    await requireAdminActor(this.deps, "deposits.read");
     return this.deps.operationsRepository.listAdminEntityNotes("deposit_intent", depositId, limit);
   }
 
@@ -196,7 +196,7 @@ export class AdminFinancialOpsService {
     input: AddFinancialNoteInput,
     context: RequestAuditContext,
   ): Promise<AdminEntityNoteRecord> {
-    const admin = await requireAdminActor(this.deps, "admin.financial.notes.write");
+    const admin = await requireAdminActor(this.deps, "deposits.review");
 
     const deposit = await this.deps.paymentRepository.findDepositIntentById(depositId);
     if (!deposit) {
@@ -232,7 +232,7 @@ export class AdminFinancialOpsService {
     reason: string,
     context: RequestAuditContext,
   ): Promise<AdminDepositActionResult> {
-    await requireAdminActor(this.deps, "admin.deposits.review");
+    await requireAdminActor(this.deps, "deposits.approve");
     return this.deps.depositEngine.adminApproveDeposit(depositId, reason, context);
   }
 
@@ -241,12 +241,12 @@ export class AdminFinancialOpsService {
     reason: string,
     context: RequestAuditContext,
   ): Promise<AdminDepositActionResult> {
-    await requireAdminActor(this.deps, "admin.deposits.review");
+    await requireAdminActor(this.deps, "deposits.approve");
     return this.deps.depositEngine.adminRejectDeposit(depositId, reason, context);
   }
 
   async searchWithdrawals(filters: SearchWithdrawalsInput): Promise<SearchWithdrawalsResultView> {
-    await requireAdminActor(this.deps, "admin.withdrawals.read");
+    await requireAdminActor(this.deps, "withdrawals.read");
     return this.deps.paymentRepository.searchWithdrawals({
       ...(filters.q ? { q: filters.q } : {}),
       ...(filters.status ? { status: filters.status } : {}),
@@ -259,7 +259,7 @@ export class AdminFinancialOpsService {
   }
 
   async getWithdrawalDetails(withdrawalId: string): Promise<WithdrawalDetailsView> {
-    await requireAdminActor(this.deps, "admin.withdrawals.read");
+    await requireAdminActor(this.deps, "withdrawals.read");
 
     const withdrawal = await this.deps.paymentRepository.findWithdrawalById(withdrawalId);
     if (!withdrawal) {
@@ -279,7 +279,7 @@ export class AdminFinancialOpsService {
   }
 
   async getWithdrawalTimeline(withdrawalId: string, limit = 50): Promise<AuditLogRecord[]> {
-    await requireAdminActor(this.deps, "admin.withdrawals.read");
+    await requireAdminActor(this.deps, "withdrawals.read");
     return this.deps.operationsRepository.listAuditLogsByTarget(
       "withdrawal_request",
       withdrawalId,
@@ -288,7 +288,7 @@ export class AdminFinancialOpsService {
   }
 
   async listWithdrawalNotes(withdrawalId: string, limit = 50): Promise<AdminEntityNoteRecord[]> {
-    await requireAdminActor(this.deps, "admin.withdrawals.read");
+    await requireAdminActor(this.deps, "withdrawals.read");
     return this.deps.operationsRepository.listAdminEntityNotes(
       "withdrawal_request",
       withdrawalId,
@@ -301,7 +301,7 @@ export class AdminFinancialOpsService {
     input: AddFinancialNoteInput,
     context: RequestAuditContext,
   ): Promise<AdminEntityNoteRecord> {
-    const admin = await requireAdminActor(this.deps, "admin.financial.notes.write");
+    const admin = await requireAdminActor(this.deps, "withdrawals.review");
 
     const withdrawal = await this.deps.paymentRepository.findWithdrawalById(withdrawalId);
     if (!withdrawal) {
@@ -337,7 +337,7 @@ export class AdminFinancialOpsService {
     reason: string,
     context: RequestAuditContext,
   ): Promise<AdminWithdrawalActionResult> {
-    await requireAdminActor(this.deps, "admin.withdrawals.review");
+    await requireAdminActor(this.deps, "withdrawals.approve");
     return this.deps.withdrawalEngine.approveWithdrawal(withdrawalId, { reason }, context);
   }
 
@@ -346,7 +346,7 @@ export class AdminFinancialOpsService {
     reason: string,
     context: RequestAuditContext,
   ): Promise<AdminWithdrawalActionResult> {
-    await requireAdminActor(this.deps, "admin.withdrawals.review");
+    await requireAdminActor(this.deps, "withdrawals.approve");
     return this.deps.withdrawalEngine.rejectWithdrawal(withdrawalId, { reason }, context);
   }
 
@@ -354,12 +354,12 @@ export class AdminFinancialOpsService {
     withdrawalId: string,
     context: RequestAuditContext,
   ): Promise<QueueWithdrawalPayoutResult> {
-    await requireAdminActor(this.deps, "admin.withdrawals.review");
+    await requireAdminActor(this.deps, "withdrawals.approve");
     return this.deps.withdrawalEngine.queueWithdrawalPayout(withdrawalId, context);
   }
 
   async listProcessingQueue(limit = 50): Promise<WithdrawalRequestRecord[]> {
-    await requireAdminActor(this.deps, "admin.withdrawals.read");
+    await requireAdminActor(this.deps, "withdrawals.read");
     const result = await this.deps.paymentRepository.searchWithdrawals({
       status: "processing",
       limit,
@@ -368,7 +368,7 @@ export class AdminFinancialOpsService {
   }
 
   async listApprovedAwaitingPayout(limit = 50): Promise<WithdrawalRequestRecord[]> {
-    await requireAdminActor(this.deps, "admin.withdrawals.read");
+    await requireAdminActor(this.deps, "withdrawals.read");
     const result = await this.deps.paymentRepository.searchWithdrawals({
       status: "approved",
       limit,
@@ -377,7 +377,7 @@ export class AdminFinancialOpsService {
   }
 
   async searchInvestments(filters: SearchInvestmentsInput): Promise<SearchInvestmentsResultView> {
-    await requireAdminActor(this.deps, "admin.investments.read");
+    await requireAdminActor(this.deps, "investments.read");
     return this.deps.investmentRepository.listInvestments({
       ...(filters.q ? { q: filters.q } : {}),
       ...(filters.status ? { status: filters.status } : {}),
@@ -388,7 +388,7 @@ export class AdminFinancialOpsService {
   }
 
   async getInvestmentDetails(investmentId: string): Promise<InvestmentDetailsView> {
-    await requireAdminActor(this.deps, "admin.investments.read");
+    await requireAdminActor(this.deps, "investments.read");
 
     const investment = await this.deps.investmentRepository.findInvestmentById(investmentId);
     if (!investment) {
@@ -405,7 +405,7 @@ export class AdminFinancialOpsService {
   }
 
   async listSettlementRuns(filters: ListSettlementRunsInput): Promise<ListSettlementRunsResultView> {
-    await requireAdminActor(this.deps, "admin.settlements.read");
+    await requireAdminActor(this.deps, "settlements.read");
     return this.deps.settlementRepository.listSettlementRuns({
       ...(filters.status ? { status: filters.status } : {}),
       ...(filters.from ? { from: filters.from } : {}),
@@ -416,7 +416,7 @@ export class AdminFinancialOpsService {
   }
 
   async getSettlementRunDetails(runId: string): Promise<SettlementRunDetailsView> {
-    await requireAdminActor(this.deps, "admin.settlements.read");
+    await requireAdminActor(this.deps, "settlements.read");
 
     const run = await this.deps.settlementRepository.findSettlementRunById(runId);
     if (!run) {
@@ -428,7 +428,7 @@ export class AdminFinancialOpsService {
   }
 
   async getMonitoringSnapshot(): Promise<MonitoringSnapshotView> {
-    await requireAdminActor(this.deps, "admin.monitoring.read");
+    await requireAdminActor(this.deps, "monitoring.read");
 
     const [
       pendingDeposits,
@@ -460,13 +460,13 @@ export class AdminFinancialOpsService {
   }
 
   async listFailedProviderEvents(limit = 50): Promise<PaymentProviderEventRecord[]> {
-    await requireAdminActor(this.deps, "admin.monitoring.read");
+    await requireAdminActor(this.deps, "monitoring.read");
     const result = await this.deps.paymentRepository.listProviderEvents({ status: "failed", limit });
     return result.rows;
   }
 
   async listDeadLetteredProviderEvents(limit = 50): Promise<PaymentProviderEventRecord[]> {
-    await requireAdminActor(this.deps, "admin.monitoring.read");
+    await requireAdminActor(this.deps, "monitoring.read");
     const result = await this.deps.paymentRepository.listProviderEvents({
       deadLetteredOnly: true,
       limit,
@@ -475,12 +475,12 @@ export class AdminFinancialOpsService {
   }
 
   async listRetryableProviderEvents(limit = 50): Promise<PaymentProviderEventRecord[]> {
-    await requireAdminActor(this.deps, "admin.monitoring.read");
+    await requireAdminActor(this.deps, "monitoring.read");
     return this.deps.paymentRepository.listRetryableProviderEvents(limit);
   }
 
   async listProviderEvents(filters: ListProviderEventsInput) {
-    await requireAdminActor(this.deps, "admin.monitoring.read");
+    await requireAdminActor(this.deps, "monitoring.read");
     return this.deps.paymentRepository.listProviderEvents({
       ...(filters.status ? { status: filters.status } : {}),
       ...(filters.deadLettered !== undefined ? { deadLetteredOnly: filters.deadLettered } : {}),
@@ -490,7 +490,7 @@ export class AdminFinancialOpsService {
   }
 
   async listFailedBackgroundJobs(limit = 50): Promise<BackgroundJobRecord[]> {
-    await requireAdminActor(this.deps, "admin.monitoring.read");
+    await requireAdminActor(this.deps, "monitoring.read");
     const result = await this.deps.operationsRepository.listBackgroundJobs({
       status: "failed",
       limit,
@@ -499,7 +499,7 @@ export class AdminFinancialOpsService {
   }
 
   async listBackgroundJobs(filters: ListBackgroundJobsInput) {
-    await requireAdminActor(this.deps, "admin.monitoring.read");
+    await requireAdminActor(this.deps, "monitoring.read");
     return this.deps.operationsRepository.listBackgroundJobs({
       ...(filters.status ? { status: filters.status } : {}),
       ...(filters.jobType ? { jobType: filters.jobType } : {}),
@@ -509,7 +509,7 @@ export class AdminFinancialOpsService {
   }
 
   async getOverviewMetrics(): Promise<OverviewMetricsView> {
-    await requireAdminActor(this.deps, "admin.overview.read");
+    await requireAdminActor(this.deps, "overview.read");
 
     const now = this.deps.clock.now();
     const startOfDay = new Date(

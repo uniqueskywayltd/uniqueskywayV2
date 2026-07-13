@@ -11,6 +11,7 @@ import {
   customerProfiles,
   depositIntents,
   emailMessages,
+  emailTemplateCatalog,
   featureFlags,
   investmentPlans,
   investmentPlanVersions,
@@ -19,18 +20,22 @@ import {
   ledgerEntries,
   ledgerTransactions,
   notificationDeliveries,
+  notificationTemplateCatalog,
   notifications,
   outboxEvents,
   paymentProviderEvents,
+  permissions,
   referralCodes,
   referralRewards,
   referrals,
+  rolePermissions,
   roiLedgerEntries,
   roiScheduleItems,
   securityEvents,
   sessions,
   settlementItems,
   settlementRuns,
+  staffInvites,
   systemSettings,
   trustedDevices,
   users,
@@ -74,5 +79,10 @@ describe("database schema", () => {
     expect(getTableName(featureFlags)).toBe("feature_flags");
     expect(getTableName(trustedDevices)).toBe("trusted_devices");
     expect(getTableName(sessions)).toBe("sessions");
+    expect(getTableName(permissions)).toBe("permissions");
+    expect(getTableName(rolePermissions)).toBe("role_permissions");
+    expect(getTableName(staffInvites)).toBe("staff_invites");
+    expect(getTableName(emailTemplateCatalog)).toBe("email_template_catalog");
+    expect(getTableName(notificationTemplateCatalog)).toBe("notification_template_catalog");
   });
 });

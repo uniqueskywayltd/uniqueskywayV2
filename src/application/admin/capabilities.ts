@@ -1,41 +1,51 @@
-export const ADMIN_CAPABILITIES = [
-  "admin.users.read",
-  "admin.users.restrict",
-  "admin.kyc.review",
-  "admin.users.notes.write",
-  "admin.deposits.read",
-  "admin.deposits.review",
-  "admin.withdrawals.read",
-  "admin.withdrawals.review",
-  "admin.investments.read",
-  "admin.settlements.read",
-  "admin.monitoring.read",
-  "admin.overview.read",
-  "admin.financial.notes.write",
+/**
+ * Canonical admin permission keys from ADMIN_PERMISSION_MATRIX.md.
+ * Runtime authorization loads grants from the database — this list is the
+ * typed catalog only, not a role map.
+ */
+export const ADMIN_PERMISSIONS = [
+  "customers.read",
+  "customers.update",
+  "customers.suspend",
+  "customers.notes",
+  "customers.kyc",
+  "deposits.read",
+  "deposits.review",
+  "deposits.approve",
+  "withdrawals.read",
+  "withdrawals.review",
+  "withdrawals.approve",
+  "investments.read",
+  "settlements.read",
+  "reports.read",
+  "reports.export",
+  "emails.manage",
+  "notifications.manage",
+  "featureflags.manage",
+  "system.manage",
+  "roles.manage",
+  "permissions.manage",
+  "staff.manage",
+  "staff.reset_password",
+  "audit.read",
+  "jobs.manage",
+  "security.read",
+  "monitoring.read",
+  "overview.read",
 ] as const;
 
-export type AdminCapability = (typeof ADMIN_CAPABILITIES)[number];
+export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
 
-export const ADMIN_CAPABILITY_ROLES: Readonly<Record<AdminCapability, readonly string[]>> = {
-  "admin.users.read": ["support_agent", "finance_admin", "platform_admin"],
-  "admin.users.restrict": ["platform_admin"],
-  "admin.kyc.review": ["platform_admin"],
-  "admin.users.notes.write": ["support_agent", "platform_admin"],
-  "admin.deposits.read": ["support_agent", "finance_admin", "platform_admin"],
-  "admin.deposits.review": ["finance_admin", "platform_admin"],
-  "admin.withdrawals.read": ["support_agent", "finance_admin", "platform_admin"],
-  "admin.withdrawals.review": ["finance_admin", "platform_admin"],
-  "admin.investments.read": ["support_agent", "finance_admin", "platform_admin"],
-  "admin.settlements.read": ["finance_admin", "platform_admin"],
-  "admin.monitoring.read": ["finance_admin", "platform_admin"],
-  "admin.overview.read": ["support_agent", "finance_admin", "platform_admin"],
-  "admin.financial.notes.write": ["finance_admin", "platform_admin"],
-};
+/** @deprecated Use AdminPermission */
+export type AdminCapability = AdminPermission;
 
-export function roleKeysSatisfyCapability(
-  roleKeys: readonly string[],
-  capability: AdminCapability,
+export function isAdminPermission(value: string): value is AdminPermission {
+  return (ADMIN_PERMISSIONS as readonly string[]).includes(value);
+}
+
+export function permissionKeysInclude(
+  permissionKeys: readonly string[],
+  permission: AdminPermission,
 ): boolean {
-  const allowedRoles = ADMIN_CAPABILITY_ROLES[capability];
-  return roleKeys.some((roleKey) => allowedRoles.includes(roleKey));
+  return permissionKeys.includes(permission);
 }

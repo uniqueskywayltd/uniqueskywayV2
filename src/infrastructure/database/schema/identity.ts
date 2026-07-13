@@ -1,8 +1,10 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   index,
   pgTable,
   primaryKey,
+  text,
   timestamp,
   uniqueIndex,
   uuid,
@@ -37,6 +39,10 @@ export const adminProfiles = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
     status: adminProfileStatusEnum("status").notNull().default("active"),
+    mustChangePassword: boolean("must_change_password").notNull().default(false),
+    lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
+    disabledAt: timestamp("disabled_at", { withTimezone: true }),
+    disabledReason: text("disabled_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -53,7 +59,10 @@ export const roles = pgTable(
     key: varchar("key", { length: 80 }).notNull(),
     name: varchar("name", { length: 120 }).notNull(),
     description: varchar("description", { length: 500 }),
+    isSystem: boolean("is_system").notNull().default(false),
+    status: varchar("status", { length: 40 }).notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("roles_key_uidx").on(table.key)],
 );

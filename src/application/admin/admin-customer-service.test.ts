@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { AuthenticatedUser } from "@/application/auth";
 
 import { AdminCustomerService } from "./admin-customer-service";
+import { permissionKeysForRoles } from "./test-role-permissions";
 
 const auditContext = {
   requestId: "request_1",
@@ -43,7 +44,7 @@ describe("AdminCustomerService", () => {
     }
   });
 
-  it("requires platform_admin to restrict or close a customer account", async () => {
+  it("requires compliance_officer to restrict or close a customer account", async () => {
     const supportFixture = createFixture({ roleKeys: ["support_agent"] });
 
     await expect(
@@ -56,7 +57,7 @@ describe("AdminCustomerService", () => {
   });
 
   it("requires a reason to restrict or close a customer account", async () => {
-    const fixture = createFixture({ roleKeys: ["platform_admin"] });
+    const fixture = createFixture({ roleKeys: ["compliance_officer"] });
 
     await expect(
       fixture.service.updateCustomerStatus("user_1", { status: "restricted" }, auditContext),
@@ -66,7 +67,7 @@ describe("AdminCustomerService", () => {
   });
 
   it("restricts a customer account with a reason and writes an admin audit log", async () => {
-    const fixture = createFixture({ roleKeys: ["platform_admin"] });
+    const fixture = createFixture({ roleKeys: ["compliance_officer"] });
 
     const result = await fixture.service.updateCustomerStatus(
       "user_1",
@@ -101,7 +102,7 @@ describe("AdminCustomerService", () => {
   });
 
   it("allows an active customer account with no reason required", async () => {
-    const fixture = createFixture({ roleKeys: ["platform_admin"] });
+    const fixture = createFixture({ roleKeys: ["compliance_officer"] });
 
     const result = await fixture.service.updateCustomerStatus(
       "user_1",
@@ -112,7 +113,7 @@ describe("AdminCustomerService", () => {
     expect(result.account?.status).toBe("active");
   });
 
-  it("requires platform_admin for KYC review and records the reason on the audit log", async () => {
+  it("requires compliance_officer for KYC review and records the reason on the audit log", async () => {
     const supportFixture = createFixture({ roleKeys: ["support_agent"] });
 
     await expect(
@@ -123,7 +124,7 @@ describe("AdminCustomerService", () => {
       ),
     ).rejects.toMatchObject({ code: "AUTHORIZATION_ERROR" });
 
-    const fixture = createFixture({ roleKeys: ["platform_admin"] });
+    const fixture = createFixture({ roleKeys: ["compliance_officer"] });
 
     const result = await fixture.service.updateCustomerVerification(
       "user_1",
@@ -311,6 +312,9 @@ function createFixture(options: FixtureOptions = {}) {
     ),
     listActiveRoleKeysForUser: vi.fn(async (userId: string) =>
       userId === adminAppUser.id ? roleKeys : [],
+    ),
+    listActivePermissionKeysForUser: vi.fn(async (userId: string) =>
+      userId === adminAppUser.id ? permissionKeysForRoles(roleKeys) : [],
     ),
     updateUserStatus: vi.fn(async (_tx: unknown, userId: string, status: string) => {
       const user = state.users.find((candidate) => candidate.id === userId);

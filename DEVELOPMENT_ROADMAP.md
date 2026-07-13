@@ -502,16 +502,16 @@ No new money-movement logic. Uses certified deposit and withdrawal engines only.
 
 ### Phase 8.3 - Roles, Permissions & System Administration
 
-- Role management
-- Permission management
-- Staff accounts
-- Feature flags
+Status: Complete (APIs).
+
+- Configurable roles and database-backed permissions (`ADMIN_PERMISSION_MATRIX.md`)
+- Staff accounts: search, details, invite, activate/disable, lock/unlock, password reset, force password change, sessions, login history
+- Feature flags (schedule, percentage rollout, internal-only)
 - System settings
-- Notification templates
-- Email templates
-- Audit viewer
-- Security events
-- Background job monitor
+- Email and notification template catalogs (preview / enable / disable / test)
+- Audit viewer, security center, background job retry/cancel, system health
+
+Authorization for Phase 8.1/8.2 now resolves through permission keys, not hardcoded role maps.
 
 ### Phase 8.4 - Reporting & Exports
 
@@ -636,7 +636,7 @@ Exit criteria:
 
 1. Keep `main` frozen at `v2.2.0` as the money-movement recovery checkpoint (`DEC-0022`).
 2. Build Phase 8 only on `phase-8-admin-platform`.
-3. Complete Phase 8.3 system administration, then 8.4 reporting/exports, then 8.5 UI polish and certification.
+3. Phase 8.3 system administration is certified. Continue with Phase 8.4 reporting/exports, then Phase 8.5 UI polish and Admin Platform certification at `v2.3.0`.
 4. Do not reopen investment-engine or money-movement behavioral rules without ADR, regression tests, and recertification.
 5. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
 6. Certify Phase 8 as `v2.3.0` only after permission, security, architecture, reporting, and UI certification gates pass.

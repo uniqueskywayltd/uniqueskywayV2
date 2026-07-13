@@ -11,7 +11,7 @@ async function readMigrationSql(fileName: string) {
 
 describe("database constraints and integrity migrations", () => {
   it("splits migrations into logical files instead of one giant migration", () => {
-    expect(databaseMigrations).toHaveLength(13);
+    expect(databaseMigrations).toHaveLength(14);
     expect(databaseMigrations.map((migration) => migration.fileName)).toEqual([
       "202607120301_identity.sql",
       "202607120302_core.sql",
@@ -26,6 +26,7 @@ describe("database constraints and integrity migrations", () => {
       "202607130702_money_movement.sql",
       "202607130801_admin_customer_notes.sql",
       "202607130802_admin_financial_ops.sql",
+      "202607130803_admin_rbac_system.sql",
     ]);
   });
 

@@ -930,3 +930,53 @@ Admin tooling must operate the certified financial system, not redefine it. Free
 - Phase 8 work happens on `phase-8-admin-platform`.
 - Deposit, withdrawal, Paystack, webhook, and ledger redesigns are out of Phase 8 scope.
 - Future money-movement behavior changes are intentionally slower than ordinary admin UI work.
+
+---
+
+## DEC-0023: Database-Backed Admin RBAC
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review when two-person approval workflows are introduced or when Phase 8.5 freezes the complete admin platform at `v2.3.0`.
+
+### Context
+
+Phase 8.1 and 8.2 temporarily used capability checks that could be paired with hardcoded role maps. Phase 8.3 builds the company operating system: staff, roles, permissions, feature flags, settings, template catalogs, job monitoring, and security center. Those features depend on configurable authorization.
+
+Hardcoded role → permission maps cannot stay as the production source of truth once roles are editable.
+
+### Decision
+
+Administrative authorization is database-backed.
+
+Binding rules:
+
+- `ADMIN_PERMISSION_MATRIX.md` is the governance source of truth for system roles, permission keys, default grants, elevated actions, and future two-person approval candidates.
+- Runtime grants load from `permissions`, `role_permissions`, and active `user_roles`.
+- `requireAdminActor` authorizes by permission key, not by role name switch statements.
+- Role keys remain labels and assignment targets; they must not encode permission logic in application code.
+- Every administrative mutation writes an audit record capturing actor, permission used, action, target, request hashes, and before/after payloads where applicable.
+- Certified financial engines remain frozen under `DEC-0022`; admin system services wrap them and must not reimplement money movement.
+
+Allowed without superseding this decision:
+
+- Adding new permission keys through matrix + migration seed updates
+- Changing production grants through audited admin role-permission operations
+- Extending staff/system administration APIs behind existing permission namespaces
+
+### Alternatives Considered
+
+- Keep hardcoded role maps in application code for simplicity.
+- Use only coarse admin vs non-admin flags.
+- Delay configurable RBAC until after reporting and UI polish.
+
+### Reason for Choosing It
+
+Every remaining admin feature depends on consistent authorization. Configurable, audited RBAC keeps Phase 8.1/8.2 surfaces aligned with staff role management and prevents permission drift as the platform grows.
+
+### Consequences
+
+- Phase 8.3 certification is complete on `phase-8-admin-platform`.
+- Production authorization must not reintroduce hardcoded role permission maps.
+- Phase 8.4 reporting and Phase 8.5 admin UI continue on the same branch.
+- Release tag `v2.3.0` remains reserved for the complete admin platform after Phase 8.5; current certified release remains `v2.2.0`.

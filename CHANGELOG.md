@@ -21,6 +21,11 @@ Added:
 - Added Phase 8.2 financial operations: deposit/withdrawal queues with search, details, timelines, notes, and review actions that wrap certified engines; read-only investment and settlement viewers; monitoring and overview metrics.
 - Added `admin_entity_notes` migration for deposit and withdrawal ops notes.
 - Updated Phase 8 roadmap sequence to include Phase 8.5 Admin UI/UX Polish & Certification before `v2.3.0`.
+- Added `ADMIN_PERMISSION_MATRIX.md` as the Phase 8.3 governance source of truth for roles, permissions, elevated actions, and future two-person approval candidates.
+- Added `DEC-0023` adopting database-backed admin RBAC; runtime authorization loads grants from `permissions` / `role_permissions`.
+- Added Phase 8.3 system administration: DB-backed RBAC, staff management, feature flags, system settings, email/notification template catalogs, job monitor, security center, and system health APIs.
+- Migrated admin authorization from hardcoded role maps to `permissions` / `role_permissions` resolution while preserving Phase 8.1/8.2 capability keys.
+- Certified Phase 8.3 on `phase-8-admin-platform` (APIs). Release tag `v2.3.0` remains reserved for complete Admin Platform after Phase 8.5; current release remains `v2.2.0`.
 
 ## v2.2.0 - 2026-07-13
 

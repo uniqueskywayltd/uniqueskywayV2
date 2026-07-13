@@ -1,8 +1,9 @@
 export {
-  ADMIN_CAPABILITIES,
-  ADMIN_CAPABILITY_ROLES,
-  roleKeysSatisfyCapability,
+  ADMIN_PERMISSIONS,
+  isAdminPermission,
+  permissionKeysInclude,
   type AdminCapability,
+  type AdminPermission,
 } from "./capabilities";
 export { requireAdminActor, type AdminActor, type RequireAdminActorDependencies } from "./require-admin";
 export {
@@ -26,6 +27,11 @@ export {
   type SettlementRunDetailsView,
   type WithdrawalDetailsView,
 } from "./admin-financial-ops-service";
+export {
+  AdminSystemService,
+  type AdminSystemServiceDependencies,
+  type SystemHealthView,
+} from "./admin-system-service";
 export {
   addCustomerNoteInputSchema,
   customerKycStatusSchema,

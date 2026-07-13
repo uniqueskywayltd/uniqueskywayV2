@@ -82,4 +82,9 @@ export const databaseMigrations = [
     phase: "admin_platform",
     fileName: "202607130802_admin_financial_ops.sql",
   },
+  {
+    id: "202607130803_admin_rbac_system",
+    phase: "admin_platform",
+    fileName: "202607130803_admin_rbac_system.sql",
+  },
 ] as const satisfies readonly DatabaseMigration[];

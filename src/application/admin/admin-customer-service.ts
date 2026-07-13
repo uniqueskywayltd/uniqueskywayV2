@@ -58,7 +58,7 @@ export class AdminCustomerService {
   constructor(private readonly deps: AdminCustomerServiceDependencies) {}
 
   async searchCustomers(input: SearchCustomersInput): Promise<SearchCustomersResultView> {
-    await requireAdminActor(this.deps, "admin.users.read");
+    await requireAdminActor(this.deps, "customers.read");
 
     return this.deps.coreRepository.searchCustomers({
       ...(input.q ? { q: input.q } : {}),
@@ -70,7 +70,7 @@ export class AdminCustomerService {
   }
 
   async getCustomerDetails(userId: string): Promise<CustomerDetails> {
-    await requireAdminActor(this.deps, "admin.users.read");
+    await requireAdminActor(this.deps, "customers.read");
     return this.loadCustomerDetails(userId);
   }
 
@@ -79,7 +79,7 @@ export class AdminCustomerService {
     input: UpdateCustomerStatusInput,
     context: RequestAuditContext,
   ): Promise<CustomerDetails> {
-    const admin = await requireAdminActor(this.deps, "admin.users.restrict");
+    const admin = await requireAdminActor(this.deps, "customers.suspend");
 
     const reason = input.reason?.trim() ?? null;
     if ((input.status === "restricted" || input.status === "closed") && !reason) {
@@ -126,7 +126,7 @@ export class AdminCustomerService {
     input: UpdateCustomerKycInput,
     context: RequestAuditContext,
   ): Promise<CustomerDetails> {
-    const admin = await requireAdminActor(this.deps, "admin.kyc.review");
+    const admin = await requireAdminActor(this.deps, "customers.kyc");
 
     const user = await this.deps.identityRepository.findUserById(userId);
     if (!user) {
@@ -159,7 +159,7 @@ export class AdminCustomerService {
     input: AddCustomerNoteInput,
     context: RequestAuditContext,
   ): Promise<CustomerNoteRecord> {
-    const admin = await requireAdminActor(this.deps, "admin.users.notes.write");
+    const admin = await requireAdminActor(this.deps, "customers.notes");
 
     const user = await this.deps.identityRepository.findUserById(userId);
     if (!user) {
@@ -182,12 +182,12 @@ export class AdminCustomerService {
   }
 
   async listCustomerNotes(userId: string, limit = 50): Promise<CustomerNoteRecord[]> {
-    await requireAdminActor(this.deps, "admin.users.read");
+    await requireAdminActor(this.deps, "customers.read");
     return this.deps.coreRepository.listCustomerNotesByUserId(userId, limit);
   }
 
   async getCustomerAuditTimeline(userId: string, limit = 50): Promise<AuditLogRecord[]> {
-    await requireAdminActor(this.deps, "admin.users.read");
+    await requireAdminActor(this.deps, "customers.read");
     return this.deps.operationsRepository.listAuditLogsForCustomerTimeline(userId, limit);
   }
 

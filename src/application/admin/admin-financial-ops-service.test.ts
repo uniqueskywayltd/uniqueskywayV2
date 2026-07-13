@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { AuthenticatedUser } from "@/application/auth";
 
 import { AdminFinancialOpsService } from "./admin-financial-ops-service";
+import { permissionKeysForRoles } from "./test-role-permissions";
 
 const auditContext = {
   requestId: "request_1",
@@ -260,6 +261,9 @@ function createFixture(options: FixtureOptions = {}) {
     ),
     listActiveRoleKeysForUser: vi.fn(async (userId: string) =>
       userId === adminAppUser.id ? roleKeys : [],
+    ),
+    listActivePermissionKeysForUser: vi.fn(async (userId: string) =>
+      userId === adminAppUser.id ? permissionKeysForRoles(roleKeys) : [],
     ),
   };
 
