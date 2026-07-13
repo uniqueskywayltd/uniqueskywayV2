@@ -87,27 +87,36 @@ Certification target:
 - Promised ROI equals settled ROI for promised-total plans.
 - Uncapped ROI equals the deterministic formula result for uncapped plans.
 
+Current Phase 6.1 certified envelope:
+
+- Daily ROI basis points: `0` through `10,000`.
+- Term duration: `1` through `1,825` New York earning days.
+- Randomized principal coverage: `1` through `10,000,000,000` minor units.
+- Large-principal coverage: up to `9,999,999,999,999,999` minor units.
+
+Any plan support outside this envelope requires expanding this matrix and the certification suite before release.
+
 | ID | Scenario | Invariants | Expected Result | Current Evidence | Status |
 | --- | --- | --- | --- | --- | --- |
 | MATH-001 | Simple whole-minor ROI | FI-001, FI-501, FI-502 | Daily ROI posts exactly as integer minor units with zero residual. | `roi-math.test.ts` covers direct daily ROI. | Covered |
 | MATH-002 | Residual carry over multiple days | FI-501, FI-503 | Sub-minor residual carries forward and becomes payable only when it reaches a whole minor unit. | `roi-math.test.ts` covers residual carry. | Covered |
 | MATH-003 | Final promised ROI absorption | FI-505, FI-506 | Final eligible earning date posts the remaining whole-minor promised ROI exactly. | `roi-math.test.ts` and proof doc cover promised final remainder. | Covered |
 | MATH-004 | Final sub-minor residual policy | FI-502, FI-504 | Sub-minor residual is not posted as cash and is recorded as non-cash metadata or reconciliation evidence. | Proof doc covers policy; final metadata exists in settlement service. | Partial |
-| MATH-005 | 100,000 randomized ROI simulations | FI-1402, FI-1405 | Every randomized valid investment satisfies promised-total or deterministic uncapped total. | Current suite has 2,000 deterministic randomized cases. | Required |
-| MATH-006 | Supported ROI percentage sweep | FI-501, FI-505 | Every supported daily ROI bps value settles correctly. | Current randomized cases sample bps values. | Required |
-| MATH-007 | Supported duration sweep | FI-501, FI-505 | Every supported term length settles correctly. | Current randomized cases sample term lengths. | Required |
-| MATH-008 | Very small principal | FI-001, FI-502, FI-503 | ROI may be zero until residual becomes payable; no negative or fractional cash is posted. | Covered by randomized cases at limited scale. | Partial |
-| MATH-009 | Large principal near allowed maximum | FI-001, FI-501 | Bigint arithmetic remains exact and does not overflow JavaScript number precision. | Current implementation uses bigint; broader fixture required. | Required |
-| MATH-010 | Zero ROI plan | FI-501, FI-607 | Settlement records a zero-amount skip and does not post ledger cash. | Service has zero-ROI path; dedicated fixture required. | Required |
-| MATH-011 | Total ROI cap lower than daily formula total | FI-505, FI-506 | Settlement never exceeds cap and final day matches cap exactly. | Promised-total logic exists; cap-specific fixture required. | Required |
-| MATH-012 | Uncapped fixed-term plan | FI-503, FI-505 | Total settled ROI equals floor of cumulative micro-minor ROI after residual carry. | Proof covers formula; automated fixture required. | Required |
+| MATH-005 | 100,000 randomized ROI simulations | FI-1402, FI-1405 | Every randomized valid investment satisfies promised-total or deterministic uncapped total. | `roi-math-certification.test.ts` runs 100,000 deterministic promised-total simulations. | Covered |
+| MATH-006 | Supported ROI percentage sweep | FI-501, FI-505 | Every supported daily ROI bps value settles correctly. | `roi-math-certification.test.ts` sweeps `0` through `10,000` daily ROI bps. | Covered |
+| MATH-007 | Supported duration sweep | FI-501, FI-505 | Every supported term length settles correctly. | `roi-math-certification.test.ts` sweeps `1` through `1,825` term days. | Covered |
+| MATH-008 | Very small principal | FI-001, FI-502, FI-503 | ROI may be zero until residual becomes payable; no negative or fractional cash is posted. | `roi-math-certification.test.ts` covers one-minor principal behavior. | Covered |
+| MATH-009 | Large principal near allowed maximum | FI-001, FI-501 | Bigint arithmetic remains exact and does not overflow JavaScript number precision. | `roi-math-certification.test.ts` covers large-principal bigint arithmetic. | Covered |
+| MATH-010 | Zero ROI plan | FI-501, FI-607 | Settlement records a zero-amount skip and does not post ledger cash. | `roi-math-certification.test.ts` covers zero daily ROI and zero promised ROI. | Covered |
+| MATH-011 | Total ROI cap lower than daily formula total | FI-505, FI-506 | Settlement never exceeds cap and final day matches cap exactly. | `roi-math-certification.test.ts` covers capped ROI below uncapped output. | Covered |
+| MATH-012 | Uncapped fixed-term plan | FI-503, FI-505 | Total settled ROI equals floor of cumulative micro-minor ROI after residual carry. | `roi-math-certification.test.ts` proves uncapped fixed-term formula output. | Covered |
 | MATH-013 | Activation before New York midnight | FI-002, FI-403, FI-600 | First settlement date is next New York day, not same day. | `new-york-calendar.test.ts` covers first settlement rule. | Covered |
-| MATH-014 | Activation after New York midnight | FI-002, FI-403, FI-600 | First settlement date remains activation New York date plus one. | Dedicated fixture required. | Required |
+| MATH-014 | Activation after New York midnight | FI-002, FI-403, FI-600 | First settlement date remains activation New York date plus one. | `new-york-calendar.test.ts` covers after-midnight activation. | Covered |
 | MATH-015 | DST start in New York | FI-002, FI-600 | No skipped or shortened financial day; date arithmetic remains calendar based. | `new-york-calendar.test.ts` covers DST start. | Covered |
 | MATH-016 | DST end in New York | FI-002, FI-600 | No duplicated or extended financial day; date arithmetic remains calendar based. | `new-york-calendar.test.ts` covers DST end. | Covered |
-| MATH-017 | Leap year boundary | FI-002, FI-600, FI-700 | February 29 is treated as a normal New York financial day. | Required fixture not yet present. | Required |
-| MATH-018 | Month boundary | FI-002, FI-600, FI-700 | Settlement and maturity dates advance correctly across month end. | Required fixture not yet present. | Required |
-| MATH-019 | Year boundary | FI-002, FI-600, FI-700 | Settlement and maturity dates advance correctly across year end. | Required fixture not yet present. | Required |
+| MATH-017 | Leap year boundary | FI-002, FI-600, FI-700 | February 29 is treated as a normal New York financial day. | `new-york-calendar.test.ts` covers leap-year settlement and maturity. | Covered |
+| MATH-018 | Month boundary | FI-002, FI-600, FI-700 | Settlement and maturity dates advance correctly across month end. | `new-york-calendar.test.ts` covers month-end settlement and maturity. | Covered |
+| MATH-019 | Year boundary | FI-002, FI-600, FI-700 | Settlement and maturity dates advance correctly across year end. | `new-york-calendar.test.ts` covers year-end settlement and maturity. | Covered |
 | MATH-020 | Live earnings | FI-205, FI-507, FI-508 | Live earnings are visual-only and never modify ledger, wallet, settlement, or maturity state. | `roi-math.test.ts` covers visual-only return contract. | Covered |
 | MATH-021 | Maturity date formula | FI-404, FI-700 | Maturity date equals first settlement date plus term days minus one. | `new-york-calendar.test.ts` covers maturity formula. | Covered |
 | MATH-022 | Mathematical proof | FI-1405 | Written proof explains total ROI correctness for supported plan policy. | `PHASE_6_ROI_MATHEMATICAL_PROOF.md` exists. | Covered |
@@ -173,7 +182,7 @@ Certification target:
 | CERT-002 | Scope leak audit | FINANCIAL_INVARIANTS.md | No deposits, withdrawals, provider workflows, customer financial UI, or admin financial overrides in Phase 6. | Manual scope audit passed at checkpoint. | Manual Review |
 | CERT-003 | Invariant coverage map | FI-1400 | Every touched financial invariant has at least one test or explicit manual review artifact. | This matrix starts the map. | Partial |
 | CERT-004 | Fixed fixture suite | FI-1401 | Human-readable fixtures exist for required financial examples. | Not yet implemented. | Required |
-| CERT-005 | Property test suite | FI-1402 | ROI math passes required randomized and sweep coverage. | Current randomized suite is below certification threshold. | Required |
+| CERT-005 | Property test suite | FI-1402 | ROI math passes required randomized and sweep coverage. | Phase 6.1 certification suite covers 100,000 simulations plus bps and term sweeps. | Covered |
 | CERT-006 | Concurrency test suite | FI-1403 | Duplicate and concurrent attempts cannot double-credit or double-release. | Not yet complete. | Required |
 | CERT-007 | Recovery test suite | FI-1404 | Interrupted settlement and maturity workflows resume safely. | Not yet complete. | Required |
 | CERT-008 | Mathematical proof review | FI-1405 | Written proof is reviewed against final implementation and test suite. | Proof exists; final review pending. | Manual Review |

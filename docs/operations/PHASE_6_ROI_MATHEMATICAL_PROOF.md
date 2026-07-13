@@ -188,11 +188,30 @@ The Phase 6 test suite verifies:
 - Final-day promised ROI absorption.
 - Whole minor-unit posting.
 - New York DST start and end boundaries.
+- New York leap-year, month-end, and year-end boundaries.
 - Deterministic ROI schedule generation.
 - Live earnings as visual-only output.
-- 2,000 deterministic randomized ROI cases.
+- 100,000 deterministic randomized promised-total ROI simulations.
+- Every daily ROI basis-point value in the current Phase 6.1 certified envelope from `0` through `10,000`.
+- Every term duration in the current Phase 6.1 certified envelope from `1` through `1,825` New York earning days.
+- Very small principal behavior.
+- Large-principal bigint behavior.
+- Zero-ROI behavior.
+- Total ROI cap below uncapped formula output.
+- Uncapped fixed-term ROI formula output.
 - Ledger posting balance validation.
 - Settlement, ROI ledger, and reconciliation agreement.
+
+## Current Phase 6.1 Certified Envelope
+
+The executable certification suite currently proves:
+
+- Daily ROI basis points from `0` through `10,000`.
+- Term durations from `1` through `1,825` New York earning days.
+- Randomized principal values from `1` through `10,000,000,000` minor units.
+- Large-principal bigint behavior up to `9,999,999,999,999,999` minor units.
+
+Any future plan that supports values outside this envelope must expand the certification tests before release.
 
 ## Conclusion
 

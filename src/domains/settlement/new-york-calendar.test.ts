@@ -18,6 +18,7 @@ describe("New York settlement calendar", () => {
   it("sets first settlement to the day after New York activation", () => {
     expect(firstSettlementDate(new Date("2026-07-13T03:59:59.000Z"))).toBe("2026-07-13");
     expect(firstSettlementDate(new Date("2026-07-13T04:00:00.000Z"))).toBe("2026-07-14");
+    expect(firstSettlementDate(new Date("2026-07-13T04:00:01.000Z"))).toBe("2026-07-14");
   });
 
   it("handles DST start and end as calendar days", () => {
@@ -48,5 +49,17 @@ describe("New York settlement calendar", () => {
       "2026-03-01",
       "2026-03-02",
     ]);
+  });
+
+  it("handles leap-year, month, and year boundaries", () => {
+    expect(addNewYorkDays("2024-02-28", 1)).toBe("2024-02-29");
+    expect(addNewYorkDays("2024-02-29", 1)).toBe("2024-03-01");
+    expect(maturityDate("2024-02-28", 2)).toBe("2024-02-29");
+
+    expect(addNewYorkDays("2026-01-31", 1)).toBe("2026-02-01");
+    expect(maturityDate("2026-01-31", 2)).toBe("2026-02-01");
+
+    expect(addNewYorkDays("2026-12-31", 1)).toBe("2027-01-01");
+    expect(maturityDate("2026-12-31", 2)).toBe("2027-01-01");
   });
 });

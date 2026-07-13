@@ -20,6 +20,7 @@ Added:
 - Added Phase 6 database migration for investment term snapshots, investment idempotency, settlement residual explanation fields, and calculation versioning.
 - Added financial tests for ROI residuals, promised ROI exactness, New York DST boundaries, ledger balancing, settlement orchestration, maturity release, idempotency, and reconciliation.
 - Added `FINANCIAL_TEST_MATRIX.md` to define Phase 6.1 mathematics, Phase 6.2 concurrency, Phase 6.3 recovery, and Phase 6.4 certification coverage requirements.
+- Added Phase 6.1 mathematics certification coverage for 100,000 deterministic ROI simulations, certified daily ROI bps sweep, certified term-duration sweep, zero ROI, capped ROI, uncapped fixed-term ROI, large-principal bigint safety, and New York leap/month/year boundaries.
 
 ## v2.0.1 - 2026-07-13
 
