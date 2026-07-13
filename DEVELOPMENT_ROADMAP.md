@@ -571,11 +571,11 @@ Do **not** implement all of Wave A in one pass. Execute and freeze:
 
 | Sprint | Scope | Exit |
 | --- | --- | --- |
-| **A1** | Navigation, header, footer, global public layout, SEO foundation, theme/tokens, public shell | Freeze shell |
-| **A2** | Homepage only | Freeze home |
-| **A3** | About, How it Works, Security | Freeze education/trust pages |
-| **A4** | Investment Plans, FAQ, Contact | Freeze conversion/support pages |
-| **A5** | Legal pages, 404 polish, search-within-FAQ if specified, performance, accessibility, Wave A certification | Certify Wave A |
+| **A1** | Navigation, header, footer, global public layout, SEO foundation, theme/tokens, public shell | **Certified** — `SPRINT_A1_CERTIFICATION.md` |
+| **A2** | Homepage only | Next |
+| **A3** | About, How it Works, Security | Pending |
+| **A4** | Investment Plans, FAQ, Contact | Pending |
+| **A5** | Legal pages, 404 polish, search-within-FAQ if specified, performance, accessibility, Wave A certification | Pending |
 
 Auth visual polish and branded auth/security emails may land in A1–A5 where they touch the public shell or certification—without expanding into Wave B money UX.
 
@@ -669,7 +669,7 @@ Exit criteria:
 - Operations certification passes.
 - Business owner approves production launch.
 
-## Planned Release Tags
+## Planned Release Tags / Release Trains
 
 | Tag | Meaning |
 | --- | --- |
@@ -678,8 +678,13 @@ Exit criteria:
 | `v2.1.0` | Investment engine certified. |
 | `v2.2.0` | Money movement certified. |
 | `v2.3.0` | Admin portal certified. |
-| `v3.0.0` | Customer Experience Platform certified (Milestone 5). |
-| Later | Production hardening and launch certification as needed after `v3.0.0`. |
+| `v3.0.0` | Customer Experience Platform — Wave A public trust (sprints A1–A5). |
+| `v3.1.0` | Customer Money Experience (dashboard, wallet, portfolio, activity). |
+| `v3.2.0` | Referral & Growth Experience. |
+| `v3.3.0` | Mobile/PWA & Customer Delight. |
+| `v4.0.0` | Enterprise & Institutional Experience (future). |
+
+From Milestone 5 onward, prefer **release trains** (versioned customer experiences) over open-ended “phases.”
 
 ## Product Milestones (summary)
 
@@ -694,9 +699,9 @@ Exit criteria:
 ## Current Build Order Summary
 
 1. Keep `main` at `v2.3.0` as the recovery checkpoint for frozen Investment, Money Movement, and Administrative Platform subsystems.
-2. Milestone 5 Wave A Stage 1 is **approved** (`DEC-0028`); design authority is `WAVE_A_UX_SPECIFICATION.md`; brand assets authority is `BRAND_ASSETS_SPECIFICATION.md`.
-3. Next Cursor work: **Sprint A1** (public shell only) on a Milestone 5 branch—then A2→A5 with freeze between sprints.
-4. Do not implement all of Wave A in one pass.
-5. Open V1 only screen-by-screen as a design reference library.
+2. Milestone 5 Wave A Stage 1 is **approved** (`DEC-0028`).
+3. **Sprint A1 Public Foundation is certified** (`SPRINT_A1_CERTIFICATION.md`). Next: Sprint **A2 Homepage only**.
+4. Continue A2→A5 with implement + self-certify per sprint; then tag `v3.0.0`.
+5. Subsequent trains: `v3.1.0` money experience → `v3.2.0` growth → `v3.3.0` mobile/delight.
 6. Do not reopen investment-engine, money-movement, or admin-platform behavioral rules without ADR, regression tests, and recertification.
 7. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
