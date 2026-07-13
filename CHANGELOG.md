@@ -15,6 +15,7 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 Added:
 
 - Added `PAYMENT_ARCHITECTURE.md` as the Phase 7 money movement constitution before payment implementation begins.
+- Added `LEDGER_POSTING_RULES.md` as the accounting specification for approved financial postings.
 - Locked the certified `v2.1.0` investment engine against business rule, ROI formula, settlement rule, maturity rule, and financial math changes without ADR, regression tests, and recertification.
 
 ## v2.1.0 - 2026-07-13

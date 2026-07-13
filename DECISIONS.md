@@ -689,3 +689,47 @@ Payment providers are inputs, not sources of financial truth. The platform needs
 - Provider-specific code belongs behind infrastructure adapters.
 - Webhook events must be verified, stored, deduplicated, and processed through application services.
 - Money movement cannot merge without payment certification.
+
+---
+
+## DEC-0018: Ledger Posting Rules As Accounting Specification
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review after Phase 7 certification and before any new financial posting type is added.
+
+### Context
+
+The platform has a ledger-first financial model, certified investment postings, and upcoming money movement flows. Developers and auditors need a single accounting reference for debit and credit behavior without reverse-engineering code or database views.
+
+### Decision
+
+`LEDGER_POSTING_RULES.md` is the accounting specification for approved financial postings.
+
+The document defines:
+
+- Ledger direction semantics.
+- Approved account types.
+- Approved transaction types.
+- Debit and credit accounts per financial event.
+- Required references.
+- Required idempotency keys.
+- Required audit, email, and notification side effects.
+- Unsupported posting patterns.
+- Testing requirements.
+
+### Alternatives Considered
+
+- Keep posting rules only in code helpers.
+- Let each financial service define its own ledger entries.
+- Rely on database constraints without a human-readable accounting contract.
+
+### Reason for Choosing It
+
+Financial correctness needs both executable enforcement and readable accounting intent. A posting constitution makes review, implementation, reconciliation, and audits more reliable.
+
+### Consequences
+
+- New posting types require an ADR and updates to `LEDGER_POSTING_RULES.md`.
+- Phase 7 money movement must implement postings exactly as documented.
+- Unsupported reversal, deficit, and correction behavior cannot be added implicitly.

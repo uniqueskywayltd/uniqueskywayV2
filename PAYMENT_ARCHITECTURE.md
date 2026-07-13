@@ -15,6 +15,7 @@ It does not define UI layout.
 Payment implementation must comply with:
 
 - `FINANCIAL_INVARIANTS.md`
+- `LEDGER_POSTING_RULES.md`
 - `DATABASE.md`
 - `API_SPEC.md`
 - `SECURITY.md`
