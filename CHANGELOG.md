@@ -12,7 +12,12 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-No unreleased certified changes.
+Added:
+
+- Added `PHASE_7_FREEZE_REPORT.md` and `DEC-0022` freezing certified money movement at `v2.2.0`.
+- Started Phase 8 administrative platform work on `phase-8-admin-platform`.
+- Added Phase 8.1 customer administration: admin customer search, details, status suspend/reactivate/close, KYC verification updates, customer notes, and customer audit timeline APIs.
+- Added `customer_notes` persistence migration and admin capability-gated authorization helper for Phase 8.
 
 ## v2.2.0 - 2026-07-13
 

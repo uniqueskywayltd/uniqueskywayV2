@@ -58,7 +58,8 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | Payment Architecture | Complete | `main` | Phase 7 money movement governance checkpoint. |
 | Ledger Posting Rules | Complete | `main` | Accounting specification for approved financial postings. |
 | Webhook Specification | Complete | `main` | External provider webhook constitution. |
-| Phase 7 | Certified | `v2.2.0` | Deposit engine, withdrawal engine, Paystack provider, money-movement certification. |
+| Phase 7 | Certified / Frozen | `v2.2.0` | Deposit engine, withdrawal engine, Paystack provider, money-movement certification. Locked by `DEC-0022`. |
+| Phase 8 | In Progress | `phase-8-admin-platform` | Administrative platform. Must use certified engines; no money-movement redesign. |
 
 After `v2.2.0` is tagged, `main` becomes the stable recovery point for Phase 8.
 
@@ -465,25 +466,61 @@ Release gate:
 
 ## Phase 8 - Admin Portal
 
-Status: Pending.
+Status: In Progress.
+
+Branch: `phase-8-admin-platform`
+
+Recovery base: `v2.2.0` / `DEC-0022` frozen money movement.
 
 Build:
 
-- Admin overview.
-- User review.
-- Deposit review.
-- Withdrawal review.
-- Settlement monitor.
-- Ledger viewer.
-- Outbox monitor.
-- Audit log search.
-- Role and permission management.
+### Phase 8.1 - Customer Administration
+
+- Customer search
+- Customer details
+- Customer profile
+- Customer status
+- Customer verification
+- Customer suspension
+- Customer reactivation
+- Customer notes
+- Customer audit timeline
+
+### Phase 8.2 - Financial Operations
+
+- Deposit queue, review, approval, rejection
+- Withdrawal queue, review, approval, rejection
+- Investment viewer
+- Settlement viewer
+
+No new money-movement logic. Use certified deposit and withdrawal engines only.
+
+### Phase 8.3 - Administration
+
+- Role management
+- Permission management
+- Staff accounts
+- Feature flags
+- System settings
+- Notification templates
+- Email templates
+- Audit viewer
+- Security events
+- Background job monitor
+
+### Phase 8.4 - Reporting
+
+- Dashboard metrics
+- Customer, deposit, withdrawal, investment, revenue, and settlement statistics
+- CSV and Excel export
 
 Exit criteria:
 
 - Admin actions are permission-gated.
 - Admin financial actions require reason.
 - Admin workflows never bypass domain services, ledger postings, audit logs, transactions, or idempotency.
+- Frozen money-movement behavior from `v2.2.0` is unchanged.
+- Target certification release: `v2.3.0`.
 
 ## Phase 9 - Communication System
 
@@ -586,7 +623,8 @@ Exit criteria:
 
 ## Current Build Order Summary
 
-1. Keep `main` stable with the `v2.2.0` money movement release.
-2. Begin Phase 8 admin portal on a new phase branch.
+1. Keep `main` frozen at `v2.2.0` as the money-movement recovery checkpoint (`DEC-0022`).
+2. Build Phase 8 only on `phase-8-admin-platform`.
 3. Do not reopen investment-engine or money-movement behavioral rules without ADR, regression tests, and recertification.
 4. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
+5. Certify Phase 8 as `v2.3.0` only after permission, security, architecture, and reporting gates pass.

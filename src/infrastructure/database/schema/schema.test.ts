@@ -6,6 +6,7 @@ import {
   auditLogs,
   backgroundJobs,
   customerAccounts,
+  customerNotes,
   customerProfiles,
   depositIntents,
   emailMessages,
@@ -41,6 +42,7 @@ describe("database schema", () => {
     expect(getTableName(users)).toBe("users");
     expect(getTableName(customerProfiles)).toBe("customer_profiles");
     expect(getTableName(customerAccounts)).toBe("customer_accounts");
+    expect(getTableName(customerNotes)).toBe("customer_notes");
     expect(getTableName(wallets)).toBe("wallets");
     expect(getTableName(ledgerAccounts)).toBe("ledger_accounts");
     expect(getTableName(ledgerTransactions)).toBe("ledger_transactions");

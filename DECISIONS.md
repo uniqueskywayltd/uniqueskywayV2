@@ -867,3 +867,66 @@ Paystack is the only provider integrated and tested in Phase 7.1. Restricting sc
 - Adding Flutterwave, Stripe, or any other provider requires a new or superseding provider ADR, a provider-specific webhook appendix, and test matrix expansion, per `WEBHOOK_SPECIFICATION.md`.
 - Adding a non-USD currency requires an accepted ADR and ledger multi-currency review before implementation.
 - `transfer.reversed` events remain visible only through audit logs and the `payment.transfer_reversed_exception` outbox event until a dedicated reversal ledger design is accepted.
+
+---
+
+## DEC-0022: Money Movement Frozen
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review only when a critical defect, security issue, or accepted product change requires money-movement modification.
+
+### Context
+
+Phase 7 certified deposits, withdrawals, Paystack integration, webhook processing, ledger posting, recovery, and financial certification as release `v2.2.0`. Phase 8 will build the administrative platform on top of these engines.
+
+Casual changes to certified money-movement behavior would undermine the financial guarantees Phase 8 admin workflows must rely on.
+
+### Decision
+
+The `v2.2.0` money movement subsystem is frozen.
+
+Locked surfaces:
+
+- Deposit engine
+- Withdrawal engine
+- Paystack integration
+- Webhook processing
+- Money-movement ledger postings
+- Deposit and withdrawal state machines
+- Idempotency, retry, recovery, and dead-letter handling
+- Phase 7 financial certification reports
+
+Allowed changes:
+
+- Security patches
+- Bug fixes
+- Performance improvements
+- Test improvements
+- Documentation clarifications that do not change behavior
+
+Behavioral or financial changes require:
+
+- An accepted ADR
+- Regression tests
+- Financial certification update
+- Explicit approval before merge
+
+Phase 8 admin financial operations must call the certified engines and must not invent alternate deposit, withdrawal, webhook, or ledger workflows.
+
+### Alternatives Considered
+
+- Allow Phase 8 to reshape payment workflows while building admin screens.
+- Rely on informal code review without a freeze ADR.
+- Delay freezing until after the admin portal ships.
+
+### Reason for Choosing It
+
+Admin tooling must operate the certified financial system, not redefine it. Freezing `v2.2.0` keeps Phase 8 focused on permissions, review surfaces, reporting, and operational administration.
+
+### Consequences
+
+- `main` at `v2.2.0` is the recovery checkpoint for money movement.
+- Phase 8 work happens on `phase-8-admin-platform`.
+- Deposit, withdrawal, Paystack, webhook, and ledger redesigns are out of Phase 8 scope.
+- Future money-movement behavior changes are intentionally slower than ordinary admin UI work.

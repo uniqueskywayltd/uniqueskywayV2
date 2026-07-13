@@ -119,6 +119,22 @@ export const investmentPlans = pgTable(
   ],
 );
 
+export const customerNotes = pgTable(
+  "customer_notes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    authorUserId: uuid("author_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("customer_notes_user_id_created_idx").on(table.userId, table.createdAt.desc())],
+);
+
 export const investmentPlanVersions = pgTable(
   "investment_plan_versions",
   {

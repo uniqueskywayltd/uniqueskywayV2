@@ -17,6 +17,13 @@ export * as schema from "./schema";
 export type { DrizzleTransactionContext } from "./transactions";
 export type { AppDatabase, AppDatabaseExecutor, AppTransaction } from "./types";
 export type {
+  AdminProfileRecord,
+  AuditLogRecord,
+  CustomerAccountRecord,
+  CustomerNoteRecord,
+  CustomerPreferenceRecord,
+  CustomerProfileRecord,
+  CustomerSearchRow,
   DepositIntentRecord,
   EmailMessageRecord,
   InvestmentRecord,
@@ -26,8 +33,13 @@ export type {
   PaymentProviderEventRecord,
   RoiLedgerEntryRecord,
   RoiScheduleItemRecord,
+  RoleRecord,
+  SearchCustomersQuery,
+  SearchCustomersResult,
+  SecurityEventRecord,
   SettlementItemRecord,
   SettlementRunRecord,
+  UserRecord,
   WalletBalanceRecord,
   WalletRecord,
   WithdrawalRequestRecord,

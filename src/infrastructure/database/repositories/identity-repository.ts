@@ -81,6 +81,20 @@ export class IdentityRepository extends BaseDrizzleRepository {
     return singleRow(rows, "markEmailVerified");
   }
 
+  async updateUserStatus(
+    context: DrizzleTransactionContext,
+    userId: string,
+    status: UserRecord["status"],
+  ): Promise<UserRecord> {
+    const rows = await context.db
+      .update(users)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return singleRow(rows, "updateUserStatus");
+  }
+
   async listRoles(): Promise<RoleRecord[]> {
     return this.db.select().from(roles);
   }

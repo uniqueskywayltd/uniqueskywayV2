@@ -1,5 +1,5 @@
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, or } from "drizzle-orm";
 
 import { auditLogs, backgroundJobs, featureFlags, securityEvents, systemSettings } from "../schema";
 import type { DrizzleTransactionContext } from "../transactions";
@@ -42,6 +42,28 @@ export class OperationsRepository extends BaseDrizzleRepository {
       .select()
       .from(auditLogs)
       .where(eq(auditLogs.actorUserId, userId))
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(limit);
+  }
+
+  async listAuditLogsByTarget(
+    targetType: string,
+    targetId: string,
+    limit = 50,
+  ): Promise<AuditLogRecord[]> {
+    return this.db
+      .select()
+      .from(auditLogs)
+      .where(and(eq(auditLogs.targetType, targetType), eq(auditLogs.targetId, targetId)))
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(limit);
+  }
+
+  async listAuditLogsForCustomerTimeline(userId: string, limit = 50): Promise<AuditLogRecord[]> {
+    return this.db
+      .select()
+      .from(auditLogs)
+      .where(or(eq(auditLogs.actorUserId, userId), eq(auditLogs.targetId, userId)))
       .orderBy(desc(auditLogs.createdAt))
       .limit(limit);
   }

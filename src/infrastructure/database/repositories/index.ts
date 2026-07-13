@@ -7,6 +7,16 @@ export { OperationsRepository } from "./operations-repository";
 export { PaymentRepository } from "./payment-repository";
 export { ReferralRepository } from "./referral-repository";
 export { SettlementRepository } from "./settlement-repository";
+export type {
+  CustomerAccountRecord,
+  CustomerNoteRecord,
+  CustomerPreferenceRecord,
+  CustomerProfileRecord,
+  CustomerSearchRow,
+  SearchCustomersQuery,
+  SearchCustomersResult,
+} from "./core-repository";
+export type { AdminProfileRecord, RoleRecord, UserRecord } from "./identity-repository";
 export type { InvestmentRecord, RoiScheduleItemRecord } from "./investment-repository";
 export type {
   LedgerAccountRecord,
@@ -16,6 +26,7 @@ export type {
   WalletRecord,
 } from "./ledger-repository";
 export type { EmailMessageRecord } from "./notification-repository";
+export type { AuditLogRecord, SecurityEventRecord } from "./operations-repository";
 export type {
   DepositIntentRecord,
   PaymentProviderEventRecord,
