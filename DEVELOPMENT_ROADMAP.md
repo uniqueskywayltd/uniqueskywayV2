@@ -14,10 +14,9 @@ It is intentionally conservative. A financial platform must be built from correc
 6. Financial engine certification.
 7. Money movement.
 8. Admin operations.
-9. Communications.
-10. Public website.
-11. Production hardening.
-12. Final certification.
+9. Customer Experience Platform (Milestone 5 / `v3.0.0`).
+10. Production hardening.
+11. Final launch certification.
 
 This document must stay consistent with:
 
@@ -29,6 +28,7 @@ This document must stay consistent with:
 - `CHANGELOG.md`
 - `DECISIONS.md`
 - `ENGINEERING_PRINCIPLES.md`
+- `LEGACY_FEATURE_EXTRACTION.md`
 
 If this roadmap conflicts with those documents, stop and reconcile the documentation before implementation continues.
 
@@ -40,7 +40,7 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 - Architectural changes require an ADR in `DECISIONS.md`.
 - Financial behavior must obey `FINANCIAL_INVARIANTS.md`.
 - Phase scope must not bleed into later phases.
-- V1 may be consulted only for business understanding; V1 code, schema, services, middleware, helpers, and architecture must not be copied.
+- V1 may be consulted only as a design/business reference when a specific screen is about to be built. Extract journey, copy hierarchy, and useful flows only. V1 code, schema, services, middleware, helpers, theme markup, and architecture must never be copied.
 
 ## Current Release State
 
@@ -61,8 +61,9 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | Webhook Specification | Complete | `main` | External provider webhook constitution. |
 | Phase 7 | Certified / Frozen | `v2.2.0` | Deposit engine, withdrawal engine, Paystack provider, money-movement certification. Locked by `DEC-0022`. |
 | Phase 8 | Certified / Frozen | `v2.3.0` | Administrative platform. Locked by `DEC-0025`. |
+| Milestone 5 | Planned | `v3.0.0` | Customer Experience Platform. Waves A–D on frozen core. `DEC-0026`. |
 
-After `v2.3.0` is tagged, `main` becomes the stable recovery point for Phase 9 communication work.
+After `v2.3.0` is tagged, `main` becomes the stable recovery checkpoint for **Milestone 5 — Customer Experience Platform (`v3.0.0`)**.
 
 ## Completed Foundation
 
@@ -542,46 +543,69 @@ Exit criteria met:
 - Frozen money-movement behavior from `v2.2.0` is unchanged.
 - Administrative Platform frozen for future ADR-gated changes only.
 
-## Phase 9 - Communication System
+## Milestone 5 - Customer Experience Platform (`v3.0.0`)
 
-Status: Pending.
+Status: Planned (post–legacy feature extraction).
 
-Build:
+Governance baseline: `LEGACY_FEATURE_EXTRACTION.md`, `DEC-0026`.
 
-- Outbox processor.
-- In-app notifications.
-- Resend email adapter production workflows.
-- Email templates.
-- Resend webhook handling.
-- Delivery visibility.
-- Future SMS and push extension points.
+This is **not** a communications-only phase and **not** a V1 rebuild.
 
-Exit criteria:
+It is customer-facing product UX built **on top of** frozen Identity, Investment Engine (`v2.1.0`), Money Movement (`v2.2.0`), and Administrative Platform (`v2.3.0`).
 
-- Events produce correct notifications.
-- Email retries are idempotent.
-- Webhook delivery statuses update.
-- Financial flows do not depend on email success.
+Legacy V1 may be opened only as a **design reference** when a specific screen is about to be built: extract business flow, useful copy, customer journey, and visual hierarchy. Never copy HTML, CSS, JavaScript, PHP, theme code, or implementation details.
 
-## Phase 10 - Public Website
+### Wave A - Trust & Public Presence
 
-Status: Pending.
+- Marketing homepage
+- About
+- Plans (certified terms only)
+- How it works
+- Security (customer trust claims)
+- FAQ
+- Contact
+- Legal pages (Privacy, Terms)
+- Auth/account visual polish over existing V2 identity
+- Branded auth/security transactional emails
 
-Build:
+### Wave B - Money Experience
 
-- Public marketing website.
-- Plan education content.
-- Compliance-friendly product explanations.
-- Contact and support entry points.
-- SEO and metadata.
+- Customer dashboard / money home
+- Wallet overview
+- Deposit UX + success + status tracking
+- Withdrawal UX + success + status tracking
+- Portfolio list + investment details
+- Customer ledger
+- Financial lifecycle emails + in-app notification wiring
+- Honest Accrued ≠ Credited ≠ Withdrawable language
 
-Exit criteria:
+All Wave B screens consume certified engines/APIs. No new ledger, ROI, deposit, withdrawal, webhook, or Paystack behavior without ADR + recertification.
 
-- Public website is fast, accessible, brand-consistent, and does not expose authenticated or financial internals.
+### Wave C - Growth & Support
+
+- Referral hub (privacy-safe)
+- Help center / in-app help
+- Onboarding checklist for unfunded accounts
+- Customer education surfaces
+
+### Wave D - Polish
+
+- Charts
+- PWA install improvements
+- Customer KYC UX
+- Saved payout destinations
+- Statement exports
+- Optional live chat / push/SMS only after earlier waves are solid
+
+Exit criteria for `v3.0.0`:
+
+- Customer can discover, trust, fund, invest, track, and withdraw through production-grade UX on frozen engines.
+- No frozen-core behavioral changes without ADR.
+- `LEGACY_FEATURE_EXTRACTION.md` REMOVE list is honored (no FOMO theater, NFTs, loan novelty, fake social proof).
 
 ## Phase 11 - Production Hardening
 
-Status: Pending.
+Status: Pending (after Milestone 5 / `v3.0.0`).
 
 Build:
 
@@ -636,15 +660,24 @@ Exit criteria:
 | `v2.1.0` | Investment engine certified. |
 | `v2.2.0` | Money movement certified. |
 | `v2.3.0` | Admin portal certified. |
-| `v2.4.0` | Communication system certified. |
-| `v2.5.0` | Public website certified. |
-| `v2.6.0` | Production hardening certified. |
-| `v3.0.0` | Final production certification. |
+| `v3.0.0` | Customer Experience Platform certified (Milestone 5). |
+| Later | Production hardening and launch certification as needed after `v3.0.0`. |
+
+## Product Milestones (summary)
+
+| Milestone | Release | Status |
+| --- | --- | --- |
+| 1 Foundation | `v2.0.0` | Complete |
+| 2 Investment Platform | `v2.1.0` | Frozen |
+| 3 Money Platform | `v2.2.0` | Frozen |
+| 4 Administration | `v2.3.0` | Frozen |
+| 5 Customer Experience | `v3.0.0` | Next |
 
 ## Current Build Order Summary
 
-1. Keep `main` frozen at `v2.3.0` as the Administrative Platform recovery checkpoint (`DEC-0025`), with nested freezes for investment (`DEC-0016`) and money movement (`DEC-0022`).
-2. Begin Phase 9 communication system work on a dedicated phase branch.
-3. Do not reopen investment-engine, money-movement, or admin-platform behavioral rules without ADR, regression tests, and recertification.
-4. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
-5. Build communications on certified engines and the frozen admin ops surface without inventing alternate financial backends.
+1. Keep `main` at `v2.3.0` as the recovery checkpoint for frozen Investment, Money Movement, and Administrative Platform subsystems.
+2. Treat next work as **Milestone 5 — Customer Experience Platform (`v3.0.0`)**, not Phase 9 Communications and not a merged V1 port.
+3. Execute Waves A → B → C → D; open V1 only screen-by-screen as a design reference.
+4. Do not reopen investment-engine, money-movement, or admin-platform behavioral rules without ADR, regression tests, and recertification.
+5. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
+6. Prefer ChatGPT for product/UX strategy and Cursor for one focused wave implementation at a time.

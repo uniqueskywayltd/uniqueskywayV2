@@ -12,7 +12,12 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-None. Current certified release is `v2.3.0`.
+Added:
+
+- Added `LEGACY_FEATURE_EXTRACTION.md` as the product-only V1 feature inventory for Milestone 5 planning (no code migration).
+- Added `DEC-0026` renaming the next major track from Phase 9/10 Communications + Website into **Milestone 5 — Customer Experience Platform (`v3.0.0`)** with Waves A–D on the frozen core.
+
+Current certified release remains `v2.3.0`.
 
 ## v2.3.0 - 2026-07-13
 

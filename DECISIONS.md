@@ -1077,5 +1077,52 @@ Three independently certified freezes—Investment Engine (`v2.1.0`), Money Move
 ### Consequences
 
 - `main` at `v2.3.0` is the recovery checkpoint for the administrative platform.
-- Phase 9+ work must not casually reshape admin workflows.
+- Milestone 5+ customer experience work must not casually reshape admin workflows.
 - Admin permission, reporting, or ops UX changes become intentionally slower than ordinary feature polish outside the freeze scope.
+
+---
+
+## DEC-0026: Milestone 5 — Customer Experience Platform
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review at `v3.0.0` certification, or if a Wave B money UX need appears to require frozen-engine behavior change.
+
+### Context
+
+Phases 6–8 certified and froze Investment Engine (`v2.1.0`), Money Movement (`v2.2.0`), and Administrative Platform (`v2.3.0`). `LEGACY_FEATURE_EXTRACTION.md` shows the largest remaining gap is customer-facing product UX—not more financial backends.
+
+Calling the next body of work “Phase 9 Communications” or “Phase 10 Public Website” understates scope and invites piecemeal builds that reopen V1 as a code migration.
+
+### Decision
+
+The next major product release is:
+
+**Milestone 5 — Customer Experience Platform (`v3.0.0`)**
+
+Binding rules:
+
+- Build customer experience **on top of** frozen Identity, Investment, Money Movement, and Admin subsystems.
+- Execute in waves: A Trust & Public Presence → B Money Experience → C Growth & Support → D Polish.
+- Communications (email, in-app notifications, templates) are part of Milestone 5 where they serve CX—not a separate competing phase that owns the roadmap.
+- Public marketing website is Wave A of Milestone 5—not a disconnected Phase 10.
+- Legacy V1 is a **design reference** opened screen-by-screen: extract business flow, useful copy, customer journey, and visual hierarchy only.
+- Never copy V1 HTML, CSS, JavaScript, PHP, theme kits, schema, or architecture.
+- Honor the `LEGACY_FEATURE_EXTRACTION.md` REMOVE list.
+- Wave B must consume certified engines/APIs; financial behavior changes still require ADR + regression + recertification.
+
+### Alternatives Considered
+
+- Keep separate Phase 9 Communications then Phase 10 Website.
+- Rebuild V1 screen-for-screen as a migration.
+- Start Wave B money UX before public trust surfaces.
+
+### Reason for Choosing It
+
+Customer experience is one product milestone. Marketing trust, money UX, growth, and polish belong together under `v3.0.0`, sequenced so trust precedes funding and engines stay frozen.
+
+### Consequences
+
+- Roadmap and release planning speak in milestones for the customer product track.
+- Cursor implementation should stay wave-scoped; strategy/prioritization can stay outside Cursor.
+- `v2.4.0` / `v2.5.0` communication-only or website-only tags are retired from the planned tag table.
