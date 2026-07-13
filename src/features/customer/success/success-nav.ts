@@ -21,7 +21,7 @@ export const SUCCESS_HUB_LINKS = [
     title: "Statements",
     description: "Official records of your financial history when you need them.",
     icon: FileText,
-    sprintNote: "Ledger-backed statements land in Sprint G2.",
+    sprintNote: "Ledger-backed statements available now.",
   },
   {
     href: "/account/referrals",

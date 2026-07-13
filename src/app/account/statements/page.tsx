@@ -1,14 +1,14 @@
 import { CustomerPageHeader } from "@/features/customer/components/page-header";
-import { StatementsEntryShell } from "@/features/customer/success/statements-entry-shell";
+import { StatementsExplorer } from "@/features/customer/statements/statements-explorer";
 
 export default function StatementsPage() {
   return (
     <>
       <CustomerPageHeader
         title="Statements"
-        description="Can I understand my financial history? Ledger-backed statements arrive in Sprint G2."
+        description="Can I understand my financial history? Ledger-backed projections — not invented totals."
       />
-      <StatementsEntryShell />
+      <StatementsExplorer />
     </>
   );
 }

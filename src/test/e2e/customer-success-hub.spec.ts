@@ -77,9 +77,27 @@ test.describe("sprint G1 customer success hub", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Milestones" })).toBeVisible();
     await expect(page.getByText("no streaks", { exact: false })).toBeVisible();
 
+    await page.route("**/api/customer/statements**", async (route) => {
+      await route.fulfill({
+        json: {
+          data: {
+            timezone: "America/New_York",
+            projectedAt: "2026-07-13T12:00:00.000Z",
+            scanLimit: 200,
+            understanding: "These statements help you understand your financial history.",
+            statements: [],
+            downloads: [],
+            emptyHint: "No posted activity to statement yet.",
+          },
+        },
+      });
+    });
+
     await page.goto("/account/statements");
     await expect(page.getByRole("heading", { level: 1, name: "Statements" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Review live ledger" })).toBeVisible();
+    await expect(
+      page.getByText("Can I understand my financial history? Ledger-backed projections — not invented totals."),
+    ).toBeVisible();
   });
 
   test("account nav exposes Success without replacing money nav", async ({ page }) => {

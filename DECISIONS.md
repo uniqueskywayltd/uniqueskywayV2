@@ -1753,3 +1753,24 @@ Before implementing statements, experience rules must be fixed separately from t
 ### Consequences
 
 - Sprint G2 implements list/detail/download UX under these principles and `STATEMENT_EXPERIENCE_GUIDE.md`.
+
+## DEC-0051: Sprint G2 Statements Experience (proposed acceptance)
+
+- Date: 2026-07-13
+- Status: **Proposed** — awaiting consultancy review of `SPRINT_G2_CERTIFICATION.md`
+- Future Review: After Accepted, G2 statement surfaces require ADR-level change control
+
+### Context
+
+G1 frozen (`DEC-0048`/`DEC-0049`). Statement Design Principles adopted (`DEC-0050`). G2 implemented ledger-only projections for understanding financial history.
+
+### Decision (pending)
+
+1. Accept Sprint G2 as certified.
+2. Merge `milestone-6-sprint-g2-statements` into `main`.
+3. Authorize Sprint G3 Education only after acceptance.
+
+### Consequences (when accepted)
+
+- Statement list/detail/download become frozen Customer Success surfaces.
+- `STATEMENT_DATA_DICTIONARY.md` remains required before G5.
