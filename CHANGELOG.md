@@ -10,6 +10,12 @@ Unique Sky Way V2 follows semantic versioning for certified phase releases:
 
 Every release must be backed by a clean build, passing tests, an immutable Git commit, and a pushed Git tag.
 
+## Unreleased
+
+Added:
+
+- Added `ENGINEERING_PRINCIPLES.md` as the decision lens for future engineering trade-offs, code review, financial work, and Phase 6 boundaries.
+
 ## v2.0.1 - 2026-07-13
 
 Status: Financial governance patch.
