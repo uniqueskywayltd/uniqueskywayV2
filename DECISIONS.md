@@ -589,3 +589,147 @@ The platform needs portability, operational resilience, and a migration path as 
 - Environment variables must be validated.
 - Deployment changes must not alter financial behavior.
 
+---
+
+## DEC-0016: Certified Investment Engine Lock
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review only when a critical defect, security issue, or accepted product change requires investment engine modification.
+
+### Context
+
+Phase 6 certified the investment engine through mathematics, concurrency, recovery, performance, architecture, and documentation review. The engine is now the trusted core that future money movement features will compose with.
+
+Changing certified ROI, settlement, maturity, or principal lifecycle behavior casually would weaken the strongest guarantee in V2.
+
+### Decision
+
+The `v2.1.0` investment engine is locked.
+
+Allowed changes:
+
+- Bug fixes.
+- Security fixes.
+- Performance improvements.
+- Test improvements.
+- Documentation clarifications that do not change behavior.
+
+Business rule changes require:
+
+- An accepted ADR.
+- Updated financial invariants or payment architecture where applicable.
+- Updated regression tests.
+- Updated certification evidence.
+- Recertification before merge.
+
+### Alternatives Considered
+
+- Allow Phase 7 money movement to freely modify investment services.
+- Rely on code review without a formal lock rule.
+- Delay the lock until production launch.
+
+### Reason for Choosing It
+
+Money movement should connect to a trusted investment engine, not reshape it. Locking the certified engine keeps Phase 7 focused on deposits, withdrawals, providers, webhooks, and ledger integration.
+
+### Consequences
+
+- Phase 7 may call investment services only through approved contracts.
+- ROI formula changes, settlement rule changes, maturity rule changes, and investment lifecycle changes require formal review.
+- Future teams have a clear boundary between investment correctness and payment orchestration.
+
+---
+
+## DEC-0017: Payment Architecture Before Money Movement
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review after the first production payment provider is selected and after Phase 7 certification.
+
+### Context
+
+Phase 7 will introduce real money movement through deposits, withdrawals, provider events, webhook verification, ledger postings, admin review, notifications, and reconciliation. These flows are externally influenced and failure-prone.
+
+Without a payment-specific constitution, implementation details could drift into provider-specific shortcuts or ambiguous ledger behavior.
+
+### Decision
+
+`PAYMENT_ARCHITECTURE.md` is required before Phase 7 production code begins.
+
+The document defines:
+
+- Provider approval rules.
+- Deposit and withdrawal state machines.
+- Webhook lifecycle.
+- Ledger posting sequences.
+- Idempotency requirements.
+- Approval and permission rules.
+- Failure recovery.
+- Retry strategy.
+- Audit events.
+- Email and notification events.
+- Phase 7 launch gates.
+
+Concrete production provider selection requires a separate accepted ADR.
+
+### Alternatives Considered
+
+- Choose a provider first and document the architecture afterward.
+- Implement provider-specific flows directly in application services.
+- Treat database status enums as sufficient design documentation.
+
+### Reason for Choosing It
+
+Payment providers are inputs, not sources of financial truth. The platform needs a provider-independent payment architecture so the ledger, audit trail, and recovery rules stay stable even if provider details change.
+
+### Consequences
+
+- Phase 7 implementation must follow `PAYMENT_ARCHITECTURE.md`.
+- Provider-specific code belongs behind infrastructure adapters.
+- Webhook events must be verified, stored, deduplicated, and processed through application services.
+- Money movement cannot merge without payment certification.
+
+---
+
+## DEC-0018: Ledger Posting Rules As Accounting Specification
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review after Phase 7 certification and before any new financial posting type is added.
+
+### Context
+
+The platform has a ledger-first financial model, certified investment postings, and upcoming money movement flows. Developers and auditors need a single accounting reference for debit and credit behavior without reverse-engineering code or database views.
+
+### Decision
+
+`LEDGER_POSTING_RULES.md` is the accounting specification for approved financial postings.
+
+The document defines:
+
+- Ledger direction semantics.
+- Approved account types.
+- Approved transaction types.
+- Debit and credit accounts per financial event.
+- Required references.
+- Required idempotency keys.
+- Required audit, email, and notification side effects.
+- Unsupported posting patterns.
+- Testing requirements.
+
+### Alternatives Considered
+
+- Keep posting rules only in code helpers.
+- Let each financial service define its own ledger entries.
+- Rely on database constraints without a human-readable accounting contract.
+
+### Reason for Choosing It
+
+Financial correctness needs both executable enforcement and readable accounting intent. A posting constitution makes review, implementation, reconciliation, and audits more reliable.
+
+### Consequences
+
+- New posting types require an ADR and updates to `LEDGER_POSTING_RULES.md`.
+- Phase 7 money movement must implement postings exactly as documented.
+- Unsupported reversal, deficit, and correction behavior cannot be added implicitly.

@@ -23,6 +23,8 @@ This document must stay consistent with:
 
 - `FINANCIAL_INVARIANTS.md`
 - `FINANCIAL_TEST_MATRIX.md`
+- `PAYMENT_ARCHITECTURE.md`
+- `LEDGER_POSTING_RULES.md`
 - `CHANGELOG.md`
 - `DECISIONS.md`
 - `ENGINEERING_PRINCIPLES.md`
@@ -51,6 +53,8 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | Phase 6.2 | Included | `v2.1.0` | Financial concurrency certified. |
 | Phase 6.3 | Included | `v2.1.0` | Financial recovery certified. |
 | Phase 6.4 | Included | `v2.1.0` | Investment engine final certification verified. |
+| Payment Architecture | Complete Pending Merge | `codex/payment-architecture-governance` | Phase 7 money movement governance checkpoint. |
+| Ledger Posting Rules | Complete Pending Merge | `codex/payment-architecture-governance` | Accounting specification for approved financial postings. |
 
 After `v2.1.0` is tagged, `main` becomes the stable recovery point for Phase 7.
 
@@ -370,7 +374,7 @@ Exit criteria:
 
 Status: Pending.
 
-Build only after Phase 6 certification:
+Build only after Phase 6 certification, `PAYMENT_ARCHITECTURE.md` approval, and `LEDGER_POSTING_RULES.md` approval:
 
 - Payment provider abstraction.
 - Deposit intent flow.
@@ -384,11 +388,15 @@ Build only after Phase 6 certification:
 
 Exit criteria:
 
+- Concrete provider ADR is accepted before production provider code merges.
+- Ledger postings match `LEDGER_POSTING_RULES.md`.
 - Duplicate provider webhooks are idempotent.
 - Deposits credit only after confirmation.
 - Withdrawal reservation is ledger-backed.
 - Withdrawal rejection releases funds through ledger.
 - Payout retries cannot pay twice.
+- Money movement emails and notifications are outbox-driven.
+- Reconciliation coverage exists for provider, ledger, and wallet state.
 
 ## Phase 8 - Admin Portal
 
@@ -514,5 +522,7 @@ Exit criteria:
 ## Current Build Order Summary
 
 1. Keep `main` stable at `v2.1.0`.
-2. Begin Phase 7 money movement on a new phase branch.
-3. Merge Phase 7 only after money movement certification passes.
+2. Approve `PAYMENT_ARCHITECTURE.md`.
+3. Approve `LEDGER_POSTING_RULES.md`.
+4. Begin Phase 7 money movement on a new phase branch.
+5. Merge Phase 7 only after money movement certification passes.
