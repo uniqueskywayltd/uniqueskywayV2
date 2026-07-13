@@ -26,6 +26,10 @@ Added:
 - Added Phase 8.3 system administration: DB-backed RBAC, staff management, feature flags, system settings, email/notification template catalogs, job monitor, security center, and system health APIs.
 - Migrated admin authorization from hardcoded role maps to `permissions` / `role_permissions` resolution while preserving Phase 8.1/8.2 capability keys.
 - Certified Phase 8.3 on `phase-8-admin-platform` (APIs). Release tag `v2.3.0` remains reserved for complete Admin Platform after Phase 8.5; current release remains `v2.2.0`.
+- Added `REPORTING_SPECIFICATION.md` as the Phase 8.4 governance baseline for read-only admin reporting.
+- Added `DEC-0024` requiring administrative reports to remain read-only projections of certified data with no financial recalculation.
+- Added Phase 8.4 reporting and exports: executive dashboard, customer/financial/operational/system reports, and audited CSV/XLSX exports gated by `reports.read` / `reports.export`.
+- Certified Phase 8.4 on `phase-8-admin-platform` (APIs). Release tag `v2.3.0` remains reserved for complete Admin Platform after Phase 8.5; current release remains `v2.2.0`.
 
 ## v2.2.0 - 2026-07-13
 

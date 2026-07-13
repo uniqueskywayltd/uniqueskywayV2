@@ -10,6 +10,7 @@ export {
   OperationsRepository,
   PaymentRepository,
   ReferralRepository,
+  ReportingRepository,
   SettlementRepository,
 } from "./repositories";
 export { DrizzleTransactionManager } from "./transactions";
@@ -42,6 +43,7 @@ export type {
   ListSettlementRunsQuery,
   ListSettlementRunsResult,
   PaymentProviderEventRecord,
+  ReportPeriodGranularity,
   RoiLedgerEntryRecord,
   RoiScheduleItemRecord,
   RoleRecord,

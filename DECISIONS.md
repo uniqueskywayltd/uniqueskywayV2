@@ -980,3 +980,45 @@ Every remaining admin feature depends on consistent authorization. Configurable,
 - Production authorization must not reintroduce hardcoded role permission maps.
 - Phase 8.4 reporting and Phase 8.5 admin UI continue on the same branch.
 - Release tag `v2.3.0` remains reserved for the complete admin platform after Phase 8.5; current certified release remains `v2.2.0`.
+
+---
+
+## DEC-0024: Read-Only Administrative Reporting
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review when Phase 8.5 freezes the complete admin platform at `v2.3.0`, or if a new report type would require derived financial formulas not already stored by certified engines.
+
+### Context
+
+Phase 8.4 adds executive, customer, financial, operational, and system reports plus CSV/Excel exports. Reporting must aggregate certified operational and financial records without becoming a second source of truth or redefining ROI, settlement, deposit, or withdrawal mathematics.
+
+### Decision
+
+Administrative reports are read-only projections of certified data.
+
+Binding rules:
+
+- `REPORTING_SPECIFICATION.md` is the governance source of truth for report catalog, data sources, America/New_York period buckets, export formats, and permission requirements.
+- Report queries may only read existing stored amounts and statuses produced by certified engines and operational systems.
+- Reporting must not post ledger entries, mutate money-movement state, recalculate ROI formulas, or invent settlement rules.
+- Viewing requires `reports.read`. Exporting requires `reports.export` and must append an audited `report.exported` record.
+- PDF generation is out of scope for Phase 8.4.
+- `v2.3.0` remains reserved for complete Admin Platform certification after Phase 8.5; current release remains `v2.2.0`.
+
+### Alternatives Considered
+
+- Allow reporting services to recompute ROI and settlement locally for dashboard speed.
+- Defer exports until after Admin UI polish.
+- Treat report totals as authoritative balances for finance reconciliation.
+
+### Reason for Choosing It
+
+A reporting layer that recalculates money movement would compete with certified engines and create reconciliation risk. Read-only projections keep Phase 8.4 operationally useful while preserving `DEC-0016` and `DEC-0022` freeze guarantees.
+
+### Consequences
+
+- Phase 8.4 certification is complete on `phase-8-admin-platform`.
+- Future report metrics must cite stored certified fields or be rejected.
+- Phase 8.5 may add Admin UI over these APIs but must not introduce new financial calculation backends.
+- Release tagging remains deferred until the full admin platform is certified.

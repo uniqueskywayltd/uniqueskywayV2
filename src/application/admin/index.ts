@@ -28,6 +28,11 @@ export {
   type WithdrawalDetailsView,
 } from "./admin-financial-ops-service";
 export {
+  AdminReportingService,
+  type AdminReportingServiceDependencies,
+  type ReportFilterInput,
+} from "./admin-reporting-service";
+export {
   AdminSystemService,
   type AdminSystemServiceDependencies,
   type SystemHealthView,
@@ -81,3 +86,11 @@ export type {
   SearchInvestmentsInput,
   SearchWithdrawalsInput,
 } from "./financial-ops-schemas";
+export {
+  customerReportKindSchema,
+  exportReportInputSchema,
+  financialReportKindSchema,
+  operationalReportKindSchema,
+  reportFilterQuerySchema,
+} from "./reporting-schemas";
+export type { ExportReportInput, ReportFilterQuery } from "./reporting-schemas";

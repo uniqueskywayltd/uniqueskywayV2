@@ -515,9 +515,14 @@ Authorization for Phase 8.1/8.2 now resolves through permission keys, not hardco
 
 ### Phase 8.4 - Reporting & Exports
 
-- Dashboard metrics
-- Customer, deposit, withdrawal, investment, revenue, and settlement statistics
-- CSV and Excel export
+Status: Complete (APIs).
+
+- `REPORTING_SPECIFICATION.md` governance for read-only projections
+- Executive dashboard metrics
+- Customer, financial, operational, and system reports
+- CSV and Excel exports with audited `report.exported` events
+- America/New_York period aggregation for financial series
+- Permission keys: `reports.read`, `reports.export`
 
 ### Phase 8.5 - Admin UI/UX Polish & Certification
 
@@ -636,7 +641,7 @@ Exit criteria:
 
 1. Keep `main` frozen at `v2.2.0` as the money-movement recovery checkpoint (`DEC-0022`).
 2. Build Phase 8 only on `phase-8-admin-platform`.
-3. Phase 8.3 system administration is certified. Continue with Phase 8.4 reporting/exports, then Phase 8.5 UI polish and Admin Platform certification at `v2.3.0`.
+3. Phase 8.3 system administration and Phase 8.4 reporting/exports are certified. Continue with Phase 8.5 UI polish and Admin Platform certification at `v2.3.0`.
 4. Do not reopen investment-engine or money-movement behavioral rules without ADR, regression tests, and recertification.
 5. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
 6. Certify Phase 8 as `v2.3.0` only after permission, security, architecture, reporting, and UI certification gates pass.

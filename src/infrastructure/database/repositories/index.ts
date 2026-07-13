@@ -6,6 +6,7 @@ export { NotificationRepository } from "./notification-repository";
 export { OperationsRepository } from "./operations-repository";
 export { PaymentRepository } from "./payment-repository";
 export { ReferralRepository } from "./referral-repository";
+export { ReportingRepository } from "./reporting-repository";
 export { SettlementRepository } from "./settlement-repository";
 export type {
   CustomerAccountRecord,
@@ -51,6 +52,14 @@ export type {
   SearchWithdrawalsResult,
   WithdrawalRequestRecord,
 } from "./payment-repository";
+export type {
+  AmountByStatusRow,
+  CustomerExportRow,
+  PeriodTotalRow,
+  ReportDateRange,
+  ReportPeriodGranularity,
+  StatusCountRow,
+} from "./reporting-repository";
 export type {
   ListSettlementRunsQuery,
   ListSettlementRunsResult,
