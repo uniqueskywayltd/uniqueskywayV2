@@ -1,0 +1,164 @@
+import { eq, sql } from "drizzle-orm";
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+
+import {
+  ledgerAccounts,
+  ledgerEntries,
+  ledgerTransactions,
+  walletAccountLinks,
+  wallets,
+} from "../schema";
+import type { DrizzleTransactionContext } from "../transactions";
+import type { AppDatabaseExecutor } from "../types";
+import { BaseDrizzleRepository, singleRow } from "./base-repository";
+
+export type WalletRecord = InferSelectModel<typeof wallets>;
+export type LedgerAccountRecord = InferSelectModel<typeof ledgerAccounts>;
+export type LedgerTransactionRecord = InferSelectModel<typeof ledgerTransactions>;
+export type LedgerEntryRecord = InferSelectModel<typeof ledgerEntries>;
+
+export interface LedgerPostingInput {
+  transaction: InferInsertModel<typeof ledgerTransactions>;
+  entries: Array<InferInsertModel<typeof ledgerEntries>>;
+}
+
+export interface WalletBalanceRecord {
+  walletId: string;
+  userId: string;
+  currency: string;
+  pendingBalanceMinor: bigint;
+  availableBalanceMinor: bigint;
+  lockedBalanceMinor: bigint;
+  reservedBalanceMinor: bigint;
+  withdrawnBalanceMinor: bigint;
+  lastEntryAt: Date | null;
+}
+
+export class LedgerRepository extends BaseDrizzleRepository {
+  constructor(db: AppDatabaseExecutor) {
+    super("ledger", db);
+  }
+
+  protected clone(db: AppDatabaseExecutor): LedgerRepository {
+    return new LedgerRepository(db);
+  }
+
+  async createWallet(
+    context: DrizzleTransactionContext,
+    values: InferInsertModel<typeof wallets>,
+  ): Promise<WalletRecord> {
+    const rows = await context.db.insert(wallets).values(values).returning();
+    return singleRow(rows, "createWallet");
+  }
+
+  async ensureWallet(
+    context: DrizzleTransactionContext,
+    values: InferInsertModel<typeof wallets>,
+  ): Promise<WalletRecord> {
+    const rows = await context.db
+      .insert(wallets)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [wallets.userId, wallets.currency],
+        set: {
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+
+    return singleRow(rows, "ensureWallet");
+  }
+
+  async createLedgerAccount(
+    context: DrizzleTransactionContext,
+    values: InferInsertModel<typeof ledgerAccounts>,
+  ): Promise<LedgerAccountRecord> {
+    const rows = await context.db.insert(ledgerAccounts).values(values).returning();
+    return singleRow(rows, "createLedgerAccount");
+  }
+
+  async ensureLedgerAccount(
+    context: DrizzleTransactionContext,
+    values: InferInsertModel<typeof ledgerAccounts>,
+  ): Promise<LedgerAccountRecord> {
+    const rows = await context.db
+      .insert(ledgerAccounts)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [
+          ledgerAccounts.ownerType,
+          ledgerAccounts.ownerId,
+          ledgerAccounts.accountType,
+          ledgerAccounts.currency,
+        ],
+        set: {
+          status: "active",
+        },
+      })
+      .returning();
+
+    return singleRow(rows, "ensureLedgerAccount");
+  }
+
+  async linkWalletAccount(
+    context: DrizzleTransactionContext,
+    values: InferInsertModel<typeof walletAccountLinks>,
+  ): Promise<void> {
+    await context.db.insert(walletAccountLinks).values(values);
+  }
+
+  async ensureWalletAccountLink(
+    context: DrizzleTransactionContext,
+    values: InferInsertModel<typeof walletAccountLinks>,
+  ): Promise<void> {
+    await context.db
+      .insert(walletAccountLinks)
+      .values(values)
+      .onConflictDoNothing({
+        target: [walletAccountLinks.walletId, walletAccountLinks.category],
+      });
+  }
+
+  async findLedgerAccountById(id: string): Promise<LedgerAccountRecord | null> {
+    const rows = await this.db
+      .select()
+      .from(ledgerAccounts)
+      .where(eq(ledgerAccounts.id, id))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
+  async findWalletBalance(walletId: string): Promise<WalletBalanceRecord | null> {
+    const rows = (await this.db.execute(sql`
+      select
+        wallet_id as "walletId",
+        user_id as "userId",
+        currency,
+        pending_balance_minor as "pendingBalanceMinor",
+        available_balance_minor as "availableBalanceMinor",
+        locked_balance_minor as "lockedBalanceMinor",
+        reserved_balance_minor as "reservedBalanceMinor",
+        withdrawn_balance_minor as "withdrawnBalanceMinor",
+        last_entry_at as "lastEntryAt"
+      from public.wallet_balances
+      where wallet_id = ${walletId}
+      limit 1
+    `)) as unknown as WalletBalanceRecord[];
+
+    return rows[0] ?? null;
+  }
+
+  async postLedgerTransaction(
+    context: DrizzleTransactionContext,
+    input: LedgerPostingInput,
+  ): Promise<{ transaction: LedgerTransactionRecord; entries: LedgerEntryRecord[] }> {
+    const transactionRows = await context.db
+      .insert(ledgerTransactions)
+      .values(input.transaction)
+      .returning();
+    const transaction = singleRow(transactionRows, "postLedgerTransaction.transaction");
+    const entryRows = await context.db.insert(ledgerEntries).values(input.entries).returning();
+
+    return { transaction, entries: entryRows };
+  }
+}

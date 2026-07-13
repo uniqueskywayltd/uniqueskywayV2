@@ -1,0 +1,591 @@
+# DECISIONS.md
+
+## Purpose
+
+This is the permanent engineering decision log for Unique Sky Way V2.
+
+It records major architectural, product, financial, security, and operational decisions. The goal is to preserve institutional memory so future engineers understand not only what was decided, but why it was decided.
+
+This document is append-only. Do not delete or rewrite historical decisions. If a decision changes, append a new decision that supersedes the old one.
+
+## Decision Rules
+
+- Decisions are appended chronologically.
+- Decision IDs must remain stable.
+- A superseded decision must link to the superseding decision.
+- Major changes to financial logic, authentication, database structure, deployment, or domain boundaries require a decision entry before implementation.
+- Pull requests that introduce major behavior without updating this file should not be merged.
+
+## Decision Template
+
+```text
+## DEC-0000: Title
+
+- Date:
+- Status:
+- Future Review:
+
+### Context
+
+### Decision
+
+### Alternatives Considered
+
+### Reason for Choosing It
+
+### Consequences
+```
+
+Statuses:
+
+- `Accepted`: current active decision.
+- `Superseded`: replaced by a later decision.
+- `Deprecated`: still present but should not be used for new work.
+- `Proposed`: not yet binding.
+
+---
+
+## DEC-0001: Greenfield V2 Rewrite
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: None unless the project scope changes.
+
+### Context
+
+The previous Unique Sky Way project exists as business reference only. It must not define V2 architecture, routing, services, middleware, authentication, helpers, utilities, state management, or folder structure.
+
+### Decision
+
+Unique Sky Way V2 is a complete greenfield rewrite.
+
+The old project may be referenced only for business rules, product behavior, and workflow discovery after those rules are intentionally revalidated.
+
+### Alternatives Considered
+
+- Refactor the previous project.
+- Incrementally migrate old modules into a new repository.
+- Fork the old project and replace pieces over time.
+
+### Reason for Choosing It
+
+An investment platform must be financially correct, secure, maintainable, and auditable. Carrying forward unknown architectural debt would compromise those goals.
+
+### Consequences
+
+- No production code is copied from the old system.
+- V2 architecture must stand on its own.
+- Business workflows must be documented before implementation.
+- Initial development is slower, but long-term maintainability improves.
+
+---
+
+## DEC-0002: Engineering Constitution
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review at the end of every major product phase.
+
+### Context
+
+The platform is expected to be maintained by multiple senior engineers over many years. Without permanent governance, architectural consistency and institutional knowledge will decay.
+
+### Decision
+
+The repository will maintain permanent constitution documents:
+
+- Product and architecture documents.
+- Financial engine documentation.
+- Security, performance, deployment, and testing standards.
+- This decision log.
+- A definitive glossary.
+- A contributor guide.
+
+### Alternatives Considered
+
+- Keep decisions only in pull request discussions.
+- Keep informal notes outside the repository.
+- Rely on code structure alone to communicate architecture.
+
+### Reason for Choosing It
+
+Financial platforms need explicit institutional memory. Critical choices should remain discoverable after teams, vendors, and deployment environments change.
+
+### Consequences
+
+- Documentation updates are required for meaningful behavior changes.
+- Code review must include governance review.
+- Future contributors have a stable source of truth.
+
+---
+
+## DEC-0003: One Source Of Truth Philosophy
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: None.
+
+### Context
+
+Financial ambiguity creates user harm, support burden, and audit risk. Customer-visible balances, ROI, maturity, referrals, and withdrawals must be explainable.
+
+### Decision
+
+Every important concept must have one authoritative source:
+
+- Financial balances come from the ledger.
+- Investment behavior comes from snapshotted plan terms.
+- Settlement history comes from settlement records and ledger transactions.
+- Terminology comes from `GLOSSARY.md`.
+- Major engineering decisions come from `DECISIONS.md`.
+- Product behavior comes from product and architecture documents.
+
+### Alternatives Considered
+
+- Store mutable wallet balances as primary truth.
+- Recalculate customer-facing values ad hoc in the UI.
+- Let each feature define its own terminology.
+
+### Reason for Choosing It
+
+The platform must be auditable and understandable. One source of truth prevents subtle divergence between screens, APIs, jobs, and admin tools.
+
+### Consequences
+
+- Derived read models are allowed only when rebuildable.
+- UI estimates must be labeled and must not override persisted financial records.
+- Duplicate concepts require explicit justification.
+
+---
+
+## DEC-0004: Server-First Architecture
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review if the platform adds a native mobile app or heavy real-time interfaces.
+
+### Context
+
+The application will include dashboards, transaction history, investment detail pages, admin review queues, and financial workflows. These are data-heavy and security-sensitive.
+
+### Decision
+
+The web application will use a server-first architecture with Next.js App Router and React Server Components by default.
+
+Client Components are reserved for browser-only interactivity such as forms, modals, charts, upload widgets, optimistic UI where safe, and interactive filters.
+
+### Alternatives Considered
+
+- Client-heavy single page application.
+- Traditional server-rendered app without React Server Components.
+- Pages Router architecture.
+
+### Reason for Choosing It
+
+Server-first rendering reduces client JavaScript, keeps secrets server-side, improves authenticated dashboard performance, and aligns with the need for secure financial data access.
+
+### Consequences
+
+- Components are server components unless they need browser APIs or client state.
+- Provider SDKs and secrets must never enter client bundles.
+- Interactive UI requires explicit client boundaries.
+
+---
+
+## DEC-0005: Modular Monolith
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review when independent deployability becomes more valuable than transactional simplicity.
+
+### Context
+
+The platform needs strong financial consistency, rapid iteration, and clear domain boundaries. It does not yet require separately deployed services.
+
+### Decision
+
+Unique Sky Way V2 will begin as a modular monolith with explicit domain boundaries.
+
+### Alternatives Considered
+
+- Distributed microservices.
+- Traditional layered monolith.
+- Serverless functions without strong domain organization.
+
+### Reason for Choosing It
+
+A modular monolith preserves transaction simplicity and maintainability while avoiding premature distributed systems complexity.
+
+### Consequences
+
+- Domains remain separated in code.
+- Shared database transactions are available for financial workflows.
+- Future service extraction remains possible if boundaries stay clean.
+
+---
+
+## DEC-0006: Supabase And PostgreSQL As System Of Record
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review before any major provider migration or compliance-driven infrastructure change.
+
+### Context
+
+The platform needs relational integrity, transactions, constraints, auditability, and a path to Row Level Security.
+
+### Decision
+
+The system of record will be PostgreSQL through Supabase.
+
+Supabase Auth and Row Level Security may be used where appropriate, but application services remain responsible for business authorization.
+
+### Alternatives Considered
+
+- Firebase or document storage.
+- MySQL.
+- Self-managed PostgreSQL from day one.
+- Payment-provider-led balance storage.
+
+### Reason for Choosing It
+
+PostgreSQL supports relational integrity, transactional financial workflows, constraints, indexes, locking, and mature operational practices. Supabase provides managed Postgres, Auth, Storage, RLS, and operational tooling suitable for the initial platform.
+
+### Consequences
+
+- Database constraints are part of the architecture.
+- RLS is defense in depth, not the only authorization layer.
+- Supabase service role keys are server-only.
+- A future migration must preserve ledger and audit history.
+
+---
+
+## DEC-0007: Drizzle ORM
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review after the first production financial workflows are implemented.
+
+### Context
+
+The application needs typed database access without hiding SQL or adding heavy runtime behavior. Financial correctness depends on clear queries, explicit transactions, and predictable migrations.
+
+### Decision
+
+Use Drizzle ORM for application database access.
+
+Drizzle must be used as a typed SQL layer, not as a place to hide business rules. Financial invariants remain enforced by domain logic, application services, database constraints, and the ledger posting engine.
+
+### Alternatives Considered
+
+- Raw SQL only.
+- Prisma.
+- TypeORM, Sequelize, or other heavy ORMs.
+- Supabase JavaScript client as the primary server-side data access layer.
+
+### Reason for Choosing It
+
+Drizzle is lightweight, TypeScript-friendly, close to SQL, and compatible with server-first application architecture. It gives engineers typed query construction while preserving visibility into database behavior.
+
+### Consequences
+
+- Engineers must understand SQL and query plans.
+- Migrations require review; financial migrations must not be generated blindly.
+- Database access belongs in repositories and infrastructure code.
+- Drizzle types do not replace domain models.
+
+---
+
+## DEC-0008: Ledger-First Financial Model
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: None unless accounting requirements change.
+
+### Context
+
+Wallet balances, deposits, withdrawals, ROI, referrals, reversals, maturity, and corrections must be auditable and reconstructable.
+
+### Decision
+
+Use a ledger-first financial model with one approved posting engine.
+
+All financial movement must be represented as immutable ledger transactions and ledger entries. Wallet balances are derived from ledger accounts or rebuildable snapshots, never updated directly as source of truth.
+
+### Alternatives Considered
+
+- Mutable wallet balance columns.
+- Single-entry transaction history.
+- Provider balance as source of truth.
+- UI-level balance calculation.
+
+### Reason for Choosing It
+
+Ledger-first design is the only acceptable model for a financial platform that needs auditability, recovery, reversals, reconciliation, and support for future accounting requirements.
+
+### Consequences
+
+- Financial corrections use compensating entries.
+- Ledger entries are append-only.
+- Posting must be idempotent.
+- Concurrent financial actions must use database transactions and locking.
+- No feature may bypass the posting engine.
+
+---
+
+## DEC-0009: New York Settlement Model
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review only if business terms or jurisdiction change.
+
+### Context
+
+The business requires daily ROI settlement based on a New York calendar. UTC timestamps alone cannot express the financial day correctly, especially around daylight saving time.
+
+### Decision
+
+Use `America/New_York` as the official financial timezone.
+
+Official terms:
+
+- Investment Activation Time: the UTC timestamp when principal is locked and the investment becomes active.
+- Earning Date: the New York calendar date for which ROI is earned.
+- Settlement Date: the New York calendar date being settled.
+- Ledger Posting Date: the UTC timestamp when the ledger transaction is committed.
+- Wallet Credit Date: the time ROI becomes available in the wallet; this is the ledger posting time.
+- Maturity Date: the final Earning Date in the investment term.
+- Principal Unlock Date: the ledger posting time when principal is moved from locked to available.
+
+Rule:
+
+- An investment activated on New York date `D` starts earning on New York date `D + 1`.
+- ROI for an Earning Date is eligible to be posted only after that New York day has completed.
+- The scheduled settlement job runs after New York midnight and settles all unsettled Earning Dates earlier than the current New York date.
+- No same-day ROI is credited unless a future plan version explicitly defines a different rule.
+
+### Alternatives Considered
+
+- UTC calendar settlement.
+- Server-local timezone settlement.
+- Same-day partial ROI.
+- Continuous real-time ROI crediting.
+
+### Reason for Choosing It
+
+New York dates match the business requirement and avoid ambiguity around midnight and daylight saving time. Posting after the earning day completes prevents customers from receiving same-day ROI for late-day investments.
+
+### Consequences
+
+- Settlement records must store New York dates separately from UTC timestamps.
+- Tests must include DST boundaries.
+- Live earnings are display estimates only until posted to the ledger.
+- Maturity occurs after the final Earning Date has been settled and principal release is posted.
+
+---
+
+## DEC-0010: Transactional Outbox
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review when moving to a dedicated queue.
+
+### Context
+
+Financial workflows trigger side effects such as emails, in-app notifications, provider calls, analytics, and admin alerts. Side effects must not fire for rolled-back database transactions.
+
+### Decision
+
+Use a transactional outbox.
+
+Domain and workflow changes are committed in the same database transaction as outbox events. Workers process outbox events asynchronously and idempotently.
+
+### Alternatives Considered
+
+- Send email and notifications directly inside request handlers.
+- Publish to an external queue without local transactional capture.
+- Poll domain tables for changes.
+
+### Reason for Choosing It
+
+The outbox pattern preserves consistency between state changes and side effects while allowing retries and future queue migration.
+
+### Consequences
+
+- Outbox lag must be monitored.
+- Handlers must be idempotent.
+- Failed events must be visible to admins.
+- Future queues must preserve event contracts.
+
+---
+
+## DEC-0011: Event-Driven Notifications
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review when SMS or push channels are implemented.
+
+### Context
+
+The platform needs in-app notifications, email, and future SMS/push without coupling product workflows to provider APIs.
+
+### Decision
+
+Notifications are driven by business events.
+
+Notification policy maps events to channels. Channel dispatch is asynchronous and idempotent.
+
+### Alternatives Considered
+
+- Direct email calls from services.
+- UI-generated notifications.
+- Provider-specific notification logic in domain workflows.
+
+### Reason for Choosing It
+
+Event-driven notifications keep financial state independent from delivery failures and make future channels easier to add.
+
+### Consequences
+
+- Notification templates receive prepared data.
+- Delivery failures do not roll back financial state.
+- Critical admin alerts require escalation rules.
+
+---
+
+## DEC-0012: Repository Pattern
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review if repository boundaries become overly generic.
+
+### Context
+
+Database access must remain organized and testable. Route handlers, React components, and domain code should not know query details.
+
+### Decision
+
+Use repositories as persistence boundaries.
+
+Repositories expose business-oriented persistence methods and hide Drizzle/Supabase-specific shapes from application services.
+
+### Alternatives Considered
+
+- Direct database access from route handlers.
+- Generic CRUD services.
+- Active Record-style domain objects.
+
+### Reason for Choosing It
+
+Repositories keep data access consistent while allowing domain logic to remain framework-free and database-agnostic.
+
+### Consequences
+
+- Repositories must not decide business policy.
+- Financial repositories must accept transaction context.
+- Raw database rows should not leak into application responses.
+
+---
+
+## DEC-0013: Service Layer
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review as workflow complexity grows.
+
+### Context
+
+Financial and admin workflows require authorization, validation, idempotency, transactions, domain rules, repository calls, and outbox events.
+
+### Decision
+
+Use application services for use cases.
+
+Examples include creating investments, requesting withdrawals, approving withdrawals, running settlement, confirming deposits, and posting referral rewards.
+
+### Alternatives Considered
+
+- Business logic in route handlers.
+- Business logic in React Server Components.
+- Business logic embedded in repositories.
+
+### Reason for Choosing It
+
+Application services provide a clear home for workflow orchestration while keeping domain logic pure and infrastructure details isolated.
+
+### Consequences
+
+- Route handlers and server actions stay thin.
+- Authorization happens in or before application services.
+- Financial services define transaction boundaries.
+
+---
+
+## DEC-0014: Managed Authentication With Application-Owned Authorization
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review if enterprise SSO or advanced compliance requirements appear.
+
+### Context
+
+Custom authentication creates unnecessary risk. Authorization, however, must reflect platform-specific financial and admin rules.
+
+### Decision
+
+Use managed authentication initially through Supabase Auth.
+
+Application services own authorization decisions. RLS provides defense in depth for customer-accessible data.
+
+### Alternatives Considered
+
+- Custom password authentication.
+- NextAuth-style self-managed auth.
+- Enterprise auth provider from day one.
+
+### Reason for Choosing It
+
+Managed auth reduces credential risk, while application-owned authorization preserves precise control over financial permissions.
+
+### Consequences
+
+- Admin MFA is required.
+- Financial actions require server-side permission checks.
+- RLS cannot be the only authorization mechanism.
+- Auth provider migration remains possible.
+
+---
+
+## DEC-0015: Platform-Independent Deployment
+
+- Date: 2026-07-12
+- Status: Accepted
+- Future Review: Review before production launch and before each hosting migration.
+
+### Context
+
+The platform may begin on current hosting and later move to VPS, Docker, AWS, Hetzner, DigitalOcean, Coolify, Cloudflare, or another environment.
+
+### Decision
+
+Business logic must be platform-independent.
+
+Hosting-specific concerns belong in infrastructure, deployment scripts, scheduler adapters, worker configuration, and environment configuration. Domain logic, application services, financial rules, and settlement behavior must not depend on hosting provider features.
+
+### Alternatives Considered
+
+- Design around one hosting provider from day one.
+- Use provider-specific serverless features directly in domain workflows.
+- Delay deployment design until after implementation.
+
+### Reason for Choosing It
+
+The platform needs portability, operational resilience, and a migration path as scale and compliance needs change.
+
+### Consequences
+
+- Background jobs must be idempotent and database-coordinated.
+- Scheduler identity must be explicit.
+- Environment variables must be validated.
+- Deployment changes must not alter financial behavior.
+
