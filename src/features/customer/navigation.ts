@@ -7,11 +7,12 @@ import {
   Palette,
   BookOpenText,
   ShieldCheck,
+  Sprout,
   UserRound,
   Wallet,
 } from "lucide-react";
 
-/** Primary money + account IA for Wave B (`WAVE_B_UX_SPECIFICATION.md` §3). */
+/** Primary money + account IA for Wave B (`WAVE_B_UX_SPECIFICATION.md` §3) + Success (`DEC-0046`). */
 export const CUSTOMER_PRIMARY_NAV = [
   {
     label: "Dashboard",
@@ -40,6 +41,13 @@ export const CUSTOMER_PRIMARY_NAV = [
     icon: BookOpenText,
     question: "What exactly happened?",
     group: "money" as const,
+  },
+  {
+    label: "Success",
+    href: "/account/success",
+    icon: Sprout,
+    question: "How can I become more successful?",
+    group: "account" as const,
   },
   {
     label: "Notifications",

@@ -65,6 +65,9 @@ export function AccountOverview() {
         </CardHeader>
         <CardContent className="space-y-3">
           <Button asChild variant="outline" className="w-full justify-start">
+            <Link href="/account/success">Customer Success Hub</Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full justify-start">
             <Link href="/account/communications">Communication Center</Link>
           </Button>
           <Button asChild variant="outline" className="w-full justify-start">

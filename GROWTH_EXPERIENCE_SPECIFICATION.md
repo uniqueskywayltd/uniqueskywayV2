@@ -2,25 +2,26 @@
 
 ## Status
 
-**DRAFT — awaiting consultancy approval**  
-Release target: Growth Experience / Customer Success Platform **`v3.2.0`**  
+**APPROVED** — Stage 1 (`DEC-0045`, score **99.8 / 100**)  
+Release target: **Customer Success Experience** **`v3.2.0`**  
+(Filename retains “Growth”; product mission is Customer Success — growth is the result.)  
 Program: Milestone 6  
-Governance: `PLATFORM_CONSTITUTION.md` (`DEC-0044`), `DEC-0027`, `EP-026`, `EP-029`  
+Governance: `PLATFORM_CONSTITUTION.md` (`DEC-0044`), `DEC-0045`, `DEC-0046`, `DEC-0047`, `DEC-0027`, `EP-026`, `EP-029`  
 Freeze baselines: `v2.1.0`–`v2.3.0`, `v3.0.0` (`DEC-0029`), `v3.1.0` (`DEC-0043`)
 
-**Stage 2 may implement only what is approved in this package.**  
+**Stage 2 may implement only what is approved in this package — one sprint at a time.**  
 Deviation requires updating these Stage 1 documents first, or an ADR for philosophy changes.
-
-No production product code until this Stage 1 package is explicitly **APPROVED**.
 
 ### Companion authorities (required reading)
 
 | Document | Role |
 | --- | --- |
 | `CUSTOMER_SUCCESS_FRAMEWORK.md` | Success definition, journeys, anti-patterns |
+| `SUCCESS_METRICS_FRAMEWORK.md` | Measurable customer outcomes (not vanity KPIs) |
 | `ENGAGEMENT_PRINCIPLES.md` | Retention without noise; calm return visits |
 | `REFERRAL_EXPERIENCE_PRINCIPLES.md` | Referral hub UX (privacy-safe) |
 | `STATEMENT_EXPERIENCE_GUIDE.md` | Statements / tax & account documents |
+| `STATEMENT_DATA_DICTIONARY.md` | Required before G5 — field catalog (ledger-backed) |
 | `CUSTOMER_EDUCATION_GUIDE.md` | Education surfaces & voice |
 | `CUSTOMER_EXPERIENCE_PRINCIPLES.md` | Authenticated UX constitution (still in force) |
 | `FINANCIAL_INVARIANTS.md` | Money truth (always wins) |
@@ -52,10 +53,10 @@ It does **not** invent new financial engines, rewrite ledger math, or reopen dep
 Internal product framing:
 
 ```text
-Customer Success Platform
+Customer Success Experience
 ```
 
-Growth is not marketing volume. Growth is **customers becoming more successful over time**—clearer about their money, more confident to act, better able to share accurately, and less dependent on support for routine facts.
+Growth is the **result**. Customer success is the **mission**. This train is not marketing volume; it makes customers more successful over time—clearer about their money, more confident to act, better able to share accurately, and less dependent on support for routine facts.
 
 North-star test for every Milestone 6 surface:
 
@@ -131,11 +132,11 @@ Personas from Wave B remain valid. Milestone 6 adds a **retention lens**.
 
 | Surface | Primary question |
 | --- | --- |
-| Customer Success Center (hub) | How do I succeed here? |
-| Education home / article | What should I understand before I act? |
-| Referral hub | How do I invite someone correctly and privately? |
-| Statements home | Which official record do I need? |
-| Statement detail / export | Does this match my ledger? |
+| Customer Success Hub | How can I become more successful? (`DEC-0046`) |
+| Education home / article | What should I learn next? |
+| Referral hub | How do I recommend this responsibly? |
+| Statements home | Can I understand my financial history? |
+| Statement detail / export | Does this match my ledger? (`DEC-0047`) |
 | Achievements / milestones | What real progress have I already made? |
 | Personalized insights (bounded) | What changed that deserves calm attention? |
 | Help Center (expanded) | How do I fix or understand this without shouting? |
@@ -146,17 +147,15 @@ Wave B surfaces keep their existing primary questions. Milestone 6 must not repl
 
 | Route | Intent |
 | --- | --- |
-| `/success` or `/account/success` | Customer Success Center hub |
-| `/learn` or `/account/learn` | Education index |
-| `/learn/[slug]` | Education article |
-| `/account/referrals` | Referral hub (evolve B4 read-only shell) |
-| `/account/statements` | Statements list / period picker |
-| `/account/statements/[id]` | Statement view / download |
-| `/account/milestones` | Achievements / milestones |
-| `/account/help` (expand) | Help Center expansion |
+| `/account/success` | Customer Success Hub (`DEC-0046`) |
+| `/account/learn` | Education index (G3 deepens content) |
+| `/account/learn/[slug]` | Education article (G3) |
+| `/account/referrals` | Referral hub (G4 deepens; B4 baseline remains) |
+| `/account/statements` | Statements entry (G2 deepens) |
+| `/account/statements/[id]` | Statement view / download (G2) |
+| `/account/milestones` | Achievements / milestones shell (G1; content later as needed) |
+| `/account/help` (expand) | Help Center (G3 topics + existing B4) |
 | Deep links from notifications / empty states | Context-sensitive education & help |
-
-Exact path names may be finalized in Stage 2 sprint plans; meaning is fixed here.
 
 ## 2.3 Navigation placement
 
@@ -198,19 +197,19 @@ Exact path names may be finalized in Stage 2 sprint plans; meaning is fixed here
 
 ---
 
-# 5. Sprint plan (Stage 2 — provisional)
+# 5. Sprint plan (Stage 2 — approved sequence)
 
-Only after Stage 1 approval. Names may adjust; sequence is fixed by dependency.
+Implement **one sprint at a time**. Review and approve before the next.
 
-| Sprint | Scope | Exit |
-| --- | --- | --- |
-| **G1** | Customer Success Center shell + Education foundation + Help expansion baseline | Certified slice |
-| **G2** | Referral Experience (full hub on frozen referral data) | Certified slice |
-| **G3** | Statements (period, preview, export) | Certified slice |
-| **G4** | Milestones / achievements + bounded personalized insights | Certified slice |
-| **G5** | Certification package, audits, tag **`v3.2.0`**, freeze | Freeze ADR |
+| Sprint | Scope | Primary question | Exit |
+| --- | --- | --- | --- |
+| **G1** | Customer Success Hub: success dashboard, learning shell, milestones shell, statements entry, referral entry, progress framework — **no business logic** | How can I become more successful? | Certified slice |
+| **G2** | Statements: monthly, investment summaries, ledger summaries, download history, timeline — **no accounting changes**; `DEC-0047` | Can I understand my financial history? | Certified slice |
+| **G3** | Education: basics, security, platform guides, FAQ, articles, optional video, progress tracking | What should I learn next? | Certified slice |
+| **G4** | Referral Experience: dashboard, rewards history, invite flow, privacy, status, education — **no gamification** | How do I recommend this responsibly? | Certified slice |
+| **G5** | Certification only (perf, a11y, UX, security, docs) + `STATEMENT_DATA_DICTIONARY.md` + tag **`v3.2.0`** + freeze | — | Freeze ADR |
 
-Each sprint: Design refinements (if needed) → Implement → Test → Audit → Review — never reopen frozen money UX for convenience.
+Each sprint: Implement → Test → Review here → Approve → next. Never reopen frozen money UX for convenience.
 
 ---
 

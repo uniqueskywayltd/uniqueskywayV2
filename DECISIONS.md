@@ -1619,29 +1619,95 @@ After freezing `v3.1.0`, the platform has a complete certified customer path fro
 - Implementation prompts should carry architecture, UX decisions, constraints, and acceptance criteria already decided.
 - Roadmap language prefers experience trains: Growth → International → Mobile → Ecosystem.
 
-## DEC-0045: Milestone 6 Stage 1 Design Package (proposed)
+## DEC-0045: Milestone 6 Stage 1 Design Package
 
 - Date: 2026-07-13
-- Status: **Proposed** — awaiting consultancy approval (no Stage 2 until Accepted)
-- Future Review: Upon Stage 1 approve / reject / revise
+- Status: Accepted
+- Future Review: Philosophy-level Customer Success Experience change
 
 ### Context
 
-After freezing `v3.1.0` and adopting `PLATFORM_CONSTITUTION.md`, the next train is Growth Experience (`v3.2.0`), framed internally as a Customer Success Platform answering **Why should I keep coming back?**
+After freezing `v3.1.0` and adopting `PLATFORM_CONSTITUTION.md`, the next train is **Customer Success Experience** (`v3.2.0`) answering **Why should I keep coming back?** Consultancy Stage 1 score: **99.8 / 100**.
 
-### Decision (pending approval)
+### Decision
 
-1. Adopt the Stage 1 pack as the design authority for Milestone 6 once consultancy marks this DEC **Accepted**:
-   - `GROWTH_EXPERIENCE_SPECIFICATION.md`
+1. Adopt the Stage 1 pack as design authority for Milestone 6:
+   - `GROWTH_EXPERIENCE_SPECIFICATION.md` (filename retained; product name is Customer Success Experience)
    - `CUSTOMER_SUCCESS_FRAMEWORK.md`
    - `ENGAGEMENT_PRINCIPLES.md`
    - `REFERRAL_EXPERIENCE_PRINCIPLES.md`
    - `STATEMENT_EXPERIENCE_GUIDE.md`
    - `CUSTOMER_EDUCATION_GUIDE.md`
-2. Explicitly forbid casino engagement, fake streaks, and new financial engines in this train.
-3. Prefer calm retention; money home from Wave B remains primary.
+   - `SUCCESS_METRICS_FRAMEWORK.md` (outcomes, not vanity KPIs)
+2. Forbid casino engagement, fake streaks, and new financial engines.
+3. Prefer calm retention; Wave B money home remains primary for balances.
+4. Stage 2 proceeds **one sprint at a time** (G1 → review → G2 → … → G5).
+5. Before G5: add `STATEMENT_DATA_DICTIONARY.md`.
+
+### Consequences
+
+- Older Wave C/D roadmap blurbs defer to this pack.
+- Sprint G1 may implement Success Hub shells without business-logic engines.
+
+## DEC-0046: Customer Success Hub Is Primary Post-Investment Guidance Surface
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: If Success IA is redesigned under ADR
+
+### Context
+
+Post-investment guidance (learn, milestones, statements entry, responsible referrals) must not compete with Dashboard money primacy or drown customers in promo chrome.
+
+### Decision
+
+1. The **Customer Success Hub** (`/account/success`) is the primary authenticated surface for post-investment **guidance and success wayfinding**.
+2. Money home (`/dashboard` and money nav) remains the primary surface for balances and money action.
+3. Growth/success capabilities link from the Success Hub; they do not stack marketing modules on the financial dashboard.
+
+### Consequences
+
+- Sprint G1 establishes the hub and shell entries under Account / Success IA.
+- Dashboard may at most keep the quiet single-cue rule from engagement principles — not a second guidance portal.
+
+## DEC-0047: Statements Are Direct Projections of Certified Ledger Data
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Only with financial ADR + recertification
+
+### Context
+
+Statements are among the highest-trust artifacts on a financial platform. Presentation-driven totals destroy trust.
+
+### Decision
+
+1. All customer statements must remain **direct projections of certified ledger / investment / payment read models**.
+2. No independently calculated or “pretty” financial figures may appear on statements.
+3. Field catalog authority for statement lines will be `STATEMENT_DATA_DICTIONARY.md` before Sprint G5.
+4. Accrued figures, if ever shown, must be explicitly labeled and sourced — never silently mixed into credited totals.
+
+### Consequences
+
+- Sprint G2 implements statement UX against existing certified reads only.
+- Conflicts with UI desire lose to `FINANCIAL_INVARIANTS.md` and this DEC.
+
+## DEC-0048: Sprint G1 Customer Success Hub (proposed acceptance)
+
+- Date: 2026-07-13
+- Status: **Proposed** — awaiting consultancy review of `SPRINT_G1_CERTIFICATION.md`
+- Future Review: After Accepted, G1 shells require ADR-level change control
+
+### Context
+
+Stage 1 (`DEC-0045`) and Success Hub primacy (`DEC-0046`) authorized Sprint G1 shells with no business logic.
+
+### Decision (pending)
+
+1. Accept Sprint G1 as certified on branch `milestone-6-sprint-g1-success-hub`.
+2. Merge to `main` after consultancy sign-off.
+3. Authorize Sprint G2 Statements design/implementation next — only after this DEC is Accepted.
 
 ### Consequences (when accepted)
 
-- Stage 2 sprints G1–G5 may begin only after explicit approval.
-- Older Wave C/D roadmap blurbs defer to the Growth Stage 1 pack.
+- G2 may begin; G3–G5 remain blocked until prior sprints are approved.

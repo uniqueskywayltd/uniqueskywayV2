@@ -617,31 +617,27 @@ All Wave B screens consume certified engines/APIs. No new ledger, ROI, deposit, 
 
 Honest language required: **Accrued ≠ Credited ≠ Withdrawable**.
 
-### Milestone 6 — Growth Experience / Customer Success Platform (`v3.2.0`)
+### Milestone 6 — Customer Success Experience (`v3.2.0`)
 
-Supersedes earlier “Wave C / Wave D” blurbs for growth, education, statements, and help polish.
+North-star: **Why should I keep coming back?**  
+Mission: Customer success (growth is the result).  
+Governance: `DEC-0045` (Stage 1), `DEC-0046` (Success Hub), `DEC-0047` (ledger statements), `SUCCESS_METRICS_FRAMEWORK.md`.
 
-North-star question: **Why should I keep coming back?**  
-Internal framing: **Customer Success Platform** (retention through clarity — not marketing noise).
+#### Stage 1 — Design (**APPROVED**)
 
-#### Stage 1 — Design only (DRAFT)
+See `GROWTH_EXPERIENCE_SPECIFICATION.md` + companions.
 
-| Document | Role |
-| --- | --- |
-| `GROWTH_EXPERIENCE_SPECIFICATION.md` | Master Stage 1 specification |
-| `CUSTOMER_SUCCESS_FRAMEWORK.md` | Success definition & anti-patterns |
-| `ENGAGEMENT_PRINCIPLES.md` | Calm retention / milestones / insights |
-| `REFERRAL_EXPERIENCE_PRINCIPLES.md` | Privacy-safe referral hub |
-| `STATEMENT_EXPERIENCE_GUIDE.md` | Ledger-honest statements & exports |
-| `CUSTOMER_EDUCATION_GUIDE.md` | Learn surfaces & voice |
+#### Stage 2 — One sprint at a time
 
-**No implementation until Stage 1 is approved.** No new financial engines. Frozen `v2.x` / `v3.0.0` / `v3.1.0` remain frozen.
+| Sprint | Scope | Status |
+| --- | --- | --- |
+| **G1** | Customer Success Hub shells (no business logic) | Implemented — `SPRINT_G1_CERTIFICATION.md` (awaiting review) |
+| **G2** | Statements (`DEC-0047`) | Blocked until G1 approved |
+| **G3** | Education | Blocked |
+| **G4** | Referral Experience | Blocked |
+| **G5** | Certification + `STATEMENT_DATA_DICTIONARY.md` + tag `v3.2.0` | Blocked |
 
-#### Stage 2 — Implementation (after approval; provisional sprints G1–G5)
-
-See `GROWTH_EXPERIENCE_SPECIFICATION.md` §5: Success Center + Education/Help → Referrals → Statements → Milestones/insights → Certification & tag `v3.2.0`.
-
-Historical exit criteria for Milestone 5 money path still hold: honor `LEGACY_FEATURE_EXTRACTION.md` REMOVE list; Design → Approve → Implement (`DEC-0027`).
+Historical “Wave C / Wave D” blurbs defer to this package.
 
 ## Phase 11 - Production Hardening
 
@@ -702,7 +698,7 @@ Exit criteria:
 | `v2.3.0` | Admin portal certified (frozen). |
 | `v3.0.0` | Customer Experience Platform — public trust (frozen, `DEC-0029`). |
 | `v3.1.0` | Customer Money Experience (frozen, `DEC-0043`). |
-| `v3.2.0` | Growth Experience (Milestone 6) — next. |
+| `v3.2.0` | Customer Success Experience (Milestone 6) — next. |
 | `v3.3.0` | International Platform (Milestone 7). |
 | `v3.4.0` | Mobile Experience (Milestone 8). |
 | `v4.0.0` | Ecosystem / Global Platform (Milestone 9). |
@@ -720,7 +716,7 @@ From Milestone 5 onward, prefer **release trains** (versioned customer experienc
 | 3 Money Platform | `v2.2.0` | Frozen |
 | 4 Administration | `v2.3.0` | Frozen |
 | 5 Customer Experience | `v3.0.0` / `v3.1.0` | Wave A frozen (`DEC-0029`); Wave B frozen (`DEC-0043`) |
-| 6 Growth Experience | `v3.2.0` | Next — Design → Approve first |
+| 6 Customer Success Experience | `v3.2.0` | Stage 1 approved; Sprint G1 in progress |
 | 7 International Platform | `v3.3.0` | Planned |
 | 8 Mobile Experience | `v3.4.0` | Planned |
 | 9 Ecosystem | `v4.0.0` | Planned |
@@ -730,7 +726,7 @@ From Milestone 5 onward, prefer **release trains** (versioned customer experienc
 1. `main` includes certified/frozen Investment (`v2.1.0`), Money Movement (`v2.2.0`), Admin (`v2.3.0`), public Wave A (`v3.0.0`), and Customer Money Experience (`v3.1.0`). Annotated tag **`v3.1.0`** is pushed; follow `PLATFORM_CONSTITUTION.md`.
 2. Public Wave A is frozen under **`DEC-0029`**. Authenticated Wave B is frozen under **`DEC-0043`**.
 3. Customer money UX constitutions remain in force; `FINANCIAL_INVARIANTS.md` always wins on money truth.
-4. Next: **Milestone 6 — Growth Experience (`v3.2.0`)** after Design → Approve. Do not start i18n until `v3.3.0` governance.
+4. Milestone 6 — **Customer Success Experience (`v3.2.0`)**: Stage 1 approved (`DEC-0045`); Sprint G1 Success Hub in progress. One sprint at a time. Do not start i18n until `v3.3.0` governance.
 5. Subsequent trains: `v3.3.0` international → `v3.4.0` mobile → `v4.0.0` ecosystem.
 6. Do not reopen frozen releases without ADR, regression tests, and (where required) UX approval + recertification.
 7. Keep Paystack as the sole provider until a superseding provider ADR is accepted.

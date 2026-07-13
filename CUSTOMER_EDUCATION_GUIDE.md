@@ -2,7 +2,7 @@
 
 ## Status
 
-**DRAFT — awaiting consultancy approval**  
+**APPROVED** — `DEC-0045`  
 Companion to `GROWTH_EXPERIENCE_SPECIFICATION.md` (Milestone 6 / `v3.2.0`)
 
 ## Purpose

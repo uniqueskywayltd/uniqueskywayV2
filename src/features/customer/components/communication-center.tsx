@@ -1,9 +1,15 @@
 import Link from "next/link";
-import { Bell, Gift, HelpCircle, History, Megaphone, MessagesSquare } from "lucide-react";
+import { Bell, Gift, HelpCircle, History, Megaphone, MessagesSquare, Sprout } from "lucide-react";
 
 import { Button } from "@/components/ui";
 
 const HUB_LINKS = [
+  {
+    href: "/account/success",
+    title: "Customer Success Hub",
+    description: "How can I become more successful?",
+    icon: Sprout,
+  },
   {
     href: "/account/notifications",
     title: "Notification Center",
@@ -25,7 +31,7 @@ const HUB_LINKS = [
   {
     href: "/account/referrals",
     title: "Referrals",
-    description: "Read-only summary from the frozen referral engine.",
+    description: "Recommend responsibly — privacy-first.",
     icon: Gift,
   },
   {

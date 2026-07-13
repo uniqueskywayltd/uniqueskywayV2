@@ -118,7 +118,7 @@ Cursor implements approved briefs. Architecture, UX critique, prioritization, an
 
 | Release | Milestone | Intent |
 | --- | --- | --- |
-| `v3.2.0` | Growth Experience | Retention, statements, education, engagement — no new engines |
+| `v3.2.0` | Customer Success Experience | Retention through success — no new engines |
 | `v3.3.0` | International Platform | i18n, RTL, locale, localized mail/notifications |
 | `v3.4.0` | Mobile Experience | PWA, push, offline, mobile polish |
 | `v4.0.0` | Ecosystem | Partner/public APIs, enterprise — only after the customer platform is complete |
