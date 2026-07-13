@@ -200,4 +200,14 @@ export class CoreRepository extends BaseDrizzleRepository {
     const rows = await context.db.insert(investmentPlanVersions).values(values).returning();
     return singleRow(rows, "createInvestmentPlanVersion");
   }
+
+  async findInvestmentPlanVersionById(id: string): Promise<InvestmentPlanVersionRecord | null> {
+    const rows = await this.db
+      .select()
+      .from(investmentPlanVersions)
+      .where(eq(investmentPlanVersions.id, id))
+      .limit(1);
+
+    return rows[0] ?? null;
+  }
 }
