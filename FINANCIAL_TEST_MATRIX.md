@@ -74,6 +74,27 @@ Deposit, withdrawal, provider, and referral rows may appear in this matrix as fu
 | Phase 6.3 | Financial Recovery Certification | Can interrupted financial jobs resume without losing or duplicating money? |
 | Phase 6.4 | Investment Engine Certification | Do architecture, math, concurrency, recovery, performance, and documentation all pass together? |
 
+## Financial Performance And Impossibility Targets
+
+These targets are part of the certification contract.
+
+Latency targets exclude unavoidable external database, network, hosting, and provider latency unless a benchmark explicitly includes those layers.
+
+| Metric | Target | Certification Evidence |
+| --- | ---: | --- |
+| Activate investment service work | `< 100 ms` excluding DB/network latency | Phase 6.4 benchmark |
+| Settle one investment service work | `< 50 ms` excluding DB/network latency | Phase 6.4 benchmark |
+| Settle 10,000 investments | `< 5 minutes` in a production-like database environment | Phase 6.4 benchmark |
+| Ledger posting | Atomic | Transaction and rollback tests |
+| Recovery after interruption | Idempotent | Phase 6.3 recovery tests |
+| Duplicate activation | Impossible | Phase 6.2 concurrency tests plus unique constraints |
+| Duplicate settlement | Impossible | Phase 6.2 concurrency tests plus unique constraints |
+| Duplicate maturity release | Impossible | Phase 6.2 concurrency tests plus unique constraints |
+| Balance mismatch | Impossible under approved posting paths | Reconciliation tests |
+| ROI drift | `0` cents for promised-total plans | Phase 6.1 mathematics certification |
+| Current-day settlement | Impossible | New York completed-day tests |
+| Live earnings wallet effect | Impossible | Domain tests and scope audit |
+
 ## Phase 6.1 - Financial Mathematics Certification
 
 Certification target:

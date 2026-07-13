@@ -21,6 +21,8 @@ Added:
 - Added financial tests for ROI residuals, promised ROI exactness, New York DST boundaries, ledger balancing, settlement orchestration, maturity release, idempotency, and reconciliation.
 - Added `FINANCIAL_TEST_MATRIX.md` to define Phase 6.1 mathematics, Phase 6.2 concurrency, Phase 6.3 recovery, and Phase 6.4 certification coverage requirements.
 - Added Phase 6.1 mathematics certification coverage for 100,000 deterministic ROI simulations, certified daily ROI bps sweep, certified term-duration sweep, zero ROI, capped ROI, uncapped fixed-term ROI, large-principal bigint safety, and New York leap/month/year boundaries.
+- Reconciled `DEVELOPMENT_ROADMAP.md` with the certified Phase 0 through Phase 6.1 sequence and the Phase 6.2, 6.3, and 6.4 certification path.
+- Added financial performance and impossibility targets to `FINANCIAL_TEST_MATRIX.md`.
 
 ## v2.0.1 - 2026-07-13
 
