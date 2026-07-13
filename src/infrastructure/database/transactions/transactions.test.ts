@@ -79,6 +79,29 @@ describe("DrizzleTransactionManager", () => {
     expect(db.transaction).toHaveBeenCalledTimes(2);
   });
 
+  it("retries PostgreSQL query timeout failures", async () => {
+    let attempts = 0;
+    const db = {
+      transaction: vi.fn(async (work: (context: unknown) => Promise<string>) => {
+        attempts += 1;
+        if (attempts === 1) {
+          throw postgresTransactionError("57014");
+        }
+
+        return work({ attempt: attempts });
+      }),
+    };
+    const manager = new DrizzleTransactionManager(db as never, {
+      maxRetries: 2,
+      retryDelayMs: 0,
+    });
+
+    const result = await manager.runInTransaction(async () => "committed after timeout retry");
+
+    expect(result).toBe("committed after timeout retry");
+    expect(db.transaction).toHaveBeenCalledTimes(2);
+  });
+
   it("stops retrying after the configured retry limit", async () => {
     const db = {
       transaction: vi.fn(async () => {

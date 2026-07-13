@@ -48,7 +48,8 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | Phase 6.0 | Checkpoint Complete | `phase-6-investment-engine` | Investment engine core built, not merged. |
 | Phase 6.1 | Complete | `phase-6-investment-engine` | Financial mathematics certified, not merged. |
 | Phase 6.2 | Complete | `phase-6-investment-engine` | Financial concurrency certified, not merged. |
-| Phase 6.3 | Next | `phase-6-investment-engine` | Financial recovery certification. |
+| Phase 6.3 | Complete | `phase-6-investment-engine` | Financial recovery certified, not merged. |
+| Phase 6.4 | Next | `phase-6-investment-engine` | Investment engine final certification. |
 
 `main` remains frozen at `v2.0.1` until Phase 6.4 passes and `v2.1.0` is tagged.
 
@@ -312,7 +313,7 @@ Exit criteria:
 
 ### Phase 6.3 - Financial Recovery Certification
 
-Status: Pending.
+Status: Complete.
 
 Mission:
 
@@ -506,8 +507,6 @@ Exit criteria:
 ## Current Build Order Summary
 
 1. Keep `main` frozen at `v2.0.1`.
-2. Complete Phase 6.2 concurrency certification.
-3. Complete Phase 6.3 recovery certification.
-4. Complete Phase 6.4 investment engine certification.
-5. Merge and tag `v2.1.0`.
-6. Begin Phase 7 money movement.
+2. Complete Phase 6.4 investment engine certification.
+3. Merge and tag `v2.1.0`.
+4. Begin Phase 7 money movement.

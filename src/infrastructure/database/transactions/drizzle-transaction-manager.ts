@@ -14,7 +14,7 @@ export interface DrizzleTransactionManagerOptions {
   readonly retryDelayMs?: number;
 }
 
-const RETRYABLE_POSTGRES_TRANSACTION_CODES = new Set(["40001", "40P01"]);
+const RETRYABLE_POSTGRES_TRANSACTION_CODES = new Set(["40001", "40P01", "57014"]);
 const DEFAULT_MAX_RETRIES = 2;
 const DEFAULT_RETRY_DELAY_MS = 25;
 

@@ -180,15 +180,15 @@ Certification target:
 
 | ID | Scenario | Invariants | Expected Result | Current Evidence | Status |
 | --- | --- | --- | --- | --- | --- |
-| REC-001 | Failure before settlement run creation | FI-004, FI-1303 | No run, item, ledger transaction, or ROI ledger entry is committed. | Dedicated recovery test required. | Required |
-| REC-002 | Failure after run creation before items | FI-606, FI-1301, FI-1303 | Rerun creates or resumes a valid run and processes unsettled investments. | Settlement run failure marking exists; resume test required. | Required |
-| REC-003 | Failure after one investment commits | FI-606, FI-1301, FI-1303 | Rerun skips committed item and continues remaining investments. | Idempotent settlement item skip exists; multi-investment recovery test required. | Required |
-| REC-004 | Failure inside ROI settlement transaction | FI-004, FI-105 | No partial settlement item, ROI ledger entry, or ledger transaction survives rollback. | Transaction wrapper exists; rollback test required. | Required |
-| REC-005 | Failure during maturity principal release | FI-004, FI-701, FI-703 | Principal is either unreleased or fully released once; never half-released. | Maturity release is transaction-scoped; rollback test required. | Required |
-| REC-006 | Retry after database timeout | FI-005, FI-1103 | Retry does not duplicate investment funding, ROI, or maturity release. | Idempotency keys exist; timeout simulation required. | Required |
-| REC-007 | Retry after process crash | FI-606, FI-1301, FI-1303 | Job resumes from durable records and already committed items are no-ops. | Durable run records exist; crash simulation required. | Required |
-| REC-008 | Failed settlement run inspection | FI-006, FI-1300 | Failed run records preserve status, error message, date, and lock owner. | Repository supports failed run status; integration test required. | Required |
-| REC-009 | Reconciliation after recovery | FI-1202, FI-1204 | Ledger, settlement items, and ROI ledger entries agree after resumed run. | Reconciliation helper exists; recovery reconciliation test required. | Required |
+| REC-001 | Failure before settlement run creation | FI-004, FI-1303 | No run, item, ledger transaction, or ROI ledger entry is committed. | `investment-engine-recovery.test.ts` verifies failed run creation leaves no durable records. | Covered |
+| REC-002 | Failure after run creation before items | FI-606, FI-1301, FI-1303 | Rerun creates or resumes a valid run and processes unsettled investments. | `investment-engine-recovery.test.ts` verifies investment-list interruption marks the run failed before item processing. | Covered |
+| REC-003 | Failure after one investment commits | FI-606, FI-1301, FI-1303 | Rerun skips committed item and continues remaining investments. | `investment-engine-recovery.test.ts` verifies a later run skips the committed item and processes the remaining item. | Covered |
+| REC-004 | Failure inside ROI settlement transaction | FI-004, FI-105 | No partial settlement item, ROI ledger entry, or ledger transaction survives rollback. | `investment-engine-recovery.test.ts` verifies rollback of settlement item, ROI ledger, ledger transaction, and wallet projection changes. | Covered |
+| REC-005 | Failure during maturity principal release | FI-004, FI-701, FI-703 | Principal is either unreleased or fully released once; never half-released. | `investment-engine-recovery.test.ts` verifies failed maturity release rolls back and rerun releases principal once. | Covered |
+| REC-006 | Retry after database timeout | FI-005, FI-1103 | Retry does not duplicate investment funding, ROI, or maturity release. | `transactions.test.ts` covers PostgreSQL `57014`; `investment-engine-recovery.test.ts` verifies timeout-like interruption reruns without duplicate effects. | Covered |
+| REC-007 | Retry after process crash | FI-606, FI-1301, FI-1303 | Job resumes from durable records and already committed items are no-ops. | `investment-engine-recovery.test.ts` reruns recovery through a fresh service instance over durable state. | Covered |
+| REC-008 | Failed settlement run inspection | FI-006, FI-1300 | Failed run records preserve status, error message, date, and lock owner. | `investment-engine-recovery.test.ts` verifies failed run status, settlement date, run type, lock owner, and error message. | Covered |
+| REC-009 | Reconciliation after recovery | FI-1202, FI-1204 | Ledger, settlement items, and ROI ledger entries agree after resumed run. | `investment-engine-recovery.test.ts` verifies reconciliation passes after resumed settlement. | Covered |
 
 ## Phase 6.4 - Investment Engine Certification
 
@@ -208,9 +208,9 @@ Certification target:
 | CERT-004 | Fixed fixture suite | FI-1401 | Human-readable fixtures exist for required financial examples. | Not yet implemented. | Required |
 | CERT-005 | Property test suite | FI-1402 | ROI math passes required randomized and sweep coverage. | Phase 6.1 certification suite covers 100,000 simulations plus bps and term sweeps. | Covered |
 | CERT-006 | Concurrency test suite | FI-1403 | Duplicate and concurrent attempts cannot double-credit or double-release. | Phase 6.2 certification suite covers activation, settlement, maturity, ledger idempotency, retryable transaction failures, and clock skew. | Covered |
-| CERT-007 | Recovery test suite | FI-1404 | Interrupted settlement and maturity workflows resume safely. | Not yet complete. | Required |
+| CERT-007 | Recovery test suite | FI-1404 | Interrupted settlement and maturity workflows resume safely. | Phase 6.3 recovery suite covers run creation failure, pre-item interruption, partial committed runs, transaction rollback, maturity rollback, timeout-like retry, process restart, failed-run inspection, and reconciliation. | Covered |
 | CERT-008 | Mathematical proof review | FI-1405 | Written proof is reviewed against final implementation and test suite. | Proof exists; final review pending. | Manual Review |
-| CERT-009 | Build and test certification | TESTING.md | Typecheck, lint, unit, integration, migration, build, and E2E checks pass. | Full verification passed through Phase 6.2; final Phase 6.4 release verification remains required. | Partial |
+| CERT-009 | Build and test certification | TESTING.md | Typecheck, lint, unit, integration, migration, build, and E2E checks pass. | Full verification passed through Phase 6.3; final Phase 6.4 release verification remains required. | Partial |
 | CERT-010 | Performance benchmark | PERFORMANCE.md | Settlement throughput and ROI simulation cost are measured and documented. | Not yet measured. | Required |
 | CERT-011 | Documentation consistency audit | CONTRIBUTING.md, DECISIONS.md | Financial docs, roadmap, tests, and implementation agree. | Roadmap has been reconciled for Phase 6; final Phase 6.4 audit remains required. | Partial |
 | CERT-012 | Release readiness | CHANGELOG.md | Branch can merge to `main`, receive `v2.1.0`, and become recovery point. | Not ready until all Phase 6 certification gates pass. | Required |

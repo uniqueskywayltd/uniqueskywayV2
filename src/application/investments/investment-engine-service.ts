@@ -225,13 +225,14 @@ export class InvestmentEngineService {
       );
     });
 
-    const investments =
-      await this.deps.investmentRepository.listActiveInvestmentsEligibleForSettlement(
-        input.settlementDate,
-      );
     const itemResults: Array<{ investmentId: string; status: "posted" | "skipped" }> = [];
 
     try {
+      const investments =
+        await this.deps.investmentRepository.listActiveInvestmentsEligibleForSettlement(
+          input.settlementDate,
+        );
+
       for (const investment of investments) {
         const result = await this.settleInvestment(run.id, investment, input.settlementDate);
         itemResults.push(result);

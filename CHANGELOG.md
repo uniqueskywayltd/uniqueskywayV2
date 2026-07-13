@@ -26,6 +26,10 @@ Added:
 - Added Phase 6.2 concurrency stress coverage for 500-worker duplicate activation, 500-worker available-balance lock contention, 500 duplicate cron settlement executions, 500 racing final-day settlement workers, and duplicate ledger idempotency collisions.
 - Added PostgreSQL transaction retry handling and tests for serialization failures (`40001`) and deadlocks (`40P01`).
 - Completed Phase 6.2 financial concurrency certification in the roadmap and financial test matrix.
+- Added Phase 6.3 recovery certification coverage for failed run creation, pre-item interruption, partial committed runs, ROI transaction rollback, maturity rollback, timeout-like retry, process restart, failed-run inspection, and post-recovery reconciliation.
+- Extended PostgreSQL transaction retry handling to query timeout failures (`57014`).
+- Fixed settlement failure handling so errors after run creation but before item processing mark the settlement run as failed.
+- Completed Phase 6.3 financial recovery certification in the roadmap and financial test matrix.
 
 ## v2.0.1 - 2026-07-13
 
