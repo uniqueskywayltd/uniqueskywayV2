@@ -2,11 +2,12 @@
 
 ## Result
 
-**PASS — Sprint G2 Statements Experience certified (pending consultancy product review)**
+**PASS — Sprint G2 Statements Experience certified**
 
 Date: 2026-07-13  
-Branch: `milestone-6-sprint-g2-statements`  
-Authority: `STATEMENT_DESIGN_PRINCIPLES.md` (**DEC-0050**), `STATEMENT_EXPERIENCE_GUIDE.md`, `DEC-0047`, `GROWTH_EXPERIENCE_SPECIFICATION.md`, `EP-029`
+Branch: `milestone-6-sprint-g2-statements` (merged to `main`)  
+Authority: `STATEMENT_DESIGN_PRINCIPLES.md` (**DEC-0050**), `STATEMENT_EXPERIENCE_GUIDE.md`, `DEC-0047`, `DEC-0051`, `DEC-0053`, `GROWTH_EXPERIENCE_SPECIFICATION.md`, `EP-029`  
+Consultancy score: **100 / 100**
 
 ## Scope completed
 

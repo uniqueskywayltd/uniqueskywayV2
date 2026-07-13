@@ -632,8 +632,8 @@ See `GROWTH_EXPERIENCE_SPECIFICATION.md` + companions.
 | Sprint | Scope | Status |
 | --- | --- | --- |
 | **G1** | Customer Success Hub shells (no business logic) | **Frozen** — `DEC-0048` / `DEC-0049` |
-| **G2** | Statements (`DEC-0047`, `DEC-0050`) | Implemented — `SPRINT_G2_CERTIFICATION.md` (awaiting review) |
-| **G3** | Education | Blocked |
+| **G2** | Statements (`DEC-0047`, `DEC-0050`) | **Frozen** — `DEC-0051` / `DEC-0053` |
+| **G3** | Education (`DEC-0052`) | Next |
 | **G4** | Referral Experience | Blocked |
 | **G5** | Certification + `STATEMENT_DATA_DICTIONARY.md` + tag `v3.2.0` | Blocked |
 

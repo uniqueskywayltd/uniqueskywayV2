@@ -1754,23 +1754,64 @@ Before implementing statements, experience rules must be fixed separately from t
 
 - Sprint G2 implements list/detail/download UX under these principles and `STATEMENT_EXPERIENCE_GUIDE.md`.
 
-## DEC-0051: Sprint G2 Statements Experience (proposed acceptance)
+## DEC-0051: Sprint G2 Statements Experience
 
 - Date: 2026-07-13
-- Status: **Proposed** — awaiting consultancy review of `SPRINT_G2_CERTIFICATION.md`
-- Future Review: After Accepted, G2 statement surfaces require ADR-level change control
+- Status: Accepted
+- Future Review: ADR-level change control for statement surfaces
 
 ### Context
 
-G1 frozen (`DEC-0048`/`DEC-0049`). Statement Design Principles adopted (`DEC-0050`). G2 implemented ledger-only projections for understanding financial history.
+G1 frozen (`DEC-0048`/`DEC-0049`). Statement Design Principles adopted (`DEC-0050`). G2 implemented ledger-only projections for understanding financial history. Consultancy score: **100 / 100**.
 
-### Decision (pending)
+### Decision
 
-1. Accept Sprint G2 as certified.
-2. Merge `milestone-6-sprint-g2-statements` into `main`.
-3. Authorize Sprint G3 Education only after acceptance.
+1. Accept Sprint G2 as certified (`SPRINT_G2_CERTIFICATION.md`).
+2. Merge `milestone-6-sprint-g2-statements` into `main` and freeze G2.
+3. Authorize Sprint G3 Education after Learning Experience Principles (`DEC-0052`).
 
-### Consequences (when accepted)
+### Consequences
 
 - Statement list/detail/download become frozen Customer Success surfaces.
 - `STATEMENT_DATA_DICTIONARY.md` remains required before G5.
+
+## DEC-0052: Learning Experience Principles Adopted before Sprint G3
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Learning UX philosophy change
+
+### Context
+
+Before Education implementation, experience rules must define how customers decide **what to learn next** — without building an LMS or gamification.
+
+### Decision
+
+1. Adopt `LEARNING_EXPERIENCE_PRINCIPLES.md` as experience authority for G3+.
+2. North star remains **What should I learn next?**
+3. Forbid quizzes, certificates, points, streaks, and mandatory courses before money actions.
+4. Align content with `CUSTOMER_EDUCATION_GUIDE.md` and glossary-safe microcopy.
+
+### Consequences
+
+- Sprint G3 implements Learn home, paths, lessons, progress, and search under these principles.
+
+## DEC-0053: Sprint G2 Statement Experience Certified
+
+- Date: 2026-07-13
+- Status: Accepted — **ACTIVE FREEZE for G2 statement surfaces**
+- Future Review: Philosophy-level statement UX change
+
+### Context
+
+G2 delivered ledger-projected statements with understanding-first reading order, CSV download, and audit history without accounting changes.
+
+### Decision
+
+1. Record G2 as **certified and frozen** under Milestone 6.
+2. Preserve `SPRINT_G2_CERTIFICATION.md` on `main`.
+3. Do not casually redesign statement projections during G3–G4.
+
+### Consequences
+
+- Later sprints may deep-link to statements; they do not reopen ledger math.
