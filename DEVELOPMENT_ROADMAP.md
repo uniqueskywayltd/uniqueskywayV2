@@ -49,9 +49,9 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | Phase 6.1 | Complete | `phase-6-investment-engine` | Financial mathematics certified, not merged. |
 | Phase 6.2 | Complete | `phase-6-investment-engine` | Financial concurrency certified, not merged. |
 | Phase 6.3 | Complete | `phase-6-investment-engine` | Financial recovery certified, not merged. |
-| Phase 6.4 | Next | `phase-6-investment-engine` | Investment engine final certification. |
+| Phase 6.4 | Complete | `phase-6-investment-engine` | Investment engine final certification verified; ready for merge and tag. |
 
-`main` remains frozen at `v2.0.1` until Phase 6.4 passes and `v2.1.0` is tagged.
+`main` remains frozen at `v2.0.1` until the phase branch is merged and `v2.1.0` is tagged.
 
 ## Completed Foundation
 
@@ -341,7 +341,7 @@ Exit criteria:
 
 ### Phase 6.4 - Investment Engine Certification
 
-Status: Pending.
+Status: Complete; ready for merge and tag.
 
 Mission:
 
@@ -355,8 +355,14 @@ Exit criteria:
 - Performance targets in `FINANCIAL_TEST_MATRIX.md` reviewed.
 - Documentation consistency audit complete.
 - Architecture and scope leak audit complete.
-- Full verification passes.
+- Certification reports created:
+  - `INVESTMENT_ENGINE_CERTIFICATION.md`.
+  - `FINANCIAL_CERTIFICATION_REPORT.md`.
+  - `PERFORMANCE_CERTIFICATION.md`.
+  - `PHASE_6_FINAL_REPORT.md`.
+- Full verification passed on `phase-6-investment-engine`.
 - Branch merges to `main`.
+- Full verification passes on `main`.
 - Tag `v2.1.0` is created and pushed.
 
 ## Phase 7 - Money Movement

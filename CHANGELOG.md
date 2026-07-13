@@ -30,6 +30,10 @@ Added:
 - Extended PostgreSQL transaction retry handling to query timeout failures (`57014`).
 - Fixed settlement failure handling so errors after run creation but before item processing mark the settlement run as failed.
 - Completed Phase 6.3 financial recovery certification in the roadmap and financial test matrix.
+- Added Phase 6.4 certification reports for investment engine readiness, financial invariant coverage, performance certification, and final Phase 6 release readiness.
+- Added Phase 6.4 investment engine performance benchmark coverage for activation service work, single settlement service work, and 10,000-investment settlement service work.
+- Closed the Phase 6 financial test matrix certification gates for architecture boundaries, scope boundaries, invariant coverage, fixed fixtures, proof review, performance, documentation synchronization, and release readiness.
+- Completed Phase 6.4 final verification on the phase branch: typecheck, lint, test, database check, build, and E2E.
 
 ## v2.0.1 - 2026-07-13
 

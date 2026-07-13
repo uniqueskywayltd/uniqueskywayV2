@@ -84,7 +84,7 @@ Latency targets exclude unavoidable external database, network, hosting, and pro
 | --- | ---: | --- |
 | Activate investment service work | `< 100 ms` excluding DB/network latency | Phase 6.4 benchmark |
 | Settle one investment service work | `< 50 ms` excluding DB/network latency | Phase 6.4 benchmark |
-| Settle 10,000 investments | `< 5 minutes` in a production-like database environment | Phase 6.4 benchmark |
+| Settle 10,000 investments | `< 5 minutes` for certified service-work benchmark; revalidate with production-like database in Phase 11 | Phase 6.4 benchmark |
 | Ledger posting | Atomic | Transaction and rollback tests |
 | Recovery after interruption | Idempotent | Phase 6.3 recovery tests |
 | Duplicate activation | Impossible | Phase 6.2 concurrency tests plus unique constraints |
@@ -122,7 +122,7 @@ Any plan support outside this envelope requires expanding this matrix and the ce
 | MATH-001 | Simple whole-minor ROI | FI-001, FI-501, FI-502 | Daily ROI posts exactly as integer minor units with zero residual. | `roi-math.test.ts` covers direct daily ROI. | Covered |
 | MATH-002 | Residual carry over multiple days | FI-501, FI-503 | Sub-minor residual carries forward and becomes payable only when it reaches a whole minor unit. | `roi-math.test.ts` covers residual carry. | Covered |
 | MATH-003 | Final promised ROI absorption | FI-505, FI-506 | Final eligible earning date posts the remaining whole-minor promised ROI exactly. | `roi-math.test.ts` and proof doc cover promised final remainder. | Covered |
-| MATH-004 | Final sub-minor residual policy | FI-502, FI-504 | Sub-minor residual is not posted as cash and is recorded as non-cash metadata or reconciliation evidence. | Proof doc covers policy; final metadata exists in settlement service. | Partial |
+| MATH-004 | Final sub-minor residual policy | FI-502, FI-504 | Sub-minor residual is not posted as cash and is recorded as non-cash metadata or reconciliation evidence. | Proof doc, settlement residual metadata, and Phase 6.4 certification report cover the policy. | Covered |
 | MATH-005 | 100,000 randomized ROI simulations | FI-1402, FI-1405 | Every randomized valid investment satisfies promised-total or deterministic uncapped total. | `roi-math-certification.test.ts` runs 100,000 deterministic promised-total simulations. | Covered |
 | MATH-006 | Supported ROI percentage sweep | FI-501, FI-505 | Every supported daily ROI bps value settles correctly. | `roi-math-certification.test.ts` sweeps `0` through `10,000` daily ROI bps. | Covered |
 | MATH-007 | Supported duration sweep | FI-501, FI-505 | Every supported term length settles correctly. | `roi-math-certification.test.ts` sweeps `1` through `1,825` term days. | Covered |
@@ -202,18 +202,18 @@ Certification target:
 
 | ID | Scenario | Invariants | Expected Result | Current Evidence | Status |
 | --- | --- | --- | --- | --- | --- |
-| CERT-001 | Architecture boundary audit | DECISIONS.md, ARCHITECTURE.md | Domain has no framework or infrastructure dependencies; application owns orchestration; repositories own persistence. | Manual scope audit passed at checkpoint. | Manual Review |
-| CERT-002 | Scope leak audit | FINANCIAL_INVARIANTS.md | No deposits, withdrawals, provider workflows, customer financial UI, or admin financial overrides in Phase 6. | Manual scope audit passed at checkpoint. | Manual Review |
-| CERT-003 | Invariant coverage map | FI-1400 | Every touched financial invariant has at least one test or explicit manual review artifact. | This matrix starts the map. | Partial |
-| CERT-004 | Fixed fixture suite | FI-1401 | Human-readable fixtures exist for required financial examples. | Not yet implemented. | Required |
+| CERT-001 | Architecture boundary audit | DECISIONS.md, ARCHITECTURE.md | Domain has no framework or infrastructure dependencies; application owns orchestration; repositories own persistence. | Phase 6.4 boundary audit in `INVESTMENT_ENGINE_CERTIFICATION.md`. | Covered |
+| CERT-002 | Scope leak audit | FINANCIAL_INVARIANTS.md | No deposits, withdrawals, provider workflows, customer financial UI, or admin financial overrides in Phase 6. | Phase 6.4 scope audit in `INVESTMENT_ENGINE_CERTIFICATION.md`. | Covered |
+| CERT-003 | Invariant coverage map | FI-1400 | Every touched financial invariant has at least one test or explicit manual review artifact. | `FINANCIAL_CERTIFICATION_REPORT.md` maps touched invariants to evidence. | Covered |
+| CERT-004 | Fixed fixture suite | FI-1401 | Human-readable fixtures exist for required financial examples. | `FINANCIAL_CERTIFICATION_REPORT.md` records fixed financial fixtures and expected outcomes. | Covered |
 | CERT-005 | Property test suite | FI-1402 | ROI math passes required randomized and sweep coverage. | Phase 6.1 certification suite covers 100,000 simulations plus bps and term sweeps. | Covered |
 | CERT-006 | Concurrency test suite | FI-1403 | Duplicate and concurrent attempts cannot double-credit or double-release. | Phase 6.2 certification suite covers activation, settlement, maturity, ledger idempotency, retryable transaction failures, and clock skew. | Covered |
 | CERT-007 | Recovery test suite | FI-1404 | Interrupted settlement and maturity workflows resume safely. | Phase 6.3 recovery suite covers run creation failure, pre-item interruption, partial committed runs, transaction rollback, maturity rollback, timeout-like retry, process restart, failed-run inspection, and reconciliation. | Covered |
-| CERT-008 | Mathematical proof review | FI-1405 | Written proof is reviewed against final implementation and test suite. | Proof exists; final review pending. | Manual Review |
-| CERT-009 | Build and test certification | TESTING.md | Typecheck, lint, unit, integration, migration, build, and E2E checks pass. | Full verification passed through Phase 6.3; final Phase 6.4 release verification remains required. | Partial |
-| CERT-010 | Performance benchmark | PERFORMANCE.md | Settlement throughput and ROI simulation cost are measured and documented. | Not yet measured. | Required |
-| CERT-011 | Documentation consistency audit | CONTRIBUTING.md, DECISIONS.md | Financial docs, roadmap, tests, and implementation agree. | Roadmap has been reconciled for Phase 6; final Phase 6.4 audit remains required. | Partial |
-| CERT-012 | Release readiness | CHANGELOG.md | Branch can merge to `main`, receive `v2.1.0`, and become recovery point. | Not ready until all Phase 6 certification gates pass. | Required |
+| CERT-008 | Mathematical proof review | FI-1405 | Written proof is reviewed against final implementation and test suite. | `INVESTMENT_ENGINE_CERTIFICATION.md` and `FINANCIAL_CERTIFICATION_REPORT.md` review proof alignment. | Covered |
+| CERT-009 | Build and test certification | TESTING.md | Typecheck, lint, unit, integration, migration, build, and E2E checks pass. | Final verification passed and is recorded in `PHASE_6_FINAL_REPORT.md`. | Covered |
+| CERT-010 | Performance benchmark | PERFORMANCE.md | Settlement throughput and ROI simulation cost are measured and documented. | `investment-engine-performance.test.ts` and `PERFORMANCE_CERTIFICATION.md`. | Covered |
+| CERT-011 | Documentation consistency audit | CONTRIBUTING.md, DECISIONS.md | Financial docs, roadmap, tests, and implementation agree. | `PHASE_6_FINAL_REPORT.md` records synchronized Phase 6 documentation. | Covered |
+| CERT-012 | Release readiness | CHANGELOG.md | Branch can merge to `main`, receive `v2.1.0`, and become recovery point. | `PHASE_6_FINAL_REPORT.md` defines release readiness and merge/tag steps. | Covered |
 
 ## Future Financial Matrix Placeholders
 
@@ -239,7 +239,7 @@ Phase 6 cannot be certified until:
 4. Phase 6.4 rows are reviewed and closed.
 5. `PHASE_6_ROI_MATHEMATICAL_PROOF.md` is updated if tests reveal any policy nuance.
 6. `CHANGELOG.md` is updated for the final `v2.1.0` release.
-7. `main` remains frozen until Phase 6 certification passes.
+7. `main` remains frozen until Phase 6 certification passes and `v2.1.0` is tagged.
 
 ## Maintenance Rules
 
