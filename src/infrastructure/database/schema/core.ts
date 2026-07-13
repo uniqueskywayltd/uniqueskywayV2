@@ -119,6 +119,44 @@ export const investmentPlans = pgTable(
   ],
 );
 
+export const customerNotes = pgTable(
+  "customer_notes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    authorUserId: uuid("author_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("customer_notes_user_id_created_idx").on(table.userId, table.createdAt.desc())],
+);
+
+export const adminEntityNotes = pgTable(
+  "admin_entity_notes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    targetType: varchar("target_type", { length: 100 }).notNull(),
+    targetId: uuid("target_id").notNull(),
+    authorUserId: uuid("author_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("admin_entity_notes_target_created_idx").on(
+      table.targetType,
+      table.targetId,
+      table.createdAt.desc(),
+    ),
+    index("admin_entity_notes_author_idx").on(table.authorUserId, table.createdAt.desc()),
+  ],
+);
+
 export const investmentPlanVersions = pgTable(
   "investment_plan_versions",
   {

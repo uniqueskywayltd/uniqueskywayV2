@@ -1,28 +1,36 @@
 import type { NextRequest } from "next/server";
-import { z } from "zod";
 
 import { createRequestContext, jsonError, jsonOk } from "@/app/api/_shared/http";
-import {
-  createDepositEngineService,
-  serializeDepositIntent,
-} from "@/app/api/payments/_shared/service";
+import { serializeDepositIntent } from "@/app/api/payments/_shared/service";
+import { searchDepositsInputSchema } from "@/application/admin";
+
+import { createAdminFinancialOpsService } from "../_shared/financial-ops-service";
 
 export const runtime = "nodejs";
-
-const depositStatusQuerySchema = z
-  .enum(["created", "pending", "confirmed", "failed", "cancelled", "reversed"])
-  .optional();
 
 export async function GET(request: NextRequest) {
   const context = createRequestContext(request);
 
   try {
-    const statusParam = request.nextUrl.searchParams.get("status") ?? undefined;
-    const status = depositStatusQuerySchema.parse(statusParam);
-    const service = await createDepositEngineService({ withIdentity: true });
-    const depositIntents = await service.listAllDepositIntents(status);
+    const searchParams = request.nextUrl.searchParams;
+    const input = searchDepositsInputSchema.parse({
+      q: searchParams.get("q") ?? undefined,
+      status: searchParams.get("status") ?? undefined,
+      userId: searchParams.get("userId") ?? undefined,
+      from: searchParams.get("from") ?? undefined,
+      to: searchParams.get("to") ?? undefined,
+      cursor: searchParams.get("cursor") ?? undefined,
+      limit: searchParams.get("limit") ?? undefined,
+    });
+
+    const service = await createAdminFinancialOpsService();
+    const result = await service.searchDeposits(input);
+
     return jsonOk(
-      { depositIntents: depositIntents.map(serializeDepositIntent) },
+      {
+        deposits: result.rows.map(serializeDepositIntent),
+        nextCursor: result.nextCursor,
+      },
       context.requestId,
     );
   } catch (error) {

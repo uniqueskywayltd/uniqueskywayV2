@@ -1,38 +1,36 @@
 import type { NextRequest } from "next/server";
-import { z } from "zod";
 
 import { createRequestContext, jsonError, jsonOk } from "@/app/api/_shared/http";
-import {
-  createWithdrawalEngineService,
-  serializeWithdrawalRequest,
-} from "@/app/api/payments/_shared/service";
+import { serializeWithdrawalRequest } from "@/app/api/payments/_shared/service";
+import { searchWithdrawalsInputSchema } from "@/application/admin";
+
+import { createAdminFinancialOpsService } from "../_shared/financial-ops-service";
 
 export const runtime = "nodejs";
-
-const withdrawalStatusQuerySchema = z
-  .enum([
-    "requested",
-    "reserved",
-    "under_review",
-    "approved",
-    "processing",
-    "paid",
-    "rejected",
-    "failed",
-    "cancelled",
-  ])
-  .optional();
 
 export async function GET(request: NextRequest) {
   const context = createRequestContext(request);
 
   try {
-    const statusParam = request.nextUrl.searchParams.get("status") ?? undefined;
-    const status = withdrawalStatusQuerySchema.parse(statusParam);
-    const service = await createWithdrawalEngineService({ withIdentity: true });
-    const withdrawals = await service.listWithdrawalsForAdmin(status);
+    const searchParams = request.nextUrl.searchParams;
+    const input = searchWithdrawalsInputSchema.parse({
+      q: searchParams.get("q") ?? undefined,
+      status: searchParams.get("status") ?? undefined,
+      userId: searchParams.get("userId") ?? undefined,
+      from: searchParams.get("from") ?? undefined,
+      to: searchParams.get("to") ?? undefined,
+      cursor: searchParams.get("cursor") ?? undefined,
+      limit: searchParams.get("limit") ?? undefined,
+    });
+
+    const service = await createAdminFinancialOpsService();
+    const result = await service.searchWithdrawals(input);
+
     return jsonOk(
-      { withdrawals: withdrawals.map(serializeWithdrawalRequest) },
+      {
+        withdrawals: result.rows.map(serializeWithdrawalRequest),
+        nextCursor: result.nextCursor,
+      },
       context.requestId,
     );
   } catch (error) {

@@ -1,12 +1,14 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq, ilike, lt, or } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import {
   customerAccounts,
+  customerNotes,
   customerPreferences,
   customerProfiles,
   investmentPlans,
   investmentPlanVersions,
+  users,
 } from "../schema";
 import type { DrizzleTransactionContext } from "../transactions";
 import type { AppDatabaseExecutor } from "../types";
@@ -15,8 +17,56 @@ import { BaseDrizzleRepository, singleRow } from "./base-repository";
 export type CustomerProfileRecord = InferSelectModel<typeof customerProfiles>;
 export type CustomerAccountRecord = InferSelectModel<typeof customerAccounts>;
 export type CustomerPreferenceRecord = InferSelectModel<typeof customerPreferences>;
+export type CustomerNoteRecord = InferSelectModel<typeof customerNotes>;
 export type InvestmentPlanRecord = InferSelectModel<typeof investmentPlans>;
 export type InvestmentPlanVersionRecord = InferSelectModel<typeof investmentPlanVersions>;
+
+export interface SearchCustomersQuery {
+  q?: string;
+  status?: CustomerAccountRecord["status"];
+  kycStatus?: CustomerProfileRecord["kycStatus"];
+  limit: number;
+  cursor?: string;
+}
+
+export interface CustomerSearchRow {
+  userId: string;
+  email: string;
+  userStatus: CustomerAccountRecord["status"];
+  emailVerifiedAt: Date | null;
+  userCreatedAt: Date;
+  displayName: string | null;
+  legalName: string | null;
+  kycStatus: CustomerProfileRecord["kycStatus"] | null;
+  riskStatus: CustomerProfileRecord["riskStatus"] | null;
+  accountNumber: string | null;
+  accountStatus: CustomerAccountRecord["status"] | null;
+  accountRestrictionReason: string | null;
+}
+
+export interface SearchCustomersResult {
+  rows: CustomerSearchRow[];
+  nextCursor: string | null;
+}
+
+interface CustomerSearchCursor {
+  createdAt: Date;
+  userId: string;
+}
+
+function encodeCustomerSearchCursor(cursor: CustomerSearchCursor): string {
+  return Buffer.from(
+    JSON.stringify({ createdAt: cursor.createdAt.toISOString(), userId: cursor.userId }),
+  ).toString("base64url");
+}
+
+function decodeCustomerSearchCursor(cursor: string): CustomerSearchCursor {
+  const decoded = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")) as {
+    createdAt: string;
+    userId: string;
+  };
+  return { createdAt: new Date(decoded.createdAt), userId: decoded.userId };
+}
 
 export class CoreRepository extends BaseDrizzleRepository {
   constructor(db: AppDatabaseExecutor) {
@@ -209,5 +259,130 @@ export class CoreRepository extends BaseDrizzleRepository {
       .limit(1);
 
     return rows[0] ?? null;
+  }
+
+  async searchCustomers(query: SearchCustomersQuery): Promise<SearchCustomersResult> {
+    const conditions = [];
+
+    const trimmedQuery = query.q?.trim();
+    if (trimmedQuery) {
+      const pattern = `%${trimmedQuery}%`;
+      conditions.push(
+        or(
+          ilike(users.email, pattern),
+          ilike(customerProfiles.displayName, pattern),
+          ilike(customerProfiles.legalName, pattern),
+          ilike(customerAccounts.accountNumber, pattern),
+        ),
+      );
+    }
+    if (query.status) {
+      conditions.push(eq(customerAccounts.status, query.status));
+    }
+    if (query.kycStatus) {
+      conditions.push(eq(customerProfiles.kycStatus, query.kycStatus));
+    }
+    if (query.cursor) {
+      const cursor = decodeCustomerSearchCursor(query.cursor);
+      conditions.push(
+        or(
+          lt(users.createdAt, cursor.createdAt),
+          and(eq(users.createdAt, cursor.createdAt), lt(users.id, cursor.userId)),
+        ),
+      );
+    }
+
+    const rows = await this.db
+      .select({
+        userId: users.id,
+        email: users.email,
+        userStatus: users.status,
+        emailVerifiedAt: users.emailVerifiedAt,
+        userCreatedAt: users.createdAt,
+        displayName: customerProfiles.displayName,
+        legalName: customerProfiles.legalName,
+        kycStatus: customerProfiles.kycStatus,
+        riskStatus: customerProfiles.riskStatus,
+        accountNumber: customerAccounts.accountNumber,
+        accountStatus: customerAccounts.status,
+        accountRestrictionReason: customerAccounts.restrictionReason,
+      })
+      .from(users)
+      .leftJoin(customerProfiles, eq(customerProfiles.userId, users.id))
+      .leftJoin(customerAccounts, eq(customerAccounts.userId, users.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(users.createdAt), desc(users.id))
+      .limit(query.limit + 1);
+
+    const hasMore = rows.length > query.limit;
+    const pageRows = hasMore ? rows.slice(0, query.limit) : rows;
+    const lastRow = pageRows[pageRows.length - 1];
+    const nextCursor =
+      hasMore && lastRow
+        ? encodeCustomerSearchCursor({ createdAt: lastRow.userCreatedAt, userId: lastRow.userId })
+        : null;
+
+    return { rows: pageRows, nextCursor };
+  }
+
+  async updateCustomerAccountStatus(
+    context: DrizzleTransactionContext,
+    userId: string,
+    values: {
+      status: CustomerAccountRecord["status"];
+      restrictionReason: string | null;
+      closedAt: Date | null;
+    },
+  ): Promise<CustomerAccountRecord> {
+    const rows = await context.db
+      .update(customerAccounts)
+      .set({
+        status: values.status,
+        restrictionReason: values.restrictionReason,
+        closedAt: values.closedAt,
+        updatedAt: new Date(),
+      })
+      .where(eq(customerAccounts.userId, userId))
+      .returning();
+
+    return singleRow(rows, "updateCustomerAccountStatus");
+  }
+
+  async updateCustomerKycStatus(
+    context: DrizzleTransactionContext,
+    userId: string,
+    values: {
+      kycStatus: CustomerProfileRecord["kycStatus"];
+      riskStatus?: CustomerProfileRecord["riskStatus"];
+    },
+  ): Promise<CustomerProfileRecord> {
+    const rows = await context.db
+      .update(customerProfiles)
+      .set({
+        kycStatus: values.kycStatus,
+        ...(values.riskStatus ? { riskStatus: values.riskStatus } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(customerProfiles.userId, userId))
+      .returning();
+
+    return singleRow(rows, "updateCustomerKycStatus");
+  }
+
+  async createCustomerNote(
+    context: DrizzleTransactionContext,
+    values: InferInsertModel<typeof customerNotes>,
+  ): Promise<CustomerNoteRecord> {
+    const rows = await context.db.insert(customerNotes).values(values).returning();
+    return singleRow(rows, "createCustomerNote");
+  }
+
+  async listCustomerNotesByUserId(userId: string, limit = 50): Promise<CustomerNoteRecord[]> {
+    return this.db
+      .select()
+      .from(customerNotes)
+      .where(eq(customerNotes.userId, userId))
+      .orderBy(desc(customerNotes.createdAt))
+      .limit(limit);
   }
 }

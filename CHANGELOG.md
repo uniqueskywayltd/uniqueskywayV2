@@ -12,7 +12,34 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-No unreleased certified changes.
+None. Current certified release is `v2.3.0`.
+
+## v2.3.0 - 2026-07-13
+
+Status: Certified Administrative Platform release (frozen).
+
+Included:
+
+- Completed Phase 8 administrative platform on `phase-8-admin-platform`: customer administration (8.1), financial operations over certified engines (8.2), database-backed RBAC and system administration (8.3), read-only reporting/exports (8.4), and production admin console polish (8.5).
+- Added `ADMIN_PERMISSION_MATRIX.md`, `REPORTING_SPECIFICATION.md`, `DEC-0023`, `DEC-0024`, and `DEC-0025` freezing the Administrative Platform at `v2.3.0`.
+- Delivered `/admin` operational console over certified `/api/admin/*` APIs with shared shell, tables, states, CSRF-backed mutations, and mobile navigation.
+- Added Phase 8.5 certification package: `ADMIN_PLATFORM_CERTIFICATION.md`, UI/performance/accessibility/security/architecture/design-system/dead-code audits, verification and release readiness reports, and `ADMIN_PLATFORM_FREEZE_REPORT.md`.
+
+Verification:
+
+- Typecheck passed.
+- Lint passed.
+- Unit and integration tests passed: 38 test files, 163 tests.
+- Database schema check passed.
+- Production build passed.
+- End-to-end tests passed: 11 tests.
+
+Scope certification:
+
+- Investment engine remains locked at `v2.1.0`.
+- Money movement remains locked at `v2.2.0`.
+- No new financial backends, ledger changes, ROI math, Paystack, or webhook behavior in Phase 8.5.
+- Administrative Platform certification is backed by `ADMIN_PLATFORM_CERTIFICATION.md` and `FINAL_VERIFICATION_REPORT.md`.
 
 ## v2.2.0 - 2026-07-13
 

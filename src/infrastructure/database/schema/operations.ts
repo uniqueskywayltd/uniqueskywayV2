@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -42,6 +43,12 @@ export const featureFlags = appPrivate.table(
       .$type<Record<string, unknown>>()
       .notNull()
       .default(sql`'{}'::jsonb`),
+    enabledAt: timestamp("enabled_at", { withTimezone: true }),
+    disabledAt: timestamp("disabled_at", { withTimezone: true }),
+    scheduleStartAt: timestamp("schedule_start_at", { withTimezone: true }),
+    scheduleEndAt: timestamp("schedule_end_at", { withTimezone: true }),
+    rolloutPercent: integer("rollout_percent").notNull().default(100),
+    internalOnly: boolean("internal_only").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

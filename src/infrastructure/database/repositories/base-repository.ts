@@ -25,3 +25,35 @@ export function singleRow<TRecord>(rows: TRecord[], operation: string): TRecord 
 
   return row;
 }
+
+export interface KeysetCursor {
+  createdAt: Date;
+  id: string;
+}
+
+export function encodeKeysetCursor(cursor: KeysetCursor): string {
+  return Buffer.from(
+    JSON.stringify({ createdAt: cursor.createdAt.toISOString(), id: cursor.id }),
+  ).toString("base64url");
+}
+
+export function decodeKeysetCursor(cursor: string): KeysetCursor {
+  const decoded = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")) as {
+    createdAt: string;
+    id: string;
+  };
+  return { createdAt: new Date(decoded.createdAt), id: decoded.id };
+}
+
+export function paginateKeysetRows<TRecord extends { createdAt: Date; id: string }>(
+  rows: TRecord[],
+  limit: number,
+): { rows: TRecord[]; nextCursor: string | null } {
+  const hasMore = rows.length > limit;
+  const pageRows = hasMore ? rows.slice(0, limit) : rows;
+  const lastRow = pageRows[pageRows.length - 1];
+  const nextCursor =
+    hasMore && lastRow ? encodeKeysetCursor({ createdAt: lastRow.createdAt, id: lastRow.id }) : null;
+
+  return { rows: pageRows, nextCursor };
+}

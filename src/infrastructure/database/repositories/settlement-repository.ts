@@ -1,14 +1,27 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lt, lte, or, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import { roiLedgerEntries, settlementItems, settlementRuns } from "../schema";
 import type { DrizzleTransactionContext } from "../transactions";
 import type { AppDatabaseExecutor } from "../types";
-import { BaseDrizzleRepository, singleRow } from "./base-repository";
+import { BaseDrizzleRepository, decodeKeysetCursor, encodeKeysetCursor, singleRow } from "./base-repository";
 
 export type SettlementRunRecord = InferSelectModel<typeof settlementRuns>;
 export type SettlementItemRecord = InferSelectModel<typeof settlementItems>;
 export type RoiLedgerEntryRecord = InferSelectModel<typeof roiLedgerEntries>;
+
+export interface ListSettlementRunsQuery {
+  status?: SettlementRunRecord["status"];
+  from?: string;
+  to?: string;
+  cursor?: string;
+  limit: number;
+}
+
+export interface ListSettlementRunsResult {
+  rows: SettlementRunRecord[];
+  nextCursor: string | null;
+}
 
 export class SettlementRepository extends BaseDrizzleRepository {
   constructor(db: AppDatabaseExecutor) {
@@ -181,5 +194,65 @@ export class SettlementRepository extends BaseDrizzleRepository {
       );
 
     return rows[0]?.total ?? 0n;
+  }
+
+  async listSettlementRuns(query: ListSettlementRunsQuery): Promise<ListSettlementRunsResult> {
+    const conditions = [];
+
+    if (query.status) conditions.push(eq(settlementRuns.status, query.status));
+    if (query.from) conditions.push(gte(settlementRuns.settlementDate, query.from));
+    if (query.to) conditions.push(lte(settlementRuns.settlementDate, query.to));
+    if (query.cursor) {
+      const cursor = decodeKeysetCursor(query.cursor);
+      conditions.push(
+        or(
+          lt(settlementRuns.createdAt, cursor.createdAt),
+          and(eq(settlementRuns.createdAt, cursor.createdAt), lt(settlementRuns.id, cursor.id)),
+        ),
+      );
+    }
+
+    const rows = await this.db
+      .select()
+      .from(settlementRuns)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(settlementRuns.createdAt), desc(settlementRuns.id))
+      .limit(query.limit + 1);
+
+    const hasMore = rows.length > query.limit;
+    const pageRows = hasMore ? rows.slice(0, query.limit) : rows;
+    const lastRow = pageRows[pageRows.length - 1];
+    const nextCursor =
+      hasMore && lastRow
+        ? encodeKeysetCursor({ createdAt: lastRow.createdAt, id: lastRow.id })
+        : null;
+
+    return { rows: pageRows, nextCursor };
+  }
+
+  async findSettlementRunById(id: string): Promise<SettlementRunRecord | null> {
+    const rows = await this.db.select().from(settlementRuns).where(eq(settlementRuns.id, id)).limit(1);
+    return rows[0] ?? null;
+  }
+
+  async listSettlementItemsByRunId(runId: string, limit = 200): Promise<SettlementItemRecord[]> {
+    return this.db
+      .select()
+      .from(settlementItems)
+      .where(eq(settlementItems.settlementRunId, runId))
+      .orderBy(desc(settlementItems.createdAt))
+      .limit(limit);
+  }
+
+  async listSettlementItemsByInvestmentId(
+    investmentId: string,
+    limit = 200,
+  ): Promise<SettlementItemRecord[]> {
+    return this.db
+      .select()
+      .from(settlementItems)
+      .where(eq(settlementItems.investmentId, investmentId))
+      .orderBy(desc(settlementItems.settlementDate))
+      .limit(limit);
   }
 }

@@ -7,11 +7,12 @@ import {
   requireCsrf,
   requireSameOrigin,
 } from "@/app/api/_shared/http";
+import { serializeWithdrawalRequest } from "@/app/api/payments/_shared/service";
+
 import {
-  createPaymentRouteAuditContext,
-  createWithdrawalEngineService,
-  serializeWithdrawalRequest,
-} from "@/app/api/payments/_shared/service";
+  createAdminFinancialOpsAuditContext,
+  createAdminFinancialOpsService,
+} from "../../../_shared/financial-ops-service";
 
 export const runtime = "nodejs";
 
@@ -27,10 +28,10 @@ export async function POST(request: NextRequest, routeContext: RouteContext) {
     await requireCsrf(request);
 
     const { withdrawalId } = await routeContext.params;
-    const service = await createWithdrawalEngineService({ withIdentity: true });
-    const result = await service.queueWithdrawalPayout(
+    const service = await createAdminFinancialOpsService();
+    const result = await service.queueWithdrawal(
       withdrawalId,
-      createPaymentRouteAuditContext(context),
+      createAdminFinancialOpsAuditContext(context),
     );
 
     return jsonOk(

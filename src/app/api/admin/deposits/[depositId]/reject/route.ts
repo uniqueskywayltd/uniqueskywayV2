@@ -8,12 +8,13 @@ import {
   requireCsrf,
   requireSameOrigin,
 } from "@/app/api/_shared/http";
-import {
-  createDepositEngineService,
-  createPaymentRouteAuditContext,
-  serializeDepositIntent,
-} from "@/app/api/payments/_shared/service";
+import { serializeDepositIntent } from "@/app/api/payments/_shared/service";
 import { adminDepositReviewInputSchema } from "@/application/payments";
+
+import {
+  createAdminFinancialOpsAuditContext,
+  createAdminFinancialOpsService,
+} from "../../../_shared/financial-ops-service";
 
 export const runtime = "nodejs";
 
@@ -30,11 +31,11 @@ export async function POST(request: NextRequest, routeContext: RouteContext) {
 
     const { depositId } = await routeContext.params;
     const input = await parseJson(request, adminDepositReviewInputSchema);
-    const service = await createDepositEngineService({ withIdentity: true });
-    const result = await service.adminRejectDeposit(
+    const service = await createAdminFinancialOpsService();
+    const result = await service.rejectDeposit(
       depositId,
       input.reason,
-      createPaymentRouteAuditContext(context),
+      createAdminFinancialOpsAuditContext(context),
     );
 
     return jsonOk(

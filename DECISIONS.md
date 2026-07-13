@@ -867,3 +867,215 @@ Paystack is the only provider integrated and tested in Phase 7.1. Restricting sc
 - Adding Flutterwave, Stripe, or any other provider requires a new or superseding provider ADR, a provider-specific webhook appendix, and test matrix expansion, per `WEBHOOK_SPECIFICATION.md`.
 - Adding a non-USD currency requires an accepted ADR and ledger multi-currency review before implementation.
 - `transfer.reversed` events remain visible only through audit logs and the `payment.transfer_reversed_exception` outbox event until a dedicated reversal ledger design is accepted.
+
+---
+
+## DEC-0022: Money Movement Frozen
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review only when a critical defect, security issue, or accepted product change requires money-movement modification.
+
+### Context
+
+Phase 7 certified deposits, withdrawals, Paystack integration, webhook processing, ledger posting, recovery, and financial certification as release `v2.2.0`. Phase 8 will build the administrative platform on top of these engines.
+
+Casual changes to certified money-movement behavior would undermine the financial guarantees Phase 8 admin workflows must rely on.
+
+### Decision
+
+The `v2.2.0` money movement subsystem is frozen.
+
+Locked surfaces:
+
+- Deposit engine
+- Withdrawal engine
+- Paystack integration
+- Webhook processing
+- Money-movement ledger postings
+- Deposit and withdrawal state machines
+- Idempotency, retry, recovery, and dead-letter handling
+- Phase 7 financial certification reports
+
+Allowed changes:
+
+- Security patches
+- Bug fixes
+- Performance improvements
+- Test improvements
+- Documentation clarifications that do not change behavior
+
+Behavioral or financial changes require:
+
+- An accepted ADR
+- Regression tests
+- Financial certification update
+- Explicit approval before merge
+
+Phase 8 admin financial operations must call the certified engines and must not invent alternate deposit, withdrawal, webhook, or ledger workflows.
+
+### Alternatives Considered
+
+- Allow Phase 8 to reshape payment workflows while building admin screens.
+- Rely on informal code review without a freeze ADR.
+- Delay freezing until after the admin portal ships.
+
+### Reason for Choosing It
+
+Admin tooling must operate the certified financial system, not redefine it. Freezing `v2.2.0` keeps Phase 8 focused on permissions, review surfaces, reporting, and operational administration.
+
+### Consequences
+
+- `main` at `v2.2.0` is the recovery checkpoint for money movement.
+- Phase 8 work happens on `phase-8-admin-platform`.
+- Deposit, withdrawal, Paystack, webhook, and ledger redesigns are out of Phase 8 scope.
+- Future money-movement behavior changes are intentionally slower than ordinary admin UI work.
+
+---
+
+## DEC-0023: Database-Backed Admin RBAC
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review when two-person approval workflows are introduced, subject to `DEC-0025` Administrative Platform freeze.
+
+### Context
+
+Phase 8.1 and 8.2 temporarily used capability checks that could be paired with hardcoded role maps. Phase 8.3 builds the company operating system: staff, roles, permissions, feature flags, settings, template catalogs, job monitoring, and security center. Those features depend on configurable authorization.
+
+Hardcoded role → permission maps cannot stay as the production source of truth once roles are editable.
+
+### Decision
+
+Administrative authorization is database-backed.
+
+Binding rules:
+
+- `ADMIN_PERMISSION_MATRIX.md` is the governance source of truth for system roles, permission keys, default grants, elevated actions, and future two-person approval candidates.
+- Runtime grants load from `permissions`, `role_permissions`, and active `user_roles`.
+- `requireAdminActor` authorizes by permission key, not by role name switch statements.
+- Role keys remain labels and assignment targets; they must not encode permission logic in application code.
+- Every administrative mutation writes an audit record capturing actor, permission used, action, target, request hashes, and before/after payloads where applicable.
+- Certified financial engines remain frozen under `DEC-0022`; admin system services wrap them and must not reimplement money movement.
+
+Allowed without superseding this decision:
+
+- Adding new permission keys through matrix + migration seed updates
+- Changing production grants through audited admin role-permission operations
+- Extending staff/system administration APIs behind existing permission namespaces
+
+### Alternatives Considered
+
+- Keep hardcoded role maps in application code for simplicity.
+- Use only coarse admin vs non-admin flags.
+- Delay configurable RBAC until after reporting and UI polish.
+
+### Reason for Choosing It
+
+Every remaining admin feature depends on consistent authorization. Configurable, audited RBAC keeps Phase 8.1/8.2 surfaces aligned with staff role management and prevents permission drift as the platform grows.
+
+### Consequences
+
+- Phase 8.3 certification is complete on `phase-8-admin-platform`.
+- Production authorization must not reintroduce hardcoded role permission maps.
+- Administrative Platform freeze at `v2.3.0` is governed by `DEC-0025`.
+
+---
+
+## DEC-0024: Read-Only Administrative Reporting
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review only if a new report type would require derived financial formulas not already stored by certified engines, subject to `DEC-0025`.
+
+### Context
+
+Phase 8.4 adds executive, customer, financial, operational, and system reports plus CSV/Excel exports. Reporting must aggregate certified operational and financial records without becoming a second source of truth or redefining ROI, settlement, deposit, or withdrawal mathematics.
+
+### Decision
+
+Administrative reports are read-only projections of certified data.
+
+Binding rules:
+
+- `REPORTING_SPECIFICATION.md` is the governance source of truth for report catalog, data sources, America/New_York period buckets, export formats, and permission requirements.
+- Report queries may only read existing stored amounts and statuses produced by certified engines and operational systems.
+- Reporting must not post ledger entries, mutate money-movement state, recalculate ROI formulas, or invent settlement rules.
+- Viewing requires `reports.read`. Exporting requires `reports.export` and must append an audited `report.exported` record.
+- PDF generation is out of scope for Phase 8.4.
+- Complete Admin Platform certification and freeze are governed by `DEC-0025` at `v2.3.0`.
+
+### Alternatives Considered
+
+- Allow reporting services to recompute ROI and settlement locally for dashboard speed.
+- Defer exports until after Admin UI polish.
+- Treat report totals as authoritative balances for finance reconciliation.
+
+### Reason for Choosing It
+
+A reporting layer that recalculates money movement would compete with certified engines and create reconciliation risk. Read-only projections keep Phase 8.4 operationally useful while preserving `DEC-0016` and `DEC-0022` freeze guarantees.
+
+### Consequences
+
+- Phase 8.4 certification remains binding under the `v2.3.0` Administrative Platform freeze.
+- Future report metrics must cite stored certified fields or be rejected.
+- Admin UI may consume these APIs but must not introduce new financial calculation backends.
+
+---
+
+## DEC-0025: Administrative Platform Frozen
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review only when a critical defect, security issue, or accepted product change requires administrative-platform modification.
+
+### Context
+
+Phase 8 certified customer administration, financial operations over frozen engines, database-backed RBAC, reporting/exports, and the Phase 8.5 operational console as release `v2.3.0`.
+
+Casual changes to certified admin workflows would undermine operational guarantees and risk regressions against frozen investment and money-movement systems.
+
+### Decision
+
+The `v2.3.0` Administrative Platform is frozen.
+
+Locked surfaces:
+
+- Admin console UX under `/admin` and `src/features/admin`
+- Admin authorization model (`ADMIN_PERMISSION_MATRIX.md`, `DEC-0023`)
+- Admin application services and `/api/admin/*` contracts certified in Phases 8.1–8.4
+- Read-only reporting rules (`DEC-0024`)
+- Phase 8 certification and audit package for `v2.3.0`
+
+Allowed changes:
+
+- Security patches
+- Bug fixes
+- Performance improvements
+- Test improvements
+- Documentation clarifications that do not change behavior
+
+Behavioral or workflow changes require:
+
+- An accepted ADR
+- Regression tests
+- Administrative platform recertification
+- Explicit approval before merge
+
+Admin financial actions must continue to wrap certified engines and must not invent alternate deposit, withdrawal, ledger, ROI, webhook, or settlement behavior.
+
+### Alternatives Considered
+
+- Keep admin UX permanently open for opportunistic redesign while building customer-facing work.
+- Freeze only APIs and leave console UX mutable without ADR.
+- Delay freezing until after public website work.
+
+### Reason for Choosing It
+
+Three independently certified freezes—Investment Engine (`v2.1.0`), Money Movement (`v2.2.0`), and Administrative Platform (`v2.3.0`)—give later phases a stable operational core.
+
+### Consequences
+
+- `main` at `v2.3.0` is the recovery checkpoint for the administrative platform.
+- Phase 9+ work must not casually reshape admin workflows.
+- Admin permission, reporting, or ops UX changes become intentionally slower than ordinary feature polish outside the freeze scope.

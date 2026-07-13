@@ -1,13 +1,26 @@
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lt, lte, or, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import { investments, roiScheduleItems } from "../schema";
 import type { DrizzleTransactionContext } from "../transactions";
 import type { AppDatabaseExecutor } from "../types";
-import { BaseDrizzleRepository, singleRow } from "./base-repository";
+import { BaseDrizzleRepository, decodeKeysetCursor, encodeKeysetCursor, singleRow } from "./base-repository";
 
 export type InvestmentRecord = InferSelectModel<typeof investments>;
 export type RoiScheduleItemRecord = InferSelectModel<typeof roiScheduleItems>;
+
+export interface ListInvestmentsQuery {
+  status?: InvestmentRecord["status"];
+  userId?: string;
+  q?: string;
+  cursor?: string;
+  limit: number;
+}
+
+export interface ListInvestmentsResult {
+  rows: InvestmentRecord[];
+  nextCursor: string | null;
+}
 
 export class InvestmentRepository extends BaseDrizzleRepository {
   constructor(db: AppDatabaseExecutor) {
@@ -197,5 +210,54 @@ export class InvestmentRepository extends BaseDrizzleRepository {
         ),
       )
       .orderBy(sql`${investments.activatedAt} asc`, sql`${investments.id} asc`);
+  }
+
+  async listInvestments(query: ListInvestmentsQuery): Promise<ListInvestmentsResult> {
+    const conditions = [];
+
+    if (query.status) conditions.push(eq(investments.status, query.status));
+    if (query.userId) conditions.push(eq(investments.userId, query.userId));
+    const trimmedQuery = query.q?.trim();
+    if (trimmedQuery) {
+      conditions.push(sql`${investments.id}::text ilike ${`%${trimmedQuery}%`}`);
+    }
+    if (query.cursor) {
+      const cursor = decodeKeysetCursor(query.cursor);
+      conditions.push(
+        or(
+          lt(investments.createdAt, cursor.createdAt),
+          and(eq(investments.createdAt, cursor.createdAt), lt(investments.id, cursor.id)),
+        ),
+      );
+    }
+
+    const rows = await this.db
+      .select()
+      .from(investments)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(investments.createdAt), desc(investments.id))
+      .limit(query.limit + 1);
+
+    const hasMore = rows.length > query.limit;
+    const pageRows = hasMore ? rows.slice(0, query.limit) : rows;
+    const lastRow = pageRows[pageRows.length - 1];
+    const nextCursor =
+      hasMore && lastRow
+        ? encodeKeysetCursor({ createdAt: lastRow.createdAt, id: lastRow.id })
+        : null;
+
+    return { rows: pageRows, nextCursor };
+  }
+
+  async listRoiScheduleItemsByInvestmentId(
+    investmentId: string,
+    limit = 200,
+  ): Promise<RoiScheduleItemRecord[]> {
+    return this.db
+      .select()
+      .from(roiScheduleItems)
+      .where(eq(roiScheduleItems.investmentId, investmentId))
+      .orderBy(roiScheduleItems.sequenceNumber)
+      .limit(limit);
   }
 }
