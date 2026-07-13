@@ -16,6 +16,7 @@ Added:
 
 - Added `PAYMENT_ARCHITECTURE.md` as the Phase 7 money movement constitution before payment implementation begins.
 - Added `LEDGER_POSTING_RULES.md` as the accounting specification for approved financial postings.
+- Added `WEBHOOK_SPECIFICATION.md` as the external provider webhook constitution for Phase 7.
 - Locked the certified `v2.1.0` investment engine against business rule, ROI formula, settlement rule, maturity rule, and financial math changes without ADR, regression tests, and recertification.
 
 ## v2.1.0 - 2026-07-13

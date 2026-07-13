@@ -733,3 +733,95 @@ Financial correctness needs both executable enforcement and readable accounting 
 - New posting types require an ADR and updates to `LEDGER_POSTING_RULES.md`.
 - Phase 7 money movement must implement postings exactly as documented.
 - Unsupported reversal, deficit, and correction behavior cannot be added implicitly.
+
+---
+
+## DEC-0019: Locked Financial Governance Documents
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review after Phase 7 certification and after any production financial incident.
+
+### Context
+
+`FINANCIAL_INVARIANTS.md`, `PAYMENT_ARCHITECTURE.md`, and `LEDGER_POSTING_RULES.md` now define the financial constitution, money movement architecture, and accounting rules. These documents are more than explanatory notes; they are implementation constraints.
+
+### Decision
+
+The financial governance documents are locked.
+
+Locked documents:
+
+- `FINANCIAL_INVARIANTS.md`
+- `PAYMENT_ARCHITECTURE.md`
+- `LEDGER_POSTING_RULES.md`
+
+Future behavioral changes require:
+
+- Accepted ADR.
+- Review.
+- Regression tests.
+- Certification update.
+
+### Alternatives Considered
+
+- Allow ordinary pull requests to change financial rules.
+- Treat documentation as descriptive rather than binding.
+- Wait until production launch to lock the documents.
+
+### Reason for Choosing It
+
+Financial correctness depends on stable rules. Developers should implement approved accounting and payment behavior, not invent it while coding.
+
+### Consequences
+
+- Phase 7 must follow the locked governance documents.
+- Changes to financial behavior are intentionally slower than ordinary code changes.
+- Production incidents must update governance and regression coverage, not only code.
+
+---
+
+## DEC-0020: Webhook Specification Before Provider Integration
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review after Paystack provider certification and before any future Flutterwave or Stripe integration.
+
+### Context
+
+Phase 7 will connect external provider systems to platform financial state. Webhooks are externally triggered, retry-prone, and security-sensitive. They can confirm deposits, mark withdrawals paid, report failures, or introduce conflicting provider evidence.
+
+### Decision
+
+`WEBHOOK_SPECIFICATION.md` is required before provider integration begins.
+
+The document defines:
+
+- Paystack as the Phase 7 target provider.
+- Future provider extension rules for Flutterwave and Stripe.
+- Signature verification.
+- Replay handling.
+- Event identity.
+- Duplicate policy.
+- Retry policy.
+- Failure recovery.
+- Security controls.
+- Testing and launch gates.
+
+Paystack production code still requires a provider ADR before merge.
+
+### Alternatives Considered
+
+- Implement webhooks directly from provider examples.
+- Rely on generic webhook security notes in `SECURITY.md`.
+- Add webhook behavior during provider implementation.
+
+### Reason for Choosing It
+
+External systems must not shape financial correctness implicitly. A webhook constitution keeps provider events as verified inputs while the platform ledger remains the source of truth.
+
+### Consequences
+
+- Phase 7 webhook code must follow `WEBHOOK_SPECIFICATION.md`.
+- New webhook providers require provider-specific appendices.
+- Invalid signatures, duplicate events, replay attempts, provider outages, and processing failures require explicit tests.

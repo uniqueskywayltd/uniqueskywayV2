@@ -14,6 +14,7 @@ Ledger implementation must comply with:
 
 - `FINANCIAL_INVARIANTS.md`
 - `PAYMENT_ARCHITECTURE.md`
+- `WEBHOOK_SPECIFICATION.md`
 - `DATABASE.md`
 - `ROI_ENGINE.md`
 - `EMAIL_SYSTEM.md`

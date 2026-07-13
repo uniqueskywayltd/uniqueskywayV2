@@ -16,6 +16,7 @@ Payment implementation must comply with:
 
 - `FINANCIAL_INVARIANTS.md`
 - `LEDGER_POSTING_RULES.md`
+- `WEBHOOK_SPECIFICATION.md`
 - `DATABASE.md`
 - `API_SPEC.md`
 - `SECURITY.md`
@@ -84,7 +85,7 @@ Money movement may call certified investment services only through approved appl
 
 No payment provider is approved for production at this checkpoint.
 
-Phase 7 must choose the first concrete provider through an accepted decision record before provider-specific production code merges.
+Phase 7 targets Paystack first, but production provider code still requires an accepted decision record before provider-specific production code merges.
 
 Approved provider classes:
 
@@ -94,6 +95,8 @@ Approved provider classes:
 | Payment webhook provider | Sends deposit confirmation, failure, reversal, or correction events. | Requires ADR |
 | Payout provider | Sends withdrawals to approved customer destinations. | Requires ADR |
 | Development test provider | Local and test-only deterministic provider simulation. | Allowed outside production only |
+
+Webhook verification, event identity, retry, duplicate, and failure recovery rules are defined in `WEBHOOK_SPECIFICATION.md`.
 
 Provider selection must define:
 
