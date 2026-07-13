@@ -1134,7 +1134,7 @@ Customer experience is one product milestone. Marketing trust, money UX, growth,
 
 - Date: 2026-07-13
 - Status: Accepted
-- Future Review: Review after Wave A Stage 1 is approved, or if a wave is too small to justify a full UX package.
+- Future Review: Review when a later wave’s UX package is approved, or if a wave is too small to justify a full UX package.
 
 ### Context
 
@@ -1174,6 +1174,56 @@ Approved UX makes implementation deterministic. Frozen engines remove financial 
 
 ### Consequences
 
-- Next Cursor task is Wave A Stage 1 design only.
+- Wave A Stage 1 is complete when approved under `DEC-0028`.
 - Implementation PRs without an approved wave UX spec should be rejected.
 - `EP-026` and `EP-027` encode the same rule in engineering principles.
+
+---
+
+## DEC-0028: Wave A UX Specification Approved
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review at Wave A Stage 2 certification, or if Stage 2 requires a philosophy-level change.
+
+### Context
+
+Wave A Stage 1 produced `WAVE_A_UX_SPECIFICATION.md` (IA through Design Constitution) and reached diminishing returns on further UX writing. Real implementation will teach more than additional documentation. Brand execution details are captured separately in `BRAND_ASSETS_SPECIFICATION.md`.
+
+### Decision
+
+**Wave A Stage 1 is approved.**
+
+Binding rules:
+
+- `WAVE_A_UX_SPECIFICATION.md` is the design authority for Wave A / Milestone 5 public customer experience.
+- `BRAND_ASSETS_SPECIFICATION.md` is the brand asset authority for Stage 2.
+- Stage 2 must implement what is specified.
+- Deviations require updating the relevant specification first, or an ADR if design philosophy changes.
+- Stage 2 is executed as bounded sprints **A1 → A5**, each ending in freeze/certify before the next sprint expands scope.
+- Frozen engines (`v2.1.0`–`v2.3.0`) remain untouched.
+
+Sprint map:
+
+| Sprint | Scope |
+| --- | --- |
+| A1 | Public shell: nav, header, footer, layout, SEO foundation, theme/tokens, marketing chrome |
+| A2 | Homepage only |
+| A3 | About, How it Works, Security |
+| A4 | Plans, FAQ, Contact |
+| A5 | Legal pages, 404 polish, performance, accessibility, Wave A certification |
+
+### Alternatives Considered
+
+- Continue refining UX docs before any code.
+- Implement all of Wave A in one Cursor pass.
+- Skip brand asset specification and decide images ad hoc.
+
+### Reason for Choosing It
+
+Approval unlocks Stage 2 without pretending the spec is eternally perfect. Sprint boundaries conserve tokens and contain rework. Brand assets must be decided before pages proliferate inconsistent visuals.
+
+### Consequences
+
+- Next engineering work is Sprint **A1** on a Milestone 5 branch—not “build all of Wave A.”
+- Spec edits after approval are controlled; philosophy changes need ADR.

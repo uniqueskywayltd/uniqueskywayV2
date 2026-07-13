@@ -15,10 +15,13 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 Added:
 
 - Added `LEGACY_FEATURE_EXTRACTION.md` as the product-only V1 feature inventory for Milestone 5 planning (no code migration).
-- Added `DEC-0026` renaming the next major track from Phase 9/10 Communications + Website into **Milestone 5 — Customer Experience Platform (`v3.0.0`)** with Waves A–D on the frozen core.
-- Added `DEC-0027` / `EP-026` / `EP-027`: Design → Approve → Implement for each CX wave; no production code until the wave UX specification is approved. Wave A Stage 1 target: `WAVE_A_UX_SPECIFICATION.md`.
+- Added `DEC-0026` renaming the next major track into **Milestone 5 — Customer Experience Platform (`v3.0.0`)** with Waves A–D on the frozen core.
+- Added `DEC-0027` / `EP-026` / `EP-027`: Design → Approve → Implement for each CX wave.
+- Added and refined `WAVE_A_UX_SPECIFICATION.md`; approved Wave A Stage 1 under **`DEC-0028`**.
+- Added `BRAND_ASSETS_SPECIFICATION.md` as the brand asset authority before Stage 2.
+- Defined Stage 2 implementation sprints **A1–A5** (shell → home → trust pages → plans/FAQ/contact → legal/certify).
 
-Current certified release remains `v2.3.0`.
+Current certified release remains `v2.3.0`. Next implementation: Sprint A1.
 
 ## v2.3.0 - 2026-07-13
 

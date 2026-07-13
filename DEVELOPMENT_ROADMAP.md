@@ -62,7 +62,7 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | Webhook Specification | Complete | `main` | External provider webhook constitution. |
 | Phase 7 | Certified / Frozen | `v2.2.0` | Deposit engine, withdrawal engine, Paystack provider, money-movement certification. Locked by `DEC-0022`. |
 | Phase 8 | Certified / Frozen | `v2.3.0` | Administrative platform. Locked by `DEC-0025`. |
-| Milestone 5 | Planned | `v3.0.0` | Customer Experience Platform. Waves A–D on frozen core. `DEC-0026`. |
+| Milestone 5 | In progress | `v3.0.0` target | Wave A Stage 1 approved (`DEC-0028`). Stage 2 sprints A1–A5 next. |
 
 After `v2.3.0` is tagged, `main` becomes the stable recovery checkpoint for **Milestone 5 — Customer Experience Platform (`v3.0.0`)**.
 
@@ -546,9 +546,9 @@ Exit criteria met:
 
 ## Milestone 5 - Customer Experience Platform (`v3.0.0`)
 
-Status: Planned (post–legacy feature extraction).
+Status: Stage 1 approved; Stage 2 ready for sprint execution.
 
-Governance baseline: `LEGACY_FEATURE_EXTRACTION.md`, `DEC-0026`, `DEC-0027`, `EP-026`.
+Governance baseline: `LEGACY_FEATURE_EXTRACTION.md`, `WAVE_A_UX_SPECIFICATION.md` (`DEC-0028`), `BRAND_ASSETS_SPECIFICATION.md`, `DEC-0026`, `DEC-0027`, `EP-026`.
 
 This is **not** a communications-only phase and **not** a V1 rebuild.
 
@@ -560,44 +560,28 @@ Legacy V1 is a **screen reference library**. When a specific page is about to be
 
 ### Wave A - Trust & Public Presence
 
-#### Stage 1 — UX & Design (current next step; no production code)
+#### Stage 1 — UX & Design — APPROVED (`DEC-0028`)
 
-Produce and approve before any Wave A implementation:
+Design authority: `WAVE_A_UX_SPECIFICATION.md`  
+Brand assets authority: `BRAND_ASSETS_SPECIFICATION.md`
 
-- Information architecture
-- User journey maps
-- Page wireframes / mockups
-- Component inventory
-- Mobile-first layouts
-- Copy hierarchy
-- Trust placement
-- SEO structure
-- Accessibility plan
-- Design tokens needed
-- Mapping of each page to existing APIs / content sources
-- Legacy comparison (business only, per page)
-- Screens that should be completely redesigned
+#### Stage 2 — Implementation (sprint-bounded)
 
-Artifact target: `WAVE_A_UX_SPECIFICATION.md` (and supporting mockups as needed).
+Do **not** implement all of Wave A in one pass. Execute and freeze:
 
-#### Stage 2 — Implementation (only after Stage 1 approval)
+| Sprint | Scope | Exit |
+| --- | --- | --- |
+| **A1** | Navigation, header, footer, global public layout, SEO foundation, theme/tokens, public shell | Freeze shell |
+| **A2** | Homepage only | Freeze home |
+| **A3** | About, How it Works, Security | Freeze education/trust pages |
+| **A4** | Investment Plans, FAQ, Contact | Freeze conversion/support pages |
+| **A5** | Legal pages, 404 polish, search-within-FAQ if specified, performance, accessibility, Wave A certification | Certify Wave A |
 
-- Homepage
-- About
-- Investment Plans
-- How It Works
-- Security
-- FAQ
-- Contact
-- Legal (Privacy, Terms)
-- Navigation + Footer
-- Responsive layouts, motion, SEO, performance
-- Auth/account visual polish over existing V2 identity
-- Branded auth/security transactional emails
+Auth visual polish and branded auth/security emails may land in A1–A5 where they touch the public shell or certification—without expanding into Wave B money UX.
 
 ### Wave B - Money Experience
 
-Same Design → Approve → Implement discipline (`DEC-0027`). Scope after Wave A Stage 1/2 are approved and implemented:
+Same Design → Approve → Implement discipline (`DEC-0027`). Scope after Wave A Stage 2 is certified:
 
 - Customer dashboard / money home
 - Wallet overview
@@ -705,14 +689,14 @@ Exit criteria:
 | 2 Investment Platform | `v2.1.0` | Frozen |
 | 3 Money Platform | `v2.2.0` | Frozen |
 | 4 Administration | `v2.3.0` | Frozen |
-| 5 Customer Experience | `v3.0.0` | Next |
+| 5 Customer Experience | `v3.0.0` | Wave A Stage 1 approved; Stage 2 next |
 
 ## Current Build Order Summary
 
 1. Keep `main` at `v2.3.0` as the recovery checkpoint for frozen Investment, Money Movement, and Administrative Platform subsystems.
-2. Treat next work as **Milestone 5 — Customer Experience Platform (`v3.0.0`)** under `DEC-0026` / `DEC-0027`.
-3. Next Cursor deliverable: **Wave A Stage 1 UX specification only** (`WAVE_A_UX_SPECIFICATION.md`) — no production implementation until approved.
-4. Then Wave A Stage 2 → Wave B → C → D, each Design → Approve → Implement → Test → Audit → Freeze.
+2. Milestone 5 Wave A Stage 1 is **approved** (`DEC-0028`); design authority is `WAVE_A_UX_SPECIFICATION.md`; brand assets authority is `BRAND_ASSETS_SPECIFICATION.md`.
+3. Next Cursor work: **Sprint A1** (public shell only) on a Milestone 5 branch—then A2→A5 with freeze between sprints.
+4. Do not implement all of Wave A in one pass.
 5. Open V1 only screen-by-screen as a design reference library.
 6. Do not reopen investment-engine, money-movement, or admin-platform behavioral rules without ADR, regression tests, and recertification.
 7. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
