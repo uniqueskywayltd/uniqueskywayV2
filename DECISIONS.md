@@ -1126,3 +1126,54 @@ Customer experience is one product milestone. Marketing trust, money UX, growth,
 - Roadmap and release planning speak in milestones for the customer product track.
 - Cursor implementation should stay wave-scoped; strategy/prioritization can stay outside Cursor.
 - `v2.4.0` / `v2.5.0` communication-only or website-only tags are retired from the planned tag table.
+- Wave execution must follow Design → Approve → Implement (`DEC-0027` / `EP-026`).
+
+---
+
+## DEC-0027: UX Specification Gate Before Wave Implementation
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review after Wave A Stage 1 is approved, or if a wave is too small to justify a full UX package.
+
+### Context
+
+Through `v2.3.0`, Unique Sky Way built a certified platform. From `v3.0.0`, the work is product experience. Jumping straight to implementation causes redesign loops that waste Cursor tokens and weaken quality.
+
+### Decision
+
+For each Milestone 5 wave:
+
+**No production implementation begins until that wave’s UX specification is approved.**
+
+Required wave loop:
+
+1. Design (documentation + mockups only)
+2. Approve
+3. Implement
+4. Test
+5. Audit
+6. Freeze (wave checkpoint)
+
+Wave A splits explicitly into:
+
+- Stage 1 — UX & Design → `WAVE_A_UX_SPECIFICATION.md`
+- Stage 2 — Implementation (after approval)
+
+Legacy usage: treat V1 as a screen reference library—one page at a time—never a source tree to port.
+
+### Alternatives Considered
+
+- Implement Wave A immediately, refine in place.
+- Design the entire Milestone 5 UX before any Wave A design approval.
+- Skip design packages for “simple” marketing pages.
+
+### Reason for Choosing It
+
+Approved UX makes implementation deterministic. Frozen engines remove financial risk; the remaining risk is product quality and rewrite cost.
+
+### Consequences
+
+- Next Cursor task is Wave A Stage 1 design only.
+- Implementation PRs without an approved wave UX spec should be rejected.
+- `EP-026` and `EP-027` encode the same rule in engineering principles.

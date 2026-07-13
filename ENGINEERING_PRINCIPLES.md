@@ -220,9 +220,9 @@ Financial errors must preserve enough context for audit and reconciliation.
 
 Unique Sky Way V2 is a greenfield platform.
 
-The previous project may be consulted only for business understanding, wording, workflows, or UI ideas.
+From Milestone 5 onward, the previous project may be used as a **screen reference library** when a specific page is about to be designed: extract business flow, useful copy, customer journey, and visual hierarchy only.
 
-Do not copy legacy architecture, services, middleware, controllers, routing, authentication, helpers, utilities, state management, schema design, or production code.
+Do not copy legacy architecture, services, middleware, controllers, routing, authentication, helpers, utilities, state management, schema design, HTML, CSS, JavaScript, PHP, theme kits, or production code.
 
 ### EP-023: Operations Are Part Of The Product
 
@@ -248,6 +248,27 @@ A phase is complete only when:
 - Security and financial risks are reviewed.
 - Build and verification pass.
 - Git history and release checkpoints are clean.
+
+### EP-026: Design Before Implementation (Customer Experience Waves)
+
+For Milestone 5 Customer Experience waves:
+
+1. Design / UX specification
+2. Explicit approval
+3. Implementation
+4. Test
+5. Audit
+6. Freeze (wave checkpoint)
+
+**No production implementation work begins until the UX specification for that wave is approved.**
+
+Wave design deliverables are documentation and mockups only: information architecture, journeys, wireframes, component inventory, mobile layouts, copy hierarchy, trust placement, SEO structure, accessibility plan, design tokens, API mapping, legacy business comparison, and redesign list.
+
+### EP-027: Platform Vs Product Mode
+
+Through `v2.3.0`, Unique Sky Way prioritized certified platform subsystems (engines, money movement, administration).
+
+From `v3.0.0`, Customer Experience work prioritizes trust, journey, and product UX **on top of** frozen financial logic. Product obsession must never reopen frozen engines without ADR, regression tests, and recertification.
 
 ## Decision Lenses
 

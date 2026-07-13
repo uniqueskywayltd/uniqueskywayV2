@@ -40,7 +40,8 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 - Architectural changes require an ADR in `DECISIONS.md`.
 - Financial behavior must obey `FINANCIAL_INVARIANTS.md`.
 - Phase scope must not bleed into later phases.
-- V1 may be consulted only as a design/business reference when a specific screen is about to be built. Extract journey, copy hierarchy, and useful flows only. V1 code, schema, services, middleware, helpers, theme markup, and architecture must never be copied.
+- V1 may be consulted only as a **screen reference library** when a specific page is about to be designed. Extract journey, copy hierarchy, and useful flows only. V1 code, schema, services, middleware, helpers, theme markup, and architecture must never be copied.
+- For Milestone 5 waves, **no implementation begins until that wave’s UX specification is approved** (`DEC-0027`, `EP-026`).
 
 ## Current Release State
 
@@ -547,28 +548,56 @@ Exit criteria met:
 
 Status: Planned (post–legacy feature extraction).
 
-Governance baseline: `LEGACY_FEATURE_EXTRACTION.md`, `DEC-0026`.
+Governance baseline: `LEGACY_FEATURE_EXTRACTION.md`, `DEC-0026`, `DEC-0027`, `EP-026`.
 
 This is **not** a communications-only phase and **not** a V1 rebuild.
 
 It is customer-facing product UX built **on top of** frozen Identity, Investment Engine (`v2.1.0`), Money Movement (`v2.2.0`), and Administrative Platform (`v2.3.0`).
 
-Legacy V1 may be opened only as a **design reference** when a specific screen is about to be built: extract business flow, useful copy, customer journey, and visual hierarchy. Never copy HTML, CSS, JavaScript, PHP, theme code, or implementation details.
+**Wave process (required):** Design → Approve → Implement → Test → Audit → Freeze.
+
+Legacy V1 is a **screen reference library**. When a specific page is about to be designed, open only that page: extract sections, customer flow, and messaging; discard HTML, CSS, JS, PHP, and theme code; redesign from scratch; approve; then implement.
 
 ### Wave A - Trust & Public Presence
 
-- Marketing homepage
+#### Stage 1 — UX & Design (current next step; no production code)
+
+Produce and approve before any Wave A implementation:
+
+- Information architecture
+- User journey maps
+- Page wireframes / mockups
+- Component inventory
+- Mobile-first layouts
+- Copy hierarchy
+- Trust placement
+- SEO structure
+- Accessibility plan
+- Design tokens needed
+- Mapping of each page to existing APIs / content sources
+- Legacy comparison (business only, per page)
+- Screens that should be completely redesigned
+
+Artifact target: `WAVE_A_UX_SPECIFICATION.md` (and supporting mockups as needed).
+
+#### Stage 2 — Implementation (only after Stage 1 approval)
+
+- Homepage
 - About
-- Plans (certified terms only)
-- How it works
-- Security (customer trust claims)
+- Investment Plans
+- How It Works
+- Security
 - FAQ
 - Contact
-- Legal pages (Privacy, Terms)
+- Legal (Privacy, Terms)
+- Navigation + Footer
+- Responsive layouts, motion, SEO, performance
 - Auth/account visual polish over existing V2 identity
 - Branded auth/security transactional emails
 
 ### Wave B - Money Experience
+
+Same Design → Approve → Implement discipline (`DEC-0027`). Scope after Wave A Stage 1/2 are approved and implemented:
 
 - Customer dashboard / money home
 - Wallet overview
@@ -583,12 +612,16 @@ All Wave B screens consume certified engines/APIs. No new ledger, ROI, deposit, 
 
 ### Wave C - Growth & Support
 
+Same Design → Approve → Implement discipline:
+
 - Referral hub (privacy-safe)
 - Help center / in-app help
 - Onboarding checklist for unfunded accounts
 - Customer education surfaces
 
 ### Wave D - Polish
+
+Same Design → Approve → Implement discipline:
 
 - Charts
 - PWA install improvements
@@ -602,6 +635,7 @@ Exit criteria for `v3.0.0`:
 - Customer can discover, trust, fund, invest, track, and withdraw through production-grade UX on frozen engines.
 - No frozen-core behavioral changes without ADR.
 - `LEGACY_FEATURE_EXTRACTION.md` REMOVE list is honored (no FOMO theater, NFTs, loan novelty, fake social proof).
+- Each wave has an approved UX specification before production implementation (`DEC-0027`).
 
 ## Phase 11 - Production Hardening
 
@@ -676,8 +710,9 @@ Exit criteria:
 ## Current Build Order Summary
 
 1. Keep `main` at `v2.3.0` as the recovery checkpoint for frozen Investment, Money Movement, and Administrative Platform subsystems.
-2. Treat next work as **Milestone 5 — Customer Experience Platform (`v3.0.0`)**, not Phase 9 Communications and not a merged V1 port.
-3. Execute Waves A → B → C → D; open V1 only screen-by-screen as a design reference.
-4. Do not reopen investment-engine, money-movement, or admin-platform behavioral rules without ADR, regression tests, and recertification.
-5. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
-6. Prefer ChatGPT for product/UX strategy and Cursor for one focused wave implementation at a time.
+2. Treat next work as **Milestone 5 — Customer Experience Platform (`v3.0.0`)** under `DEC-0026` / `DEC-0027`.
+3. Next Cursor deliverable: **Wave A Stage 1 UX specification only** (`WAVE_A_UX_SPECIFICATION.md`) — no production implementation until approved.
+4. Then Wave A Stage 2 → Wave B → C → D, each Design → Approve → Implement → Test → Audit → Freeze.
+5. Open V1 only screen-by-screen as a design reference library.
+6. Do not reopen investment-engine, money-movement, or admin-platform behavioral rules without ADR, regression tests, and recertification.
+7. Keep Paystack as the sole provider until a superseding provider ADR is accepted.

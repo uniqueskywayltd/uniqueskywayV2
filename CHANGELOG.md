@@ -16,6 +16,7 @@ Added:
 
 - Added `LEGACY_FEATURE_EXTRACTION.md` as the product-only V1 feature inventory for Milestone 5 planning (no code migration).
 - Added `DEC-0026` renaming the next major track from Phase 9/10 Communications + Website into **Milestone 5 — Customer Experience Platform (`v3.0.0`)** with Waves A–D on the frozen core.
+- Added `DEC-0027` / `EP-026` / `EP-027`: Design → Approve → Implement for each CX wave; no production code until the wave UX specification is approved. Wave A Stage 1 target: `WAVE_A_UX_SPECIFICATION.md`.
 
 Current certified release remains `v2.3.0`.
 
