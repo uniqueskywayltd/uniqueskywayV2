@@ -27,6 +27,26 @@ Phase 8 delivered and certified:
 Investment engine remains locked at `v2.1.0` (`DEC-0016`).  
 Money movement remains locked at `v2.2.0` (`DEC-0022`).
 
+## Git Commit
+
+| Field | Value |
+| --- | --- |
+| Branch | `main` |
+| Commit | `c35716bd78cb3bf3b71211aa0008a6e37caef182` |
+| Subject | Merge Phase 8 administrative platform certification. |
+| Tracks | `origin/main` (clean) |
+| Working tree | Clean |
+
+## Git Tag
+
+| Field | Value |
+| --- | --- |
+| Tag | `v2.3.0` |
+| Type | Annotated |
+| Local | Present (`git describe --exact-match` → `v2.3.0`) |
+| Remote | Present (`refs/tags/v2.3.0`) |
+| Points to commit | `c35716bd78cb3bf3b71211aa0008a6e37caef182` |
+
 ## Verification Results
 
 | Gate | Result |
