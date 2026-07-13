@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { APP_METADATA } from "@/config/constants";
 import { cn } from "@/lib/utils";
 
 export interface BrandMarkProps {
@@ -19,7 +18,7 @@ export function BrandMark({ compact = false, className }: BrandMarkProps) {
       </span>
       {!compact ? (
         <span className="grid leading-tight">
-          <span className="text-sm font-semibold tracking-normal">{APP_METADATA.displayName}</span>
+          <span className="text-sm font-semibold tracking-normal">Unique Sky Way</span>
           <span className="text-xs text-muted-foreground">Investment platform</span>
         </span>
       ) : null}

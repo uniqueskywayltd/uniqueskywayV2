@@ -1,26 +1,25 @@
 # ACCESSIBILITY_AUDIT.md
 
-## Result
+## Result: PASS (WCAG AA+ target)
 
-PASS
+## Checks
 
-## Checklist
-
-| Requirement | Status | Evidence |
+| Area | Status | Evidence |
 | --- | --- | --- |
-| Keyboard navigation | PASS | Links, buttons, selects, dialogs from design system |
-| Focus management | PASS | Dialog footer actions; mobile nav toggle |
-| ARIA labels | PASS | Nav `aria-label`, search inputs, menu `sr-only` text, `aria-expanded`/`aria-controls` |
-| Screen reader structure | PASS | Semantic `nav`, headings, table captions |
-| Color contrast | PASS | Design-system foreground/background tokens |
-| Accessible dialogs | PASS | `DialogTitle` / `DialogDescription` on confirm flows |
-| Accessible tables | PASS | Caption + header cells |
-| Accessible forms | PASS | Labels wrapping controls; status selects labeled |
+| Semantic HTML | PASS | `main`, `article`, headings, lists, native FAQ `<details>` |
+| Skip link | PASS | Root layout skip to `#main-content` |
+| Keyboard | PASS | Nav (incl. mobile), forms, accordion summaries, tabs, links |
+| Focus visibility | PASS | Focus rings via design-system input/button patterns |
+| ARIA | PASS | Landmarks via `aria-label` purposes; live region on contact success; FAQ tabs |
+| Contrast | PASS | Ink & Horizon foreground/muted tokens |
+| Reduced motion | PASS | Motion primitives honor `prefers-reduced-motion` |
+| Forms | PASS | Labels associated; validation messages announced |
 
-## Mobile Navigation
+## Legal / 404
 
-E2E verifies toggle button name “Toggle navigation” and `Admin mobile navigation` landmark.
+- Classification chips are text (not color-only meaning)
+- 404 provides multiple recovery paths without relying on gesture-only UI
 
-## Residual Notes
+## Residual
 
-Full automated axe suite across every admin page is not part of the certified gate set; manual review + component primitives + Playwright smoke cover release readiness. Deeper automated a11y CI may follow under operations hardening.
+Full automated axe suite in CI not added this sprint (deferred tooling). Manual/e2e semantic checks cover Wave A surfaces.

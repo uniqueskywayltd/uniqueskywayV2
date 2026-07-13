@@ -1,28 +1,27 @@
 # PERFORMANCE_AUDIT.md
 
-## Result
+## Result: PASS
 
-PASS
+## Architecture
 
-## Admin Surfaces
+| Item | Status |
+| --- | --- |
+| Server Components first on public pages | PASS |
+| Client JS limited to header menu, FAQ filter, contact form, motion fade | PASS |
+| Legal suite fully server-rendered | PASS |
+| Static generation for public Wave A routes | PASS (build ○) |
+| No heavy hero bitmaps required | PASS (CSS atmosphere + Lucide) |
+| Fonts via `next/font` with `display: swap` | PASS |
 
-| Optimization | Status | Notes |
-| --- | --- | --- |
-| Route pages as thin Server Components | PASS | Pages import client panels only |
-| Shared shell | PASS | One client shell; panels lazy to route |
-| Suspense / `loading.tsx` | PASS | Admin segment loading UI |
-| Bounded list queries | PASS | `limit` on list fetches |
-| No infrastructure in pages | PASS | Feature layer + certified APIs |
-| Bundle discipline | PASS | Design-system UI primitives; no new heavy deps in admin UI |
+## Core Web Vitals posture
 
-## Server Rendering
+Target maintained from A2/A3 quality bar: minimal hydration, small public surface JS, optimized font loading, no unused conversion/legal client components.
 
-Admin APIs remain server-side. UI does not pull repositories or engines into the browser. Reporting export generation stays on the server (certified Phase 8.4).
+## Cleanup this sprint
 
-## N+1 / Caching
+- Shared legal document component (no per-page duplication)
+- 404 reused public shell instead of one-off dead styling
 
-Phase 8.5 did not alter data access paths. List and detail panels issue single endpoint calls per view refresh. Overview metrics use one `/api/admin/overview` round-trip.
+## Residual
 
-## Residual Notes
-
-Admin list panels are client-fetched (same pattern as customer shell) to reuse cookie/session auth and CSRF for mutations. This is acceptable for an authenticated ops console; further RSC streaming of admin data would be a future ADR, not a freeze blocker.
+Lighthouse field/lab capture in CI not required for Wave A engineering certification; recommend spot-check during Wave A.5 visual review.
