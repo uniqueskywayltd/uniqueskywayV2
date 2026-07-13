@@ -476,6 +476,8 @@ Build:
 
 ### Phase 8.1 - Customer Administration
 
+Status: Complete (APIs).
+
 - Customer search
 - Customer details
 - Customer profile
@@ -488,14 +490,17 @@ Build:
 
 ### Phase 8.2 - Financial Operations
 
-- Deposit queue, review, approval, rejection
-- Withdrawal queue, review, approval, rejection
-- Investment viewer
-- Settlement viewer
+Status: Complete (APIs).
 
-No new money-movement logic. Use certified deposit and withdrawal engines only.
+- Deposit queue, search, filters, details, timeline, notes, approval, rejection
+- Withdrawal queue, search, filters, details, timeline, notes, approval, rejection, processing queue
+- Investment viewer (read-only)
+- Settlement viewer (read-only)
+- Financial monitoring and admin overview metrics
 
-### Phase 8.3 - Administration
+No new money-movement logic. Uses certified deposit and withdrawal engines only.
+
+### Phase 8.3 - Roles, Permissions & System Administration
 
 - Role management
 - Permission management
@@ -508,11 +513,17 @@ No new money-movement logic. Use certified deposit and withdrawal engines only.
 - Security events
 - Background job monitor
 
-### Phase 8.4 - Reporting
+### Phase 8.4 - Reporting & Exports
 
 - Dashboard metrics
 - Customer, deposit, withdrawal, investment, revenue, and settlement statistics
 - CSV and Excel export
+
+### Phase 8.5 - Admin UI/UX Polish & Certification
+
+- Admin UI polish over certified APIs
+- Full Phase 8 verification and certification package
+- Target release tag: `v2.3.0`
 
 Exit criteria:
 
@@ -625,6 +636,7 @@ Exit criteria:
 
 1. Keep `main` frozen at `v2.2.0` as the money-movement recovery checkpoint (`DEC-0022`).
 2. Build Phase 8 only on `phase-8-admin-platform`.
-3. Do not reopen investment-engine or money-movement behavioral rules without ADR, regression tests, and recertification.
-4. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
-5. Certify Phase 8 as `v2.3.0` only after permission, security, architecture, and reporting gates pass.
+3. Complete Phase 8.3 system administration, then 8.4 reporting/exports, then 8.5 UI polish and certification.
+4. Do not reopen investment-engine or money-movement behavioral rules without ADR, regression tests, and recertification.
+5. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
+6. Certify Phase 8 as `v2.3.0` only after permission, security, architecture, reporting, and UI certification gates pass.

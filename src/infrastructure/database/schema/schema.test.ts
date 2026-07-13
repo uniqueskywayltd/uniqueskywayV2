@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   accountBalanceSnapshots,
+  adminEntityNotes,
   auditLogs,
   backgroundJobs,
   customerAccounts,
@@ -43,6 +44,7 @@ describe("database schema", () => {
     expect(getTableName(customerProfiles)).toBe("customer_profiles");
     expect(getTableName(customerAccounts)).toBe("customer_accounts");
     expect(getTableName(customerNotes)).toBe("customer_notes");
+    expect(getTableName(adminEntityNotes)).toBe("admin_entity_notes");
     expect(getTableName(wallets)).toBe("wallets");
     expect(getTableName(ledgerAccounts)).toBe("ledger_accounts");
     expect(getTableName(ledgerTransactions)).toBe("ledger_transactions");

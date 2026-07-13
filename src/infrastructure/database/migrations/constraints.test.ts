@@ -11,7 +11,7 @@ async function readMigrationSql(fileName: string) {
 
 describe("database constraints and integrity migrations", () => {
   it("splits migrations into logical files instead of one giant migration", () => {
-    expect(databaseMigrations).toHaveLength(12);
+    expect(databaseMigrations).toHaveLength(13);
     expect(databaseMigrations.map((migration) => migration.fileName)).toEqual([
       "202607120301_identity.sql",
       "202607120302_core.sql",
@@ -25,6 +25,7 @@ describe("database constraints and integrity migrations", () => {
       "202607130701_deposit_engine.sql",
       "202607130702_money_movement.sql",
       "202607130801_admin_customer_notes.sql",
+      "202607130802_admin_financial_ops.sql",
     ]);
   });
 
@@ -124,6 +125,19 @@ describe("database constraints and integrity migrations", () => {
     expect(sql).toContain("customer_notes_body_not_blank_chk");
     expect(sql).toContain("customer_notes_user_id_created_idx");
     expect(sql).toContain("alter table public.customer_notes enable row level security");
+    expect(sql).not.toContain("create policy");
+    expect(sql).not.toContain("deposit_intents");
+    expect(sql).not.toContain("withdrawal_requests");
+    expect(sql).not.toContain("ledger_entries");
+  });
+
+  it("adds Phase 8.2 admin financial ops notes with a deny-by-default RLS baseline", async () => {
+    const sql = await readMigrationSql("202607130802_admin_financial_ops.sql");
+
+    expect(sql).toContain("create table public.admin_entity_notes");
+    expect(sql).toContain("admin_entity_notes_body_not_blank_chk");
+    expect(sql).toContain("admin_entity_notes_target_created_idx");
+    expect(sql).toContain("alter table public.admin_entity_notes enable row level security");
     expect(sql).not.toContain("create policy");
     expect(sql).not.toContain("deposit_intents");
     expect(sql).not.toContain("withdrawal_requests");

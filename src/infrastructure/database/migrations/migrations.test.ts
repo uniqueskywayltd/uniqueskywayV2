@@ -82,6 +82,7 @@ describe("database migration runner", () => {
       "deposit_engine",
       "money_movement",
       "admin_platform",
+      "admin_platform",
     ]);
   });
 

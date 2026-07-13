@@ -17,7 +17,12 @@ export type {
   SearchCustomersResult,
 } from "./core-repository";
 export type { AdminProfileRecord, RoleRecord, UserRecord } from "./identity-repository";
-export type { InvestmentRecord, RoiScheduleItemRecord } from "./investment-repository";
+export type {
+  ListInvestmentsQuery,
+  ListInvestmentsResult,
+  InvestmentRecord,
+  RoiScheduleItemRecord,
+} from "./investment-repository";
 export type {
   LedgerAccountRecord,
   LedgerPostingInput,
@@ -26,13 +31,29 @@ export type {
   WalletRecord,
 } from "./ledger-repository";
 export type { EmailMessageRecord } from "./notification-repository";
-export type { AuditLogRecord, SecurityEventRecord } from "./operations-repository";
 export type {
+  AdminEntityNoteRecord,
+  AuditLogRecord,
+  BackgroundJobRecord,
+  ListBackgroundJobsQuery,
+  ListBackgroundJobsResult,
+  SecurityEventRecord,
+} from "./operations-repository";
+export type {
+  CountProviderEventsQuery,
   DepositIntentRecord,
+  ListProviderEventsQuery,
+  ListProviderEventsResult,
   PaymentProviderEventRecord,
+  SearchDepositIntentsQuery,
+  SearchDepositIntentsResult,
+  SearchWithdrawalsQuery,
+  SearchWithdrawalsResult,
   WithdrawalRequestRecord,
 } from "./payment-repository";
 export type {
+  ListSettlementRunsQuery,
+  ListSettlementRunsResult,
   RoiLedgerEntryRecord,
   SettlementItemRecord,
   SettlementRunRecord,

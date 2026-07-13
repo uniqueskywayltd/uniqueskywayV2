@@ -1,14 +1,61 @@
-import { and, desc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, isNotNull, isNull, lt, lte, or, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import { depositIntents, paymentProviderEvents, withdrawalRequests } from "../schema";
 import type { DrizzleTransactionContext } from "../transactions";
 import type { AppDatabaseExecutor } from "../types";
-import { BaseDrizzleRepository, singleRow } from "./base-repository";
+import { BaseDrizzleRepository, decodeKeysetCursor, encodeKeysetCursor, singleRow } from "./base-repository";
 
 export type DepositIntentRecord = InferSelectModel<typeof depositIntents>;
 export type WithdrawalRequestRecord = InferSelectModel<typeof withdrawalRequests>;
 export type PaymentProviderEventRecord = InferSelectModel<typeof paymentProviderEvents>;
+
+export interface SearchDepositIntentsQuery {
+  q?: string;
+  status?: DepositIntentRecord["status"];
+  userId?: string;
+  from?: Date;
+  to?: Date;
+  cursor?: string;
+  limit: number;
+}
+
+export interface SearchDepositIntentsResult {
+  rows: DepositIntentRecord[];
+  nextCursor: string | null;
+}
+
+export interface SearchWithdrawalsQuery {
+  q?: string;
+  status?: WithdrawalRequestRecord["status"];
+  userId?: string;
+  from?: Date;
+  to?: Date;
+  cursor?: string;
+  limit: number;
+}
+
+export interface SearchWithdrawalsResult {
+  rows: WithdrawalRequestRecord[];
+  nextCursor: string | null;
+}
+
+export interface ListProviderEventsQuery {
+  status?: PaymentProviderEventRecord["status"];
+  deadLetteredOnly?: boolean;
+  limit: number;
+  cursor?: string;
+}
+
+export interface ListProviderEventsResult {
+  rows: PaymentProviderEventRecord[];
+  nextCursor: string | null;
+}
+
+export interface CountProviderEventsQuery {
+  status?: PaymentProviderEventRecord["status"];
+  deadLetteredOnly?: boolean;
+}
 
 export class PaymentRepository extends BaseDrizzleRepository {
   constructor(db: AppDatabaseExecutor) {
@@ -618,5 +665,186 @@ export class PaymentRepository extends BaseDrizzleRepository {
       .where(eq(paymentProviderEvents.id, id))
       .returning();
     return singleRow(rows, "markProviderEventDeadLettered");
+  }
+
+  async searchDepositIntents(query: SearchDepositIntentsQuery): Promise<SearchDepositIntentsResult> {
+    const conditions = [];
+
+    const trimmedQuery = query.q?.trim();
+    if (trimmedQuery) {
+      conditions.push(
+        or(
+          ilike(depositIntents.providerIntentId, `%${trimmedQuery}%`),
+          sql`${depositIntents.id}::text ilike ${`%${trimmedQuery}%`}`,
+        ),
+      );
+    }
+    if (query.status) conditions.push(eq(depositIntents.status, query.status));
+    if (query.userId) conditions.push(eq(depositIntents.userId, query.userId));
+    if (query.from) conditions.push(gte(depositIntents.createdAt, query.from));
+    if (query.to) conditions.push(lte(depositIntents.createdAt, query.to));
+    if (query.cursor) {
+      const cursor = decodeKeysetCursor(query.cursor);
+      conditions.push(
+        or(
+          lt(depositIntents.createdAt, cursor.createdAt),
+          and(eq(depositIntents.createdAt, cursor.createdAt), lt(depositIntents.id, cursor.id)),
+        ),
+      );
+    }
+
+    const rows = await this.db
+      .select()
+      .from(depositIntents)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(depositIntents.createdAt), desc(depositIntents.id))
+      .limit(query.limit + 1);
+
+    const hasMore = rows.length > query.limit;
+    const pageRows = hasMore ? rows.slice(0, query.limit) : rows;
+    const lastRow = pageRows[pageRows.length - 1];
+    const nextCursor =
+      hasMore && lastRow
+        ? encodeKeysetCursor({ createdAt: lastRow.createdAt, id: lastRow.id })
+        : null;
+
+    return { rows: pageRows, nextCursor };
+  }
+
+  async searchWithdrawals(query: SearchWithdrawalsQuery): Promise<SearchWithdrawalsResult> {
+    const conditions = [];
+
+    const trimmedQuery = query.q?.trim();
+    if (trimmedQuery) {
+      conditions.push(
+        or(
+          ilike(withdrawalRequests.destinationReference, `%${trimmedQuery}%`),
+          ilike(withdrawalRequests.providerPayoutReference, `%${trimmedQuery}%`),
+          sql`${withdrawalRequests.id}::text ilike ${`%${trimmedQuery}%`}`,
+        ),
+      );
+    }
+    if (query.status) conditions.push(eq(withdrawalRequests.status, query.status));
+    if (query.userId) conditions.push(eq(withdrawalRequests.userId, query.userId));
+    if (query.from) conditions.push(gte(withdrawalRequests.createdAt, query.from));
+    if (query.to) conditions.push(lte(withdrawalRequests.createdAt, query.to));
+    if (query.cursor) {
+      const cursor = decodeKeysetCursor(query.cursor);
+      conditions.push(
+        or(
+          lt(withdrawalRequests.createdAt, cursor.createdAt),
+          and(eq(withdrawalRequests.createdAt, cursor.createdAt), lt(withdrawalRequests.id, cursor.id)),
+        ),
+      );
+    }
+
+    const rows = await this.db
+      .select()
+      .from(withdrawalRequests)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(withdrawalRequests.createdAt), desc(withdrawalRequests.id))
+      .limit(query.limit + 1);
+
+    const hasMore = rows.length > query.limit;
+    const pageRows = hasMore ? rows.slice(0, query.limit) : rows;
+    const lastRow = pageRows[pageRows.length - 1];
+    const nextCursor =
+      hasMore && lastRow
+        ? encodeKeysetCursor({ createdAt: lastRow.createdAt, id: lastRow.id })
+        : null;
+
+    return { rows: pageRows, nextCursor };
+  }
+
+  async countDepositIntentsByStatus(status: DepositIntentRecord["status"]): Promise<number> {
+    const rows = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(depositIntents)
+      .where(eq(depositIntents.status, status));
+    return rows[0]?.count ?? 0;
+  }
+
+  async countWithdrawalsByStatus(status: WithdrawalRequestRecord["status"]): Promise<number> {
+    const rows = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(withdrawalRequests)
+      .where(eq(withdrawalRequests.status, status));
+    return rows[0]?.count ?? 0;
+  }
+
+  async countDepositsCreatedSince(date: Date): Promise<number> {
+    const rows = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(depositIntents)
+      .where(gte(depositIntents.createdAt, date));
+    return rows[0]?.count ?? 0;
+  }
+
+  async countWithdrawalsCreatedSince(date: Date): Promise<number> {
+    const rows = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(withdrawalRequests)
+      .where(gte(withdrawalRequests.createdAt, date));
+    return rows[0]?.count ?? 0;
+  }
+
+  async listProviderEvents(query: ListProviderEventsQuery): Promise<ListProviderEventsResult> {
+    const conditions = [];
+
+    if (query.status) conditions.push(eq(paymentProviderEvents.status, query.status));
+    if (query.deadLetteredOnly) conditions.push(isNotNull(paymentProviderEvents.deadLetteredAt));
+    if (query.cursor) {
+      const cursor = decodeKeysetCursor(query.cursor);
+      conditions.push(
+        or(
+          lt(paymentProviderEvents.receivedAt, cursor.createdAt),
+          and(
+            eq(paymentProviderEvents.receivedAt, cursor.createdAt),
+            lt(paymentProviderEvents.id, cursor.id),
+          ),
+        ),
+      );
+    }
+
+    const rows = await this.db
+      .select()
+      .from(paymentProviderEvents)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(paymentProviderEvents.receivedAt), desc(paymentProviderEvents.id))
+      .limit(query.limit + 1);
+
+    const hasMore = rows.length > query.limit;
+    const pageRows = hasMore ? rows.slice(0, query.limit) : rows;
+    const lastRow = pageRows[pageRows.length - 1];
+    const nextCursor =
+      hasMore && lastRow
+        ? encodeKeysetCursor({ createdAt: lastRow.receivedAt, id: lastRow.id })
+        : null;
+
+    return { rows: pageRows, nextCursor };
+  }
+
+  async countProviderEvents(query: CountProviderEventsQuery = {}): Promise<number> {
+    const conditions = [];
+    if (query.status) conditions.push(eq(paymentProviderEvents.status, query.status));
+    if (query.deadLetteredOnly) conditions.push(isNotNull(paymentProviderEvents.deadLetteredAt));
+
+    const rows = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(paymentProviderEvents)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    return rows[0]?.count ?? 0;
+  }
+
+  async findProviderEventsRelatedToReference(
+    reference: string,
+    limit = 20,
+  ): Promise<PaymentProviderEventRecord[]> {
+    return this.db
+      .select()
+      .from(paymentProviderEvents)
+      .where(sql`${paymentProviderEvents.payload}::text ilike ${`%${reference}%`}`)
+      .orderBy(desc(paymentProviderEvents.receivedAt))
+      .limit(limit);
   }
 }

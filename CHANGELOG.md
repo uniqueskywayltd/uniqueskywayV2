@@ -18,6 +18,9 @@ Added:
 - Started Phase 8 administrative platform work on `phase-8-admin-platform`.
 - Added Phase 8.1 customer administration: admin customer search, details, status suspend/reactivate/close, KYC verification updates, customer notes, and customer audit timeline APIs.
 - Added `customer_notes` persistence migration and admin capability-gated authorization helper for Phase 8.
+- Added Phase 8.2 financial operations: deposit/withdrawal queues with search, details, timelines, notes, and review actions that wrap certified engines; read-only investment and settlement viewers; monitoring and overview metrics.
+- Added `admin_entity_notes` migration for deposit and withdrawal ops notes.
+- Updated Phase 8 roadmap sequence to include Phase 8.5 Admin UI/UX Polish & Certification before `v2.3.0`.
 
 ## v2.2.0 - 2026-07-13
 
