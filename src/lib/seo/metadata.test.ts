@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPageMetadata, getSiteUrl, organizationJsonLd } from "@/lib/seo/metadata";
+import {
+  buildPageMetadata,
+  faqPageJsonLd,
+  getSiteUrl,
+  organizationJsonLd,
+  webPageJsonLd,
+} from "@/lib/seo/metadata";
 
 describe("seo metadata helpers", () => {
   it("builds canonical open graph and twitter metadata", () => {
@@ -20,5 +26,23 @@ describe("seo metadata helpers", () => {
     const jsonLd = organizationJsonLd();
     expect(jsonLd["@type"]).toBe("Organization");
     expect(jsonLd.url).toBe(getSiteUrl());
+  });
+
+  it("returns a web page json-ld document", () => {
+    const jsonLd = webPageJsonLd({
+      title: "About",
+      description: "Company credibility.",
+      path: "/about",
+    });
+    expect(jsonLd["@type"]).toBe("WebPage");
+    expect(jsonLd.url).toContain("/about");
+  });
+
+  it("returns an FAQ page json-ld document", () => {
+    const jsonLd = faqPageJsonLd([
+      { question: "Are returns guaranteed?", answer: "No." },
+    ]);
+    expect(jsonLd["@type"]).toBe("FAQPage");
+    expect(jsonLd.mainEntity).toHaveLength(1);
   });
 });

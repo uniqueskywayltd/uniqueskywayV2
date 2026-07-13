@@ -98,6 +98,45 @@ export function websiteJsonLd() {
   };
 }
 
+export function webPageJsonLd({
+  title,
+  description,
+  path,
+}: {
+  title: string;
+  description: string;
+  path: string;
+}) {
+  const siteUrl = getSiteUrl();
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: title,
+    description,
+    url: new URL(path, siteUrl).toString(),
+    isPartOf: {
+      "@type": "WebSite",
+      name: DEFAULT_SITE_NAME,
+      url: siteUrl,
+    },
+  };
+}
+
+export function faqPageJsonLd(items: Array<{ question: string; answer: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+}
+
 export const SEO_DEFAULTS = {
   siteName: DEFAULT_SITE_NAME,
   description: DEFAULT_DESCRIPTION,

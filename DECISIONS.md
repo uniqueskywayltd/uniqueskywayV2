@@ -1227,3 +1227,37 @@ Approval unlocks Stage 2 without pretending the spec is eternally perfect. Sprin
 
 - Next engineering work is Sprint **A1** on a Milestone 5 branch—not “build all of Wave A.”
 - Spec edits after approval are controlled; philosophy changes need ADR.
+
+## DEC-0029: Wave A Stage 2 Certified & Frozen at v3.0.0
+
+- Date: 2026-07-13
+- Status: Accepted — **ACTIVE FREEZE** after Wave A.5 Review
+- Future Review: Only for philosophy-level public UX change, counsel binding legal replacement, or superseding ADR
+
+### Context
+
+Sprints A1–A5 delivered and self-certified the public Customer Experience Platform Wave A on the frozen v2.1–v2.3 core. Automated gates passed. Wave A.5 consultancy review (customer trust lens) scored **98.6 / 100** and approved release.
+
+### Decision
+
+1. **Wave A Stage 2 is certified and frozen** (`WAVE_A_CERTIFICATION.md`).
+2. Wave A.5 Review is **PASS** — merge and release are authorized.
+3. Release actions:
+   - Merge `milestone-5-wave-a-sprint-a5` into `main`
+   - Annotated tag **`v3.0.0`**
+   - Treat the public Wave A experience as **frozen** with the same discipline as investment engine and money movement: no casual redesign; changes require ADR-level justification and recertification
+4. Legal suite pages remain marked counsel-pending until counsel signs off; honest draft labeling remains visible and is accepted at freeze.
+5. Wave B+ work may begin only under Design → Approve → Implement (`DEC-0027`) for the money experience train (`v3.1.0`).
+6. Non-blocking polish from Wave A.5 (stronger company story, founder letter, timeline, CONTENT_STYLE_GUIDE, etc.) is **deferred** — not reopened into frozen A1–A5 without a scoped ADR.
+
+### Rejected Alternatives
+
+- Merge and tag without Wave A.5 trust review.
+- Treat public pages as permanently editable marketing without freeze discipline.
+- Delay `v3.0.0` until every counsel document and brand photo is final.
+
+### Consequences
+
+- Public Wave A routes require DEC-level change control after `v3.0.0`.
+- Next product train is **Wave B — Customer Money Experience (`v3.1.0`)**.
+- Counsel finalization may update legal copy under patch/recertification without reopening A1–A4 UX.

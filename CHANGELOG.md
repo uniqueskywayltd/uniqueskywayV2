@@ -12,18 +12,29 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-Added:
+(none — Wave A released as `v3.0.0`)
 
-- Added `LEGACY_FEATURE_EXTRACTION.md` as the product-only V1 feature inventory for Milestone 5 planning (no code migration).
-- Added `DEC-0026` renaming the next major track into **Milestone 5 — Customer Experience Platform (`v3.0.0`)** with Waves A–D on the frozen core.
-- Added `DEC-0027` / `EP-026` / `EP-027`: Design → Approve → Implement for each CX wave.
-- Added and refined `WAVE_A_UX_SPECIFICATION.md`; approved Wave A Stage 1 under **`DEC-0028`**.
-- Added `BRAND_ASSETS_SPECIFICATION.md` as the brand asset authority before Stage 2.
-- Defined Stage 2 implementation sprints **A1–A5** (shell → home → trust pages → plans/FAQ/contact → legal/certify).
-- Certified **Sprint A1 Public Foundation** (`SPRINT_A1_CERTIFICATION.md`): public shell, SEO framework, theme/typography/motion/a11y foundations.
-- Certified **Sprint A2 Homepage** (`SPRINT_A2_CERTIFICATION.md`): flagship public homepage with one-purpose sections, trust-safe copy, and certified-catalog plan placeholders.
+## v3.0.0 - 2026-07-13
 
-Current certified product release remains `v2.3.0`. Next implementation: Sprint A3.
+Status: Certified Customer Experience Platform — Wave A Public Trust (frozen under `DEC-0029`).
+
+Included:
+
+- Completed Milestone 5 Wave A Stage 2 (sprints A1–A5): public foundation, homepage, trust pages, conversion pages, legal suite, and 404 recovery.
+- Certified A1–A5 and Wave A package (`WAVE_A_CERTIFICATION.md`, audits, `WAVE_A_FINAL_REPORT.md`).
+- Wave A.5 consultancy review PASS (98.6 / 100) — customer trust lens.
+- Legal pages ship with counsel-review banners and fact/placeholder/counsel classifications — no fabricated compliance claims.
+- Frozen cores preserved: Investment Engine `v2.1.0`, Money Movement `v2.2.0`, Administrative Platform `v2.3.0`.
+
+Verification:
+
+- Lint, typecheck, unit tests (170), production build, and e2e (25) passed.
+- Wave A.5 trust review passed.
+
+Scope certification:
+
+- Public Wave A is frozen. Changes require ADR-level justification under `DEC-0029`.
+- Next train: Wave B Customer Money Experience (`v3.1.0`) under Design → Approve → Implement.
 
 ## v2.3.0 - 2026-07-13
 

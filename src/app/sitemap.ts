@@ -12,6 +12,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const paths = [
     "/",
+    "/about",
+    "/how-it-works",
+    "/security",
+    "/plans",
+    "/faq",
+    "/contact",
+    "/legal/privacy",
+    "/legal/terms",
+    "/legal/risk",
+    "/legal/aml",
+    "/legal/kyc",
+    "/legal/cookies",
     "/auth/login",
     "/auth/register",
     "/auth/forgot-password",
