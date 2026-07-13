@@ -825,3 +825,45 @@ External systems must not shape financial correctness implicitly. A webhook cons
 - Phase 7 webhook code must follow `WEBHOOK_SPECIFICATION.md`.
 - New webhook providers require provider-specific appendices.
 - Invalid signatures, duplicate events, replay attempts, provider outages, and processing failures require explicit tests.
+
+---
+
+## DEC-0021: Paystack Provider Certification
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review before adding Flutterwave, Stripe, or any second payment provider.
+
+### Context
+
+`PAYMENT_ARCHITECTURE.md` and `WEBHOOK_SPECIFICATION.md` require an accepted provider ADR before Paystack production code merges. The Phase 7.1 deposit and withdrawal engines now implement Paystack-backed deposits and withdrawal payouts, so the provider scope, methods, signature scheme, and reconciliation exceptions must be certified before this code is treated as production-ready.
+
+### Decision
+
+Paystack is certified as the sole Phase 7 payment provider under these terms:
+
+- Provider: Paystack only. No other provider is implemented or enabled.
+- Currency: USD only. `supportedDepositCurrencySchema` and `supportedWithdrawalCurrencySchema` enforce this at the application boundary.
+- Deposit methods used: `POST /transaction/initialize` and `GET /transaction/verify/:reference`.
+- Withdrawal methods used: `POST /transfer` and `GET /transfer/verify/:reference`.
+- Webhook events handled: `charge.success`, `charge.failed`, `transfer.success`, `transfer.failed`, `transfer.reversed`. All other verified events are stored and marked `ignored` without financial side effects.
+- Signature verification: `HMAC SHA512` over the raw webhook body using the server-only `PAYSTACK_SECRET_KEY`, compared with constant-time comparison against the `x-paystack-signature` header, per `WEBHOOK_SPECIFICATION.md`.
+- `transfer.reversed` is a reconciliation exception only. It is stored, audited, and surfaced through an outbox event, but it never posts an automatic ledger entry. A reversed transfer requires manual financial review before any compensating ledger action is designed and certified.
+- Internal webhook retry uses the certified backoff schedule (1 minute, 5 minutes, 15 minutes, 30 minutes, 1 hour, then hourly) with a maximum of 10 attempts before an event is marked dead-lettered and an admin alert outbox event is enqueued.
+- Secrets: `PAYSTACK_SECRET_KEY` is read only from server-only environment configuration (`getServerEnv`), is never exposed to client code, and is never logged. When the key is absent, provider calls fail closed through a disabled provider implementation rather than silently no-op.
+
+### Alternatives Considered
+
+- Support multiple providers concurrently in Phase 7.
+- Auto-post a compensating ledger entry on `transfer.reversed`.
+- Allow additional currencies before the ledger and provider integration are certified for multi-currency handling.
+
+### Reason for Choosing It
+
+Paystack is the only provider integrated and tested in Phase 7.1. Restricting scope to one provider and one currency keeps the certified financial surface area small and auditable. Treating `transfer.reversed` as a reconciliation exception avoids inventing an uncertified reversal posting under provider pressure; any future automatic reversal handling requires its own ADR, ledger posting rule, and regression tests.
+
+### Consequences
+
+- Adding Flutterwave, Stripe, or any other provider requires a new or superseding provider ADR, a provider-specific webhook appendix, and test matrix expansion, per `WEBHOOK_SPECIFICATION.md`.
+- Adding a non-USD currency requires an accepted ADR and ledger multi-currency review before implementation.
+- `transfer.reversed` events remain visible only through audit logs and the `payment.transfer_reversed_exception` outbox event until a dedicated reversal ledger design is accepted.

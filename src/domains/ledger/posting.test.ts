@@ -3,9 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   LedgerPostingInvariantError,
   assertBalancedLedgerPosting,
+  createDepositConfirmationEntries,
+  createDepositReversalEntries,
   createInvestmentFundingEntries,
   createMaturityPrincipalReleaseEntries,
   createRoiSettlementEntries,
+  createWithdrawalPaymentEntries,
+  createWithdrawalReleaseEntries,
+  createWithdrawalReservationEntries,
 } from "./posting";
 
 describe("ledger posting domain rules", () => {
@@ -18,6 +23,29 @@ describe("ledger posting domain rules", () => {
     });
 
     expect(() => assertBalancedLedgerPosting({ entries })).not.toThrow();
+  });
+
+  it("accepts balanced deposit confirmation and reversal entries", () => {
+    expect(() =>
+      assertBalancedLedgerPosting({
+        entries: createDepositConfirmationEntries({
+          providerClearingAccountId: "provider_cash_clearing",
+          customerAvailableAccountId: "available",
+          amountMinor: 10_000n,
+          currency: "USD",
+        }),
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertBalancedLedgerPosting({
+        entries: createDepositReversalEntries({
+          customerAvailableAccountId: "available",
+          providerClearingAccountId: "provider_cash_clearing",
+          amountMinor: 10_000n,
+          currency: "USD",
+        }),
+      }),
+    ).not.toThrow();
   });
 
   it("accepts balanced ROI and maturity entries", () => {
@@ -36,6 +64,39 @@ describe("ledger posting domain rules", () => {
         entries: createMaturityPrincipalReleaseEntries({
           lockedAccountId: "locked",
           availableAccountId: "available",
+          amountMinor: 10_000n,
+          currency: "USD",
+        }),
+      }),
+    ).not.toThrow();
+  });
+
+  it("accepts balanced withdrawal reservation, payment, and release entries", () => {
+    expect(() =>
+      assertBalancedLedgerPosting({
+        entries: createWithdrawalReservationEntries({
+          customerAvailableAccountId: "available",
+          customerReservedAccountId: "reserved",
+          amountMinor: 10_000n,
+          currency: "USD",
+        }),
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertBalancedLedgerPosting({
+        entries: createWithdrawalPaymentEntries({
+          customerReservedAccountId: "reserved",
+          customerWithdrawnAccountId: "withdrawn",
+          amountMinor: 10_000n,
+          currency: "USD",
+        }),
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertBalancedLedgerPosting({
+        entries: createWithdrawalReleaseEntries({
+          customerReservedAccountId: "reserved",
+          customerAvailableAccountId: "available",
           amountMinor: 10_000n,
           currency: "USD",
         }),

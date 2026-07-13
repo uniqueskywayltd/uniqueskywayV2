@@ -11,7 +11,7 @@ async function readMigrationSql(fileName: string) {
 
 describe("database constraints and integrity migrations", () => {
   it("splits migrations into logical files instead of one giant migration", () => {
-    expect(databaseMigrations).toHaveLength(9);
+    expect(databaseMigrations).toHaveLength(11);
     expect(databaseMigrations.map((migration) => migration.fileName)).toEqual([
       "202607120301_identity.sql",
       "202607120302_core.sql",
@@ -22,6 +22,8 @@ describe("database constraints and integrity migrations", () => {
       "202607120307_seed.sql",
       "202607130501_customer_experience.sql",
       "202607130601_investment_engine.sql",
+      "202607130701_deposit_engine.sql",
+      "202607130702_money_movement.sql",
     ]);
   });
 
@@ -89,5 +91,28 @@ describe("database constraints and integrity migrations", () => {
     expect(sql).toContain("calculation_version");
     expect(sql).not.toContain("deposit_intents");
     expect(sql).not.toContain("withdrawal_requests");
+  });
+
+  it("adds Phase 7.1 deposit engine provider replay and ledger references", async () => {
+    const sql = await readMigrationSql("202607130701_deposit_engine.sql");
+
+    expect(sql).toContain("provider_authorization_url");
+    expect(sql).toContain("confirmation_ledger_transaction_id");
+    expect(sql).toContain("deposit_intents_confirmation_ledger_transaction_uidx");
+    expect(sql).toContain("payment_provider_events");
+    expect(sql).toContain("payload jsonb");
+    expect(sql).not.toContain("withdrawal_requests");
+  });
+
+  it("adds Phase 7.2 withdrawal payout fields and provider-event retry columns", async () => {
+    const sql = await readMigrationSql("202607130702_money_movement.sql");
+
+    expect(sql).toContain("provider_payout_reference");
+    expect(sql).toContain("reservation_ledger_transaction_id");
+    expect(sql).toContain("payment_ledger_transaction_id");
+    expect(sql).toContain("release_ledger_transaction_id");
+    expect(sql).toContain("attempt_count");
+    expect(sql).toContain("dead_lettered_at");
+    expect(sql).toContain("payment_provider_events_retry_idx");
   });
 });
