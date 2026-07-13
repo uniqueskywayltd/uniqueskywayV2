@@ -17,6 +17,11 @@ export type {
 } from "./ledger-repository";
 export type { EmailMessageRecord } from "./notification-repository";
 export type {
+  DepositIntentRecord,
+  PaymentProviderEventRecord,
+  WithdrawalRequestRecord,
+} from "./payment-repository";
+export type {
   RoiLedgerEntryRecord,
   SettlementItemRecord,
   SettlementRunRecord,

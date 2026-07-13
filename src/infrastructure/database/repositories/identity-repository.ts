@@ -1,7 +1,7 @@
 import { and, eq, gt, isNull, ne } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
-import { adminProfiles, roles, sessions, trustedDevices, users } from "../schema";
+import { adminProfiles, roles, sessions, trustedDevices, userRoles, users } from "../schema";
 import type { DrizzleTransactionContext } from "../transactions";
 import type { AppDatabaseExecutor } from "../types";
 import { BaseDrizzleRepository, singleRow } from "./base-repository";
@@ -83,6 +83,24 @@ export class IdentityRepository extends BaseDrizzleRepository {
 
   async listRoles(): Promise<RoleRecord[]> {
     return this.db.select().from(roles);
+  }
+
+  async findAdminProfileByUserId(userId: string): Promise<AdminProfileRecord | null> {
+    const rows = await this.db
+      .select()
+      .from(adminProfiles)
+      .where(eq(adminProfiles.userId, userId))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
+  async listActiveRoleKeysForUser(userId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ key: roles.key })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(and(eq(userRoles.userId, userId), isNull(userRoles.revokedAt)));
+    return rows.map((row) => row.key);
   }
 
   async createTrustedDevice(

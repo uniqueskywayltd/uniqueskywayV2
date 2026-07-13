@@ -14,6 +14,7 @@ const redactPaths = [
   "DATABASE_URL",
   "SUPABASE_SERVICE_ROLE_KEY",
   "RESEND_API_KEY",
+  "PAYSTACK_SECRET_KEY",
   "INTERNAL_JOB_TOKEN",
   "password",
   "token",

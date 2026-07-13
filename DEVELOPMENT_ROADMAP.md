@@ -49,6 +49,7 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | v2.0.0 | Certified | `v2-phase5-certified` | Architecture through Customer Experience Foundation. |
 | v2.0.1 | Certified | `v2.0.1` | Financial invariants constitution. |
 | v2.1.0 | Certified | `v2.1.0` | Investment engine certified. |
+| v2.2.0 | Certified | `v2.2.0` | Money movement certified. |
 | Phase 6.0 | Included | `v2.1.0` | Investment engine core certified. |
 | Phase 6.1 | Included | `v2.1.0` | Financial mathematics certified. |
 | Phase 6.2 | Included | `v2.1.0` | Financial concurrency certified. |
@@ -57,8 +58,9 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | Payment Architecture | Complete | `main` | Phase 7 money movement governance checkpoint. |
 | Ledger Posting Rules | Complete | `main` | Accounting specification for approved financial postings. |
 | Webhook Specification | Complete | `main` | External provider webhook constitution. |
+| Phase 7 | Certified | `v2.2.0` | Deposit engine, withdrawal engine, Paystack provider, money-movement certification. |
 
-After `v2.1.0` is tagged, `main` becomes the stable recovery point for Phase 7.
+After `v2.2.0` is tagged, `main` becomes the stable recovery point for Phase 8.
 
 ## Completed Foundation
 
@@ -374,7 +376,7 @@ Exit criteria:
 
 ## Phase 7 - Money Movement
 
-Status: Pending.
+Status: Certified.
 
 Build only after Phase 6 certification, `PAYMENT_ARCHITECTURE.md` approval, `LEDGER_POSTING_RULES.md` approval, and `WEBHOOK_SPECIFICATION.md` approval.
 
@@ -393,18 +395,20 @@ Delivered:
 
 ### Phase 7.1 - Deposit Engine
 
-Build:
+Status: Complete.
+
+Delivered:
 
 - Payment provider abstraction.
 - Deposit intent flow.
 - Provider webhook handling.
-- Deposit confirmation.
-
-Do not build withdrawals.
+- Deposit confirmation, cancellation, reversal, recovery, retry, and dead-letter handling.
 
 ### Phase 7.2 - Withdrawal Engine
 
-Build:
+Status: Complete.
+
+Delivered:
 
 - Withdrawal request flow.
 - Withdrawal reservation.
@@ -414,19 +418,21 @@ Build:
 
 ### Phase 7.3 - Provider Integration
 
-Build:
+Status: Complete.
 
-- Paystack provider adapter.
+Delivered:
+
+- Paystack provider adapter under DEC-0021.
 - Paystack signature verification.
 - Paystack webhook event processing.
 - Provider retry and duplicate protection.
 - Provider failure recovery.
 
-Do not redesign UI.
-
 ### Phase 7.4 - Financial Certification
 
-Certify:
+Status: Complete.
+
+Certified:
 
 - Money cannot disappear.
 - Money cannot duplicate.
@@ -448,6 +454,14 @@ Exit criteria:
 - Payout retries cannot pay twice.
 - Money movement emails and notifications are outbox-driven.
 - Reconciliation coverage exists for provider, ledger, and wallet state.
+
+Release gate:
+
+- Full verification passed on `phase-7.1-deposit-engine`.
+- Branch merges to `main`.
+- Full verification passes on `main`.
+- Tag `v2.2.0` is created and pushed.
+- Certification reports: `PHASE_7_VERIFICATION_REPORT.md`, `MONEY_MOVEMENT_FINANCIAL_CERTIFICATION.md`.
 
 ## Phase 8 - Admin Portal
 
@@ -572,8 +586,7 @@ Exit criteria:
 
 ## Current Build Order Summary
 
-1. Keep `main` stable with the `v2.1.0` investment engine and approved Phase 7 governance.
-2. Begin Phase 7.1 deposit engine on a new phase branch.
-3. Build Phase 7.2 withdrawal engine only after deposit scope is complete.
-4. Build Phase 7.3 provider integration only after provider ADR approval.
-5. Merge Phase 7 only after money movement certification passes.
+1. Keep `main` stable with the `v2.2.0` money movement release.
+2. Begin Phase 8 admin portal on a new phase branch.
+3. Do not reopen investment-engine or money-movement behavioral rules without ADR, regression tests, and recertification.
+4. Keep Paystack as the sole provider until a superseding provider ADR is accepted.

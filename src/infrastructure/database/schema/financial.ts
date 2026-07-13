@@ -265,14 +265,41 @@ export const depositIntents = pgTable(
     amountMinor: bigint("amount_minor", { mode: "bigint" }).notNull(),
     status: depositStatusEnum("status").notNull().default("created"),
     idempotencyKey: varchar("idempotency_key", { length: 180 }).notNull(),
+    providerAuthorizationUrl: varchar("provider_authorization_url", { length: 500 }),
+    providerAccessCode: varchar("provider_access_code", { length: 180 }),
+    providerMetadata: jsonb("provider_metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    failureReason: text("failure_reason"),
+    confirmationLedgerTransactionId: uuid("confirmation_ledger_transaction_id").references(
+      () => ledgerTransactions.id,
+      { onDelete: "restrict" },
+    ),
+    reversalLedgerTransactionId: uuid("reversal_ledger_transaction_id").references(
+      () => ledgerTransactions.id,
+      { onDelete: "restrict" },
+    ),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     uniqueIndex("deposit_intents_provider_intent_uidx").on(table.provider, table.providerIntentId),
     uniqueIndex("deposit_intents_idempotency_key_uidx").on(table.idempotencyKey),
+    uniqueIndex("deposit_intents_confirmation_ledger_transaction_uidx")
+      .on(table.confirmationLedgerTransactionId)
+      .where(sql`${table.confirmationLedgerTransactionId} is not null`),
+    uniqueIndex("deposit_intents_reversal_ledger_transaction_uidx")
+      .on(table.reversalLedgerTransactionId)
+      .where(sql`${table.reversalLedgerTransactionId} is not null`),
     index("deposit_intents_user_id_idx").on(table.userId),
     index("deposit_intents_status_idx").on(table.status),
+    index("deposit_intents_user_status_created_idx").on(
+      table.userId,
+      table.status,
+      table.createdAt,
+    ),
   ],
 );
 
@@ -293,14 +320,54 @@ export const withdrawalRequests = pgTable(
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
     reviewReason: text("review_reason"),
     idempotencyKey: varchar("idempotency_key", { length: 180 }).notNull(),
+    provider: varchar("provider", { length: 80 }),
+    providerPayoutReference: varchar("provider_payout_reference", { length: 180 }),
+    providerMetadata: jsonb("provider_metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    failureReason: text("failure_reason"),
+    reservationLedgerTransactionId: uuid("reservation_ledger_transaction_id").references(
+      () => ledgerTransactions.id,
+      { onDelete: "restrict" },
+    ),
+    paymentLedgerTransactionId: uuid("payment_ledger_transaction_id").references(
+      () => ledgerTransactions.id,
+      { onDelete: "restrict" },
+    ),
+    releaseLedgerTransactionId: uuid("release_ledger_transaction_id").references(
+      () => ledgerTransactions.id,
+      { onDelete: "restrict" },
+    ),
+    payoutInitiatedAt: timestamp("payout_initiated_at", { withTimezone: true }),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     uniqueIndex("withdrawal_requests_idempotency_key_uidx").on(table.idempotencyKey),
+    uniqueIndex("withdrawal_requests_reservation_ledger_transaction_uidx")
+      .on(table.reservationLedgerTransactionId)
+      .where(sql`${table.reservationLedgerTransactionId} is not null`),
+    uniqueIndex("withdrawal_requests_payment_ledger_transaction_uidx")
+      .on(table.paymentLedgerTransactionId)
+      .where(sql`${table.paymentLedgerTransactionId} is not null`),
+    uniqueIndex("withdrawal_requests_release_ledger_transaction_uidx")
+      .on(table.releaseLedgerTransactionId)
+      .where(sql`${table.releaseLedgerTransactionId} is not null`),
+    uniqueIndex("withdrawal_requests_provider_payout_uidx")
+      .on(table.provider, table.providerPayoutReference)
+      .where(
+        sql`${table.provider} is not null and ${table.providerPayoutReference} is not null`,
+      ),
     index("withdrawal_requests_user_id_idx").on(table.userId),
     index("withdrawal_requests_status_idx").on(table.status),
     index("withdrawal_requests_created_at_idx").on(table.createdAt),
+    index("withdrawal_requests_user_status_created_idx").on(
+      table.userId,
+      table.status,
+      table.createdAt,
+    ),
   ],
 );
 
@@ -312,7 +379,14 @@ export const paymentProviderEvents = pgTable(
     providerEventId: varchar("provider_event_id", { length: 180 }).notNull(),
     eventType: varchar("event_type", { length: 160 }).notNull(),
     payloadHash: varchar("payload_hash", { length: 128 }).notNull(),
+    payload: jsonb("payload")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     status: paymentProviderEventStatusEnum("status").notNull().default("received"),
+    attemptCount: integer("attempt_count").notNull().default(0),
+    nextRetryAt: timestamp("next_retry_at", { withTimezone: true }),
+    deadLetteredAt: timestamp("dead_lettered_at", { withTimezone: true }),
     receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
     processedAt: timestamp("processed_at", { withTimezone: true }),
     errorMessage: text("error_message"),
@@ -324,6 +398,9 @@ export const paymentProviderEvents = pgTable(
     ),
     index("payment_provider_events_status_idx").on(table.status),
     index("payment_provider_events_received_at_idx").on(table.receivedAt),
+    index("payment_provider_events_retry_idx")
+      .on(table.status, table.nextRetryAt)
+      .where(sql`${table.status} = 'failed' and ${table.deadLetteredAt} is null`),
   ],
 );
 

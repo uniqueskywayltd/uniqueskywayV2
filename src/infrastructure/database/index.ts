@@ -17,15 +17,18 @@ export * as schema from "./schema";
 export type { DrizzleTransactionContext } from "./transactions";
 export type { AppDatabase, AppDatabaseExecutor, AppTransaction } from "./types";
 export type {
+  DepositIntentRecord,
   EmailMessageRecord,
   InvestmentRecord,
   LedgerAccountRecord,
   LedgerPostingInput,
   LedgerTransactionRecord,
+  PaymentProviderEventRecord,
   RoiLedgerEntryRecord,
   RoiScheduleItemRecord,
   SettlementItemRecord,
   SettlementRunRecord,
   WalletBalanceRecord,
   WalletRecord,
+  WithdrawalRequestRecord,
 } from "./repositories";

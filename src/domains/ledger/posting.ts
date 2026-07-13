@@ -71,6 +71,50 @@ export function createInvestmentFundingEntries(input: {
   ];
 }
 
+export function createDepositConfirmationEntries(input: {
+  providerClearingAccountId: string;
+  customerAvailableAccountId: string;
+  amountMinor: bigint;
+  currency: string;
+}): LedgerPostingLine[] {
+  return [
+    {
+      accountId: input.providerClearingAccountId,
+      direction: "debit",
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+    },
+    {
+      accountId: input.customerAvailableAccountId,
+      direction: "credit",
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+    },
+  ];
+}
+
+export function createDepositReversalEntries(input: {
+  customerAvailableAccountId: string;
+  providerClearingAccountId: string;
+  amountMinor: bigint;
+  currency: string;
+}): LedgerPostingLine[] {
+  return [
+    {
+      accountId: input.customerAvailableAccountId,
+      direction: "debit",
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+    },
+    {
+      accountId: input.providerClearingAccountId,
+      direction: "credit",
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+    },
+  ];
+}
+
 export function createRoiSettlementEntries(input: {
   platformRoiExpenseAccountId: string;
   customerAvailableAccountId: string;
@@ -108,6 +152,72 @@ export function createMaturityPrincipalReleaseEntries(input: {
     },
     {
       accountId: input.availableAccountId,
+      direction: "credit",
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+    },
+  ];
+}
+
+export function createWithdrawalReservationEntries(input: {
+  customerAvailableAccountId: string;
+  customerReservedAccountId: string;
+  amountMinor: bigint;
+  currency: string;
+}): LedgerPostingLine[] {
+  return [
+    {
+      accountId: input.customerAvailableAccountId,
+      direction: "debit",
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+    },
+    {
+      accountId: input.customerReservedAccountId,
+      direction: "credit",
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+    },
+  ];
+}
+
+export function createWithdrawalPaymentEntries(input: {
+  customerReservedAccountId: string;
+  customerWithdrawnAccountId: string;
+  amountMinor: bigint;
+  currency: string;
+}): LedgerPostingLine[] {
+  return [
+    {
+      accountId: input.customerReservedAccountId,
+      direction: "debit",
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+    },
+    {
+      accountId: input.customerWithdrawnAccountId,
+      direction: "credit",
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+    },
+  ];
+}
+
+export function createWithdrawalReleaseEntries(input: {
+  customerReservedAccountId: string;
+  customerAvailableAccountId: string;
+  amountMinor: bigint;
+  currency: string;
+}): LedgerPostingLine[] {
+  return [
+    {
+      accountId: input.customerReservedAccountId,
+      direction: "debit",
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+    },
+    {
+      accountId: input.customerAvailableAccountId,
       direction: "credit",
       amountMinor: input.amountMinor,
       currency: input.currency,

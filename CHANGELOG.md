@@ -12,12 +12,40 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-Added:
+No unreleased certified changes.
+
+## v2.2.0 - 2026-07-13
+
+Status: Certified money movement release.
+
+Included:
 
 - Added `PAYMENT_ARCHITECTURE.md` as the Phase 7 money movement constitution before payment implementation begins.
 - Added `LEDGER_POSTING_RULES.md` as the accounting specification for approved financial postings.
 - Added `WEBHOOK_SPECIFICATION.md` as the external provider webhook constitution for Phase 7.
 - Locked the certified `v2.1.0` investment engine against business rule, ROI formula, settlement rule, maturity rule, and financial math changes without ADR, regression tests, and recertification.
+- Added Phase 7 money movement: deposit and withdrawal engines, Paystack payment provider adapter, deposit/withdrawal state machines, and the `payment_provider_events` webhook durability table.
+- Added customer deposit and withdrawal creation, listing, and cancellation, plus admin deposit and withdrawal review, payout queueing, and manual approval/rejection endpoints.
+- Added Paystack webhook processing for `charge.success`, `charge.failed`, `transfer.success`, `transfer.failed`, and `transfer.reversed`, with signature verification, event claim/processing locking, exponential retry backoff, and dead-letter admin alerting.
+- Added `reverseDepositIntent` for confirmed-deposit reversal with an available-balance guard that raises a financial integrity error instead of creating a negative balance, and `recoverProviderEvents` for replaying failed webhook events.
+- Added DEC-0021 certifying Paystack as the sole Phase 7 payment provider, USD as the sole currency, and `transfer.reversed` as a reconciliation exception with no automatic ledger posting.
+- Added Phase 7 certification and audit reports for verification, deposits, withdrawals, Paystack, webhooks, ledger posting, architecture, performance, security, and financial certification.
+
+Verification:
+
+- Typecheck passed.
+- Lint passed.
+- Unit and integration tests passed: 34 test files, 122 tests.
+- Database schema check passed.
+- Production build passed.
+- End-to-end tests passed: 8 tests.
+
+Scope certification:
+
+- Investment engine ROI, settlement, maturity, and New York calendar logic remain locked.
+- No Flutterwave or Stripe providers.
+- No marketing redesign, referral logic, or dashboard styling work.
+- Money movement certification is backed by `PHASE_7_VERIFICATION_REPORT.md` and `MONEY_MOVEMENT_FINANCIAL_CERTIFICATION.md`.
 
 ## v2.1.0 - 2026-07-13
 

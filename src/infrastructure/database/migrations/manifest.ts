@@ -9,7 +9,9 @@ export interface DatabaseMigration {
     | "indexes"
     | "seed"
     | "customer_experience"
-    | "investment_engine";
+    | "investment_engine"
+    | "deposit_engine"
+    | "money_movement";
   fileName: string;
 }
 
@@ -58,5 +60,15 @@ export const databaseMigrations = [
     id: "202607130601_investment_engine",
     phase: "investment_engine",
     fileName: "202607130601_investment_engine.sql",
+  },
+  {
+    id: "202607130701_deposit_engine",
+    phase: "deposit_engine",
+    fileName: "202607130701_deposit_engine.sql",
+  },
+  {
+    id: "202607130702_money_movement",
+    phase: "money_movement",
+    fileName: "202607130702_money_movement.sql",
   },
 ] as const satisfies readonly DatabaseMigration[];

@@ -171,6 +171,28 @@ export class LedgerRepository extends BaseDrizzleRepository {
     return rows[0]?.account ?? null;
   }
 
+  async findWalletAccountByCategoryInTransaction(
+    context: DrizzleTransactionContext,
+    input: {
+      walletId: string;
+      category: "pending" | "available" | "locked" | "reserved" | "withdrawn";
+    },
+  ): Promise<LedgerAccountRecord | null> {
+    const rows = await context.db
+      .select({ account: ledgerAccounts })
+      .from(walletAccountLinks)
+      .innerJoin(ledgerAccounts, eq(walletAccountLinks.ledgerAccountId, ledgerAccounts.id))
+      .where(
+        and(
+          eq(walletAccountLinks.walletId, input.walletId),
+          eq(walletAccountLinks.category, input.category),
+        ),
+      )
+      .limit(1);
+
+    return rows[0]?.account ?? null;
+  }
+
   async findWalletBalance(walletId: string): Promise<WalletBalanceRecord | null> {
     const rows = (await this.db.execute(sql`
       select
