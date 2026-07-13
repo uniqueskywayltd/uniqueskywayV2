@@ -698,16 +698,19 @@ Exit criteria:
 | --- | --- |
 | `v2.0.0` | Certified foundation through Phase 5. |
 | `v2.0.1` | Financial constitution patch. |
-| `v2.1.0` | Investment engine certified. |
-| `v2.2.0` | Money movement certified. |
-| `v2.3.0` | Admin portal certified. |
-| `v3.0.0` | Customer Experience Platform — Wave A public trust (sprints A1–A5). |
-| `v3.1.0` | Customer Money Experience (dashboard, wallet, portfolio, activity). |
-| `v3.2.0` | Referral & Growth Experience. |
-| `v3.3.0` | Mobile/PWA & Customer Delight. |
-| `v4.0.0` | Enterprise & Institutional Experience (future). |
+| `v2.1.0` | Investment engine certified (frozen). |
+| `v2.2.0` | Money movement certified (frozen). |
+| `v2.3.0` | Admin portal certified (frozen). |
+| `v3.0.0` | Customer Experience Platform — public trust (frozen, `DEC-0029`). |
+| `v3.1.0` | Customer Money Experience (frozen, `DEC-0043`). |
+| `v3.2.0` | Growth Experience (Milestone 6) — next. |
+| `v3.3.0` | International Platform (Milestone 7). |
+| `v3.4.0` | Mobile Experience (Milestone 8). |
+| `v4.0.0` | Ecosystem / Global Platform (Milestone 9). |
 
-From Milestone 5 onward, prefer **release trains** (versioned customer experiences) over open-ended “phases.”
+Strategic process authority: `PLATFORM_CONSTITUTION.md` (`DEC-0044`).
+
+From Milestone 5 onward, prefer **release trains** (versioned customer experiences) over open-ended “phases.” New work adds products inside the platform — not new foundations.
 
 ## Product Milestones (summary)
 
@@ -718,13 +721,18 @@ From Milestone 5 onward, prefer **release trains** (versioned customer experienc
 | 3 Money Platform | `v2.2.0` | Frozen |
 | 4 Administration | `v2.3.0` | Frozen |
 | 5 Customer Experience | `v3.0.0` / `v3.1.0` | Wave A frozen (`DEC-0029`); Wave B frozen (`DEC-0043`) |
+| 6 Growth Experience | `v3.2.0` | Next — Design → Approve first |
+| 7 International Platform | `v3.3.0` | Planned |
+| 8 Mobile Experience | `v3.4.0` | Planned |
+| 9 Ecosystem | `v4.0.0` | Planned |
 
 ## Current Build Order Summary
 
-1. `main` at **`v3.1.0`** includes certified/frozen Investment (`v2.1.0`), Money Movement (`v2.2.0`), Administrative Platform (`v2.3.0`), public Wave A (`v3.0.0`), and Customer Money Experience Wave B.
+1. `main` includes certified/frozen Investment (`v2.1.0`), Money Movement (`v2.2.0`), Admin (`v2.3.0`), public Wave A (`v3.0.0`), and Customer Money Experience (`v3.1.0`). Annotated tag **`v3.1.0`** is pushed; follow `PLATFORM_CONSTITUTION.md`.
 2. Public Wave A is frozen under **`DEC-0029`**. Authenticated Wave B is frozen under **`DEC-0043`**.
-3. Customer money UX constitutions: portfolio, wallet, notification, financial dashboard principles + `CUSTOMER_EXPERIENCE_PRINCIPLES.md`.
-4. Next: Growth & Support / polish trains (`v3.2.0`+) under Design → Approve → Implement. Do not casually reopen Wave A or Wave B.
-5. Subsequent trains: `v3.2.0` growth → `v3.3.0` mobile/delight.
-6. Do not reopen investment-engine, money-movement, admin-platform, public Wave A, or Wave B freezes without ADR, regression tests, and recertification.
+3. Customer money UX constitutions remain in force; `FINANCIAL_INVARIANTS.md` always wins on money truth.
+4. Next: **Milestone 6 — Growth Experience (`v3.2.0`)** after Design → Approve. Do not start i18n until `v3.3.0` governance.
+5. Subsequent trains: `v3.3.0` international → `v3.4.0` mobile → `v4.0.0` ecosystem.
+6. Do not reopen frozen releases without ADR, regression tests, and (where required) UX approval + recertification.
 7. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
+8. Do not ask implementers to re-compare the legacy V1 repository by default — evaluate remembered features through product review first.

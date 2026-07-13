@@ -12,7 +12,9 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-(none)
+Added:
+
+- Adopted `PLATFORM_CONSTITUTION.md` (`DEC-0044`) and aligned long-term trains: Growth (`v3.2.0`), International (`v3.3.0`), Mobile (`v3.4.0`), Ecosystem (`v4.0.0`).
 
 ## v3.1.0 - 2026-07-13
 

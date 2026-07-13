@@ -1594,5 +1594,27 @@ Sprints B1–B5 delivered and certified the authenticated Customer Money Experie
 ### Consequences
 
 - Authenticated Wave B routes require DEC-level change control after `v3.1.0`.
-- Next product train is Growth & Support / polish under Milestone 5 remaining waves (`v3.2.0`+), not reopen of money UX foundations.
+- Next product train is Growth Experience (`v3.2.0`) under Milestone 6 governance — not reopen of money UX foundations.
 - `FINANCIAL_INVARIANTS.md` continues to win over any experience principle conflict.
+
+## DEC-0044: Platform Constitution Adopted
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: When release-train philosophy or freeze policy changes
+
+### Context
+
+After freezing `v3.1.0`, the platform has a complete certified customer path from public trust through authenticated money management. Future work must add products inside the platform without regenerating foundations or burning implementation capacity on re-planning.
+
+### Decision
+
+1. Adopt `PLATFORM_CONSTITUTION.md` as the strategic constitution for philosophy, freeze policy, design/engineering posture, release process, and roadmap philosophy.
+2. New trains (`v3.2.0`+) require Design → Approve → Implement and must not casually reopen `v2.x`, `v3.0.0`, or `v3.1.0`.
+3. Legacy V1 is a feature-idea library only — not a repository Cursor re-compares by default.
+4. Internationalization ships as its own governed train (`v3.3.0`), not as incremental ungoverned string work.
+
+### Consequences
+
+- Implementation prompts should carry architecture, UX decisions, constraints, and acceptance criteria already decided.
+- Roadmap language prefers experience trains: Growth → International → Mobile → Ecosystem.

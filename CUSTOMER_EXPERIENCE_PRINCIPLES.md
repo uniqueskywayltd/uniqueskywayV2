@@ -41,6 +41,7 @@ This document never overrides financial invariants.
 
 | Document | Governs |
 | --- | --- |
+| `PLATFORM_CONSTITUTION.md` | Strategic philosophy, freeze policy, release & roadmap posture (`DEC-0044`) |
 | `FINANCIAL_INVARIANTS.md` | How money is created, moved, settled, and reported |
 | `CUSTOMER_EXPERIENCE_PRINCIPLES.md` | How money and status are **explained and felt** by customers |
 | `WAVE_*_UX_SPECIFICATION.md` | Screen-level Stage 1 design for a specific wave |
