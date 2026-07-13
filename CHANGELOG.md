@@ -20,9 +20,10 @@ Added:
 - Added and refined `WAVE_A_UX_SPECIFICATION.md`; approved Wave A Stage 1 under **`DEC-0028`**.
 - Added `BRAND_ASSETS_SPECIFICATION.md` as the brand asset authority before Stage 2.
 - Defined Stage 2 implementation sprints **A1–A5** (shell → home → trust pages → plans/FAQ/contact → legal/certify).
-- Certified **Sprint A1 Public Foundation** (`SPRINT_A1_CERTIFICATION.md`): public shell, SEO framework, theme/typography/motion/a11y foundations. Homepage deferred to A2.
+- Certified **Sprint A1 Public Foundation** (`SPRINT_A1_CERTIFICATION.md`): public shell, SEO framework, theme/typography/motion/a11y foundations.
+- Certified **Sprint A2 Homepage** (`SPRINT_A2_CERTIFICATION.md`): flagship public homepage with one-purpose sections, trust-safe copy, and certified-catalog plan placeholders.
 
-Current certified product release remains `v2.3.0`. Sprint A1 is certified on the Milestone 5 branch pending merge.
+Current certified product release remains `v2.3.0`. Next implementation: Sprint A3.
 
 ## v2.3.0 - 2026-07-13
 

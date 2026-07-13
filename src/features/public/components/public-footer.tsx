@@ -40,7 +40,7 @@ export function PublicFooter() {
           <p>
             © {year} {SEO_DEFAULTS.siteName}. Investments involve risk.
           </p>
-          <p>Public foundation · Sprint A1</p>
+          <p>Investments involve risk.</p>
         </div>
       </div>
     </footer>

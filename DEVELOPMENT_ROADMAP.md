@@ -572,8 +572,8 @@ Do **not** implement all of Wave A in one pass. Execute and freeze:
 | Sprint | Scope | Exit |
 | --- | --- | --- |
 | **A1** | Navigation, header, footer, global public layout, SEO foundation, theme/tokens, public shell | **Certified** — `SPRINT_A1_CERTIFICATION.md` |
-| **A2** | Homepage only | Next |
-| **A3** | About, How it Works, Security | Pending |
+| **A2** | Homepage only | **Certified** — `SPRINT_A2_CERTIFICATION.md` |
+| **A3** | About, How it Works, Security | Next |
 | **A4** | Investment Plans, FAQ, Contact | Pending |
 | **A5** | Legal pages, 404 polish, search-within-FAQ if specified, performance, accessibility, Wave A certification | Pending |
 
@@ -700,8 +700,8 @@ From Milestone 5 onward, prefer **release trains** (versioned customer experienc
 
 1. Keep `main` at `v2.3.0` as the recovery checkpoint for frozen Investment, Money Movement, and Administrative Platform subsystems.
 2. Milestone 5 Wave A Stage 1 is **approved** (`DEC-0028`).
-3. **Sprint A1 Public Foundation is certified** (`SPRINT_A1_CERTIFICATION.md`). Next: Sprint **A2 Homepage only**.
-4. Continue A2→A5 with implement + self-certify per sprint; then tag `v3.0.0`.
+3. **Sprint A1** and **Sprint A2** are certified. Next: Sprint **A3** (About, How it Works, Security only).
+4. Continue A3→A5 with implement + self-certify per sprint; then tag `v3.0.0`.
 5. Subsequent trains: `v3.1.0` money experience → `v3.2.0` growth → `v3.3.0` mobile/delight.
 6. Do not reopen investment-engine, money-movement, or admin-platform behavioral rules without ADR, regression tests, and recertification.
 7. Keep Paystack as the sole provider until a superseding provider ADR is accepted.

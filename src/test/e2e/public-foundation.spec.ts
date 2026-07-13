@@ -8,7 +8,7 @@ test.describe("sprint A1 public foundation", () => {
     await expect(page.getByRole("link", { name: "Plans" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Get started" }).first()).toBeVisible();
     await expect(page.getByRole("contentinfo")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Public foundation is ready." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invest with clarity." })).toBeVisible();
     await expect(page.getByRole("link", { name: "Skip to main content" })).toBeAttached();
   });
 
