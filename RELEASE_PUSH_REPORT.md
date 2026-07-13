@@ -43,5 +43,6 @@ Commit subject: *Certify Wave B Customer Money Experience as v3.1.0.*
 
 ## Notes
 
-- No production code was modified for this push.
+- No production code was modified for this release push.
 - Remote host: `https://github.com/uniqueskywayltd/uniqueskywayV2.git`
+- After verification, `RELEASE_PUSH_REPORT.md` was committed and pushed as docs-only `fff9d6e`. Annotated tag **`v3.1.0` remains on release commit `0ed1482`** (intentionally not moved).
