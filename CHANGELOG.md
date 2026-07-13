@@ -10,6 +10,21 @@ Unique Sky Way V2 follows semantic versioning for certified phase releases:
 
 Every release must be backed by a clean build, passing tests, an immutable Git commit, and a pushed Git tag.
 
+## v2.0.1 - 2026-07-13
+
+Status: Financial governance patch.
+
+Included:
+
+- Added `FINANCIAL_INVARIANTS.md` as the permanent rulebook for ledger, wallet, investment, ROI, settlement, maturity, withdrawal, referral, concurrency, reconciliation, background job, and financial testing invariants.
+- Defined Phase 6 internal milestone order and certification requirements.
+- Explicitly prohibited deposits and withdrawals during Phase 6.
+
+Verification:
+
+- Typecheck passed.
+- Lint passed.
+
 ## v2.0.0 - 2026-07-13
 
 Status: Certified foundation release.
