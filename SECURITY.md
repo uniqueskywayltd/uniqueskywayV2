@@ -253,6 +253,7 @@ Rules:
 - Deduplicate events.
 - Do not trust webhook amount or status without matching existing intent.
 - Log failed verification without exposing secret details.
+- Follow `WEBHOOK_SPECIFICATION.md` for provider-specific verification, replay protection, duplicate policy, and recovery.
 
 ## Database Security
 
@@ -308,4 +309,3 @@ This document is a technical architecture, not legal advice.
 - Supabase Row Level Security: https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase token security guidance: https://supabase.com/docs/guides/auth/oauth-server/token-security
 - Supabase Database Security Advisor: https://supabase.com/docs/guides/database/database-advisors
-

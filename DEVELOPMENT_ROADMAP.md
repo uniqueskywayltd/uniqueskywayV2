@@ -25,6 +25,7 @@ This document must stay consistent with:
 - `FINANCIAL_TEST_MATRIX.md`
 - `PAYMENT_ARCHITECTURE.md`
 - `LEDGER_POSTING_RULES.md`
+- `WEBHOOK_SPECIFICATION.md`
 - `CHANGELOG.md`
 - `DECISIONS.md`
 - `ENGINEERING_PRINCIPLES.md`
@@ -53,8 +54,9 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | Phase 6.2 | Included | `v2.1.0` | Financial concurrency certified. |
 | Phase 6.3 | Included | `v2.1.0` | Financial recovery certified. |
 | Phase 6.4 | Included | `v2.1.0` | Investment engine final certification verified. |
-| Payment Architecture | Complete Pending Merge | `codex/payment-architecture-governance` | Phase 7 money movement governance checkpoint. |
-| Ledger Posting Rules | Complete Pending Merge | `codex/payment-architecture-governance` | Accounting specification for approved financial postings. |
+| Payment Architecture | Complete | `main` | Phase 7 money movement governance checkpoint. |
+| Ledger Posting Rules | Complete | `main` | Accounting specification for approved financial postings. |
+| Webhook Specification | Complete | `main` | External provider webhook constitution. |
 
 After `v2.1.0` is tagged, `main` becomes the stable recovery point for Phase 7.
 
@@ -374,22 +376,71 @@ Exit criteria:
 
 Status: Pending.
 
-Build only after Phase 6 certification, `PAYMENT_ARCHITECTURE.md` approval, and `LEDGER_POSTING_RULES.md` approval:
+Build only after Phase 6 certification, `PAYMENT_ARCHITECTURE.md` approval, `LEDGER_POSTING_RULES.md` approval, and `WEBHOOK_SPECIFICATION.md` approval.
+
+### Phase 7.0 - Webhook Constitution
+
+Status: Complete.
+
+Delivered:
+
+- Paystack-targeted webhook specification.
+- Future provider extension rules for Flutterwave and Stripe.
+- Signature verification policy.
+- Replay and duplicate policy.
+- Failure recovery policy.
+- Webhook security and testing requirements.
+
+### Phase 7.1 - Deposit Engine
+
+Build:
 
 - Payment provider abstraction.
 - Deposit intent flow.
 - Provider webhook handling.
 - Deposit confirmation.
+
+Do not build withdrawals.
+
+### Phase 7.2 - Withdrawal Engine
+
+Build:
+
 - Withdrawal request flow.
 - Withdrawal reservation.
 - Withdrawal approval and rejection.
 - Payout provider abstraction.
 - Reversals and failures.
 
+### Phase 7.3 - Provider Integration
+
+Build:
+
+- Paystack provider adapter.
+- Paystack signature verification.
+- Paystack webhook event processing.
+- Provider retry and duplicate protection.
+- Provider failure recovery.
+
+Do not redesign UI.
+
+### Phase 7.4 - Financial Certification
+
+Certify:
+
+- Money cannot disappear.
+- Money cannot duplicate.
+- Webhooks are idempotent.
+- Retries are safe.
+- Deposits reconcile.
+- Withdrawals reconcile.
+- Ledger always balances.
+
 Exit criteria:
 
 - Concrete provider ADR is accepted before production provider code merges.
 - Ledger postings match `LEDGER_POSTING_RULES.md`.
+- Webhooks match `WEBHOOK_SPECIFICATION.md`.
 - Duplicate provider webhooks are idempotent.
 - Deposits credit only after confirmation.
 - Withdrawal reservation is ledger-backed.
@@ -521,8 +572,8 @@ Exit criteria:
 
 ## Current Build Order Summary
 
-1. Keep `main` stable at `v2.1.0`.
-2. Approve `PAYMENT_ARCHITECTURE.md`.
-3. Approve `LEDGER_POSTING_RULES.md`.
-4. Begin Phase 7 money movement on a new phase branch.
+1. Keep `main` stable with the `v2.1.0` investment engine and approved Phase 7 governance.
+2. Begin Phase 7.1 deposit engine on a new phase branch.
+3. Build Phase 7.2 withdrawal engine only after deposit scope is complete.
+4. Build Phase 7.3 provider integration only after provider ADR approval.
 5. Merge Phase 7 only after money movement certification passes.

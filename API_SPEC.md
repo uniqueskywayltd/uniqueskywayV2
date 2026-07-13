@@ -950,6 +950,7 @@ Behavior:
 - Deduplicate.
 - Process through payment application service.
 - Return 2xx for already processed duplicate.
+- Follow `WEBHOOK_SPECIFICATION.md` for provider-specific signature, retry, duplicate, and failure behavior.
 
 ### `POST /api/webhooks/resend`
 
@@ -1028,4 +1029,3 @@ Future external API:
 
 - Next.js Route Handlers: https://nextjs.org/docs/app/getting-started/route-handlers
 - Next.js route file convention: https://nextjs.org/docs/app/api-reference/file-conventions/route
-
