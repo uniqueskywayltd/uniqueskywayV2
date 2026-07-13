@@ -1692,22 +1692,64 @@ Statements are among the highest-trust artifacts on a financial platform. Presen
 - Sprint G2 implements statement UX against existing certified reads only.
 - Conflicts with UI desire lose to `FINANCIAL_INVARIANTS.md` and this DEC.
 
-## DEC-0048: Sprint G1 Customer Success Hub (proposed acceptance)
+## DEC-0048: Sprint G1 Customer Success Hub
 
 - Date: 2026-07-13
-- Status: **Proposed** — awaiting consultancy review of `SPRINT_G1_CERTIFICATION.md`
-- Future Review: After Accepted, G1 shells require ADR-level change control
+- Status: Accepted
+- Future Review: ADR-level change control for G1 shells after freeze
 
 ### Context
 
-Stage 1 (`DEC-0045`) and Success Hub primacy (`DEC-0046`) authorized Sprint G1 shells with no business logic.
+Stage 1 (`DEC-0045`) and Success Hub primacy (`DEC-0046`) authorized Sprint G1 shells with no business logic. Consultancy score: **99.9 / 100**.
 
-### Decision (pending)
+### Decision
 
-1. Accept Sprint G1 as certified on branch `milestone-6-sprint-g1-success-hub`.
-2. Merge to `main` after consultancy sign-off.
-3. Authorize Sprint G2 Statements design/implementation next — only after this DEC is Accepted.
+1. Accept Sprint G1 as certified (`SPRINT_G1_CERTIFICATION.md`).
+2. Merge `milestone-6-sprint-g1-success-hub` into `main` and freeze G1 shells.
+3. Authorize Sprint G2 Statements next — one sprint only — after Statement Design Principles (`DEC-0050`).
 
-### Consequences (when accepted)
+### Consequences
 
+- G1 Success Hub remains the primary post-investment guidance surface (`DEC-0046`).
 - G2 may begin; G3–G5 remain blocked until prior sprints are approved.
+
+## DEC-0049: Sprint G1 Customer Success Hub Certified
+
+- Date: 2026-07-13
+- Status: Accepted — **ACTIVE FREEZE for G1 shells**
+- Future Review: Philosophy-level Success Hub IA change
+
+### Context
+
+G1 delivered Success Hub, learning/milestones/statements entry shells, progress framework, and account nav Success entry without money-nav displacement or business logic.
+
+### Decision
+
+1. Record G1 as **certified and frozen** under Milestone 6.
+2. Preserve `SPRINT_G1_CERTIFICATION.md` on `main`.
+3. Do not casually redesign G1 wayfinding during later G2–G4 work.
+
+### Consequences
+
+- Later sprints deepen linked destinations; they do not replace the Success Hub question.
+
+## DEC-0050: Statement Design Principles Adopted before Sprint G2
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Statement experience philosophy change
+
+### Context
+
+Before implementing statements, experience rules must be fixed separately from the future field dictionary.
+
+### Decision
+
+1. Adopt `STATEMENT_DESIGN_PRINCIPLES.md` as experience authority for G2+.
+2. Keep `STATEMENT_DATA_DICTIONARY.md` deferred until before G5 (data catalog).
+3. G2 north star remains **Can I understand my financial history?** — not “export theater.”
+4. Reaffirm `DEC-0047`: projections only; no independent financial figures.
+
+### Consequences
+
+- Sprint G2 implements list/detail/download UX under these principles and `STATEMENT_EXPERIENCE_GUIDE.md`.

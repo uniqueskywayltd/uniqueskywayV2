@@ -631,11 +631,13 @@ See `GROWTH_EXPERIENCE_SPECIFICATION.md` + companions.
 
 | Sprint | Scope | Status |
 | --- | --- | --- |
-| **G1** | Customer Success Hub shells (no business logic) | Implemented — `SPRINT_G1_CERTIFICATION.md` (awaiting review) |
-| **G2** | Statements (`DEC-0047`) | Blocked until G1 approved |
+| **G1** | Customer Success Hub shells (no business logic) | **Frozen** — `DEC-0048` / `DEC-0049` |
+| **G2** | Statements (`DEC-0047`, `DEC-0050`) | Next |
 | **G3** | Education | Blocked |
 | **G4** | Referral Experience | Blocked |
 | **G5** | Certification + `STATEMENT_DATA_DICTIONARY.md` + tag `v3.2.0` | Blocked |
+
+Note: `FINANCIAL_DASHBOARD_PRINCIPLES.md` already exists from Wave B (`v3.1.0`). G5 still requires `STATEMENT_DATA_DICTIONARY.md`.
 
 Historical “Wave C / Wave D” blurbs defer to this package.
 

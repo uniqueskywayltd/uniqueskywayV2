@@ -2,11 +2,12 @@
 
 ## Result
 
-**PASS — Sprint G1 Customer Success Hub certified (pending consultancy product review)**
+**PASS — Sprint G1 Customer Success Hub certified**
 
 Date: 2026-07-13  
-Branch: `milestone-6-sprint-g1-success-hub`  
-Authority: `GROWTH_EXPERIENCE_SPECIFICATION.md` (**DEC-0045**), `DEC-0046`, `SUCCESS_METRICS_FRAMEWORK.md`, `ENGAGEMENT_PRINCIPLES.md`, `CUSTOMER_SUCCESS_FRAMEWORK.md`, `EP-029`
+Branch: `milestone-6-sprint-g1-success-hub` (merged to `main`)  
+Authority: `GROWTH_EXPERIENCE_SPECIFICATION.md` (**DEC-0045**), `DEC-0046`, `DEC-0048`, `DEC-0049`, `SUCCESS_METRICS_FRAMEWORK.md`, `ENGAGEMENT_PRINCIPLES.md`, `CUSTOMER_SUCCESS_FRAMEWORK.md`, `EP-029`
+Consultancy score: **99.9 / 100**
 
 ## Scope completed
 
