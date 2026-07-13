@@ -92,6 +92,15 @@ export class InvestmentEngineService {
         input.userId,
         planVersion.currency,
       );
+      const existingInTransaction =
+        await this.deps.investmentRepository.findInvestmentByIdempotencyKeyInTransaction(
+          tx,
+          input.idempotencyKey,
+        );
+      if (existingInTransaction) {
+        return { investment: existingInTransaction, idempotent: true };
+      }
+
       const balance = await this.deps.ledgerRepository.findWalletBalanceByUserCurrencyInTransaction(
         tx,
         input.userId,

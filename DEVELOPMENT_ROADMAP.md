@@ -47,7 +47,8 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | v2.0.1 | Certified | `v2.0.1` | Financial invariants constitution. |
 | Phase 6.0 | Checkpoint Complete | `phase-6-investment-engine` | Investment engine core built, not merged. |
 | Phase 6.1 | Complete | `phase-6-investment-engine` | Financial mathematics certified, not merged. |
-| Phase 6.2 | Next | `phase-6-investment-engine` | Financial concurrency certification. |
+| Phase 6.2 | Complete | `phase-6-investment-engine` | Financial concurrency certified, not merged. |
+| Phase 6.3 | Next | `phase-6-investment-engine` | Financial recovery certification. |
 
 `main` remains frozen at `v2.0.1` until Phase 6.4 passes and `v2.1.0` is tagged.
 
@@ -276,7 +277,7 @@ Exit criteria:
 
 ### Phase 6.2 - Financial Concurrency Certification
 
-Status: Next.
+Status: Complete.
 
 Mission:
 

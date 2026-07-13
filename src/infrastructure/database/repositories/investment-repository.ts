@@ -32,6 +32,18 @@ export class InvestmentRepository extends BaseDrizzleRepository {
     return rows[0] ?? null;
   }
 
+  async findInvestmentByIdempotencyKeyInTransaction(
+    context: DrizzleTransactionContext,
+    idempotencyKey: string,
+  ): Promise<InvestmentRecord | null> {
+    const rows = await context.db
+      .select()
+      .from(investments)
+      .where(eq(investments.idempotencyKey, idempotencyKey))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
   async lockInvestmentById(
     context: DrizzleTransactionContext,
     investmentId: string,

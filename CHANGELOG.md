@@ -23,6 +23,9 @@ Added:
 - Added Phase 6.1 mathematics certification coverage for 100,000 deterministic ROI simulations, certified daily ROI bps sweep, certified term-duration sweep, zero ROI, capped ROI, uncapped fixed-term ROI, large-principal bigint safety, and New York leap/month/year boundaries.
 - Reconciled `DEVELOPMENT_ROADMAP.md` with the certified Phase 0 through Phase 6.1 sequence and the Phase 6.2, 6.3, and 6.4 certification path.
 - Added financial performance and impossibility targets to `FINANCIAL_TEST_MATRIX.md`.
+- Added Phase 6.2 concurrency stress coverage for 500-worker duplicate activation, 500-worker available-balance lock contention, 500 duplicate cron settlement executions, 500 racing final-day settlement workers, and duplicate ledger idempotency collisions.
+- Added PostgreSQL transaction retry handling and tests for serialization failures (`40001`) and deadlocks (`40P01`).
+- Completed Phase 6.2 financial concurrency certification in the roadmap and financial test matrix.
 
 ## v2.0.1 - 2026-07-13
 

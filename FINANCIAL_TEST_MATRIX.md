@@ -154,16 +154,19 @@ Certification target:
 
 | ID | Scenario | Invariants | Expected Result | Current Evidence | Status |
 | --- | --- | --- | --- | --- | --- |
-| CONC-001 | Duplicate activation with same idempotency key | FI-005, FI-1102 | Repeated activation returns existing investment or fails without duplicate principal lock. | Service unit test covers existing idempotency key replay. | Partial |
-| CONC-002 | Concurrent duplicate activation | FI-005, FI-201, FI-1101, FI-1102 | Only one investment and one funding ledger transaction commit. | Database unique index exists; concurrent integration test required. | Required |
-| CONC-003 | Concurrent settlement for same investment and earning date | FI-601, FI-605, FI-1101, FI-1102 | Only one settlement item, one ROI ledger entry, and one ROI ledger transaction commit. | Investment row lock and unique constraints exist; concurrent integration test required. | Required |
+| CONC-001 | Duplicate activation with same idempotency key | FI-005, FI-1102 | Repeated activation returns existing investment or fails without duplicate principal lock. | `investment-engine-concurrency.test.ts` runs 500 concurrent same-key activation requests. | Covered |
+| CONC-002 | Concurrent duplicate activation | FI-005, FI-201, FI-1101, FI-1102 | Only one investment and one funding ledger transaction commit. | `investment-engine-concurrency.test.ts` covers same-key activation and unique-key over-lock prevention. | Covered |
+| CONC-003 | Concurrent settlement for same investment and earning date | FI-601, FI-605, FI-1101, FI-1102 | Only one settlement item, one ROI ledger entry, and one ROI ledger transaction commit. | `investment-engine-concurrency.test.ts` runs 500 racing settlement workers against the same investment-date pair. | Covered |
 | CONC-004 | Duplicate completed settlement run replay | FI-605 | Completed run replay returns idempotent no-op. | Service unit test covers completed run replay. | Covered |
-| CONC-005 | Duplicate active settlement run | FI-605, FI-1102, FI-1300 | Database prevents multiple pending or running runs for same settlement date. | Unique partial index exists; integration test required. | Required |
-| CONC-006 | Duplicate maturity processing | FI-701, FI-703, FI-1102 | Principal release posts at most once. | Maturity ledger idempotency key exists; concurrent integration test required. | Required |
-| CONC-007 | Concurrent ROI and maturity on final day | FI-404, FI-701, FI-703 | Final ROI and principal release commit once in the correct transaction path. | Service handles final-day release; concurrent test required. | Required |
-| CONC-008 | Row lock correctness for wallet spendable state | FI-201, FI-1101, FI-1104 | Available balance check and principal lock are protected by row locking. | Wallet row lock exists; integration test required. | Required |
-| CONC-009 | Ledger transaction idempotency collision | FI-005, FI-102, FI-1102 | Duplicate idempotency key cannot create duplicate ledger transaction. | Unique index exists; repository test required. | Required |
+| CONC-005 | Duplicate active settlement run | FI-605, FI-1102, FI-1300 | Database prevents multiple pending or running runs for same settlement date. | `investment-engine-concurrency.test.ts` runs 500 duplicate cron settlement executions. | Covered |
+| CONC-006 | Duplicate maturity processing | FI-701, FI-703, FI-1102 | Principal release posts at most once. | `investment-engine-concurrency.test.ts` proves final-day worker races release principal once. | Covered |
+| CONC-007 | Concurrent ROI and maturity on final day | FI-404, FI-701, FI-703 | Final ROI and principal release commit once in the correct transaction path. | `investment-engine-concurrency.test.ts` races 500 final-day settlement workers. | Covered |
+| CONC-008 | Row lock correctness for wallet spendable state | FI-201, FI-1101, FI-1104 | Available balance check and principal lock are protected by row locking. | `investment-engine-concurrency.test.ts` proves 500 unique activation attempts cannot over-lock one available balance. | Covered |
+| CONC-009 | Ledger transaction idempotency collision | FI-005, FI-102, FI-1102 | Duplicate idempotency key cannot create duplicate ledger transaction. | `investment-engine-concurrency.test.ts` verifies duplicate ledger idempotency keys reject without duplicate entries. | Covered |
 | CONC-010 | Settlement skip after concurrent winner commits | FI-606 | Losing worker detects existing settlement item and skips without posting ledger entries. | Service unit test covers transaction-scoped duplicate skip. | Covered |
+| CONC-011 | Serializable transaction retry | FI-1103, FI-1303 | Retryable serialization failures are retried safely without duplicate financial effects. | `transactions.test.ts` verifies PostgreSQL `40001` retry behavior and retry-limit enforcement. | Covered |
+| CONC-012 | Simulated deadlock retry | FI-1103, FI-1303 | Retryable deadlock failures are retried safely without duplicate financial effects. | `transactions.test.ts` verifies PostgreSQL `40P01` retry behavior. | Covered |
+| CONC-013 | Clock skew between workers | FI-002, FI-600, FI-602 | Workers with skewed clocks cannot settle the current New York day early. | `investment-engine-concurrency.test.ts` verifies early current-day workers reject while completed-day workers settle. | Covered |
 
 ## Phase 6.3 - Financial Recovery Certification
 
@@ -204,12 +207,12 @@ Certification target:
 | CERT-003 | Invariant coverage map | FI-1400 | Every touched financial invariant has at least one test or explicit manual review artifact. | This matrix starts the map. | Partial |
 | CERT-004 | Fixed fixture suite | FI-1401 | Human-readable fixtures exist for required financial examples. | Not yet implemented. | Required |
 | CERT-005 | Property test suite | FI-1402 | ROI math passes required randomized and sweep coverage. | Phase 6.1 certification suite covers 100,000 simulations plus bps and term sweeps. | Covered |
-| CERT-006 | Concurrency test suite | FI-1403 | Duplicate and concurrent attempts cannot double-credit or double-release. | Not yet complete. | Required |
+| CERT-006 | Concurrency test suite | FI-1403 | Duplicate and concurrent attempts cannot double-credit or double-release. | Phase 6.2 certification suite covers activation, settlement, maturity, ledger idempotency, retryable transaction failures, and clock skew. | Covered |
 | CERT-007 | Recovery test suite | FI-1404 | Interrupted settlement and maturity workflows resume safely. | Not yet complete. | Required |
 | CERT-008 | Mathematical proof review | FI-1405 | Written proof is reviewed against final implementation and test suite. | Proof exists; final review pending. | Manual Review |
-| CERT-009 | Build and test certification | TESTING.md | Typecheck, lint, unit, integration, migration, build, and E2E checks pass. | Passed at checkpoint commit `3a08dc4`. | Partial |
+| CERT-009 | Build and test certification | TESTING.md | Typecheck, lint, unit, integration, migration, build, and E2E checks pass. | Full verification passed through Phase 6.2; final Phase 6.4 release verification remains required. | Partial |
 | CERT-010 | Performance benchmark | PERFORMANCE.md | Settlement throughput and ROI simulation cost are measured and documented. | Not yet measured. | Required |
-| CERT-011 | Documentation consistency audit | CONTRIBUTING.md, DECISIONS.md | Financial docs, roadmap, tests, and implementation agree. | Roadmap terminology needs follow-up review. | Required |
+| CERT-011 | Documentation consistency audit | CONTRIBUTING.md, DECISIONS.md | Financial docs, roadmap, tests, and implementation agree. | Roadmap has been reconciled for Phase 6; final Phase 6.4 audit remains required. | Partial |
 | CERT-012 | Release readiness | CHANGELOG.md | Branch can merge to `main`, receive `v2.1.0`, and become recovery point. | Not ready until all Phase 6 certification gates pass. | Required |
 
 ## Future Financial Matrix Placeholders
