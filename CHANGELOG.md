@@ -12,7 +12,13 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-Added:
+No unreleased changes.
+
+## v2.1.0 - 2026-07-13
+
+Status: Certified investment engine release.
+
+Included:
 
 - Added `ENGINEERING_PRINCIPLES.md` as the decision lens for future engineering trade-offs, code review, financial work, and Phase 6 boundaries.
 - Added Phase 6 investment engine domain math, New York calendar handling, ledger posting validation, settlement reconciliation helpers, and mathematical ROI proof.
@@ -34,6 +40,20 @@ Added:
 - Added Phase 6.4 investment engine performance benchmark coverage for activation service work, single settlement service work, and 10,000-investment settlement service work.
 - Closed the Phase 6 financial test matrix certification gates for architecture boundaries, scope boundaries, invariant coverage, fixed fixtures, proof review, performance, documentation synchronization, and release readiness.
 - Completed Phase 6.4 final verification on the phase branch: typecheck, lint, test, database check, build, and E2E.
+
+Verification:
+
+- Typecheck passed.
+- Lint passed.
+- Unit and integration tests passed: 29 test files, 98 tests.
+- Database schema check passed.
+- Production build passed.
+- End-to-end tests passed: 8 tests.
+
+Scope certification:
+
+- No deposits, withdrawals, payment provider workflows, customer financial UI, admin financial operations, or financial override tools were implemented.
+- Investment engine certification is backed by `INVESTMENT_ENGINE_CERTIFICATION.md`, `FINANCIAL_CERTIFICATION_REPORT.md`, `PERFORMANCE_CERTIFICATION.md`, and `PHASE_6_FINAL_REPORT.md`.
 
 ## v2.0.1 - 2026-07-13
 
@@ -85,7 +105,6 @@ Scope certification:
 
 ## Planned Releases
 
-- v2.1.0 - Investment Engine
 - v2.2.0 - Money Movement
 - v2.3.0 - Admin Portal
 - v2.4.0 - Communication System

@@ -45,13 +45,14 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | --- | --- | --- | --- |
 | v2.0.0 | Certified | `v2-phase5-certified` | Architecture through Customer Experience Foundation. |
 | v2.0.1 | Certified | `v2.0.1` | Financial invariants constitution. |
-| Phase 6.0 | Checkpoint Complete | `phase-6-investment-engine` | Investment engine core built, not merged. |
-| Phase 6.1 | Complete | `phase-6-investment-engine` | Financial mathematics certified, not merged. |
-| Phase 6.2 | Complete | `phase-6-investment-engine` | Financial concurrency certified, not merged. |
-| Phase 6.3 | Complete | `phase-6-investment-engine` | Financial recovery certified, not merged. |
-| Phase 6.4 | Complete | `phase-6-investment-engine` | Investment engine final certification verified; ready for merge and tag. |
+| v2.1.0 | Certified | `v2.1.0` | Investment engine certified. |
+| Phase 6.0 | Included | `v2.1.0` | Investment engine core certified. |
+| Phase 6.1 | Included | `v2.1.0` | Financial mathematics certified. |
+| Phase 6.2 | Included | `v2.1.0` | Financial concurrency certified. |
+| Phase 6.3 | Included | `v2.1.0` | Financial recovery certified. |
+| Phase 6.4 | Included | `v2.1.0` | Investment engine final certification verified. |
 
-`main` remains frozen at `v2.0.1` until the phase branch is merged and `v2.1.0` is tagged.
+After `v2.1.0` is tagged, `main` becomes the stable recovery point for Phase 7.
 
 ## Completed Foundation
 
@@ -215,7 +216,7 @@ Delivered:
 
 ## Phase 6 - Investment Engine
 
-Status: In progress on `phase-6-investment-engine`.
+Status: Certified for `v2.1.0`.
 
 Purpose:
 
@@ -341,7 +342,7 @@ Exit criteria:
 
 ### Phase 6.4 - Investment Engine Certification
 
-Status: Complete; ready for merge and tag.
+Status: Complete.
 
 Mission:
 
@@ -512,7 +513,6 @@ Exit criteria:
 
 ## Current Build Order Summary
 
-1. Keep `main` frozen at `v2.0.1`.
-2. Complete Phase 6.4 investment engine certification.
-3. Merge and tag `v2.1.0`.
-4. Begin Phase 7 money movement.
+1. Keep `main` stable at `v2.1.0`.
+2. Begin Phase 7 money movement on a new phase branch.
+3. Merge Phase 7 only after money movement certification passes.
