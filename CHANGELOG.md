@@ -12,24 +12,34 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-Added:
+None. Current certified release is `v2.3.0`.
 
-- Added `PHASE_7_FREEZE_REPORT.md` and `DEC-0022` freezing certified money movement at `v2.2.0`.
-- Started Phase 8 administrative platform work on `phase-8-admin-platform`.
-- Added Phase 8.1 customer administration: admin customer search, details, status suspend/reactivate/close, KYC verification updates, customer notes, and customer audit timeline APIs.
-- Added `customer_notes` persistence migration and admin capability-gated authorization helper for Phase 8.
-- Added Phase 8.2 financial operations: deposit/withdrawal queues with search, details, timelines, notes, and review actions that wrap certified engines; read-only investment and settlement viewers; monitoring and overview metrics.
-- Added `admin_entity_notes` migration for deposit and withdrawal ops notes.
-- Updated Phase 8 roadmap sequence to include Phase 8.5 Admin UI/UX Polish & Certification before `v2.3.0`.
-- Added `ADMIN_PERMISSION_MATRIX.md` as the Phase 8.3 governance source of truth for roles, permissions, elevated actions, and future two-person approval candidates.
-- Added `DEC-0023` adopting database-backed admin RBAC; runtime authorization loads grants from `permissions` / `role_permissions`.
-- Added Phase 8.3 system administration: DB-backed RBAC, staff management, feature flags, system settings, email/notification template catalogs, job monitor, security center, and system health APIs.
-- Migrated admin authorization from hardcoded role maps to `permissions` / `role_permissions` resolution while preserving Phase 8.1/8.2 capability keys.
-- Certified Phase 8.3 on `phase-8-admin-platform` (APIs). Release tag `v2.3.0` remains reserved for complete Admin Platform after Phase 8.5; current release remains `v2.2.0`.
-- Added `REPORTING_SPECIFICATION.md` as the Phase 8.4 governance baseline for read-only admin reporting.
-- Added `DEC-0024` requiring administrative reports to remain read-only projections of certified data with no financial recalculation.
-- Added Phase 8.4 reporting and exports: executive dashboard, customer/financial/operational/system reports, and audited CSV/XLSX exports gated by `reports.read` / `reports.export`.
-- Certified Phase 8.4 on `phase-8-admin-platform` (APIs). Release tag `v2.3.0` remains reserved for complete Admin Platform after Phase 8.5; current release remains `v2.2.0`.
+## v2.3.0 - 2026-07-13
+
+Status: Certified Administrative Platform release (frozen).
+
+Included:
+
+- Completed Phase 8 administrative platform on `phase-8-admin-platform`: customer administration (8.1), financial operations over certified engines (8.2), database-backed RBAC and system administration (8.3), read-only reporting/exports (8.4), and production admin console polish (8.5).
+- Added `ADMIN_PERMISSION_MATRIX.md`, `REPORTING_SPECIFICATION.md`, `DEC-0023`, `DEC-0024`, and `DEC-0025` freezing the Administrative Platform at `v2.3.0`.
+- Delivered `/admin` operational console over certified `/api/admin/*` APIs with shared shell, tables, states, CSRF-backed mutations, and mobile navigation.
+- Added Phase 8.5 certification package: `ADMIN_PLATFORM_CERTIFICATION.md`, UI/performance/accessibility/security/architecture/design-system/dead-code audits, verification and release readiness reports, and `ADMIN_PLATFORM_FREEZE_REPORT.md`.
+
+Verification:
+
+- Typecheck passed.
+- Lint passed.
+- Unit and integration tests passed: 38 test files, 163 tests.
+- Database schema check passed.
+- Production build passed.
+- End-to-end tests passed: 11 tests.
+
+Scope certification:
+
+- Investment engine remains locked at `v2.1.0`.
+- Money movement remains locked at `v2.2.0`.
+- No new financial backends, ledger changes, ROI math, Paystack, or webhook behavior in Phase 8.5.
+- Administrative Platform certification is backed by `ADMIN_PLATFORM_CERTIFICATION.md` and `FINAL_VERIFICATION_REPORT.md`.
 
 ## v2.2.0 - 2026-07-13
 

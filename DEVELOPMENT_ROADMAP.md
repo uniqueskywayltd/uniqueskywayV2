@@ -50,6 +50,7 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | v2.0.1 | Certified | `v2.0.1` | Financial invariants constitution. |
 | v2.1.0 | Certified | `v2.1.0` | Investment engine certified. |
 | v2.2.0 | Certified | `v2.2.0` | Money movement certified. |
+| v2.3.0 | Certified / Frozen | `v2.3.0` | Administrative platform certified. Locked by `DEC-0025`. |
 | Phase 6.0 | Included | `v2.1.0` | Investment engine core certified. |
 | Phase 6.1 | Included | `v2.1.0` | Financial mathematics certified. |
 | Phase 6.2 | Included | `v2.1.0` | Financial concurrency certified. |
@@ -59,9 +60,9 @@ If this roadmap conflicts with those documents, stop and reconcile the documenta
 | Ledger Posting Rules | Complete | `main` | Accounting specification for approved financial postings. |
 | Webhook Specification | Complete | `main` | External provider webhook constitution. |
 | Phase 7 | Certified / Frozen | `v2.2.0` | Deposit engine, withdrawal engine, Paystack provider, money-movement certification. Locked by `DEC-0022`. |
-| Phase 8 | In Progress | `phase-8-admin-platform` | Administrative platform. Must use certified engines; no money-movement redesign. |
+| Phase 8 | Certified / Frozen | `v2.3.0` | Administrative platform. Locked by `DEC-0025`. |
 
-After `v2.2.0` is tagged, `main` becomes the stable recovery point for Phase 8.
+After `v2.3.0` is tagged, `main` becomes the stable recovery point for Phase 9 communication work.
 
 ## Completed Foundation
 
@@ -526,17 +527,20 @@ Status: Complete (APIs).
 
 ### Phase 8.5 - Admin UI/UX Polish & Certification
 
+Status: Complete / Frozen at `v2.3.0`.
+
 - Admin UI polish over certified APIs
 - Full Phase 8 verification and certification package
-- Target release tag: `v2.3.0`
+- Release tag: `v2.3.0`
+- Freeze decision: `DEC-0025`
 
-Exit criteria:
+Exit criteria met:
 
 - Admin actions are permission-gated.
 - Admin financial actions require reason.
 - Admin workflows never bypass domain services, ledger postings, audit logs, transactions, or idempotency.
 - Frozen money-movement behavior from `v2.2.0` is unchanged.
-- Target certification release: `v2.3.0`.
+- Administrative Platform frozen for future ADR-gated changes only.
 
 ## Phase 9 - Communication System
 
@@ -639,9 +643,8 @@ Exit criteria:
 
 ## Current Build Order Summary
 
-1. Keep `main` frozen at `v2.2.0` as the money-movement recovery checkpoint (`DEC-0022`).
-2. Build Phase 8 only on `phase-8-admin-platform`.
-3. Phase 8.3 system administration and Phase 8.4 reporting/exports are certified. Continue with Phase 8.5 UI polish and Admin Platform certification at `v2.3.0`.
-4. Do not reopen investment-engine or money-movement behavioral rules without ADR, regression tests, and recertification.
-5. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
-6. Certify Phase 8 as `v2.3.0` only after permission, security, architecture, reporting, and UI certification gates pass.
+1. Keep `main` frozen at `v2.3.0` as the Administrative Platform recovery checkpoint (`DEC-0025`), with nested freezes for investment (`DEC-0016`) and money movement (`DEC-0022`).
+2. Begin Phase 9 communication system work on a dedicated phase branch.
+3. Do not reopen investment-engine, money-movement, or admin-platform behavioral rules without ADR, regression tests, and recertification.
+4. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
+5. Build communications on certified engines and the frozen admin ops surface without inventing alternate financial backends.

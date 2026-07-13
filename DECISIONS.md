@@ -937,7 +937,7 @@ Admin tooling must operate the certified financial system, not redefine it. Free
 
 - Date: 2026-07-13
 - Status: Accepted
-- Future Review: Review when two-person approval workflows are introduced or when Phase 8.5 freezes the complete admin platform at `v2.3.0`.
+- Future Review: Review when two-person approval workflows are introduced, subject to `DEC-0025` Administrative Platform freeze.
 
 ### Context
 
@@ -978,8 +978,7 @@ Every remaining admin feature depends on consistent authorization. Configurable,
 
 - Phase 8.3 certification is complete on `phase-8-admin-platform`.
 - Production authorization must not reintroduce hardcoded role permission maps.
-- Phase 8.4 reporting and Phase 8.5 admin UI continue on the same branch.
-- Release tag `v2.3.0` remains reserved for the complete admin platform after Phase 8.5; current certified release remains `v2.2.0`.
+- Administrative Platform freeze at `v2.3.0` is governed by `DEC-0025`.
 
 ---
 
@@ -987,7 +986,7 @@ Every remaining admin feature depends on consistent authorization. Configurable,
 
 - Date: 2026-07-13
 - Status: Accepted
-- Future Review: Review when Phase 8.5 freezes the complete admin platform at `v2.3.0`, or if a new report type would require derived financial formulas not already stored by certified engines.
+- Future Review: Review only if a new report type would require derived financial formulas not already stored by certified engines, subject to `DEC-0025`.
 
 ### Context
 
@@ -1004,7 +1003,7 @@ Binding rules:
 - Reporting must not post ledger entries, mutate money-movement state, recalculate ROI formulas, or invent settlement rules.
 - Viewing requires `reports.read`. Exporting requires `reports.export` and must append an audited `report.exported` record.
 - PDF generation is out of scope for Phase 8.4.
-- `v2.3.0` remains reserved for complete Admin Platform certification after Phase 8.5; current release remains `v2.2.0`.
+- Complete Admin Platform certification and freeze are governed by `DEC-0025` at `v2.3.0`.
 
 ### Alternatives Considered
 
@@ -1018,7 +1017,65 @@ A reporting layer that recalculates money movement would compete with certified 
 
 ### Consequences
 
-- Phase 8.4 certification is complete on `phase-8-admin-platform`.
+- Phase 8.4 certification remains binding under the `v2.3.0` Administrative Platform freeze.
 - Future report metrics must cite stored certified fields or be rejected.
-- Phase 8.5 may add Admin UI over these APIs but must not introduce new financial calculation backends.
-- Release tagging remains deferred until the full admin platform is certified.
+- Admin UI may consume these APIs but must not introduce new financial calculation backends.
+
+---
+
+## DEC-0025: Administrative Platform Frozen
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Review only when a critical defect, security issue, or accepted product change requires administrative-platform modification.
+
+### Context
+
+Phase 8 certified customer administration, financial operations over frozen engines, database-backed RBAC, reporting/exports, and the Phase 8.5 operational console as release `v2.3.0`.
+
+Casual changes to certified admin workflows would undermine operational guarantees and risk regressions against frozen investment and money-movement systems.
+
+### Decision
+
+The `v2.3.0` Administrative Platform is frozen.
+
+Locked surfaces:
+
+- Admin console UX under `/admin` and `src/features/admin`
+- Admin authorization model (`ADMIN_PERMISSION_MATRIX.md`, `DEC-0023`)
+- Admin application services and `/api/admin/*` contracts certified in Phases 8.1–8.4
+- Read-only reporting rules (`DEC-0024`)
+- Phase 8 certification and audit package for `v2.3.0`
+
+Allowed changes:
+
+- Security patches
+- Bug fixes
+- Performance improvements
+- Test improvements
+- Documentation clarifications that do not change behavior
+
+Behavioral or workflow changes require:
+
+- An accepted ADR
+- Regression tests
+- Administrative platform recertification
+- Explicit approval before merge
+
+Admin financial actions must continue to wrap certified engines and must not invent alternate deposit, withdrawal, ledger, ROI, webhook, or settlement behavior.
+
+### Alternatives Considered
+
+- Keep admin UX permanently open for opportunistic redesign while building customer-facing work.
+- Freeze only APIs and leave console UX mutable without ADR.
+- Delay freezing until after public website work.
+
+### Reason for Choosing It
+
+Three independently certified freezes—Investment Engine (`v2.1.0`), Money Movement (`v2.2.0`), and Administrative Platform (`v2.3.0`)—give later phases a stable operational core.
+
+### Consequences
+
+- `main` at `v2.3.0` is the recovery checkpoint for the administrative platform.
+- Phase 9+ work must not casually reshape admin workflows.
+- Admin permission, reporting, or ops UX changes become intentionally slower than ordinary feature polish outside the freeze scope.
