@@ -93,7 +93,7 @@ export function DashboardWidgetSurface() {
     <div>
       {error ? (
         <p className="mb-4 rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
-          Some dashboard figures could not load. Open Portfolio or Wallet directly, or retry by
+          Some dashboard figures could not load. Open Investments or Wallet directly, or retry by
           refreshing. {error}
         </p>
       ) : null}
@@ -184,7 +184,7 @@ function DashboardWidgetBody({
           <Link href="/wallet/withdrawals/new">Withdraw</Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href="/portfolio">View portfolio</Link>
+          <Link href="/portfolio">View investments</Link>
         </Button>
       </div>
     );
@@ -205,7 +205,7 @@ function DashboardWidgetBody({
           Active principal from certified investments — not client ROI math.
         </p>
         <Button asChild variant="link" className="mt-2 h-auto px-0">
-          <Link href="/portfolio">View portfolio</Link>
+          <Link href="/portfolio">View investments</Link>
         </Button>
       </div>
     );

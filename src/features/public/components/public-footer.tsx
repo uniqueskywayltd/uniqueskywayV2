@@ -43,7 +43,7 @@ export function PublicFooter() {
             <ul className="mb-4 space-y-1 text-sm" style={{ color: LEGACY_MUTED }}>
               <li className="relative pl-[26px]">
                 <MapPin className="absolute top-[3px] left-0 size-4" aria-hidden="true" />
-                Fayetteville ARKANSAS, United Stated of Ameriaca
+                Fayetteville, Arkansas, United States of America
               </li>
               <li className="relative pl-[26px]">
                 <Mail className="absolute top-[3px] left-0 size-4" aria-hidden="true" />
@@ -72,7 +72,7 @@ export function PublicFooter() {
 
           <div>
             <h4 className="relative mb-6 pb-3 text-lg font-bold text-white after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-10 after:bg-[#da2c46] after:content-['']">
-              Newslette
+              Newsletter
             </h4>
             <p className="mb-4 text-sm" style={{ color: LEGACY_MUTED }}>
               Get in your inbox the latest News

@@ -5,12 +5,17 @@ test.describe("sprint A1 public foundation", () => {
     await page.goto("/");
     await expect(page.getByRole("link", { name: "UniqueSkyWay" }).first()).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Investments" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Plans" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Free account" }).first()).toBeVisible();
     await expect(page.getByRole("contentinfo")).toBeVisible();
     await expect(page.getByRole("heading", { name: "UniqueSkyWay" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Skip to main content" })).toBeAttached();
-    await expect(page.getByRole("region", { name: "Currency rates" })).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Illustrative exchange rates — not live" }),
+    ).toBeVisible();
+    await expect(page.getByText("Illustrative exchange rates — not live").first()).toBeVisible();
+    await expect(page.getByText("Newsletter")).toBeVisible();
+    await expect(page.getByText("United States of America").first()).toBeVisible();
   });
 
   test("supports mobile navigation", async ({ page }) => {

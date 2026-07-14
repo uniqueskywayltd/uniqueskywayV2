@@ -167,7 +167,7 @@ export function WalletOverview() {
           <EmptyState
             icon={Wallet}
             title="Your wallet is ready"
-            description="Add funds when you’re ready—no rush. Accrued investment earnings stay on Portfolio until they post here."
+            description="Add funds when you’re ready—no rush. Accrued investment earnings stay on Investments until they post here."
             action={
               <Button asChild>
                 <Link href="/wallet/deposits/new">Add funds</Link>
@@ -184,7 +184,7 @@ export function WalletOverview() {
         >
           <h2 className="text-sm font-semibold text-foreground">Balance vocabulary</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Accrued earnings live on Portfolio — they never look like Available here.
+            Accrued earnings live on Investments — they never look like Available here.
           </p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
             {data.vocabulary.map((term) => (

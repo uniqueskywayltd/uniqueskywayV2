@@ -280,7 +280,7 @@ test.describe("sprint B3 wallet experience", () => {
     await expect(page.getByText("Ready to invest or withdraw.")).toBeVisible();
     await expect(page.getByText("Cash you can send out now.")).toBeVisible();
     await expect(page.getByRole("region", { name: "Wallet navigation" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Skip to dashboard content" })).toBeAttached();
+    await expect(page.getByRole("link", { name: "Skip to main content" }).first()).toBeAttached();
     await expect(
       page
         .getByRole("region", { name: "Wallet navigation" })
@@ -335,6 +335,7 @@ test.describe("sprint B3 wallet experience", () => {
   test("binds ledger to certified postings", async ({ page }) => {
     await page.goto("/ledger");
     await expect(page.getByRole("heading", { level: 1, name: "Ledger" })).toBeVisible();
+    await expect(page.locator("#main-content")).toBeVisible();
     await expect(
       page.getByText("The ledger is an historical record, not a financial summary."),
     ).toBeVisible();
@@ -342,5 +343,6 @@ test.describe("sprint B3 wallet experience", () => {
     await expect(page.getByRole("columnheader", { name: "Activity" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Amount" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Date" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Dashboard navigation" }).first()).toBeVisible();
   });
 });

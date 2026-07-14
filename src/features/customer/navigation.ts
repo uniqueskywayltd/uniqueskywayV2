@@ -22,10 +22,10 @@ export const CUSTOMER_PRIMARY_NAV = [
     group: "money" as const,
   },
   {
-    label: "Portfolio",
+    label: "Investments",
     href: "/portfolio",
     icon: BriefcaseBusiness,
-    question: "Where is my money invested?",
+    question: "How are my investments performing?",
     group: "money" as const,
   },
   {
