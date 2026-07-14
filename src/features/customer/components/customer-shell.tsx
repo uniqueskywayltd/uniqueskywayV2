@@ -64,7 +64,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
 
   const moneyNav = CUSTOMER_PRIMARY_NAV.filter((item) => item.group === "money");
   const accountNav = CUSTOMER_PRIMARY_NAV.filter((item) => item.group === "account");
-  const uiLanguage: AppLanguage = isAppLanguage(summary?.preferences.language)
+  const uiLanguage: AppLanguage = isAppLanguage(summary?.preferences?.language)
     ? summary.preferences.language
     : "en";
 
