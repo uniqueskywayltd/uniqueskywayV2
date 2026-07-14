@@ -28,8 +28,8 @@ export function TrustPageHero({
   align?: "left" | "center";
 }) {
   return (
-    <header className="relative overflow-hidden" aria-label={purpose} data-purpose={purpose}>
-      <div className="absolute inset-0 -z-10">
+    <header className="relative isolate overflow-hidden" aria-label={purpose} data-purpose={purpose}>
+      <div className="absolute inset-0">
         <Image src={image} alt={imageAlt} fill priority className="object-cover" sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/92 via-slate-950/75 to-slate-950/50" />
       </div>
@@ -37,7 +37,7 @@ export function TrustPageHero({
       <div
         className={cn(
           section.container,
-          "py-20 sm:py-24 lg:py-28",
+          "relative py-20 sm:py-24 lg:py-28",
           align === "center" && "text-center",
         )}
       >

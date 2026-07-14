@@ -1,21 +1,15 @@
 import type { ReactNode } from "react";
 
 import { PageContainer } from "@/components/layout/page-container";
-import { CurrencyTicker } from "@/features/public/components/currency-ticker";
+import { HomepageCurrencyTicker } from "@/features/public/components/homepage/homepage-currency-ticker";
 import { PublicFooter } from "@/features/public/components/public-footer";
 import { PublicHeader } from "@/features/public/components/public-header";
 
-export function PublicShell({
-  children,
-  showMarketTicker = true,
-}: {
-  children: ReactNode;
-  showMarketTicker?: boolean;
-}) {
+export function PublicShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
       <PublicHeader />
-      {showMarketTicker ? <CurrencyTicker /> : null}
+      <HomepageCurrencyTicker />
       <main id="main-content" className="flex-1">
         {children}
       </main>

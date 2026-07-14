@@ -72,20 +72,17 @@ export function PublicHeader() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-1.5 md:flex">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5">
           <ThemeToggle compact />
           <LanguageSelector compact />
-          <Link href="/auth/login" className={marketingHeaderOutlineBtn()}>
-            {t("chrome.sign_in")}
-          </Link>
-          <Link href="/auth/register" className={marketingHeaderPrimaryBtn()}>
-            {t("chrome.open_account")}
-          </Link>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-0.5 md:hidden">
-          <ThemeToggle compact />
-          <LanguageSelector compact />
+          <div className="hidden items-center gap-1.5 md:flex">
+            <Link href="/auth/login" className={marketingHeaderOutlineBtn()}>
+              {t("chrome.sign_in")}
+            </Link>
+            <Link href="/auth/register" className={marketingHeaderPrimaryBtn()}>
+              {t("chrome.open_account")}
+            </Link>
+          </div>
           <button
             type="button"
             className="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"

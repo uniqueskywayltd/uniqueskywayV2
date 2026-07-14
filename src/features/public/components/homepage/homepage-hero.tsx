@@ -20,6 +20,8 @@ const portfolioSnapshot = [
   { value: "$3,420", label: "Available", positive: false },
 ] as const;
 
+const HERO_IMAGE = "/brand/financial-planning.webp";
+
 export function HomepageHero() {
   const { t } = useI18n();
 
@@ -81,9 +83,9 @@ export function HomepageHero() {
                 </span>
               </div>
 
-              <div className="relative aspect-[16/11] sm:aspect-[16/10]">
+              <div className="relative aspect-[16/11] w-full sm:aspect-[16/10]">
                 <Image
-                  src="/brand/financial-planning.webp"
+                  src={HERO_IMAGE}
                   alt="Financial planning and portfolio strategy"
                   fill
                   className="object-cover"

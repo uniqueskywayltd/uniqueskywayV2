@@ -4,12 +4,13 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 
-import { createTranslator, isAppLanguage, type AppLanguage } from "@/i18n";
+import { createTranslator, getLanguageDirection, isAppLanguage, type AppLanguage } from "@/i18n";
 
 type I18nContextValue = {
   language: AppLanguage;
@@ -28,6 +29,11 @@ export function I18nProvider({
 }) {
   const [override, setOverride] = useState<AppLanguage | null>(null);
   const language = override ?? initialLanguage;
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = getLanguageDirection(language);
+  }, [language]);
 
   const setLanguage = useCallback((next: AppLanguage) => {
     if (!isAppLanguage(next)) return;

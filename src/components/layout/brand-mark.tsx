@@ -4,18 +4,22 @@ import Link from "next/link";
 import { brandAssets, type BrandLogoSurface } from "@/features/brand";
 import { cn } from "@/lib/utils";
 
+/** Authoritative files under `public/brand/`. */
+const LIGHT_LOGO = brandAssets.logos.onLight; // /brand/light-logo.webp
+const DARK_LOGO = brandAssets.logos.onDark; // /brand/dark-logo.webp
+const ICON = brandAssets.icon; // /brand/icon.webp
+
 const LOGO_SIZES = {
   onLight: { width: 840, height: 297 },
   onDark: { width: 360, height: 121 },
 } as const;
 
 export interface BrandMarkProps {
-  /** Icon-only compact mark (`icon.webp`). */
   compact?: boolean;
   /**
    * `theme` — light/dark swap via CSS (`light-logo.webp` / `dark-logo.webp`).
-   * `onLight` — fixed dark-colored mark for light backgrounds.
-   * `onDark` — fixed light-colored mark for dark backgrounds (e.g. slate footer).
+   * `onLight` — fixed light-theme mark.
+   * `onDark` — fixed dark-theme mark (`dark-logo.webp`).
    * `icon` — compact brand icon.
    */
   surface?: BrandLogoSurface | "theme" | "icon";
@@ -34,8 +38,8 @@ function scaledHeight(
 const logoImageClass = "h-auto max-h-10 w-auto max-w-full object-contain sm:max-h-11";
 
 /**
- * Authoritative brand mark — assets from `public/brand/` via `brandAssets`.
- * Theme variant swaps instantly with the `dark` class (no hydration flash).
+ * Brand mark. Dark theme always uses `/brand/dark-logo.webp`.
+ * Theme swap is CSS-driven (`dark` class) — no hydration mismatch.
  */
 export function BrandMark({
   compact = false,
@@ -52,7 +56,7 @@ export function BrandMark({
         aria-label="Unique Sky Way"
       >
         <Image
-          src={brandAssets.icon}
+          src={ICON}
           alt=""
           width={36}
           height={36}
@@ -73,7 +77,7 @@ export function BrandMark({
     return (
       <Link href="/" className={cn("inline-flex items-center", className)} aria-label="Unique Sky Way">
         <Image
-          src={brandAssets.logos.onLight}
+          src={LIGHT_LOGO}
           alt="Unique Sky Way"
           width={width}
           height={scaledHeight(width, LOGO_SIZES.onLight)}
@@ -88,7 +92,7 @@ export function BrandMark({
     return (
       <Link href="/" className={cn("inline-flex items-center", className)} aria-label="Unique Sky Way">
         <Image
-          src={brandAssets.logos.onDark}
+          src={DARK_LOGO}
           alt="Unique Sky Way"
           width={width}
           height={scaledHeight(width, LOGO_SIZES.onDark)}
@@ -100,9 +104,9 @@ export function BrandMark({
   }
 
   return (
-    <Link href="/" className={cn("inline-flex items-center", className)} aria-label="Unique Sky Way">
+    <Link href="/" className={cn("relative inline-flex items-center", className)} aria-label="Unique Sky Way">
       <Image
-        src={brandAssets.logos.onLight}
+        src={LIGHT_LOGO}
         alt="Unique Sky Way"
         width={width}
         height={scaledHeight(width, LOGO_SIZES.onLight)}
@@ -110,7 +114,7 @@ export function BrandMark({
         priority={priority}
       />
       <Image
-        src={brandAssets.logos.onDark}
+        src={DARK_LOGO}
         alt="Unique Sky Way"
         width={width}
         height={scaledHeight(width, LOGO_SIZES.onDark)}

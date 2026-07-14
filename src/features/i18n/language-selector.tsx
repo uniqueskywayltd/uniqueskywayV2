@@ -33,21 +33,21 @@ const SHORT_LABEL: Record<AppLanguage, string> = {
 };
 
 async function getCsrfToken(): Promise<string | null> {
-  const response = await fetch("/api/auth/csrf", { credentials: "include" });
-  if (!response.ok) return null;
-  const payload = (await response.json()) as { data?: { csrfToken?: string } };
-  return payload.data?.csrfToken ?? null;
+  try {
+    const response = await fetch("/api/auth/csrf", { credentials: "include" });
+    if (!response.ok) return null;
+    const payload = (await response.json()) as { data?: { csrfToken?: string } };
+    return payload.data?.csrfToken ?? null;
+  } catch {
+    return null;
+  }
 }
 
-function readCookieLanguage(): AppLanguage | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith(`${LANGUAGE_COOKIE_NAME}=`));
-  const value = match?.split("=")[1];
-  const decoded = value ? decodeURIComponent(value) : null;
-  const catalog = listSelectableLanguages();
-  return catalog.some((entry) => entry.code === decoded) ? (decoded as AppLanguage) : null;
+function writeCookieLanguage(language: AppLanguage) {
+  const maxAge = 60 * 60 * 24 * 365;
+  const secure =
+    typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${LANGUAGE_COOKIE_NAME}=${encodeURIComponent(language)}; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`;
 }
 
 function applyDocumentLanguage(language: AppLanguage) {
@@ -67,52 +67,37 @@ export function LanguageSelector({ className, compact = true }: LanguageSelector
   const [pending, setPending] = useState(false);
   const [, startTransition] = useTransition();
   const options = listSelectableLanguages();
-  const value = readCookieLanguage() ?? language;
 
   async function onChange(next: string) {
     const typed = next as AppLanguage;
-    const previous = language;
-    if (typed === value) return;
+    if (typed === language) return;
 
     setPending(true);
     setLanguage(typed);
+    writeCookieLanguage(typed);
     applyDocumentLanguage(typed);
 
     try {
       const csrfToken = await getCsrfToken();
-      if (!csrfToken) {
-        setLanguage(previous);
-        applyDocumentLanguage(previous);
-        setPending(false);
-        return;
+      if (csrfToken) {
+        await fetch("/api/locale", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "content-type": "application/json",
+            "x-csrf-token": csrfToken,
+          },
+          body: JSON.stringify({ language: typed }),
+        });
       }
-
-      const response = await fetch("/api/locale", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json",
-          "x-csrf-token": csrfToken,
-        },
-        body: JSON.stringify({ language: typed }),
-      });
-
-      if (!response.ok) {
-        setLanguage(previous);
-        applyDocumentLanguage(previous);
-        setPending(false);
-        return;
-      }
-
-      startTransition(() => {
-        router.refresh();
-      });
     } catch {
-      setLanguage(previous);
-      applyDocumentLanguage(previous);
-    } finally {
-      setPending(false);
+      // Cookie + in-memory language already applied.
     }
+
+    startTransition(() => {
+      router.refresh();
+    });
+    setPending(false);
   }
 
   return (
@@ -120,21 +105,21 @@ export function LanguageSelector({ className, compact = true }: LanguageSelector
       <span id={labelId} className="sr-only">
         {t("language.selector.label")}
       </span>
-      <Select value={value} onValueChange={onChange} disabled={pending}>
+      <Select value={language} onValueChange={onChange} disabled={pending}>
         <SelectTrigger
           aria-labelledby={labelId}
           aria-label={t("language.selector.change")}
           className={cn(
             compact
-              ? "h-9 w-[3.75rem] shrink-0 justify-center gap-1 border-transparent bg-transparent px-1.5 text-xs font-semibold tracking-wide shadow-none"
+              ? "h-9 w-[4.25rem] shrink-0 justify-center gap-1 border-border/60 bg-background/80 px-2 text-xs font-semibold tracking-wide shadow-none"
               : "w-full",
           )}
         >
-          <SelectValue placeholder={SHORT_LABEL[value]}>
-            {SHORT_LABEL[value] ?? value.toUpperCase()}
+          <SelectValue placeholder={SHORT_LABEL[language]}>
+            {SHORT_LABEL[language] ?? language.toUpperCase()}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent align="end" className="min-w-[10rem]">
+        <SelectContent align="end" className="z-[var(--z-dropdown)] min-w-[10rem]">
           {options.map((option) => (
             <SelectItem key={option.code} value={option.code}>
               <span className="inline-flex w-full items-center justify-between gap-3">
