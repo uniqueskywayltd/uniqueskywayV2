@@ -1,141 +1,183 @@
 "use client";
 
-import type { MouseEventHandler, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X } from "lucide-react";
+import { Dialog as DialogPrimitive } from "radix-ui";
 
-import { BrandMark } from "@/components/layout/brand-mark";
-import { Badge, Button } from "@/components/ui";
+import { Button } from "@/components/ui";
+import { postAuthJson } from "@/features/auth/api-client";
+import { ADMIN_NAV_SECTIONS } from "@/features/admin/navigation";
 import { cn } from "@/lib/utils";
-
-import { ADMIN_NAVIGATION } from "../navigation";
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const activeLabel = useMemo(
-    () =>
-      ADMIN_NAVIGATION.find(
-        (item) =>
-          pathname === item.href || (item.href !== "/admin" && pathname.startsWith(`${item.href}/`)),
-      )?.label ?? "Admin",
-    [pathname],
-  );
+  const [signingOut, setSigningOut] = useState(false);
+
+  const activeLabel = useMemo(() => {
+    for (const section of ADMIN_NAV_SECTIONS) {
+      for (const item of section.items) {
+        const active = item.exact
+          ? pathname === item.href
+          : pathname === item.href || pathname.startsWith(`${item.href}/`);
+        if (active) return item.label;
+      }
+    }
+    return "Admin";
+  }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-sidebar lg:flex lg:flex-col">
-        <div className="border-b p-5">
-          <BrandMark />
-          <p className="mt-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Administrative console
-          </p>
+    <div className="min-h-dvh bg-background text-foreground lg:flex">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-md focus:ring-2 focus:ring-ring"
+      >
+        Skip to main content
+      </a>
+
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-background lg:flex">
+        <div className="border-b border-border px-4 py-5">
+          <p className="text-sm font-semibold text-foreground">Unique Sky Way</p>
+          <p className="text-xs text-muted-foreground">Admin Console</p>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Admin navigation">
-          {ADMIN_NAVIGATION.map((item) => (
-            <AdminNavLink
-              key={item.href}
-              href={item.href}
-              label={item.label}
-              description={item.description}
-              active={
-                pathname === item.href ||
-                (item.href !== "/admin" && pathname.startsWith(`${item.href}/`))
-              }
-              icon={item.icon}
-            />
-          ))}
-        </nav>
+        <AdminNavLinks pathname={pathname} />
       </aside>
 
-      <div className="lg:pl-72">
-        <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
-          <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
-            <div className="flex items-center gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setMobileOpen((open) => !open)}
-                aria-expanded={mobileOpen}
-                aria-controls="admin-mobile-navigation"
-              >
-                <Menu className="size-4" aria-hidden="true" />
-                <span className="sr-only">Toggle navigation</span>
-              </Button>
-              <div className="lg:hidden">
-                <BrandMark compact />
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-sm font-medium">{activeLabel}</p>
-                <p className="text-xs text-muted-foreground">Unique Sky Way operations</p>
-              </div>
-            </div>
-            <Badge variant="secondary">Admin</Badge>
-          </div>
-          {mobileOpen ? (
-            <nav
-              id="admin-mobile-navigation"
-              className="max-h-[70vh] space-y-1 overflow-y-auto border-t p-3 lg:hidden"
-              aria-label="Admin mobile navigation"
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-14 items-center justify-between gap-3 border-b border-border bg-background px-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="shrink-0 lg:hidden"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open admin menu"
+              aria-expanded={mobileOpen}
+              aria-controls="admin-mobile-nav"
             >
-              {ADMIN_NAVIGATION.map((item) => (
-                <AdminNavLink
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  description={item.description}
-                  active={
-                    pathname === item.href ||
-                    (item.href !== "/admin" && pathname.startsWith(`${item.href}/`))
-                  }
-                  icon={item.icon}
-                  onNavigate={() => setMobileOpen(false)}
-                />
-              ))}
-            </nav>
-          ) : null}
+              <Menu className="h-5 w-5" aria-hidden />
+            </Button>
+            <p className="min-w-0 truncate text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{activeLabel}</span>
+              <span className="ml-2 text-muted-foreground/80">Admin</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={signingOut}
+            className="rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => {
+              if (signingOut) return;
+              setSigningOut(true);
+              void postAuthJson("/api/auth/logout", {}).then((result) => {
+                if (result.error) {
+                  setSigningOut(false);
+                  return;
+                }
+                router.replace("/auth/login");
+                router.refresh();
+              });
+            }}
+          >
+            Sign out
+          </button>
         </header>
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:py-8">{children}</main>
+
+        <DialogPrimitive.Root open={mobileOpen} onOpenChange={setMobileOpen}>
+          <DialogPrimitive.Portal>
+            <DialogPrimitive.Overlay className="fixed inset-0 z-[var(--z-overlay)] bg-background/70 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none lg:hidden" />
+            <DialogPrimitive.Content
+              id="admin-mobile-nav"
+              aria-describedby={undefined}
+              className="fixed inset-y-0 left-0 z-[var(--z-modal)] flex w-[min(100vw-1rem,18rem)] flex-col gap-0 border-r bg-card p-0 text-card-foreground shadow-[var(--elevation-3)] outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left motion-reduce:animate-none lg:hidden"
+            >
+              <div className="flex items-center justify-between border-b border-border px-4 py-4">
+                <div>
+                  <DialogPrimitive.Title className="text-sm font-semibold text-foreground">
+                    Unique Sky Way
+                  </DialogPrimitive.Title>
+                  <p className="text-xs text-muted-foreground">Admin Console</p>
+                </div>
+                <DialogPrimitive.Close asChild>
+                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9" aria-label="Close">
+                    <X className="h-4 w-4" aria-hidden />
+                  </Button>
+                </DialogPrimitive.Close>
+              </div>
+              <AdminNavLinks
+                pathname={pathname}
+                onNavigate={() => setMobileOpen(false)}
+                ariaLabel="Admin mobile navigation"
+              />
+            </DialogPrimitive.Content>
+          </DialogPrimitive.Portal>
+        </DialogPrimitive.Root>
+
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-7xl flex-1 space-y-8 p-4 outline-none sm:p-6 lg:p-8"
+        >
+          {children}
+        </main>
       </div>
     </div>
   );
 }
 
-function AdminNavLink({
-  href,
-  label,
-  description,
-  active,
-  icon: Icon,
+function AdminNavLinks({
+  pathname,
   onNavigate,
+  ariaLabel = "Admin navigation",
+  className,
 }: {
-  href: string;
-  label: string;
-  description: string;
-  active: boolean;
-  icon: (typeof ADMIN_NAVIGATION)[number]["icon"];
-  onNavigate?: MouseEventHandler<HTMLAnchorElement>;
+  pathname: string;
+  onNavigate?: () => void;
+  ariaLabel?: string;
+  className?: string;
 }) {
-  const onClickProps = onNavigate ? { onClick: onNavigate } : {};
   return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      {...onClickProps}
-      className={cn(
-        "block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-        active && "bg-accent text-foreground",
-      )}
+    <nav
+      className={cn("flex-1 space-y-6 overflow-y-auto p-3", className)}
+      aria-label={ariaLabel}
     >
-      <span className="flex items-center gap-3 font-medium">
-        <Icon className="size-4 shrink-0" aria-hidden="true" />
-        {label}
-      </span>
-      <span className="mt-1 block pl-7 text-xs text-muted-foreground">{description}</span>
-    </Link>
+      {ADMIN_NAV_SECTIONS.map((section) => (
+        <div key={section.label}>
+          <p className="mb-2 px-2.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+            {section.label}
+          </p>
+          <div className="space-y-0.5">
+            {section.items.map((item) => {
+              const active = item.exact
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  {...(onNavigate ? { onClick: onNavigate } : {})}
+                  {...(active ? { "aria-current": "page" as const } : {})}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    active
+                      ? "bg-primary/10 font-medium text-primary"
+                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </nav>
   );
 }

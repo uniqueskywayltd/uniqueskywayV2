@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { AlertTriangle, Lock, RefreshCw, WifiOff } from "lucide-react";
 
-import { Alert, Button, EmptyState, LoadingState } from "@/components/ui";
+import { Alert, Button, EmptyState, Skeleton } from "@/components/ui";
 
 export function AdminPageHeader({
   title,
@@ -16,18 +16,33 @@ export function AdminPageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-normal">{title}</h1>
-        {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+    <div className="mb-2 flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
+        {description ? (
+          <p className="max-w-2xl text-sm text-muted-foreground">{description}</p>
+        ) : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}
     </div>
   );
 }
 
 export function AdminLoadingBlock({ label = "Loading admin data" }: { label?: string }) {
-  return <LoadingState label={label} className="rounded-lg border bg-card p-4" />;
+  return (
+    <div className="space-y-6" aria-busy="true" aria-label={label}>
+      <div className="space-y-2 border-b border-border pb-6">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-4 w-80 max-w-full" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={`metric-${index}`} className="h-28 w-full rounded-xl" />
+        ))}
+      </div>
+      <Skeleton className="h-48 w-full rounded-xl" />
+    </div>
+  );
 }
 
 export function AdminEmptyBlock({
