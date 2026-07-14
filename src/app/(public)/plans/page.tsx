@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Button } from "@/components/ui";
+import { InvestmentPlansSection } from "@/features/public/components/homepage/investment-plans-section";
 import {
   TrustCtaBand,
   TrustPageHero,
   TrustSection,
 } from "@/features/public/components/trust/trust-page";
+import { CERTIFIED_PUBLIC_PLANS, formatPlanMoney } from "@/features/public/content/certified-plans";
 import { PLANS_COPY } from "@/features/public/content/conversion-pages";
 import { buildPageMetadata, webPageJsonLd } from "@/lib/seo/metadata";
 import { JsonLdScript } from "@/lib/seo/structured-data";
 
 const PLANS_DESCRIPTION =
-  "Compare Unique Sky Way investment plans. Terms come from the certified catalog when published—never invented returns.";
+  "Compare Unique Sky Way investment plans. Terms come from the certified catalog—never invented returns.";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Investment Plans",
@@ -37,7 +38,7 @@ export default function PlansPage() {
         purpose={copy.purpose}
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
-        lead={copy.hero.lead}
+        lead="Published plan terms come from the certified investment catalog. Duration, eligibility, and return structure are shown exactly as configured — the site does not invent rates in the browser."
         image="/brand/investments.webp"
         imageAlt="Investment opportunities"
         align="center"
@@ -47,37 +48,37 @@ export default function PlansPage() {
         <p>{copy.howTermsWork.body}</p>
       </TrustSection>
 
-      <TrustSection title={copy.catalog.title} className="bg-muted/30">
-        <p className="text-sm font-semibold text-foreground">{copy.catalog.emptyTitle}</p>
-        <p>{copy.catalog.emptyDescription}</p>
-        <ul className="mt-8 grid gap-4 md:grid-cols-3">
-          {copy.catalog.placeholders.map((plan, index) => (
+      <InvestmentPlansSection compareHref="/auth/register" />
+
+      <TrustSection title="Plan catalog summary" className="bg-muted/30">
+        <ul className="grid gap-4 md:grid-cols-2">
+          {CERTIFIED_PUBLIC_PLANS.map((plan) => (
             <li
-              key={`${plan.name}-${index}`}
-              className="flex flex-col rounded-xl border border-border/80 bg-background p-5 shadow-[var(--elevation-1)]"
+              key={plan.slug}
+              className="rounded-xl border border-border/80 bg-background p-5 shadow-[var(--elevation-1)]"
             >
-              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                {plan.status}
-              </p>
-              <p className="mt-3 text-lg font-semibold text-foreground">{plan.name}</p>
-              <dl className="mt-4 space-y-3 text-sm text-muted-foreground">
+              <p className="text-lg font-semibold text-foreground">{plan.name}</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">{plan.description}</p>
+              <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <dt className="font-medium text-foreground">Daily return</dt>
+                  <dd className="mt-1 text-muted-foreground">{plan.dailyRoiPercent}%</dd>
+                </div>
                 <div>
                   <dt className="font-medium text-foreground">Duration</dt>
-                  <dd className="mt-1">{plan.duration}</dd>
+                  <dd className="mt-1 text-muted-foreground">{plan.durationDays} days</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-foreground">Eligibility</dt>
-                  <dd className="mt-1">{plan.eligibility}</dd>
+                  <dt className="font-medium text-foreground">Minimum</dt>
+                  <dd className="mt-1 text-muted-foreground">{formatPlanMoney(plan.minDeposit)}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-foreground">Earnings</dt>
-                  <dd className="mt-1">{plan.earnings}</dd>
+                  <dt className="font-medium text-foreground">Maximum</dt>
+                  <dd className="mt-1 text-muted-foreground">
+                    {plan.maxDeposit ? formatPlanMoney(plan.maxDeposit) : "Unlimited"}
+                  </dd>
                 </div>
               </dl>
-              <div className="mt-6 grow" />
-              <Button asChild className="w-full">
-                <Link href={`/auth/register?intent=plan`}>Get started</Link>
-              </Button>
             </li>
           ))}
         </ul>

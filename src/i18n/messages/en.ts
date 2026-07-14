@@ -35,6 +35,8 @@ export const enMessages = {
   "nav.referrals": "Referrals",
   "nav.services": "Services",
   "nav.dashboard": "Dashboard",
+  "nav.overview": "Overview",
+  "nav.communications": "Communications",
   "nav.wallet": "Wallet",
   "nav.ledger": "Ledger",
   "nav.success": "Success",
@@ -164,9 +166,9 @@ export const enMessages = {
   "home.how.step4_desc": "Monitor returns, request withdrawals, and refer others to earn bonuses.",
   "home.how.see_full": "See full process",
   "home.plans.eyebrow": "Investment plans",
-  "home.plans.title": "Plans coming soon",
+  "home.plans.title": "Flexible plans for every portfolio",
   "home.plans.body":
-    "Active investment plans configured in the admin portal will appear here automatically.",
+    "Choose a tier that matches your goals — transparent terms, daily reporting, and full control from one secure investor dashboard.",
   "home.cta.title": "Your portfolio deserves a platform you can trust",
   "home.cta.body":
     "Join Unique Sky Way and access a secure investor dashboard with full transaction history, referral tracking, and professional support.",

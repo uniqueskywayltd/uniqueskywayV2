@@ -9,10 +9,28 @@ test.describe("sprint A1 public foundation", () => {
     );
     await expect(page.getByRole("link", { name: "Unique Sky Way" }).first()).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Investments" }).first()).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "About" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Contact" }),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: "Open account" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Sign in" }).first()).toBeVisible();
     await expect(page.getByRole("contentinfo")).toBeVisible();
+    await expect(
+      page.getByRole("contentinfo").getByRole("link", { name: "Investments" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("contentinfo").getByRole("link", { name: "How It Works" }),
+    ).toBeVisible();
+    await expect(page.getByRole("contentinfo").getByRole("link", { name: "FAQ" })).toBeVisible();
+    await expect(
+      page.getByRole("contentinfo").getByRole("link", { name: "Referrals" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("contentinfo").getByRole("link", { name: "Security" }),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: "Skip to main content" })).toBeAttached();
     await expect(page.getByRole("region", { name: "Market overview" })).toBeVisible();
     await expect(page.getByText("Illustrative — not live")).toHaveCount(0);
@@ -25,10 +43,19 @@ test.describe("sprint A1 public foundation", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await page.getByRole("button", { name: "Open navigation" }).click();
-    await expect(page.getByRole("navigation", { name: "Mobile navigation" })).toBeVisible();
-    await expect(
-      page.getByRole("navigation", { name: "Mobile navigation" }).getByRole("link", { name: "FAQ" }),
-    ).toBeVisible();
+    const mobileNav = page.getByRole("navigation", { name: "Mobile navigation" });
+    await expect(mobileNav).toBeVisible();
+    for (const label of [
+      "About",
+      "Investments",
+      "How It Works",
+      "Referrals",
+      "FAQ",
+      "Security",
+      "Contact",
+    ]) {
+      await expect(mobileNav.getByRole("link", { name: label })).toBeVisible();
+    }
   });
 
   test("exposes robots and sitemap framework", async ({ request }) => {

@@ -13,7 +13,7 @@ import {
   marketingHeaderOutlineBtn,
   marketingHeaderPrimaryBtn,
 } from "@/features/public/components/marketing-ui";
-import { PUBLIC_PRIMARY_NAV } from "@/features/public/navigation";
+import { PUBLIC_MOBILE_NAV, PUBLIC_PRIMARY_NAV } from "@/features/public/navigation";
 import { cn } from "@/lib/utils";
 
 function NavLink({
@@ -73,7 +73,7 @@ export function PublicHeader() {
 
         <div className="hidden items-center gap-1.5 md:flex">
           <ThemeToggle compact />
-          <LanguageSelector compact className="mr-1" />
+          <LanguageSelector compact />
           <Link href="/auth/login" className={marketingHeaderOutlineBtn()}>
             {t("chrome.sign_in")}
           </Link>
@@ -100,7 +100,7 @@ export function PublicHeader() {
       {mobileOpen ? (
         <div className="border-t border-border/50 bg-background px-4 py-5 md:hidden">
           <nav className="flex flex-col gap-0.5" aria-label="Mobile navigation">
-            {PUBLIC_PRIMARY_NAV.map((link) => (
+            {PUBLIC_MOBILE_NAV.map((link) => (
               <NavLink
                 key={link.href}
                 href={link.href}

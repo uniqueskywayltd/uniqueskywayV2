@@ -1,13 +1,15 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("sprint A4 conversion experience", () => {
-  test("renders Plans with certified catalog placeholders", async ({ page }) => {
+  test("renders Plans with certified catalog", async ({ page }) => {
     await page.goto("/plans");
     await expect(
       page.getByRole("heading", { level: 1, name: "Compare with clarity." }),
     ).toBeVisible();
-    await expect(page.getByText("Plans will appear when published")).toBeVisible();
-    await expect(page.getByText("15% ROI", { exact: false })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Silver Plan" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Gold Plan" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Classic Plan" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Master Plan" }).first()).toBeVisible();
     await expect(page.getByText("guaranteed return", { exact: false })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Risk note" })).toBeVisible();
   });

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { AppProviders } from "@/components/providers/app-providers";
+import { themeInitScript } from "@/components/theme/theme-init-script";
 import { brandAssets } from "@/features/brand";
 import { legacyArimo } from "@/features/public/legacy/fonts";
 import { translate } from "@/i18n";
@@ -63,6 +64,9 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${legacyArimo.variable}`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="font-sans antialiased">
         <AppProviders language={language}>
           <a

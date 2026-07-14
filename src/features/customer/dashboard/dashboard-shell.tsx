@@ -14,10 +14,11 @@ import { getCustomerJson } from "@/features/customer/api-client";
 import type { CustomerSummary } from "@/features/customer/types";
 import {
   dashboardNavItems,
-  getDashboardNavLabel,
+  getDashboardNavLabelKey,
 } from "@/features/customer/dashboard/dashboard-nav-items";
 import { DashboardChromeProvider } from "@/features/customer/dashboard/dashboard-chrome-context";
 import { DashboardSignOutButton } from "@/features/customer/dashboard/dashboard-sign-out-button";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import {
   getPersonFullName,
   getPersonHandle,
@@ -38,6 +39,7 @@ function DashboardNavPanel({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const fullName = getPersonFullName(summary);
   const handle = getPersonHandle(summary);
   const initials = getPersonInitials(fullName);
@@ -87,7 +89,7 @@ function DashboardNavPanel({
               aria-current={active ? "page" : undefined}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}
@@ -99,6 +101,7 @@ function DashboardNavPanel({
 export function DashboardShell({ children }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useI18n();
   const [summary, setSummary] = useState<CustomerSummary | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -125,7 +128,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
   const fullName = summary ? getPersonFullName(summary) : "";
   const initials = useMemo(() => getPersonInitials(fullName || "US"), [fullName]);
-  const currentLabel = getDashboardNavLabel(pathname);
+  const currentLabel = t(getDashboardNavLabelKey(pathname));
   const isOverview = pathname === "/dashboard";
 
   return (

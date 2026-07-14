@@ -17,17 +17,23 @@ test.describe("sprint A2 homepage", () => {
     await expect(page.getByRole("region", { name: "Why Unique Sky Way" })).toBeVisible();
     await expect(page.getByRole("region", { name: "How it works" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Plans coming soon" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Investment plans" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Silver Plan" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Gold Plan" }).first()).toBeVisible();
     await expect(page.getByRole("region", { name: "Client testimonials" })).toBeVisible();
     await expect(page.getByText("Sarah Mitchell").first()).toBeVisible();
     await expect(page.getByRole("region", { name: "Get started" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Get started" }).getByRole("heading")).toBeVisible();
     await expect(page.getByRole("link", { name: "Create free account" }).first()).toBeVisible();
   });
 
   test("keeps the public shell on the homepage", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Investments" }).first()).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "About" }),
+    ).toBeVisible();
+    await expect(page.getByRole("contentinfo").getByRole("link", { name: "Investments" })).toBeVisible();
     await expect(page.getByRole("contentinfo")).toBeVisible();
   });
 });

@@ -6,6 +6,7 @@ import { Gift } from "lucide-react";
 import QRCode from "qrcode";
 
 import { Button, EmptyState, Skeleton, StatusChip } from "@/components/ui";
+import { CopyButton } from "@/components/ui/copy-button";
 import type { StatusTone } from "@/components/ui/status-chip";
 import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { getCustomerJson } from "@/features/customer/api-client";
@@ -171,23 +172,8 @@ export function ReferralHub() {
         <p className="mt-2 text-xs text-muted-foreground">{data.share.disclaimer}</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => void copyText(data.code!.code, "Code copied.")}
-          >
-            Copy code
-          </Button>
-          {data.share.url ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => void copyText(data.share.url!, "Link copied.")}
-            >
-              Copy link
-            </Button>
-          ) : null}
+          <CopyButton value={data.code!.code} label="Copy code" />
+          {data.share.url ? <CopyButton value={data.share.url} label="Copy link" /> : null}
           <Button type="button" size="sm" variant="outline" onClick={() => void nativeShare()}>
             Share
           </Button>

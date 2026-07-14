@@ -11,8 +11,26 @@ import {
   SelectValue,
 } from "@/components/ui";
 import { useI18n } from "@/features/i18n/i18n-provider";
-import { LANGUAGE_COOKIE_NAME, listSelectableLanguages, type AppLanguage } from "@/i18n";
+import {
+  getLanguageDirection,
+  LANGUAGE_COOKIE_NAME,
+  listSelectableLanguages,
+  type AppLanguage,
+} from "@/i18n";
 import { cn } from "@/lib/utils";
+
+const SHORT_LABEL: Record<AppLanguage, string> = {
+  en: "EN",
+  es: "ES",
+  fr: "FR",
+  ar: "AR",
+  pt: "PT",
+  hi: "HI",
+  bn: "BN",
+  "zh-Hans": "ZH",
+  ru: "RU",
+  ja: "JA",
+};
 
 async function getCsrfToken(): Promise<string | null> {
   const response = await fetch("/api/auth/csrf", { credentials: "include" });
@@ -32,6 +50,11 @@ function readCookieLanguage(): AppLanguage | null {
   return catalog.some((entry) => entry.code === decoded) ? (decoded as AppLanguage) : null;
 }
 
+function applyDocumentLanguage(language: AppLanguage) {
+  document.documentElement.lang = language;
+  document.documentElement.dir = getLanguageDirection(language);
+}
+
 export interface LanguageSelectorProps {
   className?: string;
   compact?: boolean;
@@ -44,17 +67,22 @@ export function LanguageSelector({ className, compact = true }: LanguageSelector
   const [pending, setPending] = useState(false);
   const [, startTransition] = useTransition();
   const options = listSelectableLanguages();
+  const value = readCookieLanguage() ?? language;
 
   async function onChange(next: string) {
     const typed = next as AppLanguage;
     const previous = language;
+    if (typed === value) return;
+
     setPending(true);
     setLanguage(typed);
+    applyDocumentLanguage(typed);
 
     try {
       const csrfToken = await getCsrfToken();
       if (!csrfToken) {
         setLanguage(previous);
+        applyDocumentLanguage(previous);
         setPending(false);
         return;
       }
@@ -71,26 +99,24 @@ export function LanguageSelector({ className, compact = true }: LanguageSelector
 
       if (!response.ok) {
         setLanguage(previous);
+        applyDocumentLanguage(previous);
         setPending(false);
         return;
       }
 
-      // Soft refresh server trees (lang/dir). Theme stays client-side via next-themes.
       startTransition(() => {
         router.refresh();
       });
     } catch {
       setLanguage(previous);
+      applyDocumentLanguage(previous);
     } finally {
       setPending(false);
     }
   }
 
-  // Prefer cookie if provider lagged after refresh (guest).
-  const value = readCookieLanguage() ?? language;
-
   return (
-    <div className={cn("flex items-center", className)}>
+    <div className={cn("flex shrink-0 items-center", className)}>
       <span id={labelId} className="sr-only">
         {t("language.selector.label")}
       </span>
@@ -100,16 +126,23 @@ export function LanguageSelector({ className, compact = true }: LanguageSelector
           aria-label={t("language.selector.change")}
           className={cn(
             compact
-              ? "h-9 w-auto min-w-[7.5rem] border-transparent bg-transparent px-2 shadow-none"
+              ? "h-9 w-[3.75rem] shrink-0 justify-center gap-1 border-transparent bg-transparent px-1.5 text-xs font-semibold tracking-wide shadow-none"
               : "w-full",
           )}
         >
-          <SelectValue />
+          <SelectValue placeholder={SHORT_LABEL[value]}>
+            {SHORT_LABEL[value] ?? value.toUpperCase()}
+          </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="end" className="min-w-[10rem]">
           {options.map((option) => (
             <SelectItem key={option.code} value={option.code}>
-              {option.nativeName}
+              <span className="inline-flex w-full items-center justify-between gap-3">
+                <span>{option.nativeName}</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {SHORT_LABEL[option.code]}
+                </span>
+              </span>
             </SelectItem>
           ))}
         </SelectContent>

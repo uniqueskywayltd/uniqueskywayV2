@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { Button, Input, Label, Skeleton } from "@/components/ui";
 import { CurrencyDisplay } from "@/components/ui/display";
+import { FormStepIndicator } from "@/components/ui/form-step-indicator";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
 import type { WalletOverviewResponse } from "@/features/customer/wallet/types";
 
@@ -112,6 +113,10 @@ export function WithdrawalJourney() {
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <p className="sr-only">Primary question: How do I get my money?</p>
+      <FormStepIndicator
+        steps={["Amount", "Confirm", "Review", "Status"]}
+        currentStep={step === "amount" ? 1 : 2}
+      />
 
       <section className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
         <div

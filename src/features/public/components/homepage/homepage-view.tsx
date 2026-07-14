@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Award, Globe2, Shield, Users } from "lucide-react";
 
-import { CurrencyTicker } from "@/features/public/components/currency-ticker";
 import { HomepageHero } from "@/features/public/components/homepage/homepage-hero";
 import { HomepageTestimonials } from "@/features/public/components/homepage/homepage-testimonials";
+import { InvestmentPlansSection } from "@/features/public/components/homepage/investment-plans-section";
 import {
   card,
   marketingOutlineBtn,
@@ -113,11 +113,10 @@ export function HomepageView() {
 
   return (
     <>
-      <CurrencyTicker />
       <HomepageHero />
 
       <section
-        className="border-y border-border/50 bg-primary text-primary-foreground"
+        className="border-y border-slate-800 bg-slate-950 text-white"
         aria-label="Platform highlights"
       >
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
@@ -128,19 +127,19 @@ export function HomepageView() {
                 className={cn(
                   "text-center md:text-left",
                   index < homepageStats.length - 1
-                    ? "md:border-r md:border-primary-foreground/15 md:pr-6 lg:pr-8"
+                    ? "md:border-r md:border-white/15 md:pr-6 lg:pr-8"
                     : "",
                 )}
               >
-                <p className="text-xl font-semibold tracking-tight tabular-nums sm:text-2xl lg:text-3xl">
+                <p className="text-xl font-semibold tracking-tight text-white tabular-nums sm:text-2xl lg:text-3xl">
                   {stat.value}
                 </p>
                 {stat.suffixKey ? (
-                  <p className="mt-0.5 text-[10px] font-medium tracking-wider text-primary-foreground/55 uppercase sm:text-xs">
+                  <p className="mt-0.5 text-[10px] font-medium tracking-wider text-slate-400 uppercase sm:text-xs">
                     {t(stat.suffixKey)}
                   </p>
                 ) : null}
-                <p className="mt-1.5 text-[11px] leading-snug text-primary-foreground/70 sm:text-sm">
+                <p className="mt-1.5 text-[11px] leading-snug text-slate-300 sm:text-sm">
                   {t(stat.labelKey)}
                 </p>
               </div>
@@ -272,26 +271,20 @@ export function HomepageView() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-muted/20 py-16" aria-label={t("home.plans.eyebrow")}>
-        <div className="mx-auto max-w-2xl px-4 text-center">
-          <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            {t("home.plans.eyebrow")}
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-foreground">{t("home.plans.title")}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{t("home.plans.body")}</p>
-        </div>
-      </section>
+      <InvestmentPlansSection />
 
       <HomepageTestimonials />
 
-      <section className={cn("relative overflow-hidden", section.padding)} aria-label="Get started">
-        <div className="absolute inset-0 -z-10 bg-primary" />
+      <section
+        className={cn("relative overflow-hidden bg-slate-950 text-white", section.padding)}
+        aria-label="Get started"
+      >
         <div className={section.container}>
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-semibold leading-[1.15] tracking-tight text-primary-foreground sm:text-4xl">
+            <h2 className="text-3xl font-semibold leading-[1.15] tracking-tight text-white sm:text-4xl">
               {t("home.cta.title")}
             </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-primary-foreground/75">
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-300">
               {t("home.cta.body")}
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -299,7 +292,7 @@ export function HomepageView() {
                 href="/auth/register"
                 className={cn(
                   marketingPrimaryBtn("w-full sm:w-auto"),
-                  "bg-white text-primary hover:bg-white/90 hover:text-primary",
+                  "bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900",
                 )}
               >
                 {t("home.cta.create")}
@@ -309,7 +302,7 @@ export function HomepageView() {
                 href="/about"
                 className={cn(
                   marketingOutlineBtn("w-full sm:w-auto"),
-                  "border-white/25 text-white hover:bg-white/10 hover:text-white",
+                  "border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white",
                 )}
               >
                 {t("home.cta.learn")}

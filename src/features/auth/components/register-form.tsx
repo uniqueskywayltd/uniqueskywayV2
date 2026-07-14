@@ -17,6 +17,7 @@ import {
   randomMathDigit,
 } from "./math-captcha-field";
 import { PasswordInput } from "./password-input";
+import { PlanSelectionField } from "./plan-selection-field";
 import { authLinkClass, authSubmitClass } from "./auth-shell";
 
 const REFERRAL_STORAGE_KEY = "usw_referral_code";
@@ -49,6 +50,7 @@ function RegisterFormInner() {
   const [mathB] = useState(() => randomMathDigit());
   const [mathAnswer, setMathAnswer] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [planIntent, setPlanIntent] = useState(planIntentFromUrl);
   const strength = getPasswordStrength(password);
 
   async function submit(formData: FormData) {
@@ -102,8 +104,9 @@ function RegisterFormInner() {
       if (referral) {
         window.sessionStorage.setItem(REFERRAL_STORAGE_KEY, referral);
       }
-      if (planIntentFromUrl) {
-        window.sessionStorage.setItem(PLAN_INTENT_STORAGE_KEY, planIntentFromUrl);
+      const intent = planIntent || planIntentFromUrl;
+      if (intent) {
+        window.sessionStorage.setItem(PLAN_INTENT_STORAGE_KEY, intent);
       }
       window.sessionStorage.setItem("usw_register_username", username);
     }
@@ -215,7 +218,13 @@ function RegisterFormInner() {
       </AuthField>
 
       <div className={cn("space-y-2", authCalloutClass)}>
-        <p className="text-sm font-medium text-foreground">{t("auth.investment_package")}</p>
+        <PlanSelectionField
+          value={planIntent}
+          onChange={setPlanIntent}
+          disabled={pending}
+          label={t("auth.investment_package")}
+          placeholder={t("auth.preview_plans")}
+        />
         <p className="text-sm leading-relaxed text-muted-foreground">
           {t("auth.package_after_verify")}{" "}
           <Link href="/plans" className={authLinkClass}>

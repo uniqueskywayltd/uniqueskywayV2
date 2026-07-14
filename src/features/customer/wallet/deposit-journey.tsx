@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Button, Input, Label } from "@/components/ui";
+import { FormStepIndicator } from "@/components/ui/form-step-indicator";
 import { postCustomerJson } from "@/features/customer/api-client";
 
 interface CreateDepositResponse {
@@ -66,22 +67,10 @@ export function DepositJourney() {
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <p className="sr-only">Primary question: How do I add funds safely?</p>
-      <ol
-        className="flex flex-wrap gap-2 text-xs text-muted-foreground"
-        aria-label="Deposit steps"
-      >
-        <li className={step === "amount" ? "font-semibold text-foreground" : undefined}>
-          1 Amount
-        </li>
-        <li aria-hidden>→</li>
-        <li className={step !== "amount" ? "font-semibold text-foreground" : undefined}>
-          2 Confirm
-        </li>
-        <li aria-hidden>→</li>
-        <li>3 Provider</li>
-        <li aria-hidden>→</li>
-        <li>4 Status</li>
-      </ol>
+      <FormStepIndicator
+        steps={["Amount", "Confirm", "Provider", "Status"]}
+        currentStep={step === "amount" ? 1 : 2}
+      />
 
       {step === "amount" ? (
         <form

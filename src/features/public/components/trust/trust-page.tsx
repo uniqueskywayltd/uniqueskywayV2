@@ -98,20 +98,20 @@ export function TrustCtaBand({
   secondary: { label: string; href: string };
 }) {
   return (
-    <section className={cn("relative overflow-hidden", section.padding)} aria-label={title}>
-      <div className="absolute inset-0 -z-10 bg-primary" />
+    <section
+      className={cn("relative overflow-hidden bg-slate-950 text-white", section.padding)}
+      aria-label={title}
+    >
       <div className={section.container}>
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-primary-foreground sm:text-4xl">
-            {title}
-          </h2>
-          <p className="mt-3 text-sm leading-7 text-primary-foreground/75 sm:text-base">{support}</p>
+          <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">{title}</h2>
+          <p className="mt-3 text-sm leading-7 text-slate-300 sm:text-base">{support}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
               href={primary.href}
               className={cn(
                 marketingPrimaryBtn(),
-                "bg-white text-primary hover:bg-white/90 hover:text-primary",
+                "bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900",
               )}
             >
               {primary.label}
@@ -120,7 +120,7 @@ export function TrustCtaBand({
               href={secondary.href}
               className={cn(
                 marketingOutlineBtn(),
-                "border-white/25 text-white hover:bg-white/10 hover:text-white",
+                "border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white",
               )}
             >
               {secondary.label}
