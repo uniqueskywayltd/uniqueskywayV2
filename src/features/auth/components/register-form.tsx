@@ -6,6 +6,7 @@ import { Suspense, useState } from "react";
 import { Gift, Lock, Mail, User, UserCircle } from "lucide-react";
 
 import { Alert, AlertDescription, Button, Checkbox, Input } from "@/components/ui";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 import { postAuthJson } from "../api-client";
@@ -35,6 +36,7 @@ function getPasswordStrength(password: string) {
 }
 
 function RegisterFormInner() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const referralFromUrl = searchParams.get("referral") ?? searchParams.get("ref") ?? "";
   const planIntentFromUrl = searchParams.get("intent") ?? "";
@@ -55,13 +57,13 @@ function RegisterFormInner() {
     setMessage(null);
 
     if (!isMathCaptchaCorrect(mathA, mathB, mathAnswer)) {
-      setError("Incorrect security check answer.");
+      setError(t("auth.incorrect_security"));
       setPending(false);
       return;
     }
 
     if (!termsAccepted) {
-      setError("Please accept the Terms of Service and Privacy Policy.");
+      setError(t("auth.accept_terms"));
       setPending(false);
       return;
     }
@@ -72,13 +74,13 @@ function RegisterFormInner() {
     const referral = String(formData.get("referral") ?? "").trim();
 
     if (!username || !/^[a-zA-Z0-9_]{3,24}$/.test(username)) {
-      setError("Username must be 3–24 characters (letters, numbers, underscore).");
+      setError(t("auth.username_rules"));
       setPending(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("auth.passwords_mismatch"));
       setPending(false);
       return;
     }
@@ -107,7 +109,7 @@ function RegisterFormInner() {
     }
 
     setMessage(
-      `Verification code queued for ${result.data?.email ?? "your email"}. Choose your investment package after you verify.`,
+      t("auth.verify_queued", { email: result.data?.email ?? "your email" }),
     );
     setPending(false);
   }
@@ -120,7 +122,7 @@ function RegisterFormInner() {
         </Alert>
       ) : null}
 
-      <AuthField label="Full name" htmlFor="fullName">
+      <AuthField label={t("auth.full_name")} htmlFor="fullName">
         <AuthInputIcon icon={<User className="h-4 w-4" aria-hidden />}>
           <Input
             id="fullName"
@@ -133,7 +135,7 @@ function RegisterFormInner() {
         </AuthInputIcon>
       </AuthField>
 
-      <AuthField label="Username" htmlFor="username">
+      <AuthField label={t("auth.username")} htmlFor="username">
         <AuthInputIcon icon={<UserCircle className="h-4 w-4" aria-hidden />}>
           <Input
             id="username"
@@ -141,14 +143,14 @@ function RegisterFormInner() {
             placeholder="johnsmith"
             autoComplete="username"
             pattern="[a-zA-Z0-9_]{3,24}"
-            title="3–24 characters: letters, numbers, underscore"
+            title={t("auth.username_rules")}
             required
             disabled={pending}
           />
         </AuthInputIcon>
       </AuthField>
 
-      <AuthField label="Email address" htmlFor="email">
+      <AuthField label={t("auth.email")} htmlFor="email">
         <AuthInputIcon icon={<Mail className="h-4 w-4" aria-hidden />}>
           <Input
             id="email"
@@ -162,12 +164,12 @@ function RegisterFormInner() {
         </AuthInputIcon>
       </AuthField>
 
-      <AuthField label="Password" htmlFor="password">
+      <AuthField label={t("auth.password")} htmlFor="password">
         <AuthInputIcon icon={<Lock className="h-4 w-4" aria-hidden />}>
           <PasswordInput
             id="password"
             name="password"
-            placeholder="Password"
+            placeholder={t("auth.password")}
             autoComplete="new-password"
             minLength={8}
             required
@@ -192,12 +194,12 @@ function RegisterFormInner() {
         ) : null}
       </AuthField>
 
-      <AuthField label="Confirm password" htmlFor="confirmPassword">
+      <AuthField label={t("auth.confirm_password")} htmlFor="confirmPassword">
         <AuthInputIcon icon={<Lock className="h-4 w-4" aria-hidden />}>
           <PasswordInput
             id="confirmPassword"
             name="confirmPassword"
-            placeholder="Confirm password"
+            placeholder={t("auth.confirm_password")}
             autoComplete="new-password"
             minLength={8}
             required
@@ -205,7 +207,7 @@ function RegisterFormInner() {
             className="pl-10"
             onChange={(event) => {
               event.target.setCustomValidity(
-                event.target.value !== password ? "Passwords do not match" : "",
+                event.target.value !== password ? t("auth.passwords_mismatch") : "",
               );
             }}
           />
@@ -213,22 +215,21 @@ function RegisterFormInner() {
       </AuthField>
 
       <div className={cn("space-y-2", authCalloutClass)}>
-        <p className="text-sm font-medium text-foreground">Investment Package</p>
+        <p className="text-sm font-medium text-foreground">{t("auth.investment_package")}</p>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Packages are selected after email verification from the certified plan catalog—not
-          invented at signup.{" "}
+          {t("auth.package_after_verify")}{" "}
           <Link href="/plans" className={authLinkClass}>
-            Preview plans
+            {t("auth.preview_plans")}
           </Link>
         </p>
       </div>
 
-      <AuthField label="Referral code" htmlFor="referral">
+      <AuthField label={t("auth.referral_code")} htmlFor="referral">
         <AuthInputIcon icon={<Gift className="h-4 w-4" aria-hidden />}>
           <Input
             id="referral"
             name="referral"
-            placeholder="Optional"
+            placeholder={t("auth.referral_optional")}
             defaultValue={referralFromUrl}
             autoComplete="off"
             disabled={pending}
@@ -256,13 +257,13 @@ function RegisterFormInner() {
           className={cn("mt-0.5", authCheckboxClass)}
         />
         <label htmlFor="terms" className="text-sm leading-relaxed text-foreground">
-          I agree to the{" "}
+          {t("auth.terms_agree_prefix")}{" "}
           <Link href="/legal/terms" className={authLinkClass}>
-            Terms of Service
+            {t("auth.terms_of_service")}
           </Link>{" "}
-          and{" "}
+          {t("auth.and")}{" "}
           <Link href="/legal/privacy" className={authLinkClass}>
-            Privacy Policy
+            {t("auth.privacy_policy")}
           </Link>
           .
         </label>
@@ -273,14 +274,14 @@ function RegisterFormInner() {
           <AlertDescription>
             {message}{" "}
             <Link href="/auth/verify-email" className={authLinkClass}>
-              Verify email
+              {t("auth.verify_email")}
             </Link>
           </AlertDescription>
         </Alert>
       ) : null}
 
       <Button type="submit" className={authSubmitClass} disabled={pending}>
-        {pending ? "Creating your account..." : "Create account"}
+        {pending ? t("auth.creating_account") : t("auth.create_account_cta")}
       </Button>
     </form>
   );

@@ -5,12 +5,14 @@ import { useState } from "react";
 import { Lock, Mail } from "lucide-react";
 
 import { Alert, AlertDescription, Button, Checkbox, Input } from "@/components/ui";
+import { useI18n } from "@/features/i18n/i18n-provider";
 
 import { postAuthJson } from "../api-client";
 import { AuthField, AuthInputIcon } from "./auth-field";
 import { authLinkClass, authSubmitClass } from "./auth-shell";
 
 export function LoginForm() {
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -37,7 +39,7 @@ export function LoginForm() {
 
   return (
     <form action={submit} className="space-y-5" aria-busy={pending}>
-      <AuthField label="Email address" htmlFor="email">
+      <AuthField label={t("auth.email")} htmlFor="email">
         <AuthInputIcon icon={<Mail className="h-4 w-4" aria-hidden />}>
           <Input
             id="email"
@@ -52,11 +54,11 @@ export function LoginForm() {
       </AuthField>
 
       <AuthField
-        label="Password"
+        label={t("auth.password")}
         htmlFor="password"
         action={
           <Link href="/auth/forgot-password" className={`${authLinkClass} text-xs`}>
-            Forgot password?
+            {t("auth.forgot_password")}
           </Link>
         }
       >
@@ -65,7 +67,7 @@ export function LoginForm() {
             id="password"
             name="password"
             type="password"
-            placeholder="Enter your password"
+            placeholder={t("auth.password")}
             autoComplete="current-password"
             required
             disabled={pending}
@@ -76,7 +78,7 @@ export function LoginForm() {
       <div className="flex items-center gap-2.5">
         <Checkbox id="rememberMe" name="rememberMe" disabled={pending} />
         <label htmlFor="rememberMe" className="text-sm font-medium text-foreground/80">
-          Keep me signed in
+          {t("auth.keep_signed_in")}
         </label>
       </div>
 
@@ -92,7 +94,7 @@ export function LoginForm() {
       ) : null}
 
       <Button type="submit" className={authSubmitClass} disabled={pending}>
-        {pending ? "Signing you in..." : "Sign in"}
+        {pending ? t("auth.signing_in") : t("auth.sign_in_cta")}
       </Button>
     </form>
   );

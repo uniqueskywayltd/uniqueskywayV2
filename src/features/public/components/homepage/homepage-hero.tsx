@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BarChart3, LogIn } from "lucide-react";
 
+import { useI18n } from "@/features/i18n/i18n-provider";
 import {
   marketingGhostLink,
   marketingOutlineBtn,
@@ -17,6 +20,8 @@ const portfolioSnapshot = [
 ] as const;
 
 export function HomepageHero() {
+  const { t } = useI18n();
+
   return (
     <section
       className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
@@ -28,31 +33,30 @@ export function HomepageHero() {
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16 xl:gap-20">
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
             <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
-              Established 2017 · Fayetteville, Arkansas
+              Established 2017 · {t("footer.location_city")}
             </p>
 
             <h1 className="mt-6 max-w-[18ch] text-4xl font-semibold leading-[1.12] tracking-tight text-slate-900 sm:text-5xl lg:max-w-[14ch] lg:text-[3.25rem] dark:text-slate-50">
-              Where vision meets measurable growth.
+              {t("home.hero.title")}
             </h1>
 
             <p className="mt-8 max-w-md text-base leading-relaxed text-slate-700 sm:text-lg dark:text-slate-300">
-              Institutional-grade portfolio management with transparent reporting, secure
-              operations, and full investor control.
+              {t("home.hero.lead")}
             </p>
 
             <div className="mt-10 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center lg:justify-start">
               <Link href="/auth/register" className={cn(marketingPrimaryBtn(), "w-full sm:w-auto")}>
-                Start investing
+                {t("home.hero.cta_invest")}
                 <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
               </Link>
               <Link href="/auth/login" className={cn(marketingOutlineBtn(), "w-full sm:w-auto")}>
                 <LogIn className="mr-2 h-4 w-4" aria-hidden />
-                Sign in
+                {t("home.hero.cta_signin")}
               </Link>
             </div>
 
             <Link href="/plans" className={cn(marketingGhostLink(), "mt-5")}>
-              View investment plans
+              {t("home.plans.eyebrow")}
               <ArrowRight className="h-3.5 w-3.5" aria-hidden />
             </Link>
           </div>

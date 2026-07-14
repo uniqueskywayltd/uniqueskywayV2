@@ -1,11 +1,16 @@
 import type { MessageCatalog } from "../types";
 
-/** Site-wide chrome + navigation catalogs (all surfaces). */
+/** Canonical English catalog — chrome, auth, home, admin, shared UX. */
 export const enMessages = {
+  // Language / theme
   "language.selector.label": "Language",
   "language.selector.change": "Change language",
   "theme.toggle.light": "Switch to light mode",
   "theme.toggle.dark": "Switch to dark mode",
+  "theme.toggle.system": "Switch to system theme",
+  "theme.cycle": "Cycle theme",
+
+  // Chrome
   "chrome.notifications": "Notifications",
   "chrome.account": "Account",
   "chrome.skip_to_content": "Skip to main content",
@@ -15,6 +20,12 @@ export const enMessages = {
   "chrome.back_home": "Back to home",
   "chrome.open_nav": "Open navigation",
   "chrome.close_nav": "Close navigation",
+  "chrome.sign_out": "Sign out",
+  "chrome.signing_out": "Signing out…",
+  "chrome.admin_console": "Admin Console",
+  "chrome.toggle_nav": "Toggle navigation",
+
+  // Public nav
   "nav.about": "About",
   "nav.investments": "Investments",
   "nav.how_it_works": "How It Works",
@@ -22,6 +33,7 @@ export const enMessages = {
   "nav.contact": "Contact",
   "nav.security": "Security",
   "nav.referrals": "Referrals",
+  "nav.services": "Services",
   "nav.dashboard": "Dashboard",
   "nav.wallet": "Wallet",
   "nav.ledger": "Ledger",
@@ -33,6 +45,12 @@ export const enMessages = {
   "nav.money": "Money",
   "nav.account_group": "Account",
   "nav.more": "More",
+  "nav.statements": "Statements",
+  "nav.learn": "Learn",
+  "nav.deposits": "Deposits",
+  "nav.withdrawals": "Withdrawals",
+
+  // Footer
   "footer.company": "Company",
   "footer.support_legal": "Support & Legal",
   "footer.about_us": "About Us",
@@ -44,11 +62,153 @@ export const enMessages = {
   "footer.secure_line": "uniqueskyway.com · Secure · Transparent · Professional",
   "footer.location_city": "Fayetteville, Arkansas",
   "footer.location_country": "United States",
+
+  // Auth
   "auth.create_title": "Create your account",
   "auth.welcome_back": "Welcome back",
+  "auth.welcome_subtitle": "Sign in to access your investor dashboard.",
   "auth.already_have": "Already have an account?",
   "auth.dont_have": "Don't have an account?",
   "auth.create_free": "Create free account",
+  "auth.full_name": "Full name",
+  "auth.username": "Username",
+  "auth.email": "Email address",
+  "auth.password": "Password",
+  "auth.confirm_password": "Confirm password",
+  "auth.referral_code": "Referral code",
+  "auth.referral_optional": "Optional",
+  "auth.investment_package": "Investment Package",
+  "auth.package_after_verify":
+    "Packages are selected after email verification from the certified plan catalog—not invented at signup.",
+  "auth.preview_plans": "Preview plans",
+  "auth.security_check": "Security check",
+  "auth.security_hint": "Enter the sum to confirm you are not a bot.",
+  "auth.your_answer": "Your answer",
+  "auth.terms_agree_prefix": "I agree to the",
+  "auth.terms_of_service": "Terms of Service",
+  "auth.and": "and",
+  "auth.privacy_policy": "Privacy Policy",
+  "auth.create_account_cta": "Create account",
+  "auth.creating_account": "Creating your account...",
+  "auth.sign_in_cta": "Sign in",
+  "auth.signing_in": "Signing you in...",
+  "auth.forgot_password": "Forgot password?",
+  "auth.keep_signed_in": "Keep me signed in",
+  "auth.remember_browser": "Remember this browser",
+  "auth.verify_email": "Verify email",
+  "auth.forgot_title": "Forgot password?",
+  "auth.reset_title": "Set new password",
+  "auth.send_reset": "Send reset code",
+  "auth.passwords_mismatch": "Passwords do not match.",
+  "auth.incorrect_security": "Incorrect security check answer.",
+  "auth.accept_terms": "Please accept the Terms of Service and Privacy Policy.",
+  "auth.username_rules": "Username must be 3–24 characters (letters, numbers, underscore).",
+  "auth.verify_queued": "Verification code queued for {email}. Choose your investment package after you verify.",
+
+  // Home
+  "home.hero.title": "Where vision meets measurable growth.",
+  "home.hero.lead":
+    "Institutional-grade portfolio management with transparent reporting, secure operations, and full investor control.",
+  "home.hero.cta_invest": "Start investing",
+  "home.hero.cta_signin": "Sign in",
+  "home.stats.aum": "Assets under management",
+  "home.stats.investors": "Active investors worldwide",
+  "home.stats.years": "Years serving clients",
+  "home.stats.years_suffix": "since 2017",
+  "home.stats.access": "Investor portal access",
+  "home.what.eyebrow": "What we do",
+  "home.what.title": "Diversified investment services",
+  "home.what.body":
+    "We get to know you, build a custom plan, and put your capital to work across multiple asset classes — with transparency at every step.",
+  "home.what.view_services": "View all services",
+  "home.service.banking": "Banking & Finance",
+  "home.service.banking_desc":
+    "Clear financial reporting and structured investment products for informed decision-making.",
+  "home.service.real_estate": "Real Estate",
+  "home.service.real_estate_desc":
+    "Diversified exposure to property and development projects with long-term growth potential.",
+  "home.service.markets": "Global Markets",
+  "home.service.markets_desc":
+    "Access to commodities and international opportunities through our global network.",
+  "home.service.advisory": "Advisory Services",
+  "home.service.advisory_desc":
+    "Personalized guidance to align your portfolio with your financial goals and risk tolerance.",
+  "home.why.eyebrow": "Why Unique Sky Way",
+  "home.why.title": "Built for investors who demand more",
+  "home.why.body":
+    "We combine institutional discipline with a modern digital experience — giving you full visibility into your portfolio, transactions, and returns.",
+  "home.why.quote": "Transparency isn't a feature — it's our foundation.",
+  "home.pillar.security": "Security & compliance",
+  "home.pillar.security_text":
+    "Enterprise-grade infrastructure with audit logging, encrypted storage, and role-based access control.",
+  "home.pillar.global": "Global perspective",
+  "home.pillar.global_text":
+    "Diversified investment opportunities designed for investors who think beyond borders.",
+  "home.pillar.service": "Client-first service",
+  "home.pillar.service_text":
+    "Dedicated support and transparent communication at every stage of your investment journey.",
+  "home.pillar.track": "Proven track record",
+  "home.pillar.track_text":
+    "A history of helping clients build wealth through disciplined, transparent portfolio management.",
+  "home.how.eyebrow": "Simple process",
+  "home.how.title": "How it works",
+  "home.how.body":
+    "From account creation to portfolio growth — a straightforward path designed for clarity and confidence.",
+  "home.how.step1": "Create your account",
+  "home.how.step1_desc": "Register in minutes with secure authentication and profile setup.",
+  "home.how.step2": "Choose your plan",
+  "home.how.step2_desc": "Select an investment tier that matches your goals and deposit amount.",
+  "home.how.step3": "Fund & invest",
+  "home.how.step3_desc": "Deposit funds and activate your portfolio through our secure dashboard.",
+  "home.how.step4": "Track & grow",
+  "home.how.step4_desc": "Monitor returns, request withdrawals, and refer others to earn bonuses.",
+  "home.how.see_full": "See full process",
+  "home.plans.eyebrow": "Investment plans",
+  "home.plans.title": "Plans coming soon",
+  "home.plans.body":
+    "Active investment plans configured in the admin portal will appear here automatically.",
+  "home.cta.title": "Your portfolio deserves a platform you can trust",
+  "home.cta.body":
+    "Join Unique Sky Way and access a secure investor dashboard with full transaction history, referral tracking, and professional support.",
+  "home.cta.create": "Create free account",
+  "home.cta.learn": "Learn more about us",
+  "home.testimonials.eyebrow": "Testimonials",
+  "home.testimonials.title": "What our clients are saying",
+  "home.testimonials.body":
+    "Real experiences from investors who value transparency, security, and long-term portfolio growth.",
+
+  // Shared UI
+  "ui.loading": "Loading…",
+  "ui.retry": "Try again",
+  "ui.save": "Save",
+  "ui.cancel": "Cancel",
+  "ui.continue": "Continue",
+  "ui.back": "Back",
+  "ui.empty": "Nothing here yet",
+  "ui.error_generic": "Something went wrong. Please try again.",
+  "ui.secure_platform": "Secure Platform",
+
+  // Admin
+  "admin.section.overview": "Overview",
+  "admin.section.operations": "Operations",
+  "admin.section.access": "Access",
+  "admin.section.platform": "Platform",
+  "admin.nav.dashboard": "Dashboard",
+  "admin.nav.customers": "Customers",
+  "admin.nav.deposits": "Deposits",
+  "admin.nav.withdrawals": "Withdrawals",
+  "admin.nav.investments": "Investments",
+  "admin.nav.settlements": "Settlements",
+  "admin.nav.jobs": "Jobs",
+  "admin.nav.staff": "Staff",
+  "admin.nav.roles": "Roles",
+  "admin.nav.security": "Security",
+  "admin.nav.reports": "Reports",
+  "admin.nav.feature_flags": "Feature Flags",
+  "admin.nav.settings": "Settings",
+  "admin.nav.system": "System",
+  "admin.open_menu": "Open admin menu",
+  "admin.close": "Close",
 } as const satisfies MessageCatalog;
 
-export type ChromeMessageKey = keyof typeof enMessages;
+export type MessageKey = keyof typeof enMessages;

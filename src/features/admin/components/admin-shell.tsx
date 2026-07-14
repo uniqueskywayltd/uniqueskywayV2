@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -10,6 +10,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { Button } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { postAuthJson } from "@/features/auth/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { LanguageSelector } from "@/features/i18n/language-selector";
 import { ADMIN_NAV_SECTIONS } from "@/features/admin/navigation";
 import { cn } from "@/lib/utils";
@@ -17,20 +18,22 @@ import { cn } from "@/lib/utils";
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
-  const activeLabel = useMemo(() => {
-    for (const section of ADMIN_NAV_SECTIONS) {
-      for (const item of section.items) {
-        const active = item.exact
-          ? pathname === item.href
-          : pathname === item.href || pathname.startsWith(`${item.href}/`);
-        if (active) return item.label;
+  let activeLabel = t("chrome.admin_console");
+  for (const section of ADMIN_NAV_SECTIONS) {
+    for (const item of section.items) {
+      const active = item.exact
+        ? pathname === item.href
+        : pathname === item.href || pathname.startsWith(`${item.href}/`);
+      if (active) {
+        activeLabel = t(item.labelKey);
+        break;
       }
     }
-    return "Admin";
-  }, [pathname]);
+  }
 
   return (
     <div className="min-h-dvh bg-background text-foreground lg:flex">
@@ -38,13 +41,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-md focus:ring-2 focus:ring-ring"
       >
-        Skip to main content
+        {t("chrome.skip_to_content")}
       </a>
 
       <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-background lg:flex">
         <div className="border-b border-border px-4 py-5">
           <p className="text-sm font-semibold text-foreground">Unique Sky Way</p>
-          <p className="text-xs text-muted-foreground">Admin Console</p>
+          <p className="text-xs text-muted-foreground">{t("chrome.admin_console")}</p>
         </div>
         <AdminNavLinks pathname={pathname} />
       </aside>
@@ -89,7 +92,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 });
               }}
             >
-              Sign out
+              {signingOut ? t("chrome.signing_out") : t("chrome.sign_out")}
             </button>
           </div>
         </header>
@@ -107,10 +110,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   <DialogPrimitive.Title className="text-sm font-semibold text-foreground">
                     Unique Sky Way
                   </DialogPrimitive.Title>
-                  <p className="text-xs text-muted-foreground">Admin Console</p>
+                  <p className="text-xs text-muted-foreground">{t("chrome.admin_console")}</p>
                 </div>
                 <DialogPrimitive.Close asChild>
-                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9" aria-label="Close">
+                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9" aria-label={t("admin.close")}>
                     <X className="h-4 w-4" aria-hidden />
                   </Button>
                 </DialogPrimitive.Close>
@@ -147,15 +150,16 @@ function AdminNavLinks({
   ariaLabel?: string;
   className?: string;
 }) {
+  const { t } = useI18n();
   return (
     <nav
       className={cn("flex-1 space-y-6 overflow-y-auto p-3", className)}
       aria-label={ariaLabel}
     >
       {ADMIN_NAV_SECTIONS.map((section) => (
-        <div key={section.label}>
+        <div key={section.labelKey}>
           <p className="mb-2 px-2.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            {section.label}
+            {t(section.labelKey)}
           </p>
           <div className="space-y-0.5">
             {section.items.map((item) => {
@@ -177,7 +181,7 @@ function AdminNavLinks({
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" aria-hidden />
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               );
             })}

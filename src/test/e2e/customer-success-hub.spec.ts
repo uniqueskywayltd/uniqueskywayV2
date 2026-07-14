@@ -124,15 +124,15 @@ test.describe("sprint G1 customer success hub", () => {
 
   test("account nav exposes Success without replacing money nav", async ({ page }) => {
     await page.goto("/account/success");
-    await expect(page.getByRole("navigation", { name: "Customer navigation" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Dashboard navigation" })).toBeVisible();
     await expect(
-      page.getByRole("navigation", { name: "Customer navigation" }).getByRole("link", {
+      page.getByRole("navigation", { name: "Dashboard navigation" }).getByRole("link", {
         name: "Success",
       }),
     ).toBeVisible();
     await expect(
-      page.getByRole("navigation", { name: "Customer navigation" }).getByRole("link", {
-        name: "Dashboard",
+      page.getByRole("navigation", { name: "Dashboard navigation" }).getByRole("link", {
+        name: "Overview",
       }),
     ).toBeVisible();
   });

@@ -1,5 +1,8 @@
+"use client";
+
 import { Quote } from "lucide-react";
 
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { section } from "@/features/public/components/marketing-ui";
 import { PLATFORM_TESTIMONIALS, type Testimonial } from "@/features/public/content/testimonials";
 import { cn } from "@/lib/utils";
@@ -28,6 +31,7 @@ function TestimonialCard({ item }: { item: Testimonial }) {
 }
 
 export function HomepageTestimonials() {
+  const { t } = useI18n();
   const track = [...PLATFORM_TESTIMONIALS, ...PLATFORM_TESTIMONIALS];
 
   return (
@@ -38,14 +42,13 @@ export function HomepageTestimonials() {
       <div className={cn(section.container, section.padding)}>
         <div className="max-w-2xl">
           <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
-            Testimonials
+            {t("home.testimonials.eyebrow")}
           </p>
           <h2 className="mt-3 text-3xl leading-[1.15] font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-slate-50">
-            What our clients are saying
+            {t("home.testimonials.title")}
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-700 dark:text-slate-300">
-            Real experiences from investors who value transparency, security, and long-term
-            portfolio growth.
+            {t("home.testimonials.body")}
           </p>
         </div>
 

@@ -10,6 +10,7 @@ import {
   ScrollText,
   Settings,
   Shield,
+  Sparkles,
   User,
   Wallet,
 } from "lucide-react";
@@ -29,6 +30,7 @@ export const dashboardNavItems: DashboardNavItem[] = [
   { href: "/wallet", label: "Wallet", icon: Wallet },
   { href: "/portfolio", label: "Investments", icon: PieChart },
   { href: "/ledger", label: "Ledger", icon: ScrollText },
+  { href: "/account/success", label: "Success", icon: Sparkles },
   { href: "/account/notifications", label: "Notifications", icon: Bell },
   { href: "/account/activity", label: "Activity", icon: Activity },
   { href: "/account/communications", label: "Communications", icon: MessagesSquare },

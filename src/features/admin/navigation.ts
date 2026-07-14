@@ -17,49 +17,49 @@ import {
 } from "lucide-react";
 
 export type AdminNavItem = {
-  label: string;
+  labelKey: string;
   href: string;
   icon: LucideIcon;
   exact?: boolean;
 };
 
 export type AdminNavSection = {
-  label: string;
+  labelKey: string;
   items: readonly AdminNavItem[];
 };
 
 /** V2 admin routes only — sectioned for platform portal visual parity. */
 export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
   {
-    label: "Overview",
-    items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true }],
+    labelKey: "admin.section.overview",
+    items: [{ href: "/admin", labelKey: "admin.nav.dashboard", icon: LayoutDashboard, exact: true }],
   },
   {
-    label: "Operations",
+    labelKey: "admin.section.operations",
     items: [
-      { href: "/admin/customers", label: "Customers", icon: Users },
-      { href: "/admin/deposits", label: "Deposits", icon: ArrowDownLeft },
-      { href: "/admin/withdrawals", label: "Withdrawals", icon: ArrowUpRight },
-      { href: "/admin/investments", label: "Investments", icon: PieChart },
-      { href: "/admin/settlements", label: "Settlements", icon: ClipboardList },
-      { href: "/admin/jobs", label: "Jobs", icon: Workflow },
+      { href: "/admin/customers", labelKey: "admin.nav.customers", icon: Users },
+      { href: "/admin/deposits", labelKey: "admin.nav.deposits", icon: ArrowDownLeft },
+      { href: "/admin/withdrawals", labelKey: "admin.nav.withdrawals", icon: ArrowUpRight },
+      { href: "/admin/investments", labelKey: "admin.nav.investments", icon: PieChart },
+      { href: "/admin/settlements", labelKey: "admin.nav.settlements", icon: ClipboardList },
+      { href: "/admin/jobs", labelKey: "admin.nav.jobs", icon: Workflow },
     ],
   },
   {
-    label: "Access",
+    labelKey: "admin.section.access",
     items: [
-      { href: "/admin/staff", label: "Staff", icon: UserCog },
-      { href: "/admin/roles", label: "Roles", icon: Building2 },
-      { href: "/admin/security", label: "Security", icon: ShieldAlert },
+      { href: "/admin/staff", labelKey: "admin.nav.staff", icon: UserCog },
+      { href: "/admin/roles", labelKey: "admin.nav.roles", icon: Building2 },
+      { href: "/admin/security", labelKey: "admin.nav.security", icon: ShieldAlert },
     ],
   },
   {
-    label: "Platform",
+    labelKey: "admin.section.platform",
     items: [
-      { href: "/admin/reports", label: "Reports", icon: LineChart },
-      { href: "/admin/feature-flags", label: "Feature Flags", icon: Flag },
-      { href: "/admin/settings", label: "Settings", icon: Settings2 },
-      { href: "/admin/system", label: "System", icon: Activity },
+      { href: "/admin/reports", labelKey: "admin.nav.reports", icon: LineChart },
+      { href: "/admin/feature-flags", labelKey: "admin.nav.feature_flags", icon: Flag },
+      { href: "/admin/settings", labelKey: "admin.nav.settings", icon: Settings2 },
+      { href: "/admin/system", labelKey: "admin.nav.system", icon: Activity },
     ],
   },
 ] as const;
@@ -68,6 +68,6 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
 export const ADMIN_NAVIGATION = ADMIN_NAV_SECTIONS.flatMap((section) =>
   section.items.map((item) => ({
     ...item,
-    description: section.label,
+    description: section.labelKey,
   })),
 );
