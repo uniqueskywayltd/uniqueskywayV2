@@ -1,6 +1,6 @@
 export const PUBLIC_PRIMARY_NAV = [
   { label: "About", href: "/about" },
-  { label: "Plans", href: "/plans" },
+  { label: "Investments", href: "/plans" },
   { label: "How It Works", href: "/how-it-works" },
   { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
@@ -11,7 +11,7 @@ export const PUBLIC_FOOTER_COLUMNS = [
   {
     title: "Product",
     links: [
-      { label: "Plans", href: "/plans" },
+      { label: "Investments", href: "/plans" },
       { label: "How It Works", href: "/how-it-works" },
       { label: "Security", href: "/security" },
       { label: "FAQ", href: "/faq" },

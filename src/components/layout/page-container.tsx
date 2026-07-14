@@ -13,7 +13,7 @@ const sizeClassName: Record<NonNullable<PageContainerProps["size"]>, string> = {
   md: "max-w-screen-md",
   lg: "max-w-screen-lg",
   xl: "max-w-screen-xl",
-  page: "max-w-[90rem]",
+  page: "max-w-7xl",
 };
 
 export function PageContainer({ children, className, size = "page" }: PageContainerProps) {

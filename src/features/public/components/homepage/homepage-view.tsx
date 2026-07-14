@@ -1,34 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Award,
-  BadgeCheck,
-  BookOpen,
-  Globe2,
-  Landmark,
-  Lock,
-  Scale,
-  Shield,
-  Users,
-} from "lucide-react";
+import { ArrowRight, Award, Globe2, Shield, Users } from "lucide-react";
 
 import { CurrencyTicker } from "@/features/public/components/currency-ticker";
 import { HomepageHero } from "@/features/public/components/homepage/homepage-hero";
+import { HomepageTestimonials } from "@/features/public/components/homepage/homepage-testimonials";
 import {
   card,
   marketingOutlineBtn,
   marketingPrimaryBtn,
   section,
 } from "@/features/public/components/marketing-ui";
-import { HOMEPAGE_COPY } from "@/features/public/content/homepage";
 import { cn } from "@/lib/utils";
 
-const honestStats = [
+const homepageStats = [
+  { label: "Assets under management", value: "$250M+", suffix: "" },
+  { label: "Active investors worldwide", value: "8,930+", suffix: "" },
   { label: "Years serving clients", value: "9+", suffix: "since 2017" },
   { label: "Investor portal access", value: "24/7", suffix: "" },
-  { label: "Account access", value: "Verified", suffix: "email before entry" },
-  { label: "Money movement", value: "Reviewed", suffix: "clear statuses" },
 ] as const;
 
 const practiceAreas = [
@@ -39,6 +28,7 @@ const practiceAreas = [
     description:
       "Clear financial reporting and structured investment products for informed decision-making.",
     tag: "Core",
+    href: "/about",
   },
   {
     image: "/brand/real-estate.webp",
@@ -47,6 +37,7 @@ const practiceAreas = [
     description:
       "Diversified exposure to property and development projects with long-term growth potential.",
     tag: "Assets",
+    href: "/about",
   },
   {
     image: "/brand/global-markets.webp",
@@ -55,6 +46,7 @@ const practiceAreas = [
     description:
       "Access to commodities and international opportunities through our global network.",
     tag: "Global",
+    href: "/about",
   },
   {
     image: "/brand/advisory.webp",
@@ -63,6 +55,7 @@ const practiceAreas = [
     description:
       "Personalized guidance to align your portfolio with your financial goals and risk tolerance.",
     tag: "Advisory",
+    href: "/about",
   },
 ] as const;
 
@@ -84,39 +77,56 @@ const trustPillars = [
   },
   {
     icon: Award,
-    title: "Proven discipline",
-    text: "A history of helping clients build wealth through patient, transparent portfolio management.",
+    title: "Proven track record",
+    text: "A history of helping clients build wealth through disciplined, transparent portfolio management.",
   },
 ] as const;
 
-const journeyMedia = [
-  "/brand/contact.webp",
-  "/brand/corporate.webp",
-  "/brand/banking.webp",
-  "/brand/financial-planning.webp",
-  "/brand/portfolio.webp",
-  "/brand/trust.webp",
+const journeySteps = [
+  {
+    step: 1,
+    title: "Create your account",
+    description: "Register in minutes with secure authentication and profile setup.",
+    image: "/brand/contact.webp",
+  },
+  {
+    step: 2,
+    title: "Choose your plan",
+    description: "Select an investment tier that matches your goals and deposit amount.",
+    image: "/brand/corporate.webp",
+  },
+  {
+    step: 3,
+    title: "Fund & invest",
+    description: "Deposit funds and activate your portfolio through our secure dashboard.",
+    image: "/brand/banking.webp",
+  },
+  {
+    step: 4,
+    title: "Track & grow",
+    description: "Monitor returns, request withdrawals, and refer others to earn bonuses.",
+    image: "/brand/real-estate.webp",
+  },
 ] as const;
 
-const trustIcons = [BadgeCheck, Scale, Landmark, Shield] as const;
-
 export function HomepageView() {
-  const copy = HOMEPAGE_COPY;
-
   return (
     <>
       <CurrencyTicker />
       <HomepageHero />
 
-      <section className="border-y border-border/50 bg-primary text-primary-foreground" aria-label="Platform highlights">
+      <section
+        className="border-y border-border/50 bg-primary text-primary-foreground"
+        aria-label="Platform highlights"
+      >
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
           <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:gap-x-8 md:grid-cols-4 md:gap-y-0">
-            {honestStats.map((stat, index) => (
+            {homepageStats.map((stat, index) => (
               <div
                 key={stat.label}
                 className={cn(
                   "text-center md:text-left",
-                  index < honestStats.length - 1
+                  index < homepageStats.length - 1
                     ? "md:border-r md:border-primary-foreground/15 md:pr-6 lg:pr-8"
                     : "",
                 )}
@@ -150,13 +160,13 @@ export function HomepageView() {
               </p>
             </div>
             <Link href="/about" className={marketingOutlineBtn("shrink-0")}>
-              Learn more
+              View all services
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
             </Link>
           </div>
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:mt-14 lg:grid-cols-4">
             {practiceAreas.map((item) => (
-              <article key={item.title} className={cn(card.base, "flex flex-col")}>
+              <Link key={item.title} href={item.href} className={cn(card.base, "flex flex-col")}>
                 <div className="relative aspect-[4/3]">
                   <Image
                     src={item.image}
@@ -173,13 +183,13 @@ export function HomepageView() {
                   <h3 className="text-sm font-semibold sm:text-base">{item.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className={section.padding} aria-label={copy.why.purpose}>
+      <section className={section.padding} aria-label="Why Unique Sky Way">
         <div className={section.container}>
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
             <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border/60 shadow-md">
@@ -225,150 +235,62 @@ export function HomepageView() {
         </div>
       </section>
 
-      <section className={cn("bg-muted/30", section.padding)} aria-label={copy.journey.purpose}>
+      <section className={cn("bg-muted/30", section.padding)} aria-label="How it works">
         <div className={section.container}>
           <div className="text-center">
             <p className={section.eyebrow}>Simple process</p>
-            <h2 className={section.heading}>{copy.journey.title}</h2>
-            <p className={section.bodyCenter}>{copy.journey.lead}</p>
+            <h2 className={section.heading}>How it works</h2>
+            <p className={section.bodyCenter}>
+              From account creation to portfolio growth — a straightforward path designed for
+              clarity and confidence.
+            </p>
           </div>
-          <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:mt-14 lg:grid-cols-3 xl:grid-cols-6 lg:gap-6">
-            {copy.journey.steps.map((step, index) => (
-              <div key={step.label} className="group flex flex-col">
+          <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:mt-14 lg:grid-cols-4 lg:gap-6">
+            {journeySteps.map((step) => (
+              <div key={step.step} className="group flex flex-col">
                 <div className={cn(card.base, "relative mb-4 aspect-[4/3]")}>
                   <Image
-                    src={journeyMedia[index] ?? "/brand/portfolio.webp"}
-                    alt={step.label}
+                    src={step.image}
+                    alt={step.title}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                    sizes="(max-width: 768px) 50vw, 16vw"
+                    sizes="(max-width: 768px) 50vw, 25vw"
                   />
                   <div className="absolute top-4 left-4 flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground shadow-sm">
-                    {index + 1}
+                    {step.step}
                   </div>
                 </div>
-                <h3 className="text-sm font-semibold sm:text-base">{step.label}</h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{step.detail}</p>
+                <h3 className="text-sm font-semibold sm:text-base">{step.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                  {step.description}
+                </p>
               </div>
             ))}
           </div>
           <div className="mt-12 text-center lg:mt-14">
-            <Link href={copy.journey.cta.href} className={marketingPrimaryBtn()}>
-              {copy.journey.cta.label}
+            <Link href="/how-it-works" className={marketingPrimaryBtn()}>
+              See full process
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
             </Link>
           </div>
         </div>
       </section>
 
-      <section className={cn("border-y border-border bg-muted/20", section.padding)} aria-label={copy.plans.purpose}>
-        <div className={section.container}>
-          <div className="mx-auto max-w-2xl text-center">
-            <p className={section.eyebrow}>Investment plans</p>
-            <h2 className={section.heading}>{copy.plans.title}</h2>
-            <p className={section.bodyCenter}>{copy.plans.lead}</p>
-          </div>
-          <ul className="mt-12 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {copy.plans.placeholders.map((plan, index) => (
-              <li key={`${plan.name}-${index}`} className={cn(card.base, "border-dashed p-6")}>
-                <p className="text-sm font-semibold text-foreground">{plan.name}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{plan.detail}</p>
-                <p className="mt-6 text-xs text-muted-foreground">Awaiting certified catalog</p>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            {copy.plans.emptyTitle}. {copy.plans.emptyDescription}
+      <section className="border-y border-border bg-muted/20 py-16" aria-label="Investment plans">
+        <div className="mx-auto max-w-2xl px-4 text-center">
+          <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            Investment plans
           </p>
-          <p className="mt-3 text-center text-sm text-muted-foreground">
-            {copy.plans.footnote}{" "}
-            <Link href={copy.plans.riskHref} className="underline underline-offset-4">
-              Risk Disclosure
-            </Link>
-            .
+          <h2 className="mt-2 text-2xl font-semibold text-foreground">Plans coming soon</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Active investment plans configured in the admin portal will appear here automatically.
           </p>
-          <div className="mt-8 flex justify-center">
-            <Link href={copy.plans.cta.href} className={marketingOutlineBtn()}>
-              {copy.plans.cta.label}
-            </Link>
-          </div>
         </div>
       </section>
 
-      <section className={section.padding} aria-label={copy.trustBar.purpose}>
-        <div className={section.container}>
-          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {copy.trustBar.items.map((item, index) => {
-              const Icon = trustIcons[index] ?? BadgeCheck;
-              return (
-                <li key={item.title}>
-                  <Link href={item.href} className={cn(card.base, "block h-full p-5")}>
-                    <Icon className="size-5 text-primary" aria-hidden strokeWidth={1.75} />
-                    <p className="mt-4 text-sm font-semibold text-foreground">{item.title}</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </section>
+      <HomepageTestimonials />
 
-      <section className={cn("bg-muted/30", section.padding)} aria-label={copy.security.purpose}>
-        <div className={section.container}>
-          <p className={section.eyebrow}>Security</p>
-          <h2 className={section.heading}>{copy.security.title}</h2>
-          <p className={section.body}>{copy.security.lead}</p>
-          <ul className="mt-12 grid gap-6 md:grid-cols-2">
-            {copy.security.pillars.map((pillar) => (
-              <li key={pillar.title} className={cn(card.base, "flex gap-4 p-5")}>
-                <Lock className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden strokeWidth={1.75} />
-                <div>
-                  <h3 className="text-base font-semibold text-foreground">{pillar.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{pillar.description}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-10 flex justify-center">
-            <Link href={copy.security.cta.href} className={marketingPrimaryBtn()}>
-              {copy.security.cta.label}
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className={section.padding} aria-label={copy.faq.purpose}>
-        <div className={section.container}>
-          <div className="mx-auto max-w-3xl text-center">
-            <p className={section.eyebrow}>FAQ</p>
-            <h2 className={section.heading}>{copy.faq.title}</h2>
-          </div>
-          <div className="mx-auto mt-10 max-w-3xl space-y-4">
-            {copy.faq.items.map((item) => (
-              <details key={item.question} className={cn(card.base, "group px-5 py-4")}>
-                <summary className="cursor-pointer list-none text-left text-sm font-semibold text-foreground marker:content-none [&::-webkit-details-marker]:hidden">
-                  <span className="flex items-center justify-between gap-4">
-                    {item.question}
-                    <BookOpen
-                      className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-12"
-                      aria-hidden
-                    />
-                  </span>
-                </summary>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.answer}</p>
-              </details>
-            ))}
-          </div>
-          <div className="mt-8 flex justify-center">
-            <Link href={copy.faq.cta.href} className={marketingOutlineBtn()}>
-              {copy.faq.cta.label}
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className={cn("relative overflow-hidden", section.padding)} aria-label={copy.finalCta.purpose}>
+      <section className={cn("relative overflow-hidden", section.padding)} aria-label="Get started">
         <div className="absolute inset-0 -z-10 bg-primary" />
         <div className={section.container}>
           <div className="mx-auto max-w-3xl text-center">

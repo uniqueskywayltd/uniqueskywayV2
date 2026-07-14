@@ -9,11 +9,11 @@ import {
 } from "@/features/public/components/marketing-ui";
 import { cn } from "@/lib/utils";
 
-/** Illustrative product chrome only — not a certified balance snapshot. */
-const portfolioPreview = [
-  { value: "Portfolio", label: "Overview", emphasis: false },
-  { value: "Settled", label: "Activity", emphasis: true },
-  { value: "Available", label: "Wallet", emphasis: false },
+/** Visual authority hero mock chrome — illustrative product preview only. */
+const portfolioSnapshot = [
+  { value: "$24,850", label: "Portfolio", positive: false },
+  { value: "+$127", label: "Today", positive: true },
+  { value: "$3,420", label: "Available", positive: false },
 ] as const;
 
 export function HomepageHero() {
@@ -91,21 +91,21 @@ export function HomepageHero() {
                     <BarChart3 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
                     <div>
                       <p className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
-                        Reporting
+                        YTD return
                       </p>
-                      <p className="text-base font-semibold text-foreground">Transparent</p>
+                      <p className="text-base font-semibold tabular-nums text-foreground">+24.8%</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 divide-x divide-slate-200 border-t border-slate-200 bg-white dark:divide-border dark:border-border dark:bg-card">
-                {portfolioPreview.map((item) => (
+                {portfolioSnapshot.map((item) => (
                   <div key={item.label} className="px-2 py-3.5 text-center sm:px-4 sm:py-4">
                     <p
                       className={cn(
-                        "text-sm font-semibold sm:text-base",
-                        item.emphasis
+                        "text-sm font-semibold tabular-nums sm:text-base",
+                        item.positive
                           ? "text-emerald-600 dark:text-emerald-400"
                           : "text-foreground",
                       )}

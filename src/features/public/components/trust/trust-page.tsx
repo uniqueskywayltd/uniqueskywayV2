@@ -8,7 +8,6 @@ import {
   marketingPrimaryBtn,
   section,
 } from "@/features/public/components/marketing-ui";
-import { PublicPageContainer } from "@/features/public/components/public-shell";
 import { cn } from "@/lib/utils";
 
 export function TrustPageHero({
@@ -35,8 +34,12 @@ export function TrustPageHero({
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/92 via-slate-950/75 to-slate-950/50" />
       </div>
 
-      <PublicPageContainer
-        className={cn("py-20 sm:py-24 lg:py-28", align === "center" && "text-center")}
+      <div
+        className={cn(
+          section.container,
+          "py-20 sm:py-24 lg:py-28",
+          align === "center" && "text-center",
+        )}
       >
         <FadeIn className={cn("max-w-3xl", align === "center" && "mx-auto")}>
           <p className="text-xs font-medium tracking-[0.14em] text-slate-300 uppercase">{eyebrow}</p>
@@ -57,7 +60,7 @@ export function TrustPageHero({
             {lead}
           </p>
         </FadeIn>
-      </PublicPageContainer>
+      </div>
     </header>
   );
 }
@@ -73,12 +76,12 @@ export function TrustSection({
 }) {
   return (
     <section className={cn(section.padding, className)}>
-      <PublicPageContainer>
+      <div className={section.container}>
         <h2 className={section.heading}>{title}</h2>
         <div className="mt-6 space-y-4 text-sm leading-7 text-muted-foreground sm:text-base">
           {children}
         </div>
-      </PublicPageContainer>
+      </div>
     </section>
   );
 }
@@ -97,7 +100,7 @@ export function TrustCtaBand({
   return (
     <section className={cn("relative overflow-hidden", section.padding)} aria-label={title}>
       <div className="absolute inset-0 -z-10 bg-primary" />
-      <PublicPageContainer>
+      <div className={section.container}>
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-primary-foreground sm:text-4xl">
             {title}
@@ -124,7 +127,7 @@ export function TrustCtaBand({
             </Link>
           </div>
         </div>
-      </PublicPageContainer>
+      </div>
     </section>
   );
 }

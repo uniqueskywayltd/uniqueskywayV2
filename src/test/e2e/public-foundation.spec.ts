@@ -5,7 +5,7 @@ test.describe("sprint A1 public foundation", () => {
     await page.goto("/");
     await expect(page.getByRole("link", { name: "Unique Sky Way" }).first()).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Plans" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Investments" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Open account" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Sign in" }).first()).toBeVisible();
     await expect(page.getByRole("contentinfo")).toBeVisible();
