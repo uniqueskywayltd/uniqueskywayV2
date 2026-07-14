@@ -7,6 +7,10 @@ test.describe("sprint A2 homepage", () => {
     await expect(page.getByRole("region", { name: "Homepage banner" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "UniqueSkyWay" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "CREATE AN ACCOUNT" }).first()).toBeVisible();
+    await expect(page.getByRole("region", { name: "Anniversary" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /9TH YEAR SUCCESS/i })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Areas of practice" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What We Can Do for You" })).toBeVisible();
 
     await expect(page.getByRole("region", { name: "Remove initial skepticism." })).toBeVisible();
     await expect(

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui";
+import { LegacyAboutPractice } from "@/features/public/components/homepage/legacy-about-practice";
 import { LegacyHeroCarousel } from "@/features/public/components/homepage/legacy-hero-carousel";
 import { HomeSection, SectionHeading } from "@/features/public/components/homepage/section";
 import { HOMEPAGE_COPY } from "@/features/public/content/homepage";
@@ -23,6 +24,7 @@ export function HomepageView() {
   return (
     <>
       <LegacyHeroCarousel />
+      <LegacyAboutPractice />
 
       {/* Purpose: remove initial skepticism. */}
       <HomeSection id="trust" purpose={copy.trustBar.purpose} tone="muted">

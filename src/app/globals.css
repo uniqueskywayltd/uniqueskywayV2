@@ -218,3 +218,9 @@
     transform: translateX(-50%);
   }
 }
+
+@keyframes legacyShine {
+  100% {
+    left: 125%;
+  }
+}
