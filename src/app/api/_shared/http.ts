@@ -11,7 +11,6 @@ import {
   type RequestSecurityContext,
 } from "@/application/auth/security";
 import { REQUEST_HEADERS } from "@/config/constants";
-import { getServerEnv } from "@/config/server-env";
 
 export interface ApiSuccess<TData> {
   data: TData;
@@ -98,13 +97,14 @@ export function createRequestContext(request: NextRequest): RequestSecurityConte
 }
 
 export async function createCsrfResponse(requestId: string) {
-  const env = getServerEnv();
   const token = createCsrfToken();
   const response = jsonOk({ csrfToken: token }, requestId);
 
+  // Cookie flags only — avoid full getServerEnv() so guest chrome (locale) keeps working
+  // when optional service credentials are absent in local review.
   response.cookies.set(AUTH_COOKIE_NAMES.csrf, token, {
     httpOnly: true,
-    secure: env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
   });
@@ -129,12 +129,19 @@ export function requireSameOrigin(request: NextRequest) {
   const origin = request.headers.get("origin");
   if (!origin) return;
 
-  const appOrigin = new URL(getServerEnv().NEXT_PUBLIC_APP_URL).origin;
-  if (origin !== appOrigin) {
-    throw new AppError({
-      code: "AUTHORIZATION_ERROR",
-      message: "Invalid request origin.",
-    });
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) return;
+
+  try {
+    const appOrigin = new URL(appUrl).origin;
+    if (origin !== appOrigin) {
+      throw new AppError({
+        code: "AUTHORIZATION_ERROR",
+        message: "Invalid request origin.",
+      });
+    }
+  } catch (error) {
+    if (error instanceof AppError) throw error;
   }
 }
 

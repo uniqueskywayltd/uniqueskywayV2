@@ -11,7 +11,6 @@ import {
   requireSameOrigin,
 } from "@/app/api/_shared/http";
 import { APP_LANGUAGE_CODES, LANGUAGE_COOKIE_NAME, isAppLanguage } from "@/i18n";
-import { getServerEnv } from "@/config/server-env";
 
 import { createAuditContext, createCustomerExperienceService } from "../customer/_shared/service";
 
@@ -52,11 +51,10 @@ export async function POST(request: NextRequest) {
 }
 
 function setLanguageCookie(response: NextResponse, language: string) {
-  const env = getServerEnv();
   response.cookies.set(LANGUAGE_COOKIE_NAME, language, {
     httpOnly: false,
     sameSite: "lax",
-    secure: env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
   });
