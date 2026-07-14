@@ -146,10 +146,15 @@ test.describe("sprint B2 portfolio experience", () => {
     await expect(
       page.getByRole("tablist", { name: "Filter investments by status" }),
     ).toBeVisible();
-    await expect(page.getByText("Growth Plan")).toBeVisible();
+    await expect(page.getByRole("list", { name: "Investment positions" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Growth Plan" })).toBeVisible();
     await expect(page.getByText("What happens next?")).toBeVisible();
     await expect(page.getByText("ROI credited")).toBeVisible();
+    await expect(page.getByRole("term").filter({ hasText: /^Principal$/ })).toBeVisible();
+    await expect(page.getByText("Matures", { exact: true })).toBeVisible();
+    await expect(page.getByRole("progressbar", { name: "Progress 40%" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add funds" })).toHaveCount(0);
+    await expect(page.getByText("1 position shown")).toBeVisible();
     await expect(
       page.getByRole("region", { name: "Portfolio navigation" }).getByRole("link", {
         name: "Explore plans",
@@ -160,7 +165,7 @@ test.describe("sprint B2 portfolio experience", () => {
   test("supports filters and opens read-only detail", async ({ page }) => {
     await page.goto("/portfolio");
     await page.getByRole("tab", { name: "Active" }).click();
-    await page.getByRole("link", { name: "View details" }).click();
+    await page.getByRole("link", { name: /Growth Plan/ }).click();
     await expect(page).toHaveURL(/\/portfolio\/inv_1$/);
     await expect(page.getByRole("heading", { level: 1, name: "Growth Plan" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Lifecycle" })).toBeVisible();

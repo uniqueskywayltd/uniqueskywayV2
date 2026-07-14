@@ -30,7 +30,7 @@
  * defects, ADRs, or accessibility fixes. Wallet is an operations center, not
  * an accounting engine.
  *
- * Customer portfolio migration: PF1 shell in progress.
+ * Customer portfolio migration: PF1 complete; PF2 investment cards in progress.
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
@@ -39,12 +39,12 @@ export const VISUAL_AUTHORITY = {
   dashboardCommit: "f436f2e",
   walletMigration: "complete",
   walletFreezeCommit: "c4a9629",
-  portfolioMigration: "pf1-in-progress",
+  portfolioMigration: "pf2-in-progress",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
   nextSurfaces: [
-    "customer portfolio PF2+ (cards, detail, analytics, polish)",
+    "customer portfolio PF3+ (detail, analytics if certified, polish)",
     "profile & security",
     "notifications & communication",
     "admin (platform hard/auth portal)",

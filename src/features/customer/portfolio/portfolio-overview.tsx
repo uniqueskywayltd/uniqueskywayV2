@@ -2,18 +2,15 @@
 
 import { useDeferredValue, useEffect, useState } from "react";
 import Link from "next/link";
-import { PieChart } from "lucide-react";
+import { PieChart, Search } from "lucide-react";
 
-import { Button, EmptyState, Input, Skeleton, StatusChip } from "@/components/ui";
+import { Button, EmptyState, Input, Skeleton } from "@/components/ui";
 import { CurrencyDisplay } from "@/components/ui/display";
 import { getCustomerJson } from "@/features/customer/api-client";
-import { presentInvestmentStatus } from "@/features/customer/portfolio/status-presentation";
+import { InvestmentCard } from "@/features/customer/portfolio/investment-card";
 import { PortfolioQuickActions } from "@/features/customer/portfolio/portfolio-quick-actions";
 import { PortfolioWelcomeHero } from "@/features/customer/portfolio/portfolio-welcome-hero";
-import type {
-  PortfolioInvestmentCard,
-  PortfolioListResponse,
-} from "@/features/customer/portfolio/types";
+import type { PortfolioListResponse } from "@/features/customer/portfolio/types";
 import { cn } from "@/lib/utils";
 
 const BUCKETS = [
@@ -46,14 +43,14 @@ function PortfolioFrameSkeleton() {
         ))}
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Skeleton className="h-48 rounded-xl" />
-        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
       </div>
     </div>
   );
 }
 
-/** PF1 — portfolio shell: hero, navigation, filters, empty state (cards preserved for PF2). */
+/** PF1–PF2 — portfolio shell + certified investment cards. */
 export function PortfolioOverview() {
   const [bucket, setBucket] = useState<(typeof BUCKETS)[number]["id"]>("all");
   const [sort, setSort] = useState<(typeof SORTS)[number]["id"]>("newest");
@@ -113,6 +110,8 @@ export function PortfolioOverview() {
     return <PortfolioFrameSkeleton />;
   }
 
+  const resultCount = data?.investments.length ?? 0;
+
   return (
     <div className="space-y-8 sm:space-y-9">
       <p className="sr-only">Primary question: How are my investments performing?</p>
@@ -141,7 +140,7 @@ export function PortfolioOverview() {
         <Skeleton className="h-20 w-full rounded-xl" />
       ) : null}
 
-      <section aria-label="Investment filters" className="space-y-4">
+      <section aria-label="Investment filters" className="space-y-3">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div
             className="flex flex-wrap gap-2"
@@ -171,24 +170,30 @@ export function PortfolioOverview() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="w-full sm:w-56">
+            <div className="relative w-full sm:w-60">
+              <Search
+                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
               <label htmlFor="portfolio-search" className="sr-only">
                 Search investments
               </label>
               <Input
                 id="portfolio-search"
                 type="search"
-                placeholder="Search investments…"
+                placeholder="Search by plan name…"
                 value={query}
                 onChange={(event) => beginReload({ query: event.target.value })}
                 autoComplete="off"
+                className="pl-9"
               />
             </div>
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              Sort
+              <span className="shrink-0">Sort by</span>
               <select
-                className="h-9 rounded-lg border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="h-9 min-w-[10.5rem] rounded-lg border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={sort}
+                aria-label="Sort investments"
                 onChange={(event) =>
                   beginReload({ sort: event.target.value as (typeof SORTS)[number]["id"] })
                 }
@@ -202,6 +207,13 @@ export function PortfolioOverview() {
             </label>
           </div>
         </div>
+
+        {data && !loading ? (
+          <p className="text-xs text-muted-foreground" aria-live="polite">
+            {resultCount === 1 ? "1 position shown" : `${resultCount} positions shown`}
+            {deferredQuery.trim() ? ` for “${deferredQuery.trim()}”` : null}
+          </p>
+        ) : null}
       </section>
 
       {error && data ? (
@@ -213,8 +225,8 @@ export function PortfolioOverview() {
 
       {loading ? (
         <div className="grid gap-4 md:grid-cols-2" aria-busy="true" aria-label="Loading positions">
-          <Skeleton className="h-48 rounded-xl" />
-          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
         </div>
       ) : null}
 
@@ -225,12 +237,11 @@ export function PortfolioOverview() {
         />
       ) : null}
 
-      {/* PF2 will rebuild investment cards; keep certified binding until then. */}
       {!loading && data && data.investments.length > 0 ? (
         <ul className="grid gap-4 md:grid-cols-2" aria-label="Investment positions">
           {data.investments.map((investment) => (
             <li key={investment.id}>
-              <InvestmentCardBridge investment={investment} />
+              <InvestmentCard investment={investment} />
             </li>
           ))}
         </ul>
@@ -271,81 +282,6 @@ function PortfolioOrientation({
         </p>
       </div>
     </section>
-  );
-}
-
-/** Temporary bridge card — full card redesign is PF2. */
-function InvestmentCardBridge({ investment }: { investment: PortfolioInvestmentCard }) {
-  const status = presentInvestmentStatus(investment.status);
-
-  return (
-    <article className="flex h-full flex-col rounded-xl border border-border/70 bg-card/90 p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            What is this?
-          </p>
-          <h2 className="mt-1 text-base font-semibold text-foreground">{investment.planName}</h2>
-        </div>
-        <StatusChip tone={status.tone}>{status.label}</StatusChip>
-      </div>
-
-      <dl className="mt-4 grid gap-3 text-sm">
-        <div>
-          <dt className="text-muted-foreground">Principal</dt>
-          <dd className="mt-1 font-medium text-foreground">
-            <CurrencyDisplay
-              amountMinor={Number(investment.principalMinor)}
-              currency={investment.currency}
-            />
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">ROI credited</dt>
-          <dd className="mt-1 font-medium text-foreground">
-            <CurrencyDisplay
-              amountMinor={Number(investment.postedRoiMinor)}
-              currency={investment.currency}
-            />
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Progress</dt>
-          <dd className="mt-2">
-            <div
-              className="h-2 overflow-hidden rounded-full bg-muted"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={investment.progressPercent ?? 0}
-              aria-label={`Progress ${investment.progressPercent ?? 0}%`}
-            >
-              <div
-                className="h-full rounded-full bg-violet-500/80"
-                style={{ width: `${investment.progressPercent ?? 0}%` }}
-              />
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {investment.progressPercent === null
-                ? "Progress available after activation dates post."
-                : `${investment.progressPercent}% toward maturity · ${investment.termDays} day term`}
-            </p>
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">What happens next?</dt>
-          <dd className="mt-1 text-foreground">
-            {investment.nextMilestone.label}
-            {investment.nextMilestone.date ? ` · ${investment.nextMilestone.date}` : null}
-          </dd>
-        </div>
-      </dl>
-
-      <div className="mt-5 grow" />
-      <Button asChild variant="outline" className="w-full focus-visible:ring-offset-2">
-        <Link href={`/portfolio/${investment.id}`}>View details</Link>
-      </Button>
-    </article>
   );
 }
 
