@@ -33,6 +33,10 @@
  * Customer portfolio status: frozen (PF1–PF5). Further portfolio work only for
  * defects, ADRs, or accessibility fixes. Portfolio explains investments; it
  * does not evaluate them. Certified dates only — never client-derived.
+ *
+ * Launch polish (LP1): baseline. Unified DashboardShell money chrome (incl.
+ * Ledger), #main-content skip target, FX illustrative disclaimer. Further
+ * shared-shell work only for defects or accessibility.
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
@@ -43,14 +47,15 @@ export const VISUAL_AUTHORITY = {
   walletFreezeCommit: "c4a9629",
   portfolioMigration: "complete",
   portfolioFreezeCommit: "cebb0b7",
+  launchPolish: "complete",
+  launchPolishCommit: "9fc1033",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
   nextSurfaces: [
-    "launch readiness audit",
     "profile & security",
     "notifications & communication",
-    "admin (platform hard/auth portal)",
+    "admin polish (platform visual parity)",
     "auth / empty / error states (platform auth, errors, brand)",
   ],
 } as const;
