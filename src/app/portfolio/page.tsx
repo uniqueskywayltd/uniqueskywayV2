@@ -1,23 +1,14 @@
 import type { Metadata } from "next";
 
-import { CustomerPageHeader } from "@/features/customer/components/page-header";
-import { PortfolioExplorer } from "@/features/customer/portfolio/portfolio-explorer";
+import { PortfolioOverview } from "@/features/customer/portfolio/portfolio-overview";
 
 export const metadata: Metadata = {
-  title: "Portfolio | Unique Sky Way",
-  description: "Where your money is invested — read-only portfolio experience.",
+  title: "Investments | Unique Sky Way",
+  description: "How are my investments performing? Certified positions, progress, and next steps.",
   robots: { index: false, follow: false },
 };
 
-/** Sprint B2 — Portfolio experience only (read-only). */
+/** PF1 — Portfolio shell over certified investment read models. */
 export default function PortfolioPage() {
-  return (
-    <div>
-      <CustomerPageHeader
-        title="Portfolio"
-        description="Where is my money? Certified investments only — no deposits or withdrawals here."
-      />
-      <PortfolioExplorer />
-    </div>
-  );
+  return <PortfolioOverview />;
 }

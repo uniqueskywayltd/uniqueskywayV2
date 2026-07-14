@@ -138,13 +138,23 @@ test.describe("sprint B2 portfolio experience", () => {
     });
   });
 
-  test("renders portfolio cards answering where money is", async ({ page }) => {
+  test("renders portfolio shell answering how investments perform", async ({ page }) => {
     await page.goto("/portfolio");
-    await expect(page.getByRole("heading", { level: 1, name: "Portfolio" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Investments" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Portfolio navigation" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Investment filters" })).toBeVisible();
+    await expect(
+      page.getByRole("tablist", { name: "Filter investments by status" }),
+    ).toBeVisible();
     await expect(page.getByText("Growth Plan")).toBeVisible();
     await expect(page.getByText("What happens next?")).toBeVisible();
     await expect(page.getByText("ROI credited")).toBeVisible();
     await expect(page.getByRole("button", { name: "Add funds" })).toHaveCount(0);
+    await expect(
+      page.getByRole("region", { name: "Portfolio navigation" }).getByRole("link", {
+        name: "Explore plans",
+      }),
+    ).toHaveAttribute("href", "/plans");
   });
 
   test("supports filters and opens read-only detail", async ({ page }) => {
