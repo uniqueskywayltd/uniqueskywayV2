@@ -7,10 +7,12 @@ test.describe("admin platform console", () => {
 
   test("renders the admin shell and overview", async ({ page }) => {
     await page.goto("/admin");
-    await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Executive dashboard", exact: true })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Admin navigation" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Customers/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Customers" }).first()).toBeVisible();
     await expect(page.getByText("Pending deposits")).toBeVisible();
+    await expect(page.locator("#main-content")).toBeVisible();
+    await expect(page.getByText("Admin Console")).toBeVisible();
   });
 
   test("supports core admin list surfaces", async ({ page }) => {
@@ -31,10 +33,10 @@ test.describe("admin platform console", () => {
   test("uses mobile admin navigation", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/admin/system");
-    await expect(page.getByRole("button", { name: "Toggle navigation" })).toBeVisible();
-    await page.getByRole("button", { name: "Toggle navigation" }).click();
+    await expect(page.getByRole("button", { name: "Open admin menu" })).toBeVisible();
+    await page.getByRole("button", { name: "Open admin menu" }).click();
     await expect(page.getByRole("navigation", { name: "Admin mobile navigation" })).toBeVisible();
-    await page.getByRole("link", { name: /Security/ }).click();
+    await page.getByRole("navigation", { name: "Admin mobile navigation" }).getByRole("link", { name: "Security" }).click();
     await expect(page).toHaveURL(/\/admin\/security$/);
   });
 });

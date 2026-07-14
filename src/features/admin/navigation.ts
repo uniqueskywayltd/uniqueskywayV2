@@ -1,110 +1,73 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  ArrowDownLeft,
+  ArrowUpRight,
   Building2,
   ClipboardList,
   Flag,
-  Landmark,
   LayoutDashboard,
   LineChart,
+  PieChart,
   Settings2,
   ShieldAlert,
-  Users,
   UserCog,
-  Wallet,
+  Users,
   Workflow,
 } from "lucide-react";
 
-export interface AdminNavItem {
+export type AdminNavItem = {
   label: string;
   href: string;
   icon: LucideIcon;
-  description: string;
-}
+  exact?: boolean;
+};
 
-export const ADMIN_NAVIGATION: readonly AdminNavItem[] = [
+export type AdminNavSection = {
+  label: string;
+  items: readonly AdminNavItem[];
+};
+
+/** V2 admin routes only — sectioned for platform portal visual parity. */
+export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
   {
     label: "Overview",
-    href: "/admin",
-    icon: LayoutDashboard,
-    description: "Operational snapshot",
+    items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true }],
   },
   {
-    label: "Customers",
-    href: "/admin/customers",
-    icon: Users,
-    description: "Search and manage customers",
+    label: "Operations",
+    items: [
+      { href: "/admin/customers", label: "Customers", icon: Users },
+      { href: "/admin/deposits", label: "Deposits", icon: ArrowDownLeft },
+      { href: "/admin/withdrawals", label: "Withdrawals", icon: ArrowUpRight },
+      { href: "/admin/investments", label: "Investments", icon: PieChart },
+      { href: "/admin/settlements", label: "Settlements", icon: ClipboardList },
+      { href: "/admin/jobs", label: "Jobs", icon: Workflow },
+    ],
   },
   {
-    label: "Deposits",
-    href: "/admin/deposits",
-    icon: Landmark,
-    description: "Deposit review queue",
+    label: "Access",
+    items: [
+      { href: "/admin/staff", label: "Staff", icon: UserCog },
+      { href: "/admin/roles", label: "Roles", icon: Building2 },
+      { href: "/admin/security", label: "Security", icon: ShieldAlert },
+    ],
   },
   {
-    label: "Withdrawals",
-    href: "/admin/withdrawals",
-    icon: Wallet,
-    description: "Withdrawal review queue",
-  },
-  {
-    label: "Investments",
-    href: "/admin/investments",
-    icon: LineChart,
-    description: "Read-only investments",
-  },
-  {
-    label: "Settlements",
-    href: "/admin/settlements",
-    icon: ClipboardList,
-    description: "Settlement runs",
-  },
-  {
-    label: "Staff",
-    href: "/admin/staff",
-    icon: UserCog,
-    description: "Staff accounts",
-  },
-  {
-    label: "Roles",
-    href: "/admin/roles",
-    icon: Building2,
-    description: "Roles and permissions",
-  },
-  {
-    label: "Reports",
-    href: "/admin/reports",
-    icon: Activity,
-    description: "Reporting and exports",
-  },
-  {
-    label: "Jobs",
-    href: "/admin/jobs",
-    icon: Workflow,
-    description: "Background jobs",
-  },
-  {
-    label: "Security",
-    href: "/admin/security",
-    icon: ShieldAlert,
-    description: "Security center",
-  },
-  {
-    label: "Feature flags",
-    href: "/admin/feature-flags",
-    icon: Flag,
-    description: "Runtime feature flags",
-  },
-  {
-    label: "Settings",
-    href: "/admin/settings",
-    icon: Settings2,
-    description: "System settings",
-  },
-  {
-    label: "System",
-    href: "/admin/system",
-    icon: Building2,
-    description: "Health and release info",
+    label: "Platform",
+    items: [
+      { href: "/admin/reports", label: "Reports", icon: LineChart },
+      { href: "/admin/feature-flags", label: "Feature Flags", icon: Flag },
+      { href: "/admin/settings", label: "Settings", icon: Settings2 },
+      { href: "/admin/system", label: "System", icon: Activity },
+    ],
   },
 ] as const;
+
+/** Flat list for legacy lookups (active label, etc.). */
+export const ADMIN_NAVIGATION = ADMIN_NAV_SECTIONS.flatMap((section) =>
+  section.items.map((item) => ({
+    ...item,
+    description: section.label,
+  })),
+);

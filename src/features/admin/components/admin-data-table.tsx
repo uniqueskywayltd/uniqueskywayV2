@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui";
+import { StatCard, type StatCardAccent } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 
 export interface AdminColumn<TRow> {
@@ -47,22 +48,23 @@ export function AdminToolbar({
   trailing?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+    <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/90 p-4 shadow-sm lg:flex-row lg:items-end lg:justify-between">
       <div className="grid flex-1 gap-3 sm:grid-cols-2">
         <label className="grid gap-1.5 text-sm">
-          <span className="font-medium">{searchLabel}</span>
+          <span className="font-medium text-foreground">{searchLabel}</span>
           <Input
             value={searchValue}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search…"
             aria-label={searchLabel}
+            className="h-10"
           />
         </label>
         {statusOptions && onStatusChange ? (
           <label className="grid gap-1.5 text-sm">
-            <span className="font-medium">{statusLabel ?? "Status"}</span>
+            <span className="font-medium text-foreground">{statusLabel ?? "Status"}</span>
             <Select value={statusValue ?? "all"} onValueChange={onStatusChange}>
-              <SelectTrigger aria-label={statusLabel ?? "Status"}>
+              <SelectTrigger aria-label={statusLabel ?? "Status"} className="h-10">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -104,11 +106,11 @@ export function AdminDataTable<TRow extends { id: string }>({
   const allSelected = selectable && rows.length > 0 && rows.every((row) => selectedIds?.has(row.id));
 
   return (
-    <Card className="overflow-hidden p-0">
+    <Card className="overflow-hidden border-border/70 bg-card/90 p-0 shadow-sm">
       <Table>
         <caption className="sr-only">{caption}</caption>
-        <TableHeader className="sticky top-0 z-10 bg-card">
-          <TableRow>
+        <TableHeader className="sticky top-0 z-10 bg-muted/40">
+          <TableRow className="hover:bg-transparent">
             {selectable ? (
               <TableHead className="w-10">
                 <Checkbox
@@ -128,7 +130,11 @@ export function AdminDataTable<TRow extends { id: string }>({
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.id} data-selected={selectedIds?.has(row.id) ? "true" : undefined}>
+            <TableRow
+              key={row.id}
+              data-selected={selectedIds?.has(row.id) ? "true" : undefined}
+              className="hover:bg-muted/30"
+            >
               {selectable ? (
                 <TableCell>
                   <Checkbox
@@ -155,19 +161,41 @@ export function AdminDataTable<TRow extends { id: string }>({
 export function AdminMetricGrid({
   metrics,
 }: {
-  metrics: Array<{ label: string; value: string | number; hint?: string }>;
+  metrics: Array<{
+    label: string;
+    value: string | number;
+    hint?: string;
+    href?: string;
+    accent?: StatCardAccent;
+  }>;
 }) {
   return (
-    <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {metrics.map((metric) => (
-        <Card key={metric.label} className="p-4">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {metric.label}
-          </p>
-          <p className="mt-2 text-2xl font-semibold tabular-nums">{metric.value}</p>
-          {metric.hint ? <p className="mt-1 text-xs text-muted-foreground">{metric.hint}</p> : null}
-        </Card>
-      ))}
+    <div className="mb-2 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {metrics.map((metric, index) => {
+        const accent =
+          metric.accent ?? DEFAULT_METRIC_ACCENTS[index % DEFAULT_METRIC_ACCENTS.length] ?? "primary";
+        return (
+          <StatCard
+            key={metric.label}
+            title={metric.label}
+            value={String(metric.value)}
+            {...(metric.hint ? { description: metric.hint } : {})}
+            {...(metric.href ? { href: metric.href } : {})}
+            accent={accent}
+          />
+        );
+      })}
     </div>
   );
 }
+
+const DEFAULT_METRIC_ACCENTS = [
+  "sky",
+  "rose",
+  "amber",
+  "primary",
+  "emerald",
+  "violet",
+  "slate",
+  "amber",
+] as const satisfies readonly StatCardAccent[];

@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
 import { Badge, Button, Card, Input, StatusChip, Textarea } from "@/components/ui";
+import { DashboardPanelCard } from "@/components/ui/dashboard-panel-card";
 import {
   Dialog,
   DialogContent,
@@ -96,43 +97,102 @@ export function OverviewPanel() {
   if (!metrics) return <AdminEmptyBlock title="No overview data" description="Operational metrics are unavailable." />;
 
   return (
-    <div>
+    <div className="space-y-8">
       <AdminPageHeader
-        title="Overview"
+        title="Executive dashboard"
         description="Live operational snapshot across customers, money movement, and system health."
       />
-      <AdminMetricGrid
-        metrics={[
-          { label: "Pending deposits", value: metrics.pendingDeposits },
-          { label: "Pending withdrawals", value: metrics.pendingWithdrawals },
-          { label: "Under review withdrawals", value: metrics.underReviewWithdrawals },
-          { label: "Pending reviews", value: metrics.pendingReviews },
-          { label: "Deposits today", value: metrics.depositsToday },
-          { label: "Withdrawals today", value: metrics.withdrawalsToday },
-          { label: "Failed jobs", value: metrics.failedJobs },
-          { label: "Failed webhooks", value: metrics.failedWebhooks },
-        ]}
-      />
-      <Card className="p-4">
-        <h2 className="text-sm font-semibold">Recent admin activity</h2>
+
+      <section className="space-y-4">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Operations queue
+        </h2>
+        <AdminMetricGrid
+          metrics={[
+            {
+              label: "Pending deposits",
+              value: metrics.pendingDeposits,
+              href: "/admin/deposits",
+              accent: "sky",
+            },
+            {
+              label: "Pending withdrawals",
+              value: metrics.pendingWithdrawals,
+              href: "/admin/withdrawals",
+              accent: "rose",
+            },
+            {
+              label: "Under review withdrawals",
+              value: metrics.underReviewWithdrawals,
+              href: "/admin/withdrawals",
+              accent: "amber",
+            },
+            {
+              label: "Pending reviews",
+              value: metrics.pendingReviews,
+              href: "/admin/deposits",
+              accent: "primary",
+            },
+          ]}
+        />
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Today
+        </h2>
+        <AdminMetricGrid
+          metrics={[
+            {
+              label: "Deposits today",
+              value: metrics.depositsToday,
+              href: "/admin/deposits",
+              accent: "emerald",
+            },
+            {
+              label: "Withdrawals today",
+              value: metrics.withdrawalsToday,
+              href: "/admin/withdrawals",
+              accent: "violet",
+            },
+            {
+              label: "Failed jobs",
+              value: metrics.failedJobs,
+              href: "/admin/jobs",
+              accent: "slate",
+            },
+            {
+              label: "Failed webhooks",
+              value: metrics.failedWebhooks,
+              href: "/admin/system",
+              accent: "amber",
+            },
+          ]}
+        />
+      </section>
+
+      <DashboardPanelCard title="Recent administrative activity" href="/admin/security" accent="slate">
         {activity.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">No recent administrative activity.</p>
+          <p className="text-sm text-muted-foreground">No recent administrative activity.</p>
         ) : (
-          <ul className="mt-3 divide-y">
+          <div className="space-y-2">
             {activity.map((item) => (
-              <li key={item.id} className="flex items-center justify-between gap-3 py-2 text-sm">
-                <span>
-                  <span className="font-medium">{item.action}</span>
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-3 rounded-lg border border-border/40 bg-muted/20 px-4 py-2.5 text-sm"
+              >
+                <div className="min-w-0">
+                  <span className="font-medium capitalize">{item.action}</span>
                   <span className="text-muted-foreground"> · {item.targetType}</span>
-                </span>
-                <time className="text-xs text-muted-foreground" dateTime={item.createdAt}>
+                </div>
+                <time className="shrink-0 text-xs text-muted-foreground" dateTime={item.createdAt}>
                   {new Date(item.createdAt).toLocaleString()}
                 </time>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
-      </Card>
+      </DashboardPanelCard>
     </div>
   );
 }
