@@ -1,14 +1,5 @@
-import { PreferencesManagement } from "@/features/customer/components/preferences-management";
-import { CustomerPageHeader } from "@/features/customer/components/page-header";
+import { PreferencesSurface } from "@/features/customer/account/preferences-surface";
 
 export default function PreferencesPage() {
-  return (
-    <>
-      <CustomerPageHeader
-        title="Preferences"
-        description="Set language, time zone, appearance, and email preferences."
-      />
-      <PreferencesManagement />
-    </>
-  );
+  return <PreferencesSurface />;
 }

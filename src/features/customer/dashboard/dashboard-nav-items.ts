@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   PieChart,
   ScrollText,
+  Settings,
   Shield,
   User,
   Wallet,
@@ -31,6 +32,7 @@ export const dashboardNavItems: DashboardNavItem[] = [
   { href: "/account/activity", label: "Activity", icon: Activity },
   { href: "/account/profile", label: "Profile", icon: User },
   { href: "/account/security", label: "Security", icon: Shield },
+  { href: "/account/preferences", label: "Preferences", icon: Settings },
 ];
 
 export function getDashboardNavLabel(pathname: string): string {
