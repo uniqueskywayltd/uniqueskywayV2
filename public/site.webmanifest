@@ -1,0 +1,23 @@
+{
+  "name": "Unique Sky Way",
+  "short_name": "USW",
+  "description": "Structured investment with transparent processes and a clear investor dashboard.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/brand/icon.webp",
+      "sizes": "176x176",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/favicon.webp",
+      "sizes": "32x32",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandMark } from "@/components/layout/brand-mark";
 import { Button } from "@/components/ui";
 import { PublicPageContainer, PublicShell } from "@/features/public/components/public-shell";
 
@@ -14,12 +15,13 @@ const RECOVERY_LINKS = [
 export default function NotFound() {
   return (
     <PublicShell>
-      <div className="border-b border-border/70 bg-[radial-gradient(90%_80%_at_50%_0%,oklch(0.94_0.015_250)_0%,oklch(0.985_0.004_250)_55%)]">
+      <div className="border-b border-border/70 bg-muted/30 dark:bg-muted/15">
         <PublicPageContainer className="py-20 sm:py-24">
+          <BrandMark surface="theme" width={140} className="mb-8 [&_img]:max-h-9" />
           <p className="text-sm font-medium tracking-[0.16em] text-muted-foreground uppercase">
             404
           </p>
-          <h1 className="mt-4 max-w-2xl font-[family-name:var(--font-instrument-serif)] text-4xl tracking-normal text-foreground sm:text-5xl">
+          <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
             This page is unavailable.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">

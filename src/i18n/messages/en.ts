@@ -81,6 +81,8 @@ export const enMessages = {
   "auth.referral_code": "Referral code",
   "auth.referral_optional": "Optional",
   "auth.investment_package": "Investment Package",
+  "auth.tap_select_package": "Tap to select a package",
+  "auth.packages_unavailable": "Packages unavailable.",
   "auth.package_after_verify":
     "Packages are selected after email verification from the certified plan catalog—not invented at signup.",
   "auth.preview_plans": "Preview plans",
@@ -107,6 +109,64 @@ export const enMessages = {
   "auth.accept_terms": "Please accept the Terms of Service and Privacy Policy.",
   "auth.username_rules": "Username must be 3–24 characters (letters, numbers, underscore).",
   "auth.verify_queued": "Verification code queued for {email}. Choose your investment package after you verify.",
+
+  // Wallet / money journeys (operational)
+  "wallet.amount_invalid": "Enter a valid USD amount greater than zero.",
+  "wallet.withdraw_exceeds": "Withdrawal cannot exceed Available balance.",
+  "wallet.destination_required": "Destination reference is required.",
+  "wallet.no_available": "You do not have Available funds to withdraw yet.",
+  "wallet.withdraw_failed": "Withdrawal could not be created.",
+  "wallet.deposit_failed": "Deposit could not be created.",
+  "wallet.submit_withdrawal": "Submit withdrawal",
+  "wallet.submitting": "Submitting…",
+  "wallet.continue_payment": "Continue to payment",
+  "wallet.starting": "Starting…",
+  "wallet.step_amount": "Amount",
+  "wallet.step_confirm": "Confirm",
+  "wallet.step_review": "Review",
+  "wallet.step_status": "Status",
+  "wallet.step_provider": "Provider",
+  "wallet.amount_usd": "Amount (USD)",
+  "wallet.deposit_safe_hint":
+    "Money should feel safe — not fast. Funds become Available only after confirmation.",
+  "wallet.continue": "Continue",
+  "wallet.cancel": "Cancel",
+  "wallet.back": "Back",
+  "wallet.confirm_deposit": "Confirm deposit",
+  "wallet.amount": "Amount",
+  "wallet.what_happens_next": "What happens next",
+  "wallet.deposit_next_hint":
+    "You’ll complete payment with the certified provider, then wait for confirmation.",
+  "wallet.available_to_withdraw": "Available to withdraw",
+  "wallet.withdraw_reserve_hint":
+    "After you submit, the certified engine reserves funds so they cannot be spent twice. Status updates explain progress — not bank processing times.",
+  "wallet.destination_label": "Destination reference",
+  "wallet.destination_hint":
+    "Uses the certified payout destination type. No alternate providers in this release.",
+  "wallet.confirm_withdrawal": "Confirm withdrawal",
+  "wallet.withdraw_confirm_hint":
+    "After you submit, this amount is reserved so it cannot be spent twice. Review may occur before payout. Timing is expectancy — not a promise.",
+  "wallet.destination": "Destination",
+  "wallet.contact_support": "Contact support",
+  "wallet.need_help_support": "Need help? Contact support",
+
+  // System surfaces
+  "system.offline_title": "You are offline",
+  "system.offline_body": "Reconnect to continue using your Unique Sky Way account.",
+  "system.maintenance_title": "Under maintenance",
+  "system.maintenance_body":
+    "Unique Sky Way is currently undergoing scheduled maintenance. Please check back shortly.",
+  "system.error_title": "Something went wrong",
+  "system.error_body": "The application could not complete this request.",
+  "system.reload": "Reload",
+  "system.try_again": "Try again",
+  "system.go_home": "Go home",
+  "system.not_found_title": "This page is unavailable.",
+  "system.not_found_body":
+    "The address may be mistyped, or the page may have moved. Use the links below to return to a known surface.",
+  "system.return_home": "Return home",
+  "system.search_faq": "Search the FAQ",
+  "system.continue_here": "Continue here",
 
   // Home
   "home.hero.title": "Where vision meets measurable growth.",

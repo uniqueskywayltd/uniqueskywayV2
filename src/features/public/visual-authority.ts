@@ -91,8 +91,8 @@ export const VISUAL_AUTHORITY = {
   visualParityCompletionFreezeCommit: "f461660",
   publicVisualReconstruction: "complete",
   publicVisualReconstructionFreezeCommit: "700647b",
-  productionReadiness: "platform-feature-recovery",
-  i18nCoverage: "chrome-home-auth-admin-customer-nav",
+  productionReadiness: "launch-blocker-elimination",
+  i18nCoverage: "operational-ui-enough-for-launch",
   themeSupport: "light-dark",
   launchCandidate: "LC1",
   launchCandidateReleaseBranch: "release/v3.2-final",
@@ -101,6 +101,7 @@ export const VISUAL_AUTHORITY = {
   phpStatus: "historical-reference-only",
   nextSurfaces: [
     "production deploy to https://uniqueskyway.com/v2 (ops)",
-    "v3.3.0 international platform (i18n, RTL, locale formatting)",
+    "acceptance testing on /v2",
+    "v3.3.0 international platform (marketing/legal i18n refinement)",
   ],
 } as const;

@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 
+import { formatPlanSelectorMeta } from "@/features/public/components/certified-plan-card";
 import {
   CERTIFIED_PUBLIC_PLANS,
   type CertifiedPublicPlan,
 } from "@/features/public/content/certified-plans";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 type PlanSelectionFieldProps = {
@@ -19,7 +21,7 @@ type PlanSelectionFieldProps = {
 };
 
 /**
- * Presentation-only package selector — platform `plan-selection-field.tsx` parity.
+ * Presentation-only package selector — platform chrome + certified catalog meta.
  * Does not bind investments during signup.
  */
 export function PlanSelectionField({
@@ -30,6 +32,7 @@ export function PlanSelectionField({
   loading,
   error,
 }: PlanSelectionFieldProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const selected = plans.find((plan) => plan.slug === value);
 
@@ -41,19 +44,19 @@ export function PlanSelectionField({
   if (loading) {
     return (
       <div className="space-y-2">
-        <p className="text-sm font-medium text-foreground">Investment Package</p>
+        <p className="text-sm font-medium text-foreground">{t("auth.investment_package")}</p>
         <div className="h-12 animate-pulse rounded-xl border border-border bg-muted/40" />
       </div>
     );
   }
 
   if (!plans.length) {
-    return <p className="text-sm text-muted-foreground">Packages unavailable.</p>;
+    return <p className="text-sm text-muted-foreground">{t("auth.packages_unavailable")}</p>;
   }
 
   return (
     <fieldset className="space-y-2" disabled={disabled}>
-      <legend className="mb-2 text-sm font-medium text-foreground">Investment Package</legend>
+      <legend className="mb-2 text-sm font-medium text-foreground">{t("auth.investment_package")}</legend>
 
       <button
         type="button"
@@ -76,13 +79,20 @@ export function PlanSelectionField({
               <Check className="h-3 w-3" aria-hidden />
             </span>
           ) : null}
-          <span
-            className={cn(
-              "truncate text-sm",
-              selected ? "font-medium text-foreground" : "text-muted-foreground",
-            )}
-          >
-            {selected ? selected.name : "Tap to select a package"}
+          <span className="min-w-0">
+            <span
+              className={cn(
+                "block truncate text-sm",
+                selected ? "font-medium text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {selected ? selected.name : t("auth.tap_select_package")}
+            </span>
+            {selected ? (
+              <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                {formatPlanSelectorMeta(selected)}
+              </span>
+            ) : null}
           </span>
         </span>
         <ChevronDown
@@ -97,7 +107,7 @@ export function PlanSelectionField({
       {open ? (
         <div
           role="listbox"
-          aria-label="Investment packages"
+          aria-label={t("auth.investment_package")}
           className="flex flex-col gap-1.5 overflow-hidden rounded-xl border border-border/70 bg-card p-1.5"
         >
           {plans.map((plan) => {
@@ -125,7 +135,12 @@ export function PlanSelectionField({
                 >
                   {isSelected ? <Check className="h-3 w-3 text-primary-foreground" /> : null}
                 </span>
-                <span className="text-sm font-medium">{plan.name}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-foreground">{plan.name}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {formatPlanSelectorMeta(plan)}
+                  </span>
+                </span>
               </button>
             );
           })}

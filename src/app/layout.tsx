@@ -40,11 +40,13 @@ export const metadata: Metadata = {
     path: "/",
   }),
   applicationName: "Unique Sky Way",
+  manifest: "/site.webmanifest",
   icons: {
     icon: [
       { url: brandAssets.favicon, type: "image/webp", sizes: "32x32" },
       { url: brandAssets.icon, type: "image/webp", sizes: "176x176" },
       { url: brandAssets.iconSvg, type: "image/svg+xml" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
     ],
     apple: [{ url: brandAssets.icon }],
   },
