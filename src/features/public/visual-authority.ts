@@ -37,6 +37,10 @@
  * Launch polish (LP1): baseline. Unified DashboardShell money chrome (incl.
  * Ledger), #main-content skip target, FX illustrative disclaimer. Further
  * shared-shell work only for defects or accessibility.
+ *
+ * Profile & Security: frozen. Account controls on DashboardShell — profile,
+ * preferences, password, devices, sessions, certified security activity.
+ * Further work only for defects, ADRs, or accessibility fixes. No fake 2FA.
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
@@ -49,11 +53,12 @@ export const VISUAL_AUTHORITY = {
   portfolioFreezeCommit: "cebb0b7",
   launchPolish: "complete",
   launchPolishCommit: "9fc1033",
+  profileSecurityMigration: "complete",
+  profileSecurityFreezeCommit: "46ae5dd",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
   nextSurfaces: [
-    "profile & security",
     "notifications & communication",
     "admin polish (platform visual parity)",
     "auth / empty / error states (platform auth, errors, brand)",
