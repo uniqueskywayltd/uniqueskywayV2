@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
+import { brandAssets } from "@/features/brand";
 import { PLANS_COPY } from "@/features/public/content/conversion-pages";
 import { cn } from "@/lib/utils";
 
@@ -26,12 +27,12 @@ const VIDEO_OPTIONS = [
   {
     id: "english",
     label: "English",
-    src: "/legacy/videos/english1.mp4",
+    src: brandAssets.videos.english,
   },
   {
     id: "spanish",
     label: "Spanish",
-    src: "/legacy/videos/spanish.mp4",
+    src: brandAssets.videos.spanish,
   },
   {
     id: "french",
@@ -110,7 +111,7 @@ function PlansCarouselInner({ itemsPerView }: { itemsPerView: number }) {
               <div className="border-b border-[#8db6d6] px-0 pt-[33px] pb-[22px]">
                 <div
                   className="relative mb-[26px] bg-cover bg-center px-0 py-7"
-                  style={{ backgroundImage: "url(/legacy/plans/a.jpg)" }}
+                  style={{ backgroundImage: `url(${brandAssets.plans.cardBackground})` }}
                 >
                   <div className="bg-black/60 px-3 py-4 text-white">
                     <h3 className="mb-2 text-[20px] leading-7 font-bold text-white uppercase">
@@ -280,7 +281,7 @@ function CertificationModal() {
               ×
             </button>
             <Image
-              src="/legacy/plans/cert.jpg"
+              src={brandAssets.plans.certificate}
               alt="Company certification document"
               width={1200}
               height={1600}

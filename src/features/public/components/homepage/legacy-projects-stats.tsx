@@ -3,57 +3,58 @@
 import Image from "next/image";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
+import { brandAssets } from "@/features/brand";
 import { LEGACY_ACCENT } from "@/features/public/legacy/tokens";
 import { cn } from "@/lib/utils";
 
 const PROJECTS = [
   {
-    image: "/legacy/projects/IMG_2756.jpg",
+    image: brandAssets.projects.nfts,
     sector: "NFTs Tokenization",
     title: "Collectible Digital World",
   },
   {
-    image: "/legacy/projects/IMG_2703.jpg",
+    image: brandAssets.projects.realEstate,
     sector: "Real Estate",
     title: "Building to your Satisfaction",
   },
   {
-    image: "/legacy/projects/IMG_2711.jpg",
+    image: brandAssets.projects.realWorldAsset,
     sector: "Real World Asset",
     title: "Commodities on demand is our Priority Profitability Business",
   },
   {
-    image: "/legacy/projects/IMG_2717.jpg",
+    image: brandAssets.projects.corporate,
     sector: "Corporate Management",
     title: "We are here to serve you better",
   },
   {
-    image: "/legacy/projects/IMG_2716.jpg",
+    image: brandAssets.projects.financialInitiatives,
     sector: "Financial Initiatives",
     title: "Planning & Task Completion",
   },
   {
-    image: "/legacy/projects/IMG_2712.jpg",
+    image: brandAssets.projects.naturalEnergy,
     sector: "Natural Energy",
     title: "Planning & Task Completion",
   },
   {
-    image: "/legacy/projects/IMG_2739.jpg",
+    image: brandAssets.projects.financialLoan,
     sector: "Financial Loan",
     title: "Growing your Financial Firm",
   },
   {
-    image: "/legacy/projects/IMG_2750.jpg",
+    image: brandAssets.projects.crypto,
     sector: "Crypto Mining & Trading",
     title: "Digital Asset",
   },
   {
-    image: "/legacy/projects/IMG_2747.jpg",
+    image: brandAssets.projects.agriculture,
     sector: "Tokenize Mechanized Agriculture",
     title: "Huge Mechanized Project Completion",
   },
   {
-    image: "/legacy/projects/IMG_2740.jpg",
+    image: brandAssets.projects.financialGrant,
     sector: "Financial Grant",
     title: "Private Enterprize Building",
   },
@@ -336,15 +337,15 @@ function AnnualStats() {
         <div className="relative lg:mt-[7px] lg:ml-[55px]">
           <div
             className="pointer-events-none absolute top-[120px] right-[-250px] hidden h-[271px] w-[347px] bg-contain bg-no-repeat lg:block"
-            style={{ backgroundImage: "url(/legacy/shape/shape-1.png)" }}
+            style={{ backgroundImage: `url(${brandAssets.projects.pattern})` }}
             aria-hidden="true"
           />
           <div className="group relative overflow-hidden [clip-path:polygon(0%_0%,100%_0%,100%_90%,0%_100%,0%_0%)]">
             <Image
-              src="/legacy/projects/IMG_2753.jpg"
+              src={brandAssets.projects.awardPhoto}
               alt=""
               width={612}
-              height={708}
+              height={408}
               className="h-auto w-full object-cover"
             />
             <div
@@ -360,7 +361,7 @@ function AnnualStats() {
               }}
             >
               <Image
-                src="/legacy/icons/icon-1.png"
+                src={brandAssets.projects.awardIcon}
                 alt=""
                 width={60}
                 height={66}

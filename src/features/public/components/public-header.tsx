@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Mail, MapPin, Menu, X } from "lucide-react";
 
+import { brandAssets, brandLogo } from "@/features/brand";
 import { LanguageSelector } from "@/features/i18n/language-selector";
 import { CurrencyTicker } from "@/features/public/components/currency-ticker";
 import {
@@ -65,14 +66,11 @@ export function PublicHeader() {
           <div className="mx-auto flex max-w-[1170px] items-center justify-between gap-4 px-4 sm:px-[15px]">
             <Link href="/" className="shrink-0 py-3" aria-label="UniqueSkyWay">
               <Image
-                src="/legacy/small-logo.png"
+                src={brandLogo(sticky ? "onLight" : "onDark")}
                 alt="UniqueSkyWay"
-                width={100}
-                height={70}
-                className={cn(
-                  "h-[70px] w-[100px] object-contain",
-                  sticky ? "" : "brightness-0 invert",
-                )}
+                width={160}
+                height={56}
+                className="h-[56px] w-auto max-w-[160px] object-contain sm:h-[70px] sm:max-w-[180px]"
                 priority
               />
             </Link>
@@ -183,11 +181,11 @@ export function PublicHeader() {
           >
             <div className="flex items-center justify-between border-b p-4">
               <Image
-                src="/legacy/mobile-logo.png"
+                src={brandAssets.icon}
                 alt="UniqueSkyWay"
-                width={100}
-                height={100}
-                className="h-[100px] w-[100px] rounded bg-white object-contain"
+                width={64}
+                height={64}
+                className="size-16 rounded-lg object-cover"
               />
               <button
                 type="button"

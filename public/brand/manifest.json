@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "basePath": "/brand",
+  "logos": {
+    "onLight": "light-logo.webp",
+    "onDark": "dark-logo.webp",
+    "legacyWordmark": "logo.webp"
+  },
+  "icon": "icon.webp",
+  "iconSvg": "icon.svg",
+  "logoMarkSvg": "logo-mark.svg",
+  "favicon": "favicon.webp",
+  "ogImage": "og-image.webp",
+  "ogImageSvg": "og-image.svg",
+  "hero": {
+    "note": "HP2 frozen — keep approved legacy hero JPEGs, not brand WebPs",
+    "slides": [
+      "/legacy/hero/IMG_2695.jpg",
+      "/legacy/hero/IMG_2916.jpg",
+      "/legacy/hero/IMG_2755.jpg"
+    ]
+  },
+  "about": {
+    "banking": "banking.webp",
+    "about1": "about-1.webp",
+    "about2": "about-2.webp"
+  },
+  "projects": {
+    "nfts": "/legacy/projects/IMG_2756.jpg",
+    "realEstate": "real-estate.webp",
+    "realWorldAsset": "global-markets.webp",
+    "corporate": "corporate.webp",
+    "financialInitiatives": "financial-planning.webp",
+    "naturalEnergy": "energy.webp",
+    "financialLoan": "advisory.webp",
+    "crypto": "/legacy/projects/IMG_2750.jpg",
+    "agriculture": "/legacy/projects/IMG_2747.jpg",
+    "financialGrant": "/legacy/projects/IMG_2740.jpg",
+    "awardPhoto": "/legacy/projects/IMG_2753.jpg",
+    "awardIcon": "/legacy/icons/icon-1.png",
+    "pattern": "/legacy/shape/shape-1.png"
+  },
+  "plans": {
+    "cardBackground": "investments.webp",
+    "certificate": "cert.webp"
+  },
+  "videos": {
+    "english": "/legacy/videos/english1.mp4",
+    "spanish": "/legacy/videos/spanish.mp4"
+  },
+  "support": "contact.webp",
+  "testimonialsBackground": "testimonials-bg.webp",
+  "emptyStates": {
+    "default": "office.webp",
+    "meeting": "meeting.webp",
+    "portfolio": "portfolio.webp",
+    "security": "security.webp",
+    "strategy": "strategy.webp",
+    "trust": "trust.webp"
+  },
+  "footer": {
+    "onLight": "light-logo.webp",
+    "onDark": "dark-logo.webp"
+  },
+  "unused": [
+    "logo.webp",
+    "og-image.svg",
+    "logo-mark.svg"
+  ],
+  "notes": {
+    "logoNaming": "light-logo.webp = dark-colored mark for light backgrounds; dark-logo.webp = light-colored mark for dark backgrounds",
+    "hero": "Approved HP2 legacy JPEGs remain authoritative until a dedicated hero WebP set is provided",
+    "frenchVideo": "No french.mp4 in brand or legacy archives",
+    "awardPhoto": "No award-specific WebP in brand; keep legacy IMG_2753.jpg"
+  }
+}

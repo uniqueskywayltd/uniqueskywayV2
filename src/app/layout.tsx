@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { brandAssets } from "@/features/brand";
 import { legacyArimo } from "@/features/public/legacy/fonts";
 import { translate } from "@/i18n";
 import { getRequestLanguage } from "@/i18n/request-language";
@@ -38,8 +39,12 @@ export const metadata: Metadata = {
   }),
   applicationName: "Unique Sky Way",
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/brand/icon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/brand/icon.svg" }],
+    icon: [
+      { url: brandAssets.favicon, type: "image/webp", sizes: "32x32" },
+      { url: brandAssets.icon, type: "image/webp", sizes: "176x176" },
+      { url: brandAssets.iconSvg, type: "image/svg+xml" },
+    ],
+    apple: [{ url: brandAssets.icon }],
   },
 };
 

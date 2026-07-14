@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { brandAssets } from "@/features/brand";
+
 const DEFAULT_SITE_NAME = "Unique Sky Way";
 const DEFAULT_DESCRIPTION =
   "Structured investment with transparent processes, verified accounts, and clear money movement.";
@@ -29,7 +31,7 @@ export function buildPageMetadata({
   description = DEFAULT_DESCRIPTION,
   path = "/",
   noIndex = false,
-  imagePath = "/brand/og-image.svg",
+  imagePath = brandAssets.ogImage,
 }: PageMetadataInput): Metadata {
   const siteUrl = getSiteUrl();
   const url = new URL(path, siteUrl).toString();
@@ -84,7 +86,7 @@ export function organizationJsonLd() {
     "@type": "Organization",
     name: DEFAULT_SITE_NAME,
     url: siteUrl,
-    logo: new URL("/brand/icon.svg", siteUrl).toString(),
+    logo: new URL(brandAssets.icon, siteUrl).toString(),
   };
 }
 

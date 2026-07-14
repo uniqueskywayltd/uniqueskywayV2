@@ -13,6 +13,7 @@ import {
   CUSTOMER_MOBILE_BOTTOM_NAV,
   CUSTOMER_PRIMARY_NAV,
 } from "@/features/customer/navigation";
+import { brandAssets } from "@/features/brand";
 import { LanguageSelector } from "@/features/i18n/language-selector";
 import { isAppLanguage, translate, type AppLanguage } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -133,9 +134,10 @@ export function CustomerShell({ children }: CustomerShellProps) {
                   className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
                 >
                   <Avatar className="size-8">
-                    {summary.profile?.avatarUrl ? (
-                      <AvatarImage src={summary.profile.avatarUrl} alt="" />
-                    ) : null}
+                    <AvatarImage
+                      src={summary.profile?.avatarUrl ?? brandAssets.icon}
+                      alt=""
+                    />
                     <AvatarFallback>{initials || "US"}</AvatarFallback>
                   </Avatar>
                   <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
@@ -298,7 +300,7 @@ function CustomerIdentityBlock({
   return (
     <div className="flex min-w-0 items-center gap-3">
       <Avatar className="size-10">
-        {summary.profile?.avatarUrl ? <AvatarImage src={summary.profile.avatarUrl} alt="" /> : null}
+        <AvatarImage src={summary.profile?.avatarUrl ?? brandAssets.icon} alt="" />
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       <div className="min-w-0">

@@ -9,6 +9,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { brandAssets } from "@/features/brand";
+
 const PRACTICE_ITEMS = [
   {
     title: "Company Accounting",
@@ -95,10 +97,10 @@ export function LegacyAboutPractice() {
             </h3>
             <div className="group relative mr-0 overflow-hidden lg:mr-[70px] [clip-path:polygon(0%_0%,100%_0%,100%_100%,0%_90%,0%_0%)]">
               <Image
-                src="/legacy/IMG_2715.jpg"
+                src={brandAssets.about.banking}
                 alt=""
-                width={1011}
-                height={725}
+                width={1400}
+                height={1004}
                 className="h-auto w-full object-cover"
               />
               <div

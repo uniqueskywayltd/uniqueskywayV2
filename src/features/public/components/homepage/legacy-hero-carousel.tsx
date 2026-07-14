@@ -4,27 +4,28 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { brandAssets } from "@/features/brand";
 import { LEGACY_NAVY } from "@/features/public/legacy/tokens";
 import { cn } from "@/lib/utils";
 
 const HERO_SLIDES = [
   {
     id: "join",
-    image: "/legacy/hero/IMG_2695.jpg",
+    image: brandAssets.hero.slides[0]!,
     title: "UniqueSkyWay",
     body: "We facilitate Trade occurrence and thus we are committed to enhancing the global financial economy and constructing patterns of intergenerational investors through our strategic investment portfolio. Our exceptional sustainability characteristics allow for account succession to offspring through boundaries.\nJOIN US AND EXPERIENCE THE DELIGHTS OF INVESTMENT.",
     cta: { label: "CREATE AN ACCOUNT", href: "/auth/register" },
   },
   {
     id: "integrity",
-    image: "/legacy/hero/IMG_2916.jpg",
+    image: brandAssets.hero.slides[1]!,
     title: "",
     body: "We are wholeheartedly Devoted to providing unparalleled Excellence and exceptional Services to Our Esteemed Investors. We firmly Assure absolute integrity, trustworthiness, and utmost transparency in all aspects of our operations, ensuring a solid foundation of credibility and accountability.",
     cta: { label: "REGISTER", href: "/auth/register" },
   },
   {
     id: "risk",
-    image: "/legacy/hero/IMG_2755.jpg",
+    image: brandAssets.hero.slides[2]!,
     title: "UniqueSkyWay",
     body: "We employ a Strategic approach to diversify our investment portfolio, effectively mitigating and managing various forms of risk inherent in financial investments. Explore the opportunities presented by our comprehensive selection of Long and Short Term Investment Packages.",
     cta: { label: "LOGIN", href: "/auth/login" },

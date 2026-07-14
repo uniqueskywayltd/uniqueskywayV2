@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Mail, MapPin, User } from "lucide-react";
 
+import { brandAssets } from "@/features/brand";
 import { LEGACY_FOOTER_BG, LEGACY_MUTED, LEGACY_NAVY } from "@/features/public/legacy/tokens";
 import { LEGACY_USEFUL_LINKS } from "@/features/public/legacy/nav";
 
@@ -28,11 +29,11 @@ export function PublicFooter() {
           <div>
             <Link href="/" className="inline-block">
               <Image
-                src="/legacy/logo.png"
+                src={brandAssets.footer.onDark}
                 alt="UniqueSkyWay"
-                width={160}
+                width={180}
                 height={60}
-                className="mb-[27px] h-auto w-[160px] bg-white/95 object-contain p-1"
+                className="mb-[27px] h-auto w-[180px] object-contain"
               />
             </Link>
             <p className="mb-3 text-sm leading-6" style={{ color: LEGACY_MUTED }}>
