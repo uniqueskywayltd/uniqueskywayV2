@@ -60,6 +60,15 @@
  * feature complete for the certified V2 platform. Additive work only from here
  * (internationalization, refinements). Immutable git reference:
  * `release/v3.2-final`.
+ *
+ * Public Visual Reconstruction: frozen. Homepage, navigation, and public pages
+ * matched to platform Next.js experience. Intentional differences (LanguageSelector,
+ * legal route prefixes, illustrative FX ticker, etc.) are product decisions.
+ * Further public UI only for bugs, product decisions, accessibility, or
+ * screenshot-backed defects.
+ *
+ * Production readiness: deployment hardening for cPanel `/v2` (standalone build,
+ * basePath, site URL pathname, security headers). Not feature/visual work.
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
@@ -80,13 +89,16 @@ export const VISUAL_AUTHORITY = {
   adminVisualFreezeCommit: "1cf302d",
   visualParityCompletion: "complete",
   visualParityCompletionFreezeCommit: "f461660",
+  publicVisualReconstruction: "complete",
+  publicVisualReconstructionFreezeCommit: "700647b",
+  productionReadiness: "hardening-complete",
   launchCandidate: "LC1",
   launchCandidateReleaseBranch: "release/v3.2-final",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
   nextSurfaces: [
+    "production deploy to https://uniqueskyway.com/v2 (ops)",
     "v3.3.0 international platform (i18n, RTL, locale formatting)",
-    "screenshot-backed defects only",
   ],
 } as const;

@@ -10,5 +10,6 @@ export function GET() {
     service: APP_METADATA.packageName,
     version: APP_METADATA.version,
     time: new Date().toISOString(),
+    basePath: process.env.NEXT_PUBLIC_BASE_PATH ?? "",
   });
 }

@@ -10,11 +10,20 @@ export function getSiteUrl(): string {
   const configured = process.env.NEXT_PUBLIC_APP_URL;
   if (configured) {
     try {
-      return new URL(configured).origin;
+      const url = new URL(configured);
+      const path = url.pathname.replace(/\/$/, "");
+      // Preserve subdirectory deploys (e.g. https://uniqueskyway.com/v2).
+      return path && path !== "/" ? `${url.origin}${path}` : url.origin;
     } catch {
       // fall through
     }
   }
+
+  const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/$/, "");
+  if (basePath) {
+    return `http://localhost:3000${basePath}`;
+  }
+
   return "http://localhost:3000";
 }
 

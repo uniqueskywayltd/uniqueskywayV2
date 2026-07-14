@@ -129,18 +129,53 @@ Mitigations:
 - Manual rollback artifact.
 - Strict production certification before launch.
 
+## Production target: https://uniqueskyway.com/v2 (cPanel)
+
+V2 deploys under the `/v2` subdirectory on existing cPanel Node.js hosting.
+
+### Required environment
+
+```bash
+NODE_ENV=production
+NEXT_PUBLIC_APP_URL=https://uniqueskyway.com/v2
+NEXT_PUBLIC_BASE_PATH=/v2
+# Plus existing secrets: DATABASE_URL, Supabase, Resend, INTERNAL_JOB_TOKEN, etc.
+# See .env.example
+```
+
+### Build (on a trusted machine / CI)
+
+```bash
+npm ci
+npm run build:cpanel
+# → .next/standalone with public/ and .next/static copied in
+```
+
+Requires **Node.js ≥ 20.11**. Set `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_BASE_PATH` in the build environment when baking public asset URLs.
+
+### cPanel app
+
+1. Create or update Node.js App; Application URL `/v2` (or reverse-proxy so traffic reaches the Node process under that path).
+2. Application startup file: `.next/standalone/server.js` (upload standalone tree so paths resolve).
+3. Set `HOSTNAME=127.0.0.1`, `PORT` to the cPanel-assigned port.
+4. Start the app; smoke `GET /v2/api/health` (or proxied equivalent).
+5. Keep settlement / outbox on **external cron** calling authenticated job routes — do not rely on an always-on worker inside shared hosting.
+
+### Rollback
+
+Keep the previous standalone artifact tarball. Swap files + restart Node app. Do not roll back schema without a forward-fix plan.
+
 ## Recommended Namecheap Deployment Flow
 
-1. Build application artifact in CI or trusted local environment.
-2. Run tests.
-3. Run migration review.
-4. Upload artifact to hosting environment.
-5. Install production dependencies.
-6. Configure environment variables in cPanel.
-7. Start Node app in production mode.
-8. Run health check.
-9. Run smoke tests.
-10. Verify settlement scheduler and outbox processing.
+1. Build with `npm run build:cpanel` (standalone + static copy).
+2. Run typecheck, lint, unit tests.
+3. Run migration review (do not auto-migrate on boot).
+4. Upload `.next/standalone` (and any required parent layout) to the Node app root.
+5. Configure production env vars in cPanel (including `/v2` URL + base path).
+6. Start Node app (`server.js` from standalone).
+7. Hit `/api/health` (under `/v2`).
+8. Smoke public home, login, and one authenticated money surface.
+9. Verify external cron for settlement and outbox.
 
 Important:
 

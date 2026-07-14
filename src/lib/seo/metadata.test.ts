@@ -9,6 +9,13 @@ import {
 } from "@/lib/seo/metadata";
 
 describe("seo metadata helpers", () => {
+  it("preserves subdirectory site path for /v2 production deploys", () => {
+    const previous = process.env.NEXT_PUBLIC_APP_URL;
+    process.env.NEXT_PUBLIC_APP_URL = "https://uniqueskyway.com/v2";
+    expect(getSiteUrl()).toBe("https://uniqueskyway.com/v2");
+    process.env.NEXT_PUBLIC_APP_URL = previous;
+  });
+
   it("builds canonical open graph and twitter metadata", () => {
     const metadata = buildPageMetadata({
       title: "Plans",

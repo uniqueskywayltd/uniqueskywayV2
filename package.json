@@ -2,11 +2,16 @@
   "name": "unique-sky-way-v2",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20.11.0"
+  },
   "description": "Unique Sky Way V2 engineering foundation.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cpanel": "NEXT_OUTPUT_STANDALONE=1 NEXT_CPANEL=1 NEXT_PUBLIC_BASE_PATH=/v2 next build && node scripts/prepare-standalone.mjs",
     "start": "next start",
+    "start:standalone": "node .next/standalone/server.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --check",
