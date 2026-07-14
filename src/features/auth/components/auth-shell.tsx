@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { ShieldCheck, Sparkles } from "lucide-react";
 
 import { BrandMark } from "@/components/layout/brand-mark";
+import { AuthChromeControls } from "@/features/auth/components/auth-chrome";
 import { cn } from "@/lib/utils";
 
 export interface AuthShellProps {
@@ -95,14 +96,7 @@ export function AuthShell({
           <div className="min-w-0 max-w-[52%] shrink sm:max-w-none lg:hidden">
             <BrandMark surface="onLight" className="[&_img]:h-8 [&_img]:max-w-[112px]" />
           </div>
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-3">
-            <Link
-              href="/"
-              className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline"
-            >
-              Back to home
-            </Link>
-          </div>
+          <AuthChromeControls />
         </div>
 
         <div className="flex flex-1 items-center justify-center px-6 pt-8 pb-10 lg:px-10">

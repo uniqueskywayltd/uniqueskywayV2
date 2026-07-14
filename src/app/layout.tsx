@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { AppProviders } from "@/components/providers/app-providers";
 import { brandAssets } from "@/features/brand";
 import { legacyArimo } from "@/features/public/legacy/fonts";
 import { translate } from "@/i18n";
@@ -59,17 +60,20 @@ export default async function RootLayout({
     <html
       lang={language}
       dir={direction}
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${legacyArimo.variable}`}
     >
       <body className="font-sans antialiased">
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[var(--z-toast)] focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-[var(--elevation-2)]"
-        >
-          {translate(language, "chrome.skip_to_content")}
-        </a>
-        <DefaultStructuredData />
-        {children}
+        <AppProviders language={language}>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[var(--z-toast)] focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-[var(--elevation-2)]"
+          >
+            {translate(language, "chrome.skip_to_content")}
+          </a>
+          <DefaultStructuredData />
+          {children}
+        </AppProviders>
       </body>
     </html>
   );

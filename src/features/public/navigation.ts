@@ -1,45 +1,25 @@
 export const PUBLIC_PRIMARY_NAV = [
-  { label: "About", href: "/about" },
-  { label: "Investments", href: "/plans" },
-  { label: "How It Works", href: "/how-it-works" },
-  { label: "FAQ", href: "/faq" },
-  { label: "Contact", href: "/contact" },
-  { label: "Security", href: "/security" },
+  { labelKey: "nav.about", href: "/about" },
+  { labelKey: "nav.investments", href: "/plans" },
+  { labelKey: "nav.how_it_works", href: "/how-it-works" },
+  { labelKey: "nav.referrals", href: "/referrals" },
+  { labelKey: "nav.faq", href: "/faq" },
+  { labelKey: "nav.contact", href: "/contact" },
+  { labelKey: "nav.security", href: "/security" },
 ] as const;
 
-export const PUBLIC_FOOTER_COLUMNS = [
-  {
-    title: "Product",
-    links: [
-      { label: "Investments", href: "/plans" },
-      { label: "How It Works", href: "/how-it-works" },
-      { label: "Security", href: "/security" },
-      { label: "FAQ", href: "/faq" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "About Us", href: "/about" },
-      { label: "Contact", href: "/contact" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { label: "Privacy Policy", href: "/legal/privacy" },
-      { label: "Terms of Service", href: "/legal/terms" },
-      { label: "Risk", href: "/legal/risk" },
-      { label: "AML", href: "/legal/aml" },
-      { label: "KYC", href: "/legal/kyc" },
-      { label: "Cookies", href: "/legal/cookies" },
-    ],
-  },
-  {
-    title: "Account",
-    links: [
-      { label: "Sign in", href: "/auth/login" },
-      { label: "Create account", href: "/auth/register" },
-    ],
-  },
+/** Footer link groups for marketing shell (labels via i18n keys). */
+export const PUBLIC_FOOTER_COMPANY_LINKS = [
+  { labelKey: "footer.about_us", href: "/about" },
+  { labelKey: "nav.investments", href: "/plans" },
+  { labelKey: "nav.how_it_works", href: "/how-it-works" },
+  { labelKey: "nav.referrals", href: "/referrals" },
+  { labelKey: "nav.security", href: "/security" },
+] as const;
+
+export const PUBLIC_FOOTER_SUPPORT_LINKS = [
+  { labelKey: "nav.faq", href: "/faq" },
+  { labelKey: "nav.contact", href: "/contact" },
+  { labelKey: "footer.privacy", href: "/legal/privacy" },
+  { labelKey: "footer.terms", href: "/legal/terms" },
 ] as const;

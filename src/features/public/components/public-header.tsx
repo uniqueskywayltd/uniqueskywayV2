@@ -6,7 +6,9 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 import { BrandMark } from "@/components/layout/brand-mark";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { LanguageSelector } from "@/features/i18n/language-selector";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import {
   marketingHeaderOutlineBtn,
   marketingHeaderPrimaryBtn,
@@ -53,6 +55,7 @@ function NavLink({
 
 export function PublicHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useI18n();
 
   return (
     <header className="relative z-40 border-b border-border/50 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
@@ -64,28 +67,30 @@ export function PublicHeader() {
 
         <nav className="hidden items-center gap-10 lg:flex" aria-label="Main navigation">
           {PUBLIC_PRIMARY_NAV.map((link) => (
-            <NavLink key={link.href} href={link.href} label={link.label} />
+            <NavLink key={link.href} href={link.href} label={t(link.labelKey)} />
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2.5 md:flex">
+        <div className="hidden items-center gap-1.5 md:flex">
+          <ThemeToggle compact />
           <LanguageSelector compact className="mr-1" />
           <Link href="/auth/login" className={marketingHeaderOutlineBtn()}>
-            Sign in
+            {t("chrome.sign_in")}
           </Link>
           <Link href="/auth/register" className={marketingHeaderPrimaryBtn()}>
-            Open account
+            {t("chrome.open_account")}
           </Link>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1.5 md:hidden">
+        <div className="flex shrink-0 items-center gap-0.5 md:hidden">
+          <ThemeToggle compact />
           <LanguageSelector compact />
           <button
             type="button"
             className="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-expanded={mobileOpen}
-            aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+            aria-label={mobileOpen ? t("chrome.close_nav") : t("chrome.open_nav")}
           >
             {mobileOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
           </button>
@@ -99,7 +104,7 @@ export function PublicHeader() {
               <NavLink
                 key={link.href}
                 href={link.href}
-                label={link.label}
+                label={t(link.labelKey)}
                 mobile
                 onClick={() => setMobileOpen(false)}
               />
@@ -110,14 +115,14 @@ export function PublicHeader() {
                 className={cn(marketingHeaderOutlineBtn(), "h-11 w-full")}
                 onClick={() => setMobileOpen(false)}
               >
-                Sign in
+                {t("chrome.sign_in")}
               </Link>
               <Link
                 href="/auth/register"
                 className={cn(marketingHeaderPrimaryBtn(), "h-11 w-full")}
                 onClick={() => setMobileOpen(false)}
               >
-                Open account
+                {t("chrome.open_account")}
               </Link>
             </div>
           </nav>

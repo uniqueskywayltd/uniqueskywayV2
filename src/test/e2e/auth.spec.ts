@@ -11,7 +11,15 @@ test.describe("identity UI", () => {
 
     await page.goto("/auth/register");
     await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
-    await expect(page.getByLabel("Name")).toBeVisible();
+    await expect(page.getByLabel("Full name")).toBeVisible();
+    await expect(page.getByLabel("Username")).toBeVisible();
+    await expect(page.getByLabel("Email address")).toBeVisible();
+    await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Confirm password")).toBeVisible();
+    await expect(page.getByText("Investment Package")).toBeVisible();
+    await expect(page.getByLabel("Referral code")).toBeVisible();
+    await expect(page.getByText("Security check")).toBeVisible();
+    await expect(page.getByText("256-bit encryption")).toBeVisible();
     await expect(page.getByRole("button", { name: "Create account" })).toBeVisible();
 
     await page.goto("/auth/verify-email");

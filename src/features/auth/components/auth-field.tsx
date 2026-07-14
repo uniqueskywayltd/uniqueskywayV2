@@ -43,3 +43,9 @@ export function AuthInputIcon({ children, icon }: { children: ReactNode; icon: R
     </div>
   );
 }
+
+export const authCalloutClass =
+  "rounded-xl border border-border bg-muted/50 px-4 py-3 dark:border-border/80 dark:bg-muted/60";
+
+export const authCheckboxClass =
+  "border-border bg-background shadow-sm dark:border-muted-foreground/50 dark:bg-background data-checked:border-primary";

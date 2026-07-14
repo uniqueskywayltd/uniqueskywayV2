@@ -1,25 +1,30 @@
 import type { AppLanguage, MessageCatalog } from "./types";
-import { enMessages } from "./messages/en";
 import { arMessages } from "./messages/ar";
-
-const englishCatalog: MessageCatalog = { ...enMessages };
-const arabicCatalog: MessageCatalog = { ...arMessages };
+import { bnMessages } from "./messages/bn";
+import { enMessages } from "./messages/en";
+import { esMessages } from "./messages/es";
+import { frMessages } from "./messages/fr";
+import { hiMessages } from "./messages/hi";
+import { jaMessages } from "./messages/ja";
+import { ptMessages } from "./messages/pt";
+import { ruMessages } from "./messages/ru";
+import { zhHansMessages } from "./messages/zh-Hans";
 
 const catalogs: Record<AppLanguage, MessageCatalog> = {
-  en: englishCatalog,
-  es: englishCatalog,
-  fr: englishCatalog,
-  ar: arabicCatalog,
-  pt: englishCatalog,
-  hi: englishCatalog,
-  bn: englishCatalog,
-  "zh-Hans": englishCatalog,
-  ru: englishCatalog,
-  ja: englishCatalog,
+  en: enMessages,
+  es: esMessages,
+  fr: frMessages,
+  ar: arMessages,
+  pt: ptMessages,
+  hi: hiMessages,
+  bn: bnMessages,
+  "zh-Hans": zhHansMessages,
+  ru: ruMessages,
+  ja: jaMessages,
 };
 
 export function loadMessages(language: AppLanguage): MessageCatalog {
-  return catalogs[language] ?? englishCatalog;
+  return catalogs[language] ?? enMessages;
 }
 
 export function translate(
@@ -28,7 +33,7 @@ export function translate(
   values?: Record<string, string | number>,
 ): string {
   const catalog = loadMessages(language);
-  const template = catalog[key] ?? englishCatalog[key] ?? key;
+  const template = catalog[key] ?? enMessages[key as keyof typeof enMessages] ?? key;
   if (!values) return template;
 
   return template.replace(/\{(\w+)\}/g, (_match: string, name: string) => {

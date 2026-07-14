@@ -8,7 +8,9 @@ import { Menu, X } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 
 import { Button } from "@/components/ui";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { postAuthJson } from "@/features/auth/api-client";
+import { LanguageSelector } from "@/features/i18n/language-selector";
 import { ADMIN_NAV_SECTIONS } from "@/features/admin/navigation";
 import { cn } from "@/lib/utils";
 
@@ -67,25 +69,29 @@ export function AdminShell({ children }: { children: ReactNode }) {
               <span className="ml-2 text-muted-foreground/80">Admin</span>
             </p>
           </div>
-          <button
-            type="button"
-            disabled={signingOut}
-            className="rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            onClick={() => {
-              if (signingOut) return;
-              setSigningOut(true);
-              void postAuthJson("/api/auth/logout", {}).then((result) => {
-                if (result.error) {
-                  setSigningOut(false);
-                  return;
-                }
-                router.replace("/auth/login");
-                router.refresh();
-              });
-            }}
-          >
-            Sign out
-          </button>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <ThemeToggle compact />
+            <LanguageSelector compact />
+            <button
+              type="button"
+              disabled={signingOut}
+              className="rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => {
+                if (signingOut) return;
+                setSigningOut(true);
+                void postAuthJson("/api/auth/logout", {}).then((result) => {
+                  if (result.error) {
+                    setSigningOut(false);
+                    return;
+                  }
+                  router.replace("/auth/login");
+                  router.refresh();
+                });
+              }}
+            >
+              Sign out
+            </button>
+          </div>
         </header>
 
         <DialogPrimitive.Root open={mobileOpen} onOpenChange={setMobileOpen}>

@@ -9,13 +9,14 @@ import { Bell, ChevronDown, Menu } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge, Button, Skeleton } from "@/components/ui";
 import { BrandMark } from "@/components/layout/brand-mark";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { brandAssets } from "@/features/brand";
 import {
   CUSTOMER_MOBILE_BOTTOM_NAV,
   CUSTOMER_PRIMARY_NAV,
 } from "@/features/customer/navigation";
-import { brandAssets } from "@/features/brand";
 import { LanguageSelector } from "@/features/i18n/language-selector";
-import { isAppLanguage, translate, type AppLanguage } from "@/i18n";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 import { getCustomerJson } from "../api-client";
@@ -65,9 +66,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
 
   const moneyNav = CUSTOMER_PRIMARY_NAV.filter((item) => item.group === "money");
   const accountNav = CUSTOMER_PRIMARY_NAV.filter((item) => item.group === "account");
-  const uiLanguage: AppLanguage = isAppLanguage(summary?.preferences?.language)
-    ? summary.preferences.language
-    : "en";
+  const { t } = useI18n();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -76,8 +75,13 @@ export function CustomerShell({ children }: CustomerShellProps) {
           <BrandMark />
         </div>
         <nav className="flex-1 space-y-6 overflow-y-auto p-3" aria-label="Customer navigation">
-          <NavGroup label="Money" items={moneyNav} pathname={pathname} summary={summary} />
-          <NavGroup label="Account" items={accountNav} pathname={pathname} summary={summary} />
+          <NavGroup label={t("nav.money")} items={moneyNav} pathname={pathname} summary={summary} />
+          <NavGroup
+            label={t("nav.account_group")}
+            items={accountNav}
+            pathname={pathname}
+            summary={summary}
+          />
         </nav>
         <div className="border-t p-4">
           {loaded && summary ? (
@@ -115,6 +119,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <ThemeToggle compact />
               <div className="hidden sm:block">
                 <LanguageSelector />
               </div>
@@ -123,7 +128,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
                 className="relative rounded-md border px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 <Bell className="size-4" aria-hidden="true" />
-                <span className="sr-only">{translate(uiLanguage, "chrome.notifications")}</span>
+                <span className="sr-only">{t("chrome.notifications")}</span>
                 {summary?.unreadNotificationCount ? (
                   <span className="absolute -right-1 -top-1 size-2 rounded-full bg-destructive" />
                 ) : null}
@@ -152,20 +157,23 @@ export function CustomerShell({ children }: CustomerShellProps) {
               aria-label="Customer mobile navigation"
             >
               <NavGroup
-                label="Money"
+                label={t("nav.money")}
                 items={moneyNav}
                 pathname={pathname}
                 summary={summary}
                 onNavigate={() => setMobileOpen(false)}
               />
               <NavGroup
-                label="Account"
+                label={t("nav.account_group")}
                 items={accountNav}
                 pathname={pathname}
                 summary={summary}
                 onNavigate={() => setMobileOpen(false)}
               />
               <div className="border-t pt-3 sm:hidden">
+                <div className="mb-3 flex items-center gap-2">
+                  <ThemeToggle compact />
+                </div>
                 <LanguageSelector compact={false} />
               </div>
             </nav>
@@ -202,7 +210,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
                   )}
                 >
                   <Icon className="size-4" aria-hidden="true" />
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               </li>
             );
@@ -226,6 +234,8 @@ function NavGroup({
   summary: CustomerSummary | null;
   onNavigate?: MouseEventHandler<HTMLAnchorElement>;
 }) {
+  const { t } = useI18n();
+
   return (
     <div>
       <p className="px-3 pb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -241,7 +251,7 @@ function NavGroup({
               <CustomerNavLink
                 key={item.href}
                 href={item.href}
-                label={item.label}
+                label={t(item.labelKey)}
                 active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
                 icon={item.icon}
                 {...(onNavigate ? { onNavigate } : {})}

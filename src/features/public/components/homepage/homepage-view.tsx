@@ -28,7 +28,7 @@ const practiceAreas = [
     description:
       "Clear financial reporting and structured investment products for informed decision-making.",
     tag: "Core",
-    href: "/about",
+    href: "/services",
   },
   {
     image: "/brand/real-estate.webp",
@@ -37,7 +37,7 @@ const practiceAreas = [
     description:
       "Diversified exposure to property and development projects with long-term growth potential.",
     tag: "Assets",
-    href: "/about",
+    href: "/services",
   },
   {
     image: "/brand/global-markets.webp",
@@ -46,7 +46,7 @@ const practiceAreas = [
     description:
       "Access to commodities and international opportunities through our global network.",
     tag: "Global",
-    href: "/about",
+    href: "/services",
   },
   {
     image: "/brand/advisory.webp",
@@ -55,7 +55,7 @@ const practiceAreas = [
     description:
       "Personalized guidance to align your portfolio with your financial goals and risk tolerance.",
     tag: "Advisory",
-    href: "/about",
+    href: "/services",
   },
 ] as const;
 
@@ -159,7 +159,7 @@ export function HomepageView() {
                 asset classes — with transparency at every step.
               </p>
             </div>
-            <Link href="/about" className={marketingOutlineBtn("shrink-0")}>
+            <Link href="/services" className={marketingOutlineBtn("shrink-0")}>
               View all services
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
             </Link>

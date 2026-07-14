@@ -1,26 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import { Mail, MapPin } from "lucide-react";
 
 import { BrandMark } from "@/components/layout/brand-mark";
-import { PUBLIC_FOOTER_COLUMNS } from "@/features/public/navigation";
+import { useI18n } from "@/features/i18n/i18n-provider";
+import {
+  PUBLIC_FOOTER_COMPANY_LINKS,
+  PUBLIC_FOOTER_SUPPORT_LINKS,
+} from "@/features/public/navigation";
 
 export function PublicFooter() {
-  const company = PUBLIC_FOOTER_COLUMNS.find((column) => column.title === "Company");
-  const product = PUBLIC_FOOTER_COLUMNS.find((column) => column.title === "Product");
-  const legal = PUBLIC_FOOTER_COLUMNS.find((column) => column.title === "Legal");
-  const companyLinks = [
-    ...(company?.links ?? []),
-    ...(product?.links ?? []).filter((link) =>
-      ["/plans", "/how-it-works", "/security"].includes(link.href),
-    ),
-  ];
-  const supportLinks = [
-    { label: "FAQ", href: "/faq" },
-    { label: "Contact", href: "/contact" },
-    ...(legal?.links ?? []).filter((link) =>
-      ["/legal/privacy", "/legal/terms"].includes(link.href),
-    ),
-  ];
+  const { t } = useI18n();
 
   return (
     <footer className="border-t border-slate-800 bg-slate-950 text-slate-300">
@@ -28,19 +19,16 @@ export function PublicFooter() {
         <div className="grid gap-12 md:grid-cols-4">
           <div className="md:col-span-2">
             <BrandMark surface="onDark" className="[&_img]:h-10 [&_img]:w-auto [&_img]:max-w-[160px]" />
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-400">
-              A modern investment and financial services platform built for transparency, security,
-              and long-term portfolio growth. Diversify your portfolio with confidence.
-            </p>
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-400">{t("footer.tagline")}</p>
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-white">Company</p>
+            <p className="text-sm font-semibold text-white">{t("footer.company")}</p>
             <ul className="mt-4 space-y-3 text-sm">
-              {companyLinks.map((link) => (
-                <li key={`${link.href}-${link.label}`}>
+              {PUBLIC_FOOTER_COMPANY_LINKS.map((link) => (
+                <li key={`${link.href}-${link.labelKey}`}>
                   <Link href={link.href} className="text-slate-400 hover:text-white">
-                    {link.label}
+                    {t(link.labelKey)}
                   </Link>
                 </li>
               ))}
@@ -48,12 +36,12 @@ export function PublicFooter() {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-white">Support & Legal</p>
+            <p className="text-sm font-semibold text-white">{t("footer.support_legal")}</p>
             <ul className="mt-4 space-y-3 text-sm">
-              {supportLinks.map((link) => (
-                <li key={`${link.href}-${link.label}`}>
+              {PUBLIC_FOOTER_SUPPORT_LINKS.map((link) => (
+                <li key={`${link.href}-${link.labelKey}`}>
                   <Link href={link.href} className="text-slate-400 hover:text-white">
-                    {link.label}
+                    {t(link.labelKey)}
                   </Link>
                 </li>
               ))}
@@ -68,9 +56,9 @@ export function PublicFooter() {
               <li className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
                 <span className="text-slate-400">
-                  Fayetteville, Arkansas
+                  {t("footer.location_city")}
                   <br />
-                  United States
+                  {t("footer.location_country")}
                 </span>
               </li>
             </ul>
@@ -79,11 +67,9 @@ export function PublicFooter() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 sm:flex-row">
           <p className="text-sm text-slate-500">
-            © {new Date().getFullYear()} Unique Sky Way. All rights reserved.
+            © {new Date().getFullYear()} Unique Sky Way. {t("footer.rights")}
           </p>
-          <p className="text-xs text-slate-600">
-            uniqueskyway.com · Secure · Transparent · Professional
-          </p>
+          <p className="text-xs text-slate-600">{t("footer.secure_line")}</p>
         </div>
       </div>
     </footer>

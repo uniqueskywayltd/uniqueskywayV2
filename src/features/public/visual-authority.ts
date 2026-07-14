@@ -35,8 +35,8 @@
  * does not evaluate them. Certified dates only — never client-derived.
  *
  * Launch polish (LP1): baseline. Unified DashboardShell money chrome (incl.
- * Ledger), #main-content skip target, FX illustrative disclaimer. Further
- * shared-shell work only for defects or accessibility.
+ * Ledger), #main-content skip target. Further shared-shell work only for
+ * defects or accessibility.
  *
  * Profile & Security: frozen. Account controls on DashboardShell — profile,
  * preferences, password, devices, sessions, certified security activity.
@@ -63,7 +63,7 @@
  *
  * Public Visual Reconstruction: frozen. Homepage, navigation, and public pages
  * matched to platform Next.js experience. Intentional differences (LanguageSelector,
- * legal route prefixes, illustrative FX ticker, etc.) are product decisions.
+ * legal route prefixes, etc.) are product decisions.
  * Further public UI only for bugs, product decisions, accessibility, or
  * screenshot-backed defects.
  *

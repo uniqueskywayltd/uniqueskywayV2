@@ -43,8 +43,8 @@ describe("resolveLanguage", () => {
 });
 
 describe("translate", () => {
-  it("returns English when the active locale lacks a key", () => {
-    expect(translate("es", "language.selector.label")).toBe("Language");
+  it("returns locale copy when present", () => {
+    expect(translate("es", "language.selector.label")).toBe("Idioma");
   });
 
   it("returns Arabic keys when present", () => {
@@ -53,6 +53,10 @@ describe("translate", () => {
 
   it("interpolates values", () => {
     expect(translate("en", "language.selector.label")).toContain("Language");
+  });
+
+  it("falls back to English for unknown keys", () => {
+    expect(translate("fr", "definitely.missing.key")).toBe("definitely.missing.key");
   });
 });
 

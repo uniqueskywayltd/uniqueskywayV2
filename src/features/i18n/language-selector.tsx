@@ -1,8 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Globe } from "lucide-react";
 
 import {
   Select,
@@ -11,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
-import { LANGUAGE_COOKIE_NAME, listSelectableLanguages, translate, type AppLanguage } from "@/i18n";
+import { useI18n } from "@/features/i18n/i18n-provider";
+import { LANGUAGE_COOKIE_NAME, listSelectableLanguages, type AppLanguage } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 async function getCsrfToken(): Promise<string | null> {
@@ -33,62 +33,71 @@ function readCookieLanguage(): AppLanguage | null {
 }
 
 export interface LanguageSelectorProps {
-  initialLanguage?: AppLanguage;
   className?: string;
   compact?: boolean;
 }
 
-export function LanguageSelector({
-  initialLanguage = "en",
-  className,
-  compact = true,
-}: LanguageSelectorProps) {
+export function LanguageSelector({ className, compact = true }: LanguageSelectorProps) {
   const router = useRouter();
   const labelId = useId();
-  const [language, setLanguage] = useState<AppLanguage>(
-    () => readCookieLanguage() ?? initialLanguage,
-  );
+  const { language, setLanguage, t } = useI18n();
   const [pending, setPending] = useState(false);
+  const [, startTransition] = useTransition();
   const options = listSelectableLanguages();
 
   async function onChange(next: string) {
     const typed = next as AppLanguage;
+    const previous = language;
     setPending(true);
     setLanguage(typed);
 
-    const csrfToken = await getCsrfToken();
-    if (!csrfToken) {
+    try {
+      const csrfToken = await getCsrfToken();
+      if (!csrfToken) {
+        setLanguage(previous);
+        setPending(false);
+        return;
+      }
+
+      const response = await fetch("/api/locale", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+          "x-csrf-token": csrfToken,
+        },
+        body: JSON.stringify({ language: typed }),
+      });
+
+      if (!response.ok) {
+        setLanguage(previous);
+        setPending(false);
+        return;
+      }
+
+      // Soft refresh server trees (lang/dir). Theme stays client-side via next-themes.
+      startTransition(() => {
+        router.refresh();
+      });
+    } catch {
+      setLanguage(previous);
+    } finally {
       setPending(false);
-      return;
     }
-
-    const response = await fetch("/api/locale", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "content-type": "application/json",
-        "x-csrf-token": csrfToken,
-      },
-      body: JSON.stringify({ language: typed }),
-    });
-
-    setPending(false);
-    if (!response.ok) return;
-    router.refresh();
   }
 
-  const label = translate(language, "language.selector.label");
+  // Prefer cookie if provider lagged after refresh (guest).
+  const value = readCookieLanguage() ?? language;
 
   return (
-    <div className={cn("flex items-center gap-1.5", className)}>
-      <Globe className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+    <div className={cn("flex items-center", className)}>
       <span id={labelId} className="sr-only">
-        {label}
+        {t("language.selector.label")}
       </span>
-      <Select value={language} onValueChange={onChange} disabled={pending}>
+      <Select value={value} onValueChange={onChange} disabled={pending}>
         <SelectTrigger
           aria-labelledby={labelId}
-          aria-label={translate(language, "language.selector.change")}
+          aria-label={t("language.selector.change")}
           className={cn(
             compact
               ? "h-9 w-auto min-w-[7.5rem] border-transparent bg-transparent px-2 shadow-none"
