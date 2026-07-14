@@ -19,6 +19,13 @@ test.describe("sprint A2 homepage", () => {
     await expect(page.getByRole("button", { name: "View Certificate" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Featured plan" }).first()).toBeVisible();
     await expect(page.getByText("Returns are not guaranteed").first()).toBeVisible();
+    await expect(page.getByRole("region", { name: "Support" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Serving investors is what we do" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Testimonials" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Clients" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Call to action" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Fun facts" })).toBeVisible();
+    await expect(page.getByText("Figures appear from certified reporting when published.")).toBeVisible();
 
     await expect(page.getByRole("region", { name: "Remove initial skepticism." })).toBeVisible();
     await expect(

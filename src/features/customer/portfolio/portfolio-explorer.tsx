@@ -3,7 +3,7 @@
 import { useDeferredValue, useEffect, useState } from "react";
 import Link from "next/link";
 
-import { Button, Input, Skeleton, StatusChip } from "@/components/ui";
+import { Button, EmptyState, Input, Skeleton, StatusChip } from "@/components/ui";
 import { CurrencyDisplay } from "@/components/ui/display";
 import { getCustomerJson } from "@/features/customer/api-client";
 import { presentInvestmentStatus } from "@/features/customer/portfolio/status-presentation";
@@ -319,19 +319,20 @@ function PortfolioEmptyState({
   }
 
   return (
-    <section className="rounded-xl border border-border/80 p-6">
-      <h2 className="text-base font-semibold text-foreground">No investments yet</h2>
-      <p className="mt-2 text-sm text-muted-foreground">
-        When you activate a published plan, it will appear here with progress and settlement cues.
-      </p>
-      <div className="mt-4 flex flex-wrap gap-3">
-        <Button asChild>
-          <Link href="/dashboard">Back to dashboard</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link href="/plans">Explore plans</Link>
-        </Button>
-      </div>
-    </section>
+    <EmptyState
+      illustration="portfolio"
+      title="No investments yet"
+      description="When you activate a published plan, it will appear here with progress and settlement cues."
+      action={
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button asChild>
+            <Link href="/dashboard">Back to dashboard</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/plans">Explore plans</Link>
+          </Button>
+        </div>
+      }
+    />
   );
 }

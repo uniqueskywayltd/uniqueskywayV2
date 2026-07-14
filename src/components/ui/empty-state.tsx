@@ -1,17 +1,30 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 
+import { brandAssets } from "@/features/brand";
 import { cn } from "@/lib/utils";
 
 export interface EmptyStateProps {
   icon?: LucideIcon;
+  /** Brand empty-state illustration key from `public/brand/manifest.json`. */
+  illustration?: keyof typeof brandAssets.emptyStates;
   title: string;
   description?: string;
   action?: ReactNode;
   className?: string;
 }
 
-export function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  illustration,
+  title,
+  description,
+  action,
+  className,
+}: EmptyStateProps) {
+  const imageSrc = illustration ? brandAssets.emptyStates[illustration] : null;
+
   return (
     <div
       className={cn(
@@ -19,7 +32,15 @@ export function EmptyState({ icon: Icon, title, description, action, className }
         className,
       )}
     >
-      {Icon ? (
+      {imageSrc ? (
+        <Image
+          src={imageSrc}
+          alt=""
+          width={160}
+          height={120}
+          className="mb-4 h-24 w-auto max-w-[160px] object-contain opacity-90"
+        />
+      ) : Icon ? (
         <div className="mb-4 rounded-full border bg-background p-3 text-muted-foreground">
           <Icon className="size-5" aria-hidden="true" />
         </div>

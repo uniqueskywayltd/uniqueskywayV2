@@ -6,6 +6,7 @@ export default function ForbiddenPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-6">
       <EmptyState
+        illustration="security"
         title="Access restricted"
         description="This area is not available to your account."
         action={

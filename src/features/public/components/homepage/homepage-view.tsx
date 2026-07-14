@@ -12,6 +12,10 @@ import {
 import { Button } from "@/components/ui";
 import { LegacyAboutPractice } from "@/features/public/components/homepage/legacy-about-practice";
 import { LegacyHeroCarousel } from "@/features/public/components/homepage/legacy-hero-carousel";
+import {
+  LegacyHomepageFinale,
+  LegacyPreloader,
+} from "@/features/public/components/homepage/legacy-homepage-finale";
 import { LegacyPlansVideos } from "@/features/public/components/homepage/legacy-plans-videos";
 import { LegacyProjectsStats } from "@/features/public/components/homepage/legacy-projects-stats";
 import { HomeSection, SectionHeading } from "@/features/public/components/homepage/section";
@@ -25,10 +29,12 @@ export function HomepageView() {
 
   return (
     <>
+      <LegacyPreloader />
       <LegacyHeroCarousel />
       <LegacyAboutPractice />
       <LegacyProjectsStats />
       <LegacyPlansVideos />
+      <LegacyHomepageFinale />
 
       {/* Purpose: remove initial skepticism. */}
       <HomeSection id="trust" purpose={copy.trustBar.purpose} tone="muted">
