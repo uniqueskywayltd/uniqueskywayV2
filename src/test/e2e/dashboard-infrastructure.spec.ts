@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("dashboard DP1 frame", () => {
+test.describe("dashboard DP1–DP2 frame and money cards", () => {
   test.beforeEach(async ({ page }) => {
     await page.route("**/api/customer/summary", async (route) => {
       await route.fulfill({
@@ -56,6 +56,46 @@ test.describe("dashboard DP1 frame", () => {
         },
       });
     });
+
+    await page.route("**/api/customer/wallet", async (route) => {
+      await route.fulfill({
+        json: {
+          data: {
+            balances: {
+              currency: "USD",
+              availableBalanceMinor: "12000",
+              pendingBalanceMinor: "500",
+              lockedBalanceMinor: "25000",
+              reservedBalanceMinor: "0",
+              withdrawnBalanceMinor: "0",
+              withdrawableBalanceMinor: "12000",
+              lastEntryAt: null,
+            },
+            vocabulary: [],
+            recentActivity: [],
+            recentDeposits: [],
+            recentWithdrawals: [],
+            pendingDepositCount: 1,
+            openWithdrawalCount: 0,
+          },
+        },
+      });
+    });
+
+    await page.route("**/api/customer/investments**", async (route) => {
+      await route.fulfill({
+        json: {
+          data: {
+            summary: {
+              totalCount: 2,
+              byStatus: { active: 1, pending: 1, maturing: 0, matured: 0, cancelled: 0, failed: 0 },
+              activePrincipalMinor: "25000",
+            },
+            investments: [],
+          },
+        },
+      });
+    });
   });
 
   test("renders platform-aligned dashboard frame", async ({ page }) => {
@@ -94,5 +134,25 @@ test.describe("dashboard DP1 frame", () => {
       "href",
       "/wallet",
     );
+  });
+
+  test("renders certified money cards", async ({ page }) => {
+    await page.goto("/dashboard");
+
+    const portfolio = page.getByRole("region", { name: "Portfolio balances" });
+    await expect(portfolio.getByText("Portfolio value")).toBeVisible();
+    await expect(portfolio.getByText("$250.00")).toBeVisible();
+    await expect(portfolio.getByText("Available balance")).toBeVisible();
+    await expect(portfolio.getByText("$120.00")).toBeVisible();
+    await expect(portfolio.getByText("Locked balance")).toBeVisible();
+    await expect(portfolio.getByText("$250.00").nth(1)).toBeVisible();
+    await expect(portfolio.getByText("Pending balance")).toBeVisible();
+    await expect(portfolio.getByText("$5.00")).toBeVisible();
+
+    const summary = page.getByRole("region", { name: "Investment summary" });
+    await expect(summary.getByText("Active investments")).toBeVisible();
+    await expect(summary.getByText("1", { exact: true }).first()).toBeVisible();
+    await expect(summary.getByText("Pending deposits")).toBeVisible();
+    await expect(summary.getByText("Open withdrawals")).toBeVisible();
   });
 });
