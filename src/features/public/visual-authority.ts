@@ -30,7 +30,7 @@ export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
   homepageFreezeTag: "homepage-migration-complete",
   dashboardMigration: "complete",
-  dashboardCommit: "dp5-dashboard-finalization",
+  dashboardCommit: "f436f2e",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
