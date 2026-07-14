@@ -701,9 +701,9 @@ Exit criteria:
 | `v3.0.0` | Customer Experience Platform — public trust (frozen, `DEC-0029`). |
 | `v3.1.0` | Customer Money Experience (frozen, `DEC-0043`). |
 | `v3.2.0` | Customer Success Experience (Milestone 6) — frozen. |
-| `v3.3.0` | International Platform (Milestone 7). |
+| `v3.3.0` | Global Experience Platform (Milestone 7). |
 | `v3.4.0` | Mobile Experience (Milestone 8). |
-| `v4.0.0` | Ecosystem / Global Platform (Milestone 9). |
+| `v4.0.0` | Ecosystem Platform (Milestone 9). |
 
 Strategic process authority: `PLATFORM_CONSTITUTION.md` (`DEC-0044`).
 
@@ -719,7 +719,7 @@ From Milestone 5 onward, prefer **release trains** (versioned customer experienc
 | 4 Administration | `v2.3.0` | Frozen |
 | 5 Customer Experience | `v3.0.0` / `v3.1.0` | Wave A frozen (`DEC-0029`); Wave B frozen (`DEC-0043`) |
 | 6 Customer Success Experience | `v3.2.0` | Frozen (`DEC-0059`) |
-| 7 International Platform | `v3.3.0` | Planned |
+| 7 Global Experience Platform | `v3.3.0` | Stage 1 frozen (`DEC-0060`); next **Sprint I1** |
 | 8 Mobile Experience | `v3.4.0` | Planned |
 | 9 Ecosystem | `v4.0.0` | Planned |
 
@@ -729,7 +729,7 @@ From Milestone 5 onward, prefer **release trains** (versioned customer experienc
 2. Public Wave A is frozen under **`DEC-0029`**. Authenticated Wave B is frozen under **`DEC-0043`**. Customer Success is frozen under **`DEC-0059`**.
 3. Customer money UX constitutions remain in force; `FINANCIAL_INVARIANTS.md` always wins on money truth.
 4. Milestone 6 — **Customer Success Experience (`v3.2.0`)** is certified and frozen (`DEC-0058` / `DEC-0059`). Annotated tag **`v3.2.0`** is the freeze point.
-5. Next: International Platform (`v3.3.0`) under Design → Approve → Implement. Then `v3.4.0` mobile → `v4.0.0` ecosystem.
+5. Milestone 7 — **Global Experience Platform (`v3.3.0`)** Stage 1 is **approved and frozen** (`DEC-0060`, score 99.8; companions include `LOCALE_EXPERIENCE_GUIDE.md`, `TRANSLATION_KEYS_POLICY.md`, `LANGUAGE_CATALOG.md`; `DEC-0061` / `DEC-0062`). Next: **Sprint I1 – Localization Infrastructure** only (then I2 public → I3 customer → I4 mail → I5 certify). Do not translate the whole platform in one pass.
 6. Do not reopen frozen releases without ADR, regression tests, and (where required) UX approval + recertification.
 7. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
-8. Do not ask implementers to re-compare the legacy V1 repository by default — evaluate remembered features through product review first.
+8. Do not ask implementers to re-compare the legacy V1 repository by default — evaluate remembered features through product review first. After Global Experience seams exist, legacy may inform **content/experience** migration only—never V1 business logic.

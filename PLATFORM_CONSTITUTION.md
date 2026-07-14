@@ -112,14 +112,14 @@ Cursor implements approved briefs. Architecture, UX critique, prioritization, an
 2. **Prefer refinement over expansion** — Deepen trust and clarity before adding surface area.  
 3. **Governance before implementation** — Specification and principles precede code.  
 4. **Legacy is a feature library** — Remembered V1 ideas are evaluated outside the repo; Cursor never re-analyzes the legacy tree by default.  
-5. **Internationalization is a train, not a patch** — Languages, RTL, and locale formatting ship as a governed release (`v3.3.0`), not drive-by string swaps.
+5. **Global experience is a train, not a patch** — Languages, RTL, locale formatting, and regional presentation ship as a governed release (`v3.3.0`), not drive-by string swaps. Internal name: **Global Experience Platform** (broader than “internationalization alone”).
 
 ### Forward release trains
 
 | Release | Milestone | Intent |
 | --- | --- | --- |
 | `v3.2.0` | Customer Success Experience | Frozen — retention through success; no new engines |
-| `v3.3.0` | International Platform | i18n, RTL, locale, localized mail/notifications |
+| `v3.3.0` | Global Experience Platform | Language, localization, RTL, locale presentation, localized mail/notifications |
 | `v3.4.0` | Mobile Experience | PWA, push, offline, mobile polish |
 | `v4.0.0` | Ecosystem | Partner/public APIs, enterprise — only after the customer platform is complete |
 

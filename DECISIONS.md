@@ -1933,7 +1933,7 @@ Milestone 6 feature work is complete. Certification gates passed. The platform n
 1. Freeze Milestone 6 at annotated tag **`v3.2.0`**.
 2. Merge `milestone-6-sprint-g5-certification` into `main`, tag, and push.
 3. Require ADR + regression + recertification for casual changes to Success Hub, Learning, Statements, or Referral hub.
-4. Next product train is International Platform (`v3.3.0`) — Design → Approve first.
+4. Next product train is Global Experience Platform (`v3.3.0`) — Design → Approve first (see `DEC-0060`).
 
 ### Rejected Alternatives
 
@@ -1944,3 +1944,90 @@ Milestone 6 feature work is complete. Certification gates passed. The platform n
 
 - `v3.2.0` is immutable intent for Customer Success Experience.
 - `FINANCIAL_INVARIANTS.md` continues to win over any experience conflict.
+
+## DEC-0060: Milestone 7 Stage 1 — Global Experience Design Package
+
+- Date: 2026-07-13
+- Status: **Accepted** — Stage 1 frozen (consultancy **99.8 / 100**)
+- Future Review: Philosophy-level Global Experience change
+
+### Context
+
+Customer Success Experience is frozen at `v3.2.0`. The next train prepares the product for international customers through language, localization, RTL, and regional presentation—not new financial features. Internal product framing is **Global Experience Platform** (broader than “International Platform” alone). Consultancy Stage 1 score: **99.8 / 100**.
+
+### Decision
+
+1. Adopt Stage 1 as design authority for Milestone 7 / `v3.3.0`:
+   - `GLOBAL_EXPERIENCE_SPECIFICATION.md` (master)
+   - `LOCALIZATION_PRINCIPLES.md`
+   - `LOCALE_EXPERIENCE_GUIDE.md`
+   - `INTERNATIONALIZATION_ARCHITECTURE.md`
+   - `LANGUAGE_GOVERNANCE.md`
+   - `LANGUAGE_CATALOG.md`
+   - `DATE_TIME_LOCALIZATION_GUIDE.md`
+   - `MULTI_CURRENCY_PRESENTATION_GUIDE.md`
+   - `RTL_SUPPORT_GUIDE.md`
+   - `TRANSLATION_STYLE_GUIDE.md`
+   - `TRANSLATION_KEYS_POLICY.md`
+2. Phase 1 languages per `LANGUAGE_CATALOG.md`.
+3. Language resolution order: saved preference → browser language → optional country hint → English. Never override explicit choice.
+4. Language selector: compact header control (globe + label); mobile inside menu.
+5. Never translate financial values or stable financial identifiers—presentation and locale formatting only.
+6. Freeze Stage 1; Stage 2 proceeds one sprint at a time: **I1 → I2 → I3 → I4 → I5**.
+7. Rename roadmap/constitution language from “International Platform” to **Global Experience Platform**.
+8. Companion ADRs: `DEC-0061` (English canonical), `DEC-0062` (keys mandatory).
+
+### Rejected Alternatives
+
+- Begin full-platform translation before localization architecture approval.
+- Drive-by string swaps on frozen Success/Money surfaces.
+- Dual-ledger / local-currency money-of-record under the guise of localization.
+
+### Consequences
+
+- Sprint **I1 – Localization Infrastructure** is the only authorized next implementation step.
+- Legacy content migration waits until Global Experience seams exist; still never migrations of V1 business logic.
+
+## DEC-0061: English Is the Canonical Authoring Language
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Only if product adopts a different primary authoring language under ADR
+
+### Context
+
+Phase 1 targets ten languages. Without a single authoring source, locales will drift in meaning and financial caution.
+
+### Decision
+
+1. **English is the canonical authoring language** for all product content and translation catalog meaning.
+2. Every new user-facing feature is written and approved in English first.
+3. Translations are created only after English approval, under `LANGUAGE_GOVERNANCE.md` and `TRANSLATION_STYLE_GUIDE.md`.
+4. Other locales must not invent divergent financial or product policy.
+
+### Consequences
+
+- PR review expects English catalog entries for new keys before non-English copies.
+- `LANGUAGE_CATALOG.md` marks `en` as production/canonical.
+
+## DEC-0062: Translation Keys Mandatory for Production UI Strings
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Enforcement tooling changes; not the mandatory-key rule itself
+
+### Context
+
+Raw UI strings prevent clean catalogs and make progressive localization unreliable.
+
+### Decision
+
+1. Translation keys are **mandatory** for all user-facing production strings.
+2. Raw UI strings are prohibited in production UI except where `TRANSLATION_KEYS_POLICY.md` allows narrow exemptions (tests, prototypes, UGC, verbatim brands/IDs).
+3. Key shape follows `TRANSLATION_KEYS_POLICY.md` (e.g. `dashboard.available_balance`).
+4. Sprint I1 must ship the framework path (`t(key)` or equivalent) that makes this enforceable going forward.
+
+### Consequences
+
+- I2+ localization sprints add keys and translations; they do not reintroduce raw chrome for new covered surfaces.
+- Missing keys fall back per policy (English, never blank money labels).

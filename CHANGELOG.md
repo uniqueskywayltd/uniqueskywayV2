@@ -12,7 +12,7 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-(none)
+- Milestone 7 Stage 1 frozen (`DEC-0060`, score 99.8): Global Experience design pack + `LOCALE_EXPERIENCE_GUIDE.md`, `TRANSLATION_KEYS_POLICY.md`, `LANGUAGE_CATALOG.md`; `DEC-0061` / `DEC-0062`. Next: Sprint I1 infrastructure only.
 
 ## v3.2.0 - 2026-07-13
 
