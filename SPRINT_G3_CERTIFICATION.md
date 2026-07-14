@@ -2,11 +2,12 @@
 
 ## Result
 
-**PASS — Sprint G3 Learning Experience certified (pending consultancy product review)**
+**PASS — Sprint G3 Learning Experience certified**
 
 Date: 2026-07-13  
-Branch: `milestone-6-sprint-g3-education`  
-Authority: `LEARNING_EXPERIENCE_PRINCIPLES.md` (**DEC-0052**), `CUSTOMER_EDUCATION_GUIDE.md`, `GROWTH_EXPERIENCE_SPECIFICATION.md`, `EP-029`
+Branch: `milestone-6-sprint-g3-education` (merged to `main`)  
+Authority: `LEARNING_EXPERIENCE_PRINCIPLES.md` (**DEC-0052**), `DEC-0054`, `DEC-0056`, `CUSTOMER_EDUCATION_GUIDE.md`, `GROWTH_EXPERIENCE_SPECIFICATION.md`, `EP-029`  
+Consultancy score: **100 / 100**
 
 ## Scope completed
 

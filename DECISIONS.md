@@ -1816,22 +1816,63 @@ G2 delivered ledger-projected statements with understanding-first reading order,
 
 - Later sprints may deep-link to statements; they do not reopen ledger math.
 
-## DEC-0054: Sprint G3 Learning Experience (proposed acceptance)
+## DEC-0054: Sprint G3 Learning Experience
 
 - Date: 2026-07-13
-- Status: **Proposed** — awaiting consultancy review of `SPRINT_G3_CERTIFICATION.md`
-- Future Review: After Accepted, G3 learning surfaces require ADR-level change control
+- Status: Accepted
+- Future Review: ADR-level change control for learning surfaces
 
 ### Context
 
-G2 frozen (`DEC-0051`/`DEC-0053`). Learning Experience Principles adopted (`DEC-0052`). G3 implemented recommended-next learning without LMS gamification.
+G2 frozen (`DEC-0051`/`DEC-0053`). Learning Experience Principles adopted (`DEC-0052`). G3 implemented recommended-next learning without LMS gamification. Consultancy score: **100 / 100**.
 
-### Decision (pending)
+### Decision
 
-1. Accept Sprint G3 as certified.
-2. Merge `milestone-6-sprint-g3-education` into `main`.
-3. Authorize Sprint G4 Referral Experience only after acceptance.
+1. Accept Sprint G3 as certified (`SPRINT_G3_CERTIFICATION.md`).
+2. Merge `milestone-6-sprint-g3-education` into `main` and freeze G3.
+3. Authorize Sprint G4 Referrals after Referral Ethics Guide (`DEC-0055`).
 
-### Consequences (when accepted)
+### Consequences
 
 - Learn home/paths/lessons become frozen Customer Success surfaces.
+
+## DEC-0055: Referral Ethics Guide Adopted before Sprint G4
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Ethical posture or pressure-UX philosophy change
+
+### Context
+
+Before deepening referrals, ethical rules must reinforce that recommendations are invitations — not income-maximization schemes.
+
+### Decision
+
+1. Adopt `REFERRAL_ETHICS_GUIDE.md` as ethical authority for G4+.
+2. North star remains **How do I recommend this platform responsibly?**
+3. Reaffirm bans on leaderboards, spam tooling, MLM trees, scarcity pressure, and privacy leakage.
+4. Align with `REFERRAL_EXPERIENCE_PRINCIPLES.md` for UX over the frozen referral engine.
+
+### Consequences
+
+- Sprint G4 implements referral hub UX under ethics + experience principles without changing commission math.
+
+## DEC-0056: Sprint G3 Education Experience Certified
+
+- Date: 2026-07-13
+- Status: Accepted — **ACTIVE FREEZE for G3 learning surfaces**
+- Future Review: Philosophy-level learning UX change
+
+### Context
+
+G3 delivered Learn home, paths, lessons, calm progress, and search without LMS gamification.
+
+### Decision
+
+1. Record G3 as **certified and frozen** under Milestone 6.
+2. Preserve `SPRINT_G3_CERTIFICATION.md` on `main`.
+3. Do not casually redesign learning IA during G4–G5.
+
+### Consequences
+
+- G4 may deep-link to the referrals lesson; it does not reopen Learning.
