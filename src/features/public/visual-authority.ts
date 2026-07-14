@@ -49,6 +49,12 @@
  * Admin Visual Polish: frozen. Admin console chrome (shell, nav, tables,
  * overview) matched to platform admin under presentation-only constraints.
  * Further admin work only for defects, ADRs, or accessibility fixes.
+ *
+ * Visual Parity Completion: frozen (final visual migration baseline). Whole-app
+ * presentation aligned with platform authority while preserving certified V2
+ * architecture. Further UI only for confirmed bugs, screenshot-backed polish,
+ * product decisions, accessibility, or responsive defects. No speculative
+ * redesign. Next major train: v3.3.0 International Platform.
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
@@ -67,11 +73,13 @@ export const VISUAL_AUTHORITY = {
   notificationsCommunicationFreezeCommit: "864a63d",
   adminVisualMigration: "complete",
   adminVisualFreezeCommit: "1cf302d",
+  visualParityCompletion: "complete",
+  visualParityCompletionFreezeCommit: "f461660",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
   nextSurfaces: [
-    "screenshot walkthrough fixes only",
     "v3.3.0 international platform (i18n, RTL, locale formatting)",
+    "screenshot-backed defects only",
   ],
 } as const;
