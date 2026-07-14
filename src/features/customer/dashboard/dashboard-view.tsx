@@ -5,6 +5,7 @@ import { DashboardActivitySection } from "@/features/customer/dashboard/dashboar
 import { useDashboardChrome } from "@/features/customer/dashboard/dashboard-chrome-context";
 import { DashboardInvestmentsSection } from "@/features/customer/dashboard/dashboard-investments-section";
 import { DashboardMoneyCards } from "@/features/customer/dashboard/dashboard-money-cards";
+import { DashboardReveal } from "@/features/customer/dashboard/dashboard-motion";
 import { DashboardQuickActions } from "@/features/customer/dashboard/dashboard-quick-actions";
 import { DashboardWelcomeHero } from "@/features/customer/dashboard/dashboard-welcome-hero";
 import {
@@ -12,40 +13,69 @@ import {
   getPersonHandle,
 } from "@/lib/utils/person-display";
 
-/** DP1–DP4: frame, money, investments, activity. DP5 polish deferred. */
+function DashboardFrameSkeleton() {
+  return (
+    <div className="space-y-8" aria-busy="true" aria-label="Loading dashboard">
+      <Skeleton className="h-36 w-full rounded-2xl sm:h-40" />
+      <div className="flex flex-wrap gap-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={`qa-${index}`} className="h-8 w-24 rounded-lg" />
+        ))}
+      </div>
+      <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={`money-a-${index}`} className="h-32 w-full rounded-xl" />
+          ))}
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={`money-b-${index}`} className="h-32 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+      <Skeleton className="h-28 w-full rounded-xl" />
+      <div className="grid gap-4">
+        <Skeleton className="h-36 w-full rounded-xl" />
+        <Skeleton className="h-36 w-full rounded-xl" />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Skeleton className="h-[240px] w-full rounded-xl" />
+        <Skeleton className="h-[240px] w-full rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
+/** DP1–DP5: certified dashboard surface (frame → money → investments → activity + polish). */
 export function DashboardView() {
   const { summary, loaded } = useDashboardChrome();
 
   if (!loaded || !summary) {
-    return (
-      <div className="space-y-8" aria-busy="true" aria-label="Loading dashboard">
-        <Skeleton className="h-36 w-full rounded-2xl" />
-        <div className="flex flex-wrap gap-2">
-          <Skeleton className="h-7 w-24 rounded-lg" />
-          <Skeleton className="h-7 w-24 rounded-lg" />
-          <Skeleton className="h-7 w-28 rounded-lg" />
-          <Skeleton className="h-7 w-20 rounded-lg" />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-32 w-full rounded-lg" />
-          ))}
-        </div>
-      </div>
-    );
+    return <DashboardFrameSkeleton />;
   }
 
   return (
-    <div className="space-y-8">
-      <DashboardWelcomeHero
-        fullName={getPersonFullName(summary)}
-        handle={getPersonHandle(summary)}
-        avatarUrl={summary.profile?.avatarUrl ?? null}
-      />
-      <DashboardQuickActions />
-      <DashboardMoneyCards />
-      <DashboardInvestmentsSection />
-      <DashboardActivitySection />
+    <div className="space-y-8 sm:space-y-9">
+      <DashboardReveal>
+        <DashboardWelcomeHero
+          fullName={getPersonFullName(summary)}
+          handle={getPersonHandle(summary)}
+          avatarUrl={summary.profile?.avatarUrl ?? null}
+        />
+      </DashboardReveal>
+      <DashboardReveal delayMs={40}>
+        <DashboardQuickActions />
+      </DashboardReveal>
+      <DashboardReveal delayMs={80}>
+        <DashboardMoneyCards />
+      </DashboardReveal>
+      <DashboardReveal delayMs={120}>
+        <DashboardInvestmentsSection />
+      </DashboardReveal>
+      <DashboardReveal delayMs={160}>
+        <DashboardActivitySection />
+      </DashboardReveal>
       <p className="sr-only">Primary question: How am I doing today?</p>
     </div>
   );

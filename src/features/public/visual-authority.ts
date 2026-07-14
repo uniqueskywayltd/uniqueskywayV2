@@ -22,16 +22,21 @@
  *
  * Homepage status: frozen (`homepage-migration-complete`). Prefer the platform
  * marketing homepage composition for any future public visual changes.
+ *
+ * Customer dashboard status: frozen (DP1–DP5). Further dashboard work only for
+ * defects, ADRs, or accessibility fixes — next migration surface is Wallet.
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
   homepageFreezeTag: "homepage-migration-complete",
+  dashboardMigration: "complete",
+  dashboardCommit: "dp5-dashboard-finalization",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
   nextSurfaces: [
-    "public marketing (platform MarketingLayout + marketing/*)",
-    "customer dashboard (platform dashboard/*)",
+    "customer wallet (platform dashboard/wallet visuals → V3 /wallet)",
+    "customer portfolio",
     "admin (platform hard/auth portal)",
     "auth / empty / error states (platform auth, errors, brand)",
   ],

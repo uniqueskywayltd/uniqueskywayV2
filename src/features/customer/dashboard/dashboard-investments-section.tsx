@@ -164,7 +164,7 @@ function InvestmentSummaryCard({ investment }: { investment: PortfolioInvestment
   return (
     <Link
       href={`/portfolio/${investment.id}`}
-      className="block rounded-xl border border-border/70 bg-card p-4 shadow-sm transition-colors hover:border-primary/30 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:p-5"
+      className="block rounded-xl border border-border/70 bg-card p-4 shadow-sm motion-safe:transition-[border-color,background-color,box-shadow,transform] motion-safe:duration-200 motion-reduce:transition-none hover:border-primary/30 hover:bg-muted/20 motion-safe:hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:p-5"
     >
       <div className="flex items-start justify-between gap-3">
         <p className="truncate text-base font-semibold text-foreground">{investment.planName}</p>

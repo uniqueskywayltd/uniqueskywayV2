@@ -16,7 +16,11 @@ export function DashboardSignOutButton() {
     <button
       type="button"
       disabled={pending}
-      className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
+      aria-busy={pending}
+      className={cn(
+        buttonVariants({ variant: "outline", size: "sm" }),
+        "gap-2 focus-visible:ring-offset-background",
+      )}
       onClick={() => {
         if (pending) return;
         setPending(true);

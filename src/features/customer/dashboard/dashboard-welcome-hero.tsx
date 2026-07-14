@@ -50,7 +50,7 @@ export function DashboardWelcomeHero({
           />
           <Link
             href="/account/profile"
-            className="relative block rounded-2xl ring-1 ring-border/80 ring-offset-2 ring-offset-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="relative block rounded-2xl ring-1 ring-border/80 ring-offset-2 ring-offset-card motion-safe:transition-shadow motion-safe:duration-200 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Open profile"
           >
             <Avatar className="h-16 w-16 rounded-2xl sm:h-[4.5rem] sm:w-[4.5rem]">

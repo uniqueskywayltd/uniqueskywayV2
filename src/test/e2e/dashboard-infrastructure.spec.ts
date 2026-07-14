@@ -191,6 +191,11 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
     await expect(page.getByText("@USW-123")).toBeVisible();
     await expect(page.getByRole("region", { name: "Welcome" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Quick actions" })).toBeVisible();
+    await expect(page.locator("#dashboard-main")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Skip to dashboard content" })).toHaveAttribute(
+      "href",
+      "#dashboard-main",
+    );
   });
 
   test("exposes dashboard navigation shell", async ({ page }) => {

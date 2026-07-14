@@ -116,7 +116,7 @@ export function DashboardActivitySection() {
               icon={Activity}
               title="No recent activity"
               description="Ledger movements will appear here when funds are deposited, invested, or settled."
-              className="min-h-40 border-0 bg-transparent p-4"
+              className="min-h-36 border-0 bg-transparent p-3 sm:p-4"
             />
           ) : (
             <div className="overflow-x-auto">
@@ -174,7 +174,7 @@ export function DashboardActivitySection() {
               icon={Bell}
               title="No notifications"
               description="Security and money alerts will show here when something needs attention."
-              className="min-h-40 border-0 bg-transparent p-4"
+              className="min-h-36 border-0 bg-transparent p-3 sm:p-4"
             />
           ) : (
             <ul className="space-y-2" role="list">

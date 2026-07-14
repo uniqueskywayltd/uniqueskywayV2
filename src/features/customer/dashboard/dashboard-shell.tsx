@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -79,7 +79,7 @@ function DashboardNavPanel({
               href={item.href}
               {...onClickProps}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm motion-safe:transition-colors motion-safe:duration-200 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 active
                   ? "bg-primary/10 font-medium text-primary"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -131,6 +131,13 @@ export function DashboardShell({ children }: DashboardShellProps) {
   return (
     <DashboardChromeProvider value={{ summary, loaded }}>
       <div className="min-h-dvh bg-gradient-to-b from-muted/25 via-background to-background lg:flex">
+        <a
+          href="#dashboard-main"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-md focus:ring-2 focus:ring-ring"
+        >
+          Skip to dashboard content
+        </a>
+
         <aside className="hidden w-64 shrink-0 flex-col border-r border-border/60 bg-card/80 backdrop-blur-sm lg:sticky lg:top-0 lg:flex lg:h-dvh lg:overflow-y-auto">
           {summary ? (
             <DashboardNavPanel summary={summary} />
@@ -154,6 +161,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
                 className="h-10 w-10 shrink-0 lg:hidden"
                 onClick={() => setMobileOpen(true)}
                 aria-label="Open navigation menu"
+                aria-expanded={mobileOpen}
+                aria-controls="dashboard-mobile-nav"
               >
                 <Menu className="h-4 w-4" aria-hidden />
               </Button>
@@ -186,10 +195,29 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
           <DialogPrimitive.Root open={mobileOpen} onOpenChange={setMobileOpen}>
             <DialogPrimitive.Portal>
-              <DialogPrimitive.Overlay className="fixed inset-0 z-[var(--z-overlay)] bg-background/70 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 lg:hidden" />
-              <DialogPrimitive.Content className="fixed inset-y-0 left-0 z-[var(--z-modal)] flex w-[min(100vw-1rem,20rem)] flex-col gap-0 border-r bg-card p-0 text-card-foreground shadow-[var(--elevation-3)] outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left lg:hidden">
-                <DialogPrimitive.Title className="sr-only">Dashboard navigation</DialogPrimitive.Title>
-                <div className="flex max-h-dvh flex-col overflow-y-auto">
+              <DialogPrimitive.Overlay className="fixed inset-0 z-[var(--z-overlay)] bg-background/70 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none lg:hidden" />
+              <DialogPrimitive.Content
+                id="dashboard-mobile-nav"
+                aria-describedby={undefined}
+                className="fixed inset-y-0 left-0 z-[var(--z-modal)] flex w-[min(100vw-1rem,20rem)] flex-col gap-0 border-r bg-card p-0 text-card-foreground shadow-[var(--elevation-3)] outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left motion-reduce:animate-none lg:hidden"
+              >
+                <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
+                  <DialogPrimitive.Title className="px-1 text-sm font-semibold text-foreground">
+                    Dashboard navigation
+                  </DialogPrimitive.Title>
+                  <DialogPrimitive.Close asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      aria-label="Close navigation menu"
+                    >
+                      <X className="h-4 w-4" aria-hidden />
+                    </Button>
+                  </DialogPrimitive.Close>
+                </div>
+                <div className="flex max-h-[calc(100dvh-3.25rem)] flex-col overflow-y-auto">
                   {summary ? (
                     <DashboardNavPanel
                       summary={summary}
@@ -201,7 +229,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
             </DialogPrimitive.Portal>
           </DialogPrimitive.Root>
 
-          <main className="mx-auto max-w-6xl space-y-6 px-4 py-5 sm:space-y-8 sm:py-6 lg:px-8 lg:py-8">
+          <main
+            id="dashboard-main"
+            tabIndex={-1}
+            className="mx-auto max-w-6xl space-y-6 px-4 py-5 outline-none sm:space-y-8 sm:py-6 lg:px-8 lg:py-8"
+          >
             {children}
           </main>
         </div>
