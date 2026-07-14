@@ -1,14 +1,5 @@
-import { ActivityTimeline } from "@/features/customer/components/activity-timeline";
-import { CustomerPageHeader } from "@/features/customer/components/page-header";
+import { ActivitySurface } from "@/features/customer/communications/activity-surface";
 
 export default function ActivityPage() {
-  return (
-    <>
-      <CustomerPageHeader
-        title="Activity"
-        description="What have I done recently? Financial vs account/security — distinct from ledger postings."
-      />
-      <ActivityTimeline />
-    </>
-  );
+  return <ActivitySurface />;
 }

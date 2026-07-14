@@ -196,6 +196,9 @@ test.describe("sprint B4 communication experience", () => {
   test("renders notification center answering what to know now", async ({ page }) => {
     await page.goto("/account/notifications");
     await expect(page.getByRole("heading", { level: 1, name: "Notifications" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Dashboard navigation" }).first()).toBeVisible();
+    await expect(page.locator("#main-content")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Communications navigation" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "Security" })).toBeVisible();
     await expect(page.getByText("New device signed in")).toBeVisible();
     await expect(page.getByText("Today")).toBeVisible();
@@ -206,8 +209,10 @@ test.describe("sprint B4 communication experience", () => {
   test("supports help search, referrals, and communication hub", async ({ page }) => {
     await page.goto("/account/help");
     await expect(page.getByRole("heading", { level: 1, name: "Help Center" })).toBeVisible();
-    await page.getByLabel("Search help articles").fill("accrued");
-    await expect(page.getByRole("heading", { name: "Accrued earnings vs credited earnings" })).toBeVisible();
+    await page.locator("#main-content #help-article-search").fill("accrued");
+    await expect(page.getByRole("heading", { name: "Accrued earnings vs credited earnings" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Request support" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Public FAQ" })).toBeVisible();
 
     await page.goto("/account/referrals");
     await expect(page.getByText("SKY-AVERY", { exact: true })).toBeVisible();
@@ -215,11 +220,18 @@ test.describe("sprint B4 communication experience", () => {
     await page.goto("/account/communications");
     await expect(page.getByRole("heading", { level: 1, name: "Communication Center" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "What’s New" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Notification Center" })).toBeVisible();
+
+    await page.goto("/account/whats-new");
+    await expect(page.getByRole("heading", { level: 1, name: "What’s New" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Product updates" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Service messages" })).toBeVisible();
   });
 
   test("refines activity with financial/security filters", async ({ page }) => {
     await page.goto("/account/activity");
     await expect(page.getByRole("heading", { level: 1, name: "Activity" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Communications navigation" })).toBeVisible();
     await page.getByRole("button", { name: "Financial" }).click();
     await expect(page.getByText("Deposit Created")).toBeVisible();
     await page.getByRole("button", { name: "Security" }).click();
