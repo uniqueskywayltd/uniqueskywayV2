@@ -93,6 +93,7 @@ export function DashboardActivitySection() {
       {unreadCount > 0 ? (
         <div
           role="status"
+          aria-live="polite"
           className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm"
         >
           <p className="text-foreground">
@@ -100,12 +101,20 @@ export function DashboardActivitySection() {
             <span className="font-semibold tabular-nums">{unreadCount}</span> unread{" "}
             {unreadCount === 1 ? "notification" : "notifications"}.
           </p>
-          <Link
-            href="/account/notifications"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Review alerts
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/account/notifications"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Review alerts
+            </Link>
+            <Link
+              href="/account/communications"
+              className="font-medium text-muted-foreground underline-offset-4 hover:underline"
+            >
+              Communication Center
+            </Link>
+          </div>
         </div>
       ) : null}
 

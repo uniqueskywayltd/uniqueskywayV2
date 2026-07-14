@@ -9,7 +9,7 @@ test.describe("customer experience foundation", () => {
     await page.goto("/account/notifications");
     await expect(page.getByRole("heading", { name: "Notifications", exact: true })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Dashboard navigation" }).first()).toBeVisible();
-    await expect(page.getByLabel("Search notifications")).toBeVisible();
+    await expect(page.locator("#main-content #notification-search")).toBeVisible();
     await expect(page.getByText("Welcome to Unique Sky Way")).toBeVisible();
 
     await page.goto("/account/activity");

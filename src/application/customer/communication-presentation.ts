@@ -169,6 +169,13 @@ export const HELP_ARTICLES = [
 
 export const WHATS_NEW_ITEMS = [
   {
+    id: "profile-security",
+    title: "Profile & Security controls",
+    summary: "Account, password, devices, and sessions in one DashboardShell experience.",
+    date: "2026-07-14",
+    href: "/account",
+  },
+  {
     id: "wave-b-wallet",
     title: "Wallet operations center",
     summary: "Available, Pending, Locked, and clear deposit/withdrawal journeys.",
