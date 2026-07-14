@@ -2,11 +2,12 @@
 
 ## Result
 
-**PASS — Sprint G4 Referral Experience certified (pending consultancy product review)**
+**PASS — Sprint G4 Referral Experience certified**
 
 Date: 2026-07-13  
-Branch: `milestone-6-sprint-g4-referrals`  
-Authority: `REFERRAL_ETHICS_GUIDE.md` (**DEC-0055**), `REFERRAL_EXPERIENCE_PRINCIPLES.md`, `GROWTH_EXPERIENCE_SPECIFICATION.md`, `EP-029`
+Branch: `milestone-6-sprint-g4-referrals` (merged to `main`)  
+Authority: `REFERRAL_ETHICS_GUIDE.md` (**DEC-0055**), `DEC-0057`, `REFERRAL_EXPERIENCE_PRINCIPLES.md`, `GROWTH_EXPERIENCE_SPECIFICATION.md`, `EP-029`  
+Consultancy score: **100 / 100**
 
 ## Scope completed
 

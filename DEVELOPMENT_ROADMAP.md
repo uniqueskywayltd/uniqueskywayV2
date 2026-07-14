@@ -634,8 +634,8 @@ See `GROWTH_EXPERIENCE_SPECIFICATION.md` + companions.
 | **G1** | Customer Success Hub shells (no business logic) | **Frozen** — `DEC-0048` / `DEC-0049` |
 | **G2** | Statements (`DEC-0047`, `DEC-0050`) | **Frozen** — `DEC-0051` / `DEC-0053` |
 | **G3** | Education (`DEC-0052`) | **Frozen** — `DEC-0054` / `DEC-0056` |
-| **G4** | Referral Experience (`DEC-0055`) | Implemented — `SPRINT_G4_CERTIFICATION.md` (awaiting review) |
-| **G5** | Certification + `STATEMENT_DATA_DICTIONARY.md` + tag `v3.2.0` | Blocked |
+| **G4** | Referral Experience (`DEC-0055`) | **Frozen** — `DEC-0057` |
+| **G5** | Certification + `STATEMENT_DATA_DICTIONARY.md` + tag `v3.2.0` | Next |
 
 Note: `FINANCIAL_DASHBOARD_PRINCIPLES.md` already exists from Wave B (`v3.1.0`). G5 still requires `STATEMENT_DATA_DICTIONARY.md`.
 
