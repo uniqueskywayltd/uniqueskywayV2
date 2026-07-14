@@ -272,11 +272,21 @@ test.describe("sprint B3 wallet experience", () => {
   test("renders wallet hierarchy answering how to safely move money", async ({ page }) => {
     await page.goto("/wallet");
     await expect(page.getByRole("heading", { level: 1, name: "Wallet" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Balance hierarchy" })).toBeVisible();
+    await expect(page.getByText("Available", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Withdrawable", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Pending", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Invested", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Withdrawable now equals Available")).toBeVisible();
-    await expect(page.getByText("Pending deposits")).toBeVisible();
-    await expect(page.getByText("Locked funds")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Start deposit" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Start withdrawal" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Wallet navigation" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Deposit" }).first()).toHaveAttribute(
+      "href",
+      "/wallet/deposits/new",
+    );
+    await expect(page.getByRole("link", { name: "Withdraw" }).first()).toHaveAttribute(
+      "href",
+      "/wallet/withdrawals/new",
+    );
     await expect(page.getByText("Accrued earnings", { exact: true })).toBeVisible();
   });
 

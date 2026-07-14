@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
-import CustomerAppLayout from "@/features/customer/components/customer-app-layout";
+import { DashboardShell } from "@/features/customer/dashboard/dashboard-shell";
 
+/** WP1 — wallet uses the frozen dashboard chrome for platform visual continuity. */
 export default function WalletLayout({ children }: { children: ReactNode }) {
-  return <CustomerAppLayout>{children}</CustomerAppLayout>;
+  return <DashboardShell>{children}</DashboardShell>;
 }

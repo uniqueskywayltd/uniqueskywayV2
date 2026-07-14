@@ -24,18 +24,21 @@
  * marketing homepage composition for any future public visual changes.
  *
  * Customer dashboard status: frozen (DP1–DP5). Further dashboard work only for
- * defects, ADRs, or accessibility fixes — next migration surface is Wallet.
+ * defects, ADRs, or accessibility fixes.
+ *
+ * Wallet migration: in progress (WP1 shell).
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
   homepageFreezeTag: "homepage-migration-complete",
   dashboardMigration: "complete",
   dashboardCommit: "f436f2e",
+  walletMigration: "wp1-in-progress",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
   nextSurfaces: [
-    "customer wallet (platform dashboard/wallet visuals → V3 /wallet)",
+    "customer wallet WP2+ (deposits, withdrawals, ledger preview)",
     "customer portfolio",
     "admin (platform hard/auth portal)",
     "auth / empty / error states (platform auth, errors, brand)",
