@@ -2,9 +2,12 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { Button } from "@/components/ui";
 import { FadeIn } from "@/features/public/components/motion";
-import { PublicPageContainer } from "@/features/public/components/public-shell";
+import {
+  marketingOutlineBtn,
+  marketingPrimaryBtn,
+  section,
+} from "@/features/public/components/marketing-ui";
 import { cn } from "@/lib/utils";
 
 export function TrustPageHero({
@@ -27,19 +30,13 @@ export function TrustPageHero({
   return (
     <header className="relative overflow-hidden" aria-label={purpose} data-purpose={purpose}>
       <div className="absolute inset-0 -z-10">
-        <Image
-          src={image}
-          alt={imageAlt}
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-        />
+        <Image src={image} alt={imageAlt} fill priority className="object-cover" sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/92 via-slate-950/75 to-slate-950/50" />
       </div>
 
-      <PublicPageContainer
+      <div
         className={cn(
+          section.container,
           "py-20 sm:py-24 lg:py-28",
           align === "center" && "text-center",
         )}
@@ -63,7 +60,7 @@ export function TrustPageHero({
             {lead}
           </p>
         </FadeIn>
-      </PublicPageContainer>
+      </div>
     </header>
   );
 }
@@ -78,15 +75,13 @@ export function TrustSection({
   className?: string;
 }) {
   return (
-    <section className={cn("py-12 sm:py-14", className)}>
-      <PublicPageContainer>
-        <h2 className="font-[family-name:var(--font-instrument-serif)] text-2xl tracking-normal text-foreground sm:text-3xl">
-          {title}
-        </h2>
+    <section className={cn(section.padding, className)}>
+      <div className={section.container}>
+        <h2 className={section.heading}>{title}</h2>
         <div className="mt-6 space-y-4 text-sm leading-7 text-muted-foreground sm:text-base">
           {children}
         </div>
-      </PublicPageContainer>
+      </div>
     </section>
   );
 }
@@ -103,23 +98,36 @@ export function TrustCtaBand({
   secondary: { label: string; href: string };
 }) {
   return (
-    <section className="border-t bg-muted/30 py-14">
-      <PublicPageContainer>
+    <section className={cn("relative overflow-hidden", section.padding)} aria-label={title}>
+      <div className="absolute inset-0 -z-10 bg-primary" />
+      <div className={section.container}>
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-[family-name:var(--font-instrument-serif)] text-2xl text-foreground sm:text-3xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-primary-foreground sm:text-4xl">
             {title}
           </h2>
-          <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">{support}</p>
+          <p className="mt-3 text-sm leading-7 text-primary-foreground/75 sm:text-base">{support}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button asChild>
-              <Link href={primary.href}>{primary.label}</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={secondary.href}>{secondary.label}</Link>
-            </Button>
+            <Link
+              href={primary.href}
+              className={cn(
+                marketingPrimaryBtn(),
+                "bg-white text-primary hover:bg-white/90 hover:text-primary",
+              )}
+            >
+              {primary.label}
+            </Link>
+            <Link
+              href={secondary.href}
+              className={cn(
+                marketingOutlineBtn(),
+                "border-white/25 text-white hover:bg-white/10 hover:text-white",
+              )}
+            >
+              {secondary.label}
+            </Link>
           </div>
         </div>
-      </PublicPageContainer>
+      </div>
     </section>
   );
 }

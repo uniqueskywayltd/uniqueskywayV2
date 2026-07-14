@@ -1,58 +1,33 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("sprint A2 homepage", () => {
-  test("renders the flagship homepage sections", async ({ page }) => {
+  test("renders the platform homepage composition", async ({ page }) => {
     await page.goto("/");
 
     await expect(page.getByRole("region", { name: "Homepage banner" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 1, name: "UniqueSkyWay" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "CREATE AN ACCOUNT" }).first()).toBeVisible();
-    await expect(page.getByRole("region", { name: "Anniversary" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /9TH YEAR SUCCESS/i })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Areas of practice" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "What We Can Do for You" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Projects and sectors" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Collectible Digital World" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Annual statistics" })).toBeVisible();
-    await expect(page.getByText("Financial & Consulting Award 2020-2021")).toBeVisible();
-    await expect(page.getByRole("region", { name: "Plans and videos" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "View Certificate" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Featured plan" }).first()).toBeVisible();
-    await expect(page.getByText("Returns are not guaranteed").first()).toBeVisible();
-    await expect(page.getByRole("region", { name: "Support" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Serving investors is what we do" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Testimonials" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Clients" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Call to action" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Fun facts" })).toBeVisible();
-    await expect(page.getByText("Figures appear from certified reporting when published.")).toBeVisible();
-
-    await expect(page.getByRole("region", { name: "Remove initial skepticism." })).toBeVisible();
     await expect(
-      page.getByRole("region", { name: "Explain why the company exists and why it is different." }),
+      page.getByRole("heading", { level: 1, name: "Where vision meets measurable growth." }),
     ).toBeVisible();
-    await expect(page.getByRole("region", { name: "Show how simple the process is." })).toBeVisible();
-    await expect(
-      page.getByRole("region", {
-        name: "Introduce investment opportunities without overwhelming details.",
-      }),
-    ).toBeVisible();
-    await expect(page.getByRole("region", { name: "Answer “Is my money safe?”" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Build long-term credibility." })).toBeVisible();
-    await expect(
-      page.getByRole("region", { name: "Resolve the most common objections." }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("region", { name: "Encourage registration with confidence." }),
-    ).toBeVisible();
-
-    await expect(page.getByText("Returns are not guaranteed.")).toBeVisible();
-    await expect(page.getByText("Plans will appear when published")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Start investing" }).first()).toBeVisible();
+    await expect(page.getByText("$24,850").first()).toBeVisible();
+    await expect(page.getByRole("region", { name: "Platform highlights" })).toBeVisible();
+    await expect(page.getByText("$250M+").first()).toBeVisible();
+    await expect(page.getByRole("region", { name: "What we do" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Diversified investment services" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Why Unique Sky Way" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "How it works" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Plans coming soon" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Client testimonials" })).toBeVisible();
+    await expect(page.getByText("Sarah Mitchell").first()).toBeVisible();
+    await expect(page.getByRole("region", { name: "Get started" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Create free account" }).first()).toBeVisible();
   });
 
   test("keeps the public shell on the homepage", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Investments" }).first()).toBeVisible();
     await expect(page.getByRole("contentinfo")).toBeVisible();
   });
 });

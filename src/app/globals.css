@@ -224,3 +224,23 @@
     left: 125%;
   }
 }
+
+@keyframes testimonials-marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-testimonials-marquee {
+  animation: testimonials-marquee-scroll 140s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-testimonials-marquee {
+    animation: none;
+  }
+}
+
