@@ -46,6 +46,7 @@ test.describe("sprint A1 public foundation", () => {
     const mobileNav = page.getByRole("navigation", { name: "Mobile navigation" });
     await expect(mobileNav).toBeVisible();
     for (const label of [
+      "Home",
       "About",
       "Investments",
       "How It Works",

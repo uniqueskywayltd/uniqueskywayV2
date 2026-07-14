@@ -8,7 +8,7 @@ export default function AuthLoading() {
       <div className="flex flex-col">
         <div className="flex items-center justify-between border-b border-border/50 px-6 py-5 lg:px-10">
           <div className="lg:hidden">
-            <BrandMark surface="onLight" className="[&_img]:h-8 [&_img]:max-w-[112px]" />
+            <BrandMark surface="theme" width={112} className="[&_img]:max-h-8" />
           </div>
         </div>
         <div className="flex flex-1 items-center justify-center px-6 py-10">

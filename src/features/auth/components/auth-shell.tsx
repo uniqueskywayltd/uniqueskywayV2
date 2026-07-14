@@ -54,7 +54,7 @@ export function AuthShell({
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
         <div className="relative flex h-full flex-col justify-between p-12 xl:p-16">
-          <BrandMark surface="onLight" />
+          <BrandMark surface="theme" width={148} />
 
           <div className="max-w-md">
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-medium tracking-[0.16em] text-amber-900 uppercase dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
@@ -94,7 +94,7 @@ export function AuthShell({
       <div className="relative flex flex-col bg-background">
         <div className="flex items-center justify-between gap-2 border-b border-border/50 px-4 py-4 sm:gap-3 sm:px-6 sm:py-5 lg:px-10">
           <div className="min-w-0 max-w-[52%] shrink sm:max-w-none lg:hidden">
-            <BrandMark surface="onLight" className="[&_img]:h-8 [&_img]:max-w-[112px]" />
+            <BrandMark surface="theme" width={112} className="[&_img]:max-h-8" />
           </div>
           <AuthChromeControls />
         </div>

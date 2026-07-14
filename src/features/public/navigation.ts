@@ -3,8 +3,12 @@ export const PUBLIC_PRIMARY_NAV = [
   { labelKey: "nav.contact", href: "/contact" },
 ] as const;
 
-/** Full mobile drawer — richer than desktop chrome while desktop stays lean. */
+/**
+ * Full mobile drawer — richer than desktop chrome while desktop stays lean.
+ * Order matches platform discoverability without changing routes.
+ */
 export const PUBLIC_MOBILE_NAV = [
+  { labelKey: "nav.home", href: "/" },
   { labelKey: "nav.about", href: "/about" },
   { labelKey: "nav.investments", href: "/plans" },
   { labelKey: "nav.how_it_works", href: "/how-it-works" },

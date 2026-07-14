@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BarChart3, LogIn } from "lucide-react";
 
+import { brandAssets } from "@/features/brand";
 import { useI18n } from "@/features/i18n/i18n-provider";
 import {
   marketingGhostLink,
@@ -68,7 +69,7 @@ export function HomepageHero() {
             >
               <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-5 dark:border-border dark:bg-muted/50">
                 <div className="flex items-center gap-2.5">
-                  <Image src="/brand/icon.webp" alt="" width={22} height={22} className="rounded" />
+                  <Image src={brandAssets.icon} alt="" width={22} height={22} className="rounded" />
                   <div>
                     <p className="text-xs font-medium text-foreground">Investor dashboard</p>
                     <p className="text-[10px] text-muted-foreground">Portfolio overview</p>

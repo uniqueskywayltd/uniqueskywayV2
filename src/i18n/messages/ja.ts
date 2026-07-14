@@ -21,6 +21,7 @@ export const jaMessages = localeFromEnglish({
   'chrome.signing_out': 'サインアウト中…',
   'chrome.admin_console': '管理コンソール',
   'chrome.toggle_nav': 'ナビ切替',
+  'nav.home': 'ホーム',
   'nav.about': '会社概要',
   'nav.investments': '投資',
   'nav.how_it_works': '仕組み',

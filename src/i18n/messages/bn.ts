@@ -21,6 +21,7 @@ export const bnMessages = localeFromEnglish({
   'chrome.signing_out': 'সাইন আউট হচ্ছে…',
   'chrome.admin_console': 'অ্যাডমিন কনসোল',
   'chrome.toggle_nav': 'নেভিগেশন টগল',
+  'nav.home': 'হোম',
   'nav.about': 'আমাদের সম্পর্কে',
   'nav.investments': 'বিনিয়োগ',
   'nav.how_it_works': 'কীভাবে কাজ করে',

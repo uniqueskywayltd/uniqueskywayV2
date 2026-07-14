@@ -61,8 +61,9 @@ export function PublicHeader() {
     <header className="relative z-40 border-b border-border/50 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6 lg:px-8">
         <BrandMark
-          surface="onLight"
-          className="min-w-0 max-w-[45%] shrink sm:max-w-none [&_img]:h-9 [&_img]:w-auto [&_img]:max-w-[128px] sm:[&_img]:h-10"
+          surface="theme"
+          width={128}
+          className="min-w-0 max-w-[45%] shrink sm:max-w-none [&_img]:w-[96px] sm:[&_img]:w-[112px] md:[&_img]:w-[128px]"
         />
 
         <nav className="hidden items-center gap-10 lg:flex" aria-label="Main navigation">
@@ -99,6 +100,22 @@ export function PublicHeader() {
 
       {mobileOpen ? (
         <div className="border-t border-border/50 bg-background px-4 py-5 md:hidden">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <BrandMark
+              surface="theme"
+              width={112}
+              priority={false}
+              className="[&_img]:w-[104px]"
+            />
+            <button
+              type="button"
+              className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => setMobileOpen(false)}
+              aria-label={t("chrome.close_nav")}
+            >
+              <X className="h-5 w-5" aria-hidden />
+            </button>
+          </div>
           <nav className="flex flex-col gap-0.5" aria-label="Mobile navigation">
             {PUBLIC_MOBILE_NAV.map((link) => (
               <NavLink
@@ -112,14 +129,14 @@ export function PublicHeader() {
             <div className="mt-4 flex flex-col gap-2.5 border-t border-border/50 pt-4">
               <Link
                 href="/auth/login"
-                className={cn(marketingHeaderOutlineBtn(), "h-11 w-full")}
+                className={cn(marketingHeaderOutlineBtn(), "h-11 w-full justify-center")}
                 onClick={() => setMobileOpen(false)}
               >
                 {t("chrome.sign_in")}
               </Link>
               <Link
                 href="/auth/register"
-                className={cn(marketingHeaderPrimaryBtn(), "h-11 w-full")}
+                className={cn(marketingHeaderPrimaryBtn(), "h-11 w-full justify-center")}
                 onClick={() => setMobileOpen(false)}
               >
                 {t("chrome.open_account")}

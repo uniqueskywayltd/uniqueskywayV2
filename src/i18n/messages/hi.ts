@@ -21,6 +21,7 @@ export const hiMessages = localeFromEnglish({
   'chrome.signing_out': 'साइन आउट हो रहा है…',
   'chrome.admin_console': 'एडमिन कंसोल',
   'chrome.toggle_nav': 'नेविगेशन टॉगल',
+  'nav.home': 'होम',
   'nav.about': 'परिचय',
   'nav.investments': 'निवेश',
   'nav.how_it_works': 'यह कैसे काम करता है',

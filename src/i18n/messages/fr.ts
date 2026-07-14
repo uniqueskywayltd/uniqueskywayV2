@@ -21,6 +21,7 @@ export const frMessages = localeFromEnglish({
   'chrome.signing_out': 'Déconnexion…',
   'chrome.admin_console': 'Console d\'administration',
   'chrome.toggle_nav': 'Basculer la navigation',
+  'nav.home': 'Accueil',
   'nav.about': 'À propos',
   'nav.investments': 'Investissements',
   'nav.how_it_works': 'Comment ça marche',

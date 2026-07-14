@@ -21,6 +21,7 @@ export const zhHansMessages = localeFromEnglish({
   'chrome.signing_out': '正在退出…',
   'chrome.admin_console': '管理控制台',
   'chrome.toggle_nav': '切换导航',
+  'nav.home': '首页',
   'nav.about': '关于',
   'nav.investments': '投资',
   'nav.how_it_works': '运作方式',

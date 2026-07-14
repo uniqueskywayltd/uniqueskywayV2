@@ -26,6 +26,7 @@ export const enMessages = {
   "chrome.toggle_nav": "Toggle navigation",
 
   // Public nav
+  "nav.home": "Home",
   "nav.about": "About",
   "nav.investments": "Investments",
   "nav.how_it_works": "How It Works",

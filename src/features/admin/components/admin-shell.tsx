@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 
+import { BrandMark } from "@/components/layout/brand-mark";
 import { Button } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { postAuthJson } from "@/features/auth/api-client";
@@ -46,8 +47,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-background lg:flex">
         <div className="border-b border-border px-4 py-5">
-          <p className="text-sm font-semibold text-foreground">Unique Sky Way</p>
-          <p className="text-xs text-muted-foreground">{t("chrome.admin_console")}</p>
+          <BrandMark surface="theme" width={132} className="[&_img]:max-h-8" />
+          <p className="mt-2 text-xs text-muted-foreground">{t("chrome.admin_console")}</p>
         </div>
         <AdminNavLinks pathname={pathname} />
       </aside>
@@ -107,10 +108,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
             >
               <div className="flex items-center justify-between border-b border-border px-4 py-4">
                 <div>
-                  <DialogPrimitive.Title className="text-sm font-semibold text-foreground">
-                    Unique Sky Way
-                  </DialogPrimitive.Title>
-                  <p className="text-xs text-muted-foreground">{t("chrome.admin_console")}</p>
+                  <DialogPrimitive.Title className="sr-only">Unique Sky Way</DialogPrimitive.Title>
+                  <BrandMark surface="theme" width={120} priority={false} className="[&_img]:max-h-8" />
+                  <p className="mt-1.5 text-xs text-muted-foreground">{t("chrome.admin_console")}</p>
                 </div>
                 <DialogPrimitive.Close asChild>
                   <Button type="button" variant="ghost" size="icon" className="h-9 w-9" aria-label={t("admin.close")}>

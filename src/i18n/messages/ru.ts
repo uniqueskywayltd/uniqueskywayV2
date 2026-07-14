@@ -21,6 +21,7 @@ export const ruMessages = localeFromEnglish({
   'chrome.signing_out': 'Выход…',
   'chrome.admin_console': 'Админ-консоль',
   'chrome.toggle_nav': 'Переключить меню',
+  'nav.home': 'Главная',
   'nav.about': 'О нас',
   'nav.investments': 'Инвестиции',
   'nav.how_it_works': 'Как это работает',

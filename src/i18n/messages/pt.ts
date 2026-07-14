@@ -21,6 +21,7 @@ export const ptMessages = localeFromEnglish({
   'chrome.signing_out': 'Saindo…',
   'chrome.admin_console': 'Console de administração',
   'chrome.toggle_nav': 'Alternar navegação',
+  'nav.home': 'Início',
   'nav.about': 'Sobre',
   'nav.investments': 'Investimentos',
   'nav.how_it_works': 'Como funciona',

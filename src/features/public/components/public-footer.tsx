@@ -18,7 +18,7 @@ export function PublicFooter() {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-12 md:grid-cols-4">
           <div className="md:col-span-2">
-            <BrandMark surface="onDark" className="[&_img]:h-10 [&_img]:w-auto [&_img]:max-w-[160px]" />
+            <BrandMark surface="onDark" width={160} className="[&_img]:max-h-10" />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-400">{t("footer.tagline")}</p>
           </div>
 

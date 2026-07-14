@@ -21,6 +21,7 @@ export const arMessages = localeFromEnglish({
   'chrome.signing_out': 'جاري تسجيل الخروج…',
   'chrome.admin_console': 'وحدة تحكم المسؤول',
   'chrome.toggle_nav': 'تبديل القائمة',
+  'nav.home': 'الرئيسية',
   'nav.about': 'من نحن',
   'nav.investments': 'الاستثمارات',
   'nav.how_it_works': 'كيف يعمل',

@@ -21,6 +21,7 @@ export const esMessages = localeFromEnglish({
   'chrome.signing_out': 'Cerrando sesión…',
   'chrome.admin_console': 'Consola de administración',
   'chrome.toggle_nav': 'Alternar navegación',
+  'nav.home': 'Inicio',
   'nav.about': 'Acerca de',
   'nav.investments': 'Inversiones',
   'nav.how_it_works': 'Cómo funciona',
