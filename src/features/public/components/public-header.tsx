@@ -21,6 +21,9 @@ export function PublicHeader() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [sticky, setSticky] = useState(false);
   const mobileNavId = useId();
+  const isHome = pathname === "/";
+  /** HP2 acceptance: transparent overlay on homepage until sticky. */
+  const overlay = isHome && !sticky;
 
   useEffect(() => {
     const onScroll = () => setSticky(window.scrollY > 120);
@@ -34,15 +37,19 @@ export function PublicHeader() {
       <header
         className={cn(
           "z-[999] w-full font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif]",
-          sticky ? "fixed top-0 left-0 right-0" : "relative",
+          sticky ? "fixed top-0 right-0 left-0" : isHome ? "absolute top-0 right-0 left-0" : "relative",
         )}
       >
         {!sticky ? <CurrencyTicker /> : null}
 
         <div
           className={cn(
-            "transition-shadow duration-500",
-            sticky ? "bg-white shadow-[0_10px_20px_rgba(0,0,0,0.2)]" : "bg-[color:var(--legacy-navy)]",
+            "transition-[background-color,box-shadow] duration-500",
+            sticky
+              ? "bg-white shadow-[0_10px_20px_rgba(0,0,0,0.2)]"
+              : overlay
+                ? "bg-transparent"
+                : "bg-[color:var(--legacy-navy)]",
           )}
           style={{ ["--legacy-navy" as string]: LEGACY_NAVY }}
         >
@@ -82,7 +89,7 @@ export function PublicHeader() {
                       <Link
                         href={item.href}
                         className={cn(
-                          "relative block px-3 py-[18px] text-[15px] font-bold uppercase tracking-[0.02em] transition-colors",
+                          "relative block px-3 py-[18px] text-[15px] font-bold tracking-[0.02em] uppercase transition-colors",
                           sticky
                             ? active
                               ? "text-[#da2c46]"
@@ -102,7 +109,7 @@ export function PublicHeader() {
                   <button
                     type="button"
                     className={cn(
-                      "flex items-center gap-1 px-3 py-[18px] text-[15px] font-bold uppercase tracking-[0.02em]",
+                      "flex items-center gap-1 px-3 py-[18px] text-[15px] font-bold tracking-[0.02em] uppercase",
                       sticky ? "text-[#222] hover:text-[#da2c46]" : "text-white",
                     )}
                     aria-expanded={accountOpen}
@@ -128,11 +135,16 @@ export function PublicHeader() {
                   ) : null}
                 </li>
               </ul>
-              <div className="ml-6 border-l border-white/50 pl-6">
+              <div
+                className={cn(
+                  "ml-6 border-l pl-6",
+                  sticky ? "border-[#ddd]" : "border-white/50",
+                )}
+              >
                 <Link
                   href="/auth/register"
                   className="inline-block px-7 py-2.5 text-base font-bold text-white"
-                  style={{ background: sticky ? LEGACY_NAVY : LEGACY_NAVY, border: sticky ? undefined : "1px solid rgba(255,255,255,0.55)" }}
+                  style={{ background: LEGACY_NAVY }}
                 >
                   Free account
                 </Link>
@@ -177,7 +189,12 @@ export function PublicHeader() {
                 height={100}
                 className="h-[100px] w-[100px] rounded bg-white object-contain"
               />
-              <button type="button" className="p-2 text-[#222]" onClick={() => setOpen(false)} aria-label="Close navigation">
+              <button
+                type="button"
+                className="p-2 text-[#222]"
+                onClick={() => setOpen(false)}
+                aria-label="Close navigation"
+              >
                 <X className="size-5" aria-hidden="true" />
               </button>
             </div>
@@ -233,7 +250,6 @@ export function PublicHeader() {
         </div>
       ) : null}
 
-      {/* Spacer when sticky so content does not jump */}
       {sticky ? <div className="h-[102px]" aria-hidden="true" /> : null}
     </>
   );

@@ -4,9 +4,9 @@ test.describe("sprint A2 homepage", () => {
   test("renders the flagship homepage sections", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.getByRole("heading", { level: 1, name: "Invest with clarity." })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Get started" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "View plans" }).first()).toBeVisible();
+    await expect(page.getByRole("region", { name: "Homepage banner" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "UniqueSkyWay" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "CREATE AN ACCOUNT" }).first()).toBeVisible();
 
     await expect(page.getByRole("region", { name: "Remove initial skepticism." })).toBeVisible();
     await expect(

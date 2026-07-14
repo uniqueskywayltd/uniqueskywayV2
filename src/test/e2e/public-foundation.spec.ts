@@ -8,7 +8,7 @@ test.describe("sprint A1 public foundation", () => {
     await expect(page.getByRole("link", { name: "Investments" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Free account" }).first()).toBeVisible();
     await expect(page.getByRole("contentinfo")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Invest with clarity." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "UniqueSkyWay" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Skip to main content" })).toBeAttached();
     await expect(page.getByRole("region", { name: "Currency rates" })).toBeVisible();
   });

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui";
-import { FadeIn } from "@/features/public/components/motion";
+import { LegacyHeroCarousel } from "@/features/public/components/homepage/legacy-hero-carousel";
 import { HomeSection, SectionHeading } from "@/features/public/components/homepage/section";
 import { HOMEPAGE_COPY } from "@/features/public/content/homepage";
 import { cn } from "@/lib/utils";
@@ -22,43 +22,7 @@ export function HomepageView() {
 
   return (
     <>
-      {/* Purpose: capture attention and communicate the core value proposition. */}
-      <section
-        id="hero"
-        aria-label={copy.hero.purpose}
-        data-purpose={copy.hero.purpose}
-        className="relative isolate overflow-hidden"
-      >
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[radial-gradient(120%_80%_at_10%_0%,oklch(0.93_0.02_250)_0%,oklch(0.985_0.004_250)_45%,oklch(0.96_0.01_70)_100%)]"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-background to-transparent"
-        />
-        <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-[90rem] flex-col justify-center px-4 py-20 sm:px-6 lg:px-8">
-          <FadeIn className="max-w-3xl">
-            <p className="text-sm font-medium tracking-[0.18em] text-muted-foreground uppercase">
-              Unique Sky Way
-            </p>
-            <h1 className="mt-5 font-[family-name:var(--font-instrument-serif)] text-5xl leading-[1.05] tracking-normal text-foreground sm:text-6xl lg:text-7xl">
-              {copy.hero.headline}
-            </h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-              {copy.hero.support}
-            </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Button asChild size="lg">
-                <Link href={copy.hero.primaryCta.href}>{copy.hero.primaryCta.label}</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href={copy.hero.secondaryCta.href}>{copy.hero.secondaryCta.label}</Link>
-              </Button>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
+      <LegacyHeroCarousel />
 
       {/* Purpose: remove initial skepticism. */}
       <HomeSection id="trust" purpose={copy.trustBar.purpose} tone="muted">
