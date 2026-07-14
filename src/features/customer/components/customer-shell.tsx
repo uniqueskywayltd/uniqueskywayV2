@@ -13,6 +13,8 @@ import {
   CUSTOMER_MOBILE_BOTTOM_NAV,
   CUSTOMER_PRIMARY_NAV,
 } from "@/features/customer/navigation";
+import { LanguageSelector } from "@/features/i18n/language-selector";
+import { isAppLanguage, translate, type AppLanguage } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 import { getCustomerJson } from "../api-client";
@@ -62,6 +64,9 @@ export function CustomerShell({ children }: CustomerShellProps) {
 
   const moneyNav = CUSTOMER_PRIMARY_NAV.filter((item) => item.group === "money");
   const accountNav = CUSTOMER_PRIMARY_NAV.filter((item) => item.group === "account");
+  const uiLanguage: AppLanguage = isAppLanguage(summary?.preferences.language)
+    ? summary.preferences.language
+    : "en";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -109,12 +114,15 @@ export function CustomerShell({ children }: CustomerShellProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <div className="hidden sm:block">
+                <LanguageSelector />
+              </div>
               <Link
                 href="/account/notifications"
                 className="relative rounded-md border px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 <Bell className="size-4" aria-hidden="true" />
-                <span className="sr-only">Notifications</span>
+                <span className="sr-only">{translate(uiLanguage, "chrome.notifications")}</span>
                 {summary?.unreadNotificationCount ? (
                   <span className="absolute -right-1 -top-1 size-2 rounded-full bg-destructive" />
                 ) : null}
@@ -155,6 +163,9 @@ export function CustomerShell({ children }: CustomerShellProps) {
                 summary={summary}
                 onNavigate={() => setMobileOpen(false)}
               />
+              <div className="border-t pt-3 sm:hidden">
+                <LanguageSelector compact={false} />
+              </div>
             </nav>
           ) : null}
         </header>

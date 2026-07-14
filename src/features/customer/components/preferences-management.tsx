@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { LANGUAGE_COOKIE_NAME, listSelectableLanguages } from "@/i18n";
 import {
   Alert,
   AlertDescription,
@@ -77,7 +78,12 @@ export function PreferencesManagement() {
     });
 
     if (result.error) setError(result.error);
-    else setMessage("Preferences saved.");
+    else {
+      setMessage("Preferences saved.");
+      if (typeof document !== "undefined") {
+        document.cookie = `${LANGUAGE_COOKIE_NAME}=${encodeURIComponent(language)}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+      }
+    }
     setPending(false);
   }
 
@@ -109,9 +115,11 @@ export function PreferencesManagement() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="es">Spanish</SelectItem>
-                  <SelectItem value="fr">French</SelectItem>
+                  {listSelectableLanguages().map((entry) => (
+                    <SelectItem key={entry.code} value={entry.code}>
+                      {entry.nativeName}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

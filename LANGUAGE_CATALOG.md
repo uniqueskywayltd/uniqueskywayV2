@@ -53,4 +53,4 @@ Notes:
 
 - Adding/removing a language or changing direction/status requires updating this file in the same PR as catalog/code changes.  
 - Implementation must read supported tags from a code module kept in sync with this table (Sprint I1).  
-- Never offer a language in the selector while status is `design` unless an ADR explicitly allows a development-only flag.
+- Languages offered in the selector during Sprint I1 for infrastructure/RTL testing even while non-English rows remain `design` status; missing strings fall back to English until a locale is certified `pilot` / `production`.

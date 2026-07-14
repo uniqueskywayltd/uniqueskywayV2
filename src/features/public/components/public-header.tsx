@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 
 import { BrandMark } from "@/components/layout/brand-mark";
 import { Button } from "@/components/ui";
+import { LanguageSelector } from "@/features/i18n/language-selector";
 import { PUBLIC_PRIMARY_NAV } from "@/features/public/navigation";
 import { marketingTransitionClassName } from "@/features/public/components/motion";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ export function PublicHeader() {
           })}
         </nav>
         <div className="hidden items-center gap-2 lg:flex">
+          <LanguageSelector />
           <Button asChild variant="ghost" size="sm">
             <Link href="/contact">Contact</Link>
           </Button>
@@ -80,6 +82,7 @@ export function PublicHeader() {
               </Link>
             ))}
             <div className="mt-2 grid gap-2 border-t pt-3">
+              <LanguageSelector compact={false} />
               <Button asChild variant="outline">
                 <Link href="/auth/login" onClick={() => setOpen(false)}>
                   Sign in

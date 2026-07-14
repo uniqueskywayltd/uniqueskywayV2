@@ -1,6 +1,10 @@
 import { z } from "zod";
 
+import { APP_LANGUAGE_CODES } from "@/i18n";
+
 export const customerAppearanceSchema = z.enum(["system", "light", "dark"]);
+
+export const customerLanguageSchema = z.enum(APP_LANGUAGE_CODES);
 
 export const updateCustomerProfileInputSchema = z.object({
   legalName: z.string().trim().max(200).optional().nullable(),
@@ -23,11 +27,7 @@ export const updateCustomerProfileInputSchema = z.object({
 
 export const updateCustomerPreferencesInputSchema = z.object({
   appearance: customerAppearanceSchema.optional(),
-  language: z
-    .string()
-    .trim()
-    .regex(/^[a-z]{2}(-[A-Z]{2})?$/)
-    .optional(),
+  language: customerLanguageSchema.optional(),
   timeZone: z.string().trim().min(3).max(80).optional(),
   inAppNotificationsEnabled: z.boolean().optional(),
   securityEmailsEnabled: z.boolean().optional(),

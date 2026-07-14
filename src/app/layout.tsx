@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { translate } from "@/i18n";
+import { getRequestLanguage } from "@/i18n/request-language";
 import { DefaultStructuredData } from "@/lib/seo/structured-data";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 
@@ -40,14 +42,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const { language, direction } = await getRequestLanguage();
+
   return (
     <html
-      lang="en"
+      lang={language}
+      dir={direction}
       className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
     >
       <body className="font-sans antialiased">
@@ -55,7 +60,7 @@ export default function RootLayout({
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[var(--z-toast)] focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-[var(--elevation-2)]"
         >
-          Skip to main content
+          {translate(language, "chrome.skip_to_content")}
         </a>
         <DefaultStructuredData />
         {children}
