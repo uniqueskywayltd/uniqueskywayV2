@@ -15,6 +15,10 @@ test.describe("sprint A2 homepage", () => {
     await expect(page.getByRole("heading", { name: "Collectible Digital World" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Annual statistics" })).toBeVisible();
     await expect(page.getByText("Financial & Consulting Award 2020-2021")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Plans and videos" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "View Certificate" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Featured plan" }).first()).toBeVisible();
+    await expect(page.getByText("Returns are not guaranteed").first()).toBeVisible();
 
     await expect(page.getByRole("region", { name: "Remove initial skepticism." })).toBeVisible();
     await expect(
