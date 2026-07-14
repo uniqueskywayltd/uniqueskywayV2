@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
 
-import { CustomerPageHeader } from "@/features/customer/components/page-header";
 import { DepositJourney } from "@/features/customer/wallet/deposit-journey";
+import { DepositSurfaceHero } from "@/features/customer/wallet/deposit-surface-hero";
 
 export const metadata: Metadata = {
-  title: "Add funds | Unique Sky Way",
+  title: "New deposit | Unique Sky Way",
   robots: { index: false, follow: false },
 };
 
+/** WP2 — Deposit CTA / journey presentation; engine calls unchanged. */
 export default function NewDepositPage() {
   return (
-    <div className="space-y-6">
-      <CustomerPageHeader
-        title="Add funds"
+    <div className="space-y-8">
+      <DepositSurfaceHero
+        title="New deposit"
         description="How do I add funds safely? Amount → confirm → provider → status. Not instant."
       />
       <DepositJourney />

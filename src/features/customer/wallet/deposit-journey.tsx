@@ -66,7 +66,10 @@ export function DepositJourney() {
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <p className="sr-only">Primary question: How do I add funds safely?</p>
-      <ol className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+      <ol
+        className="flex flex-wrap gap-2 text-xs text-muted-foreground"
+        aria-label="Deposit steps"
+      >
         <li className={step === "amount" ? "font-semibold text-foreground" : undefined}>
           1 Amount
         </li>
@@ -81,8 +84,15 @@ export function DepositJourney() {
       </ol>
 
       {step === "amount" ? (
-        <form onSubmit={onContinue} className="space-y-4 rounded-xl border border-border/80 p-5">
-          <div className="space-y-2">
+        <form
+          onSubmit={onContinue}
+          className="relative overflow-hidden space-y-4 rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-6"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_50%)] opacity-[0.08] dark:opacity-[0.16]"
+            aria-hidden
+          />
+          <div className="relative space-y-2">
             <Label htmlFor="deposit-amount">Amount (USD)</Label>
             <Input
               id="deposit-amount"
@@ -95,8 +105,8 @@ export function DepositJourney() {
               Money should feel safe — not fast. Funds become Available only after confirmation.
             </p>
           </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <div className="flex gap-3">
+          {error ? <p className="relative text-sm text-destructive">{error}</p> : null}
+          <div className="relative flex gap-3">
             <Button type="submit">Continue</Button>
             <Button asChild type="button" variant="ghost">
               <Link href="/wallet">Cancel</Link>
@@ -104,23 +114,34 @@ export function DepositJourney() {
           </div>
         </form>
       ) : (
-        <div className="space-y-4 rounded-xl border border-border/80 p-5">
-          <h2 className="text-base font-semibold text-foreground">Confirm deposit</h2>
-          <dl className="space-y-2 text-sm">
-            <div className="flex justify-between gap-4">
+        <div className="relative overflow-hidden space-y-4 rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-6">
+          <div
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_50%)] opacity-[0.08] dark:opacity-[0.16]"
+            aria-hidden
+          />
+          <h2 className="relative text-base font-semibold text-foreground">Confirm deposit</h2>
+          <dl className="relative space-y-3 text-sm">
+            <div className="flex justify-between gap-4 border-b border-border/60 py-2">
               <dt className="text-muted-foreground">Amount</dt>
-              <dd className="font-mono">${Number(amount).toFixed(2)} USD</dd>
+              <dd className="font-mono font-medium tabular-nums">
+                ${Number(amount).toFixed(2)} USD
+              </dd>
             </div>
-            <div className="flex justify-between gap-4">
+            <div className="flex justify-between gap-4 py-2">
               <dt className="text-muted-foreground">What happens next</dt>
               <dd className="max-w-[14rem] text-right text-muted-foreground">
                 You’ll complete payment with the certified provider, then wait for confirmation.
               </dd>
             </div>
           </dl>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <div className="flex flex-wrap gap-3">
-            <Button type="button" onClick={() => void onSubmit()} disabled={step === "submitting"}>
+          {error ? <p className="relative text-sm text-destructive">{error}</p> : null}
+          <div className="relative flex flex-wrap gap-3">
+            <Button
+              type="button"
+              onClick={() => void onSubmit()}
+              disabled={step === "submitting"}
+              aria-busy={step === "submitting"}
+            >
               {step === "submitting" ? "Starting…" : "Continue to payment"}
             </Button>
             <Button

@@ -292,10 +292,17 @@ test.describe("sprint B3 wallet experience", () => {
 
   test("supports deposit history and anxiety-reducing withdrawal detail", async ({ page }) => {
     await page.goto("/wallet/deposits");
-    await expect(page.getByRole("heading", { level: 1, name: "Funding history" })).toBeVisible();
-    await page.getByRole("link", { name: /\$50\.00/ }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Deposits" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "New deposit" }).first()).toHaveAttribute(
+      "href",
+      "/wallet/deposits/new",
+    );
+    await expect(page.getByRole("group", { name: "Filter deposits by status" })).toBeVisible();
+    await page.getByRole("link", { name: "View" }).click();
     await expect(page).toHaveURL(/\/wallet\/deposits\/dep_1$/);
     await expect(page.getByText("Expected next step")).toBeVisible();
+    await expect(page.getByText("Timeline")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Contact support" })).toBeVisible();
 
     await page.goto("/wallet/withdrawals/wd_1");
     await expect(page.getByText("Current status")).toBeVisible();
