@@ -635,7 +635,7 @@ See `GROWTH_EXPERIENCE_SPECIFICATION.md` + companions.
 | **G2** | Statements (`DEC-0047`, `DEC-0050`) | **Frozen** — `DEC-0051` / `DEC-0053` |
 | **G3** | Education (`DEC-0052`) | **Frozen** — `DEC-0054` / `DEC-0056` |
 | **G4** | Referral Experience (`DEC-0055`) | **Frozen** — `DEC-0057` |
-| **G5** | Certification + `STATEMENT_DATA_DICTIONARY.md` + tag `v3.2.0` | Next |
+| **G5** | Certification + `STATEMENT_DATA_DICTIONARY.md` + tag `v3.2.0` | **Frozen** — `DEC-0058` / `DEC-0059` |
 
 Note: `FINANCIAL_DASHBOARD_PRINCIPLES.md` already exists from Wave B (`v3.1.0`). G5 still requires `STATEMENT_DATA_DICTIONARY.md`.
 
@@ -700,7 +700,7 @@ Exit criteria:
 | `v2.3.0` | Admin portal certified (frozen). |
 | `v3.0.0` | Customer Experience Platform — public trust (frozen, `DEC-0029`). |
 | `v3.1.0` | Customer Money Experience (frozen, `DEC-0043`). |
-| `v3.2.0` | Customer Success Experience (Milestone 6) — next. |
+| `v3.2.0` | Customer Success Experience (Milestone 6) — frozen. |
 | `v3.3.0` | International Platform (Milestone 7). |
 | `v3.4.0` | Mobile Experience (Milestone 8). |
 | `v4.0.0` | Ecosystem / Global Platform (Milestone 9). |
@@ -718,18 +718,18 @@ From Milestone 5 onward, prefer **release trains** (versioned customer experienc
 | 3 Money Platform | `v2.2.0` | Frozen |
 | 4 Administration | `v2.3.0` | Frozen |
 | 5 Customer Experience | `v3.0.0` / `v3.1.0` | Wave A frozen (`DEC-0029`); Wave B frozen (`DEC-0043`) |
-| 6 Customer Success Experience | `v3.2.0` | Stage 1 approved; Sprint G1 in progress |
+| 6 Customer Success Experience | `v3.2.0` | Frozen (`DEC-0059`) |
 | 7 International Platform | `v3.3.0` | Planned |
 | 8 Mobile Experience | `v3.4.0` | Planned |
 | 9 Ecosystem | `v4.0.0` | Planned |
 
 ## Current Build Order Summary
 
-1. `main` includes certified/frozen Investment (`v2.1.0`), Money Movement (`v2.2.0`), Admin (`v2.3.0`), public Wave A (`v3.0.0`), and Customer Money Experience (`v3.1.0`). Annotated tag **`v3.1.0`** is pushed; follow `PLATFORM_CONSTITUTION.md`.
-2. Public Wave A is frozen under **`DEC-0029`**. Authenticated Wave B is frozen under **`DEC-0043`**.
+1. `main` includes certified/frozen Investment (`v2.1.0`), Money Movement (`v2.2.0`), Admin (`v2.3.0`), public Wave A (`v3.0.0`), Customer Money Experience (`v3.1.0`), and Customer Success Experience (`v3.2.0`). Follow `PLATFORM_CONSTITUTION.md`.
+2. Public Wave A is frozen under **`DEC-0029`**. Authenticated Wave B is frozen under **`DEC-0043`**. Customer Success is frozen under **`DEC-0059`**.
 3. Customer money UX constitutions remain in force; `FINANCIAL_INVARIANTS.md` always wins on money truth.
-4. Milestone 6 — **Customer Success Experience (`v3.2.0`)**: Stage 1 approved (`DEC-0045`); Sprint G1 Success Hub in progress. One sprint at a time. Do not start i18n until `v3.3.0` governance.
-5. Subsequent trains: `v3.3.0` international → `v3.4.0` mobile → `v4.0.0` ecosystem.
+4. Milestone 6 — **Customer Success Experience (`v3.2.0`)** is certified and frozen (`DEC-0058` / `DEC-0059`). Annotated tag **`v3.2.0`** is the freeze point.
+5. Next: International Platform (`v3.3.0`) under Design → Approve → Implement. Then `v3.4.0` mobile → `v4.0.0` ecosystem.
 6. Do not reopen frozen releases without ADR, regression tests, and (where required) UX approval + recertification.
 7. Keep Paystack as the sole provider until a superseding provider ADR is accepted.
 8. Do not ask implementers to re-compare the legacy V1 repository by default — evaluate remembered features through product review first.

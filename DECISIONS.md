@@ -1877,22 +1877,70 @@ G3 delivered Learn home, paths, lessons, calm progress, and search without LMS g
 
 - G4 may deep-link to the referrals lesson; it does not reopen Learning.
 
-## DEC-0057: Sprint G4 Referral Experience (proposed acceptance)
+## DEC-0057: Sprint G4 Referral Experience
 
 - Date: 2026-07-13
-- Status: **Proposed** — awaiting consultancy review of `SPRINT_G4_CERTIFICATION.md`
-- Future Review: After Accepted, G4 referral hub requires ADR-level change control
+- Status: Accepted
+- Future Review: ADR-level change control for referral hub surfaces
 
 ### Context
 
-G3 frozen (`DEC-0054`/`DEC-0056`). Referral Ethics Guide adopted (`DEC-0055`). G4 deepened the referral hub for responsible invitations over the frozen referral engine.
+G3 frozen (`DEC-0054`/`DEC-0056`). Referral Ethics Guide adopted (`DEC-0055`). G4 deepened the referral hub for responsible invitations over the frozen referral engine. Consultancy score: **100 / 100**.
 
-### Decision (pending)
+### Decision
 
-1. Accept Sprint G4 as certified.
-2. Merge `milestone-6-sprint-g4-referrals` into `main`.
-3. Authorize Sprint G5 Certification only after acceptance (including `STATEMENT_DATA_DICTIONARY.md`).
+1. Accept Sprint G4 as certified (`SPRINT_G4_CERTIFICATION.md`).
+2. Merge `milestone-6-sprint-g4-referrals` into `main` and freeze G4.
+3. Authorize Sprint G5 Certification only — no new customer functionality before `v3.2.0`.
 
-### Consequences (when accepted)
+### Consequences
 
 - Referral hub becomes a frozen Customer Success surface.
+- G5 produces audits, `STATEMENT_DATA_DICTIONARY.md`, freeze ADRs, and annotated tag **`v3.2.0`**.
+
+## DEC-0058: Customer Success Experience Certified
+
+- Date: 2026-07-13
+- Status: Accepted
+- Future Review: Philosophy-level Customer Success change
+
+### Context
+
+Sprints G1–G5 delivered and certified the Customer Success Experience on frozen v2.x / v3.0 / v3.1 cores. Consultancy scored G1 at **99.9** and G2–G4 at **100 / 100**. G5 completed audits and `STATEMENT_DATA_DICTIONARY.md` without new product functionality.
+
+### Decision
+
+1. Certify Milestone 6 Customer Success Experience (`MILESTONE_6_CERTIFICATION.md`, `CUSTOMER_SUCCESS_CERTIFICATION.md`).
+2. Treat G1–G4 surfaces as certified for release `v3.2.0`.
+3. Proceed to freeze under `DEC-0059`.
+
+### Consequences
+
+- Customer Success train is release-ready pending freeze tag actions.
+
+## DEC-0059: Customer Success Experience Frozen at v3.2.0
+
+- Date: 2026-07-13
+- Status: Accepted — **ACTIVE FREEZE**
+- Future Review: Only for philosophy-level Success Experience change, or superseding ADR
+
+### Context
+
+Milestone 6 feature work is complete. Certification gates passed. The platform now answers trust, money management, success guidance, learning, statements understanding, and responsible referrals as coherent experiences.
+
+### Decision
+
+1. Freeze Milestone 6 at annotated tag **`v3.2.0`**.
+2. Merge `milestone-6-sprint-g5-certification` into `main`, tag, and push.
+3. Require ADR + regression + recertification for casual changes to Success Hub, Learning, Statements, or Referral hub.
+4. Next product train is International Platform (`v3.3.0`) — Design → Approve first.
+
+### Rejected Alternatives
+
+- Ship more Milestone 6 features before freeze.
+- Soft-freeze without an annotated tag.
+
+### Consequences
+
+- `v3.2.0` is immutable intent for Customer Success Experience.
+- `FINANCIAL_INVARIANTS.md` continues to win over any experience conflict.

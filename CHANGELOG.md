@@ -12,17 +12,26 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-Added:
+(none)
 
-- Adopted `PLATFORM_CONSTITUTION.md` (`DEC-0044`) and aligned long-term trains: Customer Success (`v3.2.0`), International (`v3.3.0`), Mobile (`v3.4.0`), Ecosystem (`v4.0.0`).
-- Approved Milestone 6 Stage 1 (`DEC-0045`, **99.8 / 100**): Customer Success Experience design pack + `SUCCESS_METRICS_FRAMEWORK.md`; `DEC-0046` Success Hub primacy; `DEC-0047` ledger-only statements.
-- Sprint G1 (in progress): Customer Success Hub shells — `/account/success`, learn, milestones, statements entry, progress framework (no business logic).
-- Sprint G1 merged and frozen (`DEC-0048` / `DEC-0049`); `STATEMENT_DESIGN_PRINCIPLES.md` adopted (`DEC-0050`).
-- Sprint G2 (in progress): Ledger-projected statements — list, detail, filters, download history, CSV export.
-- Sprint G2 merged and frozen (`DEC-0051` / `DEC-0053`); `LEARNING_EXPERIENCE_PRINCIPLES.md` adopted (`DEC-0052`).
-- Sprint G3 (in progress): Learning experience — recommended next lesson, paths, lesson detail, progress, search.
-- Sprint G3 merged and frozen (`DEC-0054` / `DEC-0056`); `REFERRAL_ETHICS_GUIDE.md` adopted (`DEC-0055`).
-- Sprint G4 (in progress): Responsible referral hub — share/QR, status, rewards, guidance over frozen referral engine.
+## v3.2.0 - 2026-07-13
+
+Status: Certified Customer Success Experience (frozen under `DEC-0058` / `DEC-0059`).
+
+Included:
+
+- Completed Milestone 6 (sprints G1–G5): Success Hub, ledger-projected statements, learning experience, responsible referral hub, and certification package.
+- Adopted success/governance companions including `SUCCESS_METRICS_FRAMEWORK.md`, `STATEMENT_DESIGN_PRINCIPLES.md`, `STATEMENT_DATA_DICTIONARY.md`, `LEARNING_EXPERIENCE_PRINCIPLES.md`, and `REFERRAL_ETHICS_GUIDE.md`.
+- Preserved frozen cores: Investment `v2.1.0`, Money Movement `v2.2.0`, Admin `v2.3.0`, Public Wave A `v3.0.0`, Customer Money Experience `v3.1.0`.
+
+Verification:
+
+- Lint, typecheck, unit tests (198), `db:check`, production build, and e2e (44) passed.
+
+Scope certification:
+
+- Customer Success Experience is frozen under `DEC-0059`. Changes require ADR-level justification and recertification.
+- Next train: International Platform (`v3.3.0`) under Design → Approve → Implement.
 
 ## v3.1.0 - 2026-07-13
 
