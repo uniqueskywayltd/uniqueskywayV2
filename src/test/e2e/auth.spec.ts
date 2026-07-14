@@ -17,6 +17,7 @@ test.describe("identity UI", () => {
     await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
     await expect(page.getByLabel("Confirm password")).toBeVisible();
     await expect(page.getByText("Investment Package")).toBeVisible();
+    await expect(page.getByRole("button", { name: /Tap to select a package|Silver Plan|Gold Plan|Classic Plan|Master Plan/ })).toBeVisible();
     await expect(page.getByLabel("Referral code")).toBeVisible();
     await expect(page.getByText("Security check")).toBeVisible();
     await expect(page.getByText("256-bit encryption")).toBeVisible();

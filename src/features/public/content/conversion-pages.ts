@@ -6,24 +6,20 @@
 export const PLANS_COPY = {
   purpose: "Help customers understand available investment opportunities.",
   hero: {
-    eyebrow: "Investment plans",
-    title: "Compare with clarity.",
-    lead: "Plan terms come from the certified investment catalog. Compare Silver, Gold, Classic, and Master with clear duration and deposit ranges—never invented returns.",
-  },
-  howTermsWork: {
-    title: "How plan terms work",
-    body: "When a plan is published, its duration, eligibility, and earning rules are defined by the certified investment engine. The public site presents those terms; it does not calculate returns in the browser.",
+    eyebrow: "Investments",
+    title: "Plans built for every portfolio size",
+    lead: "From entry-level Silver to premium Master plans — each designed with clear terms, transparent returns, and professional management.",
   },
   lifecycle: {
-    title: "Plan lifecycle (high level)",
+    title: "What happens next",
     steps: [
       {
         title: "Choose",
-        detail: "Review published plans and select one that matches your timing and capacity.",
+        detail: "Select a published plan that matches your timing and capacity.",
       },
       {
         title: "Activate",
-        detail: "After funding eligibility is met, activate within your account following platform rules.",
+        detail: "After funding eligibility is met, activate within your account.",
       },
       {
         title: "Track",
@@ -31,64 +27,28 @@ export const PLANS_COPY = {
       },
       {
         title: "Complete",
-        detail: "When the term concludes, eligible balances follow certified settlement behavior.",
+        detail: "When the term concludes, eligible balances follow certified settlement.",
       },
     ],
   },
   eligibility: {
-    title: "Eligibility",
+    title: "Can I invest?",
     items: [
       "Verified account (email confirmation complete).",
       "Sufficient available balance for the plan’s published minimum, when shown.",
       "Plan status must be available for activation—not every listing is always open.",
     ],
   },
-  catalog: {
-    title: "Featured plans",
-    emptyTitle: "Certified catalog",
-    emptyDescription:
-      "Plan terms are sourced from the certified investment catalog (Silver, Gold, Classic, Master).",
-    placeholders: [
-      {
-        name: "Silver Plan",
-        duration: "5 days",
-        eligibility: "Minimum $50",
-        earnings: "3% daily return (certified terms)",
-        status: "Active",
-      },
-      {
-        name: "Gold Plan",
-        duration: "7 days",
-        eligibility: "Minimum $25,000",
-        earnings: "5.5% daily return (certified terms)",
-        status: "Active",
-      },
-      {
-        name: "Classic Plan",
-        duration: "14 days",
-        eligibility: "Minimum $50,000",
-        earnings: "6% daily return (certified terms)",
-        status: "Active",
-      },
-      {
-        name: "Master Plan",
-        duration: "30 days",
-        eligibility: "Minimum $100,000",
-        earnings: "10% daily return (certified terms)",
-        status: "Active",
-      },
-    ],
-  },
   risk: {
-    title: "Risk note",
+    title: "What you should understand",
     body: "Investments involve risk, including possible loss of capital. Returns are not guaranteed. Read the Risk Disclosure before registering.",
     href: "/legal/risk",
     label: "Risk Disclosure",
   },
   cta: {
-    title: "Ready to begin?",
-    support: "Create an account when you are ready. There is no countdown and no manufactured scarcity.",
-    primary: { label: "Get started", href: "/auth/register" },
+    title: "Ready to start investing?",
+    support: "Create your free account and access our full range of investment plans.",
+    primary: { label: "Open your account", href: "/auth/register" },
     secondary: { label: "How it works", href: "/how-it-works" },
   },
 } as const;

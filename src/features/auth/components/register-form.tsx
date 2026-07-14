@@ -217,21 +217,11 @@ function RegisterFormInner() {
         </AuthInputIcon>
       </AuthField>
 
-      <div className={cn("space-y-2", authCalloutClass)}>
-        <PlanSelectionField
-          value={planIntent}
-          onChange={setPlanIntent}
-          disabled={pending}
-          label={t("auth.investment_package")}
-          placeholder={t("auth.preview_plans")}
-        />
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {t("auth.package_after_verify")}{" "}
-          <Link href="/plans" className={authLinkClass}>
-            {t("auth.preview_plans")}
-          </Link>
-        </p>
-      </div>
+      <PlanSelectionField
+        value={planIntent}
+        onChange={setPlanIntent}
+        disabled={pending}
+      />
 
       <AuthField label={t("auth.referral_code")} htmlFor="referral">
         <AuthInputIcon icon={<Gift className="h-4 w-4" aria-hidden />}>

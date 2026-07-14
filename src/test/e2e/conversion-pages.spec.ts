@@ -4,14 +4,14 @@ test.describe("sprint A4 conversion experience", () => {
   test("renders Plans with certified catalog", async ({ page }) => {
     await page.goto("/plans");
     await expect(
-      page.getByRole("heading", { level: 1, name: "Compare with clarity." }),
+      page.getByRole("heading", { level: 1, name: "Plans built for every portfolio size" }),
     ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Silver Plan" }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Gold Plan" }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Classic Plan" }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Master Plan" }).first()).toBeVisible();
     await expect(page.getByText("guaranteed return", { exact: false })).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: "Risk note" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What you should understand" })).toBeVisible();
   });
 
   test("renders FAQ groups and supports search", async ({ page }) => {

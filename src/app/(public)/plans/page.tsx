@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import { BarChart3, Clock, Shield, Wallet } from "lucide-react";
 
 import { InvestmentPlansSection } from "@/features/public/components/homepage/investment-plans-section";
 import {
@@ -7,13 +9,37 @@ import {
   TrustPageHero,
   TrustSection,
 } from "@/features/public/components/trust/trust-page";
-import { CERTIFIED_PUBLIC_PLANS, formatPlanMoney } from "@/features/public/content/certified-plans";
+import { section } from "@/features/public/components/marketing-ui";
 import { PLANS_COPY } from "@/features/public/content/conversion-pages";
 import { buildPageMetadata, webPageJsonLd } from "@/lib/seo/metadata";
 import { JsonLdScript } from "@/lib/seo/structured-data";
+import { cn } from "@/lib/utils";
 
 const PLANS_DESCRIPTION =
-  "Compare Unique Sky Way investment plans. Terms come from the certified catalog—never invented returns.";
+  "From entry-level Silver to premium Master plans — each designed with clear terms, transparent returns, and professional management.";
+
+const FEATURES = [
+  {
+    icon: BarChart3,
+    title: "Real-time tracking",
+    text: "Monitor your investments, returns, and portfolio performance from a single dashboard.",
+  },
+  {
+    icon: Shield,
+    title: "Secure transactions",
+    text: "Every deposit and withdrawal is logged, audited, and protected by enterprise security.",
+  },
+  {
+    icon: Clock,
+    title: "Flexible durations",
+    text: "Choose from multiple plan durations designed to match your investment timeline.",
+  },
+  {
+    icon: Wallet,
+    title: "Easy withdrawals",
+    text: "Request withdrawals through your dashboard with full transparency on processing status.",
+  },
+] as const;
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Investment Plans",
@@ -38,58 +64,56 @@ export default function PlansPage() {
         purpose={copy.purpose}
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
-        lead="Published plan terms come from the certified investment catalog. Duration, eligibility, and return structure are shown exactly as configured — the site does not invent rates in the browser."
+        lead={copy.hero.lead}
         image="/brand/investments.webp"
         imageAlt="Investment opportunities"
         align="center"
       />
 
-      <TrustSection title={copy.howTermsWork.title}>
-        <p>{copy.howTermsWork.body}</p>
-      </TrustSection>
+      <section className={section.padding}>
+        <div className={section.container}>
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-2xl">
+              <Image
+                src="/brand/portfolio.webp"
+                alt="Investment portfolio management"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 to-transparent" />
+              <div className="absolute right-6 bottom-6 left-6">
+                <p className="text-lg font-medium text-white">Professional portfolio management</p>
+                <p className="mt-1 text-sm text-white/70">
+                  Transparent terms. Secure operations. Full visibility.
+                </p>
+              </div>
+            </div>
 
-      <InvestmentPlansSection compareHref="/auth/register" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              {FEATURES.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="rounded-xl border border-border/60 bg-card/50 p-5"
+                >
+                  <feature.icon className="mb-3 h-6 w-6 text-primary" aria-hidden />
+                  <h3 className="font-medium text-foreground">{feature.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feature.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <TrustSection title="Plan catalog summary" className="bg-muted/30">
-        <ul className="grid gap-4 md:grid-cols-2">
-          {CERTIFIED_PUBLIC_PLANS.map((plan) => (
-            <li
-              key={plan.slug}
-              className="rounded-xl border border-border/80 bg-background p-5 shadow-[var(--elevation-1)]"
-            >
-              <p className="text-lg font-semibold text-foreground">{plan.name}</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">{plan.description}</p>
-              <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <dt className="font-medium text-foreground">Daily return</dt>
-                  <dd className="mt-1 text-muted-foreground">{plan.dailyRoiPercent}%</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-foreground">Duration</dt>
-                  <dd className="mt-1 text-muted-foreground">{plan.durationDays} days</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-foreground">Minimum</dt>
-                  <dd className="mt-1 text-muted-foreground">{formatPlanMoney(plan.minDeposit)}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium text-foreground">Maximum</dt>
-                  <dd className="mt-1 text-muted-foreground">
-                    {plan.maxDeposit ? formatPlanMoney(plan.maxDeposit) : "Unlimited"}
-                  </dd>
-                </div>
-              </dl>
-            </li>
-          ))}
-        </ul>
-      </TrustSection>
+      <InvestmentPlansSection showCompareStrip={false} />
 
       <TrustSection title={copy.lifecycle.title}>
-        <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {copy.lifecycle.steps.map((step, index) => (
-            <li key={step.title} className="rounded-xl border border-border/80 p-5">
-              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                {index + 1}
+            <li key={step.title} className="min-w-0">
+              <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                Step {index + 1}
               </p>
               <p className="mt-2 text-base font-semibold text-foreground">{step.title}</p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.detail}</p>
@@ -99,7 +123,7 @@ export default function PlansPage() {
       </TrustSection>
 
       <TrustSection title={copy.eligibility.title} className="bg-muted/30">
-        <ul className="list-disc space-y-2 pl-5">
+        <ul className="list-disc space-y-2 pl-5 text-muted-foreground">
           {copy.eligibility.items.map((item) => (
             <li key={item}>{item}</li>
           ))}
@@ -108,8 +132,11 @@ export default function PlansPage() {
 
       <TrustSection title={copy.risk.title}>
         <p>{copy.risk.body}</p>
-        <p>
-          <Link href={copy.risk.href} className="underline underline-offset-4">
+        <p className="mt-3">
+          <Link
+            href={copy.risk.href}
+            className={cn("font-medium text-foreground underline underline-offset-4")}
+          >
             {copy.risk.label}
           </Link>
         </p>

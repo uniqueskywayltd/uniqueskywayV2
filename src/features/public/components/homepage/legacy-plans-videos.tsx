@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
 import { brandAssets } from "@/features/brand";
-import { PLANS_COPY } from "@/features/public/content/conversion-pages";
+import {
+  CERTIFIED_PUBLIC_PLANS,
+  formatPlanMoney,
+} from "@/features/public/content/certified-plans";
 import { cn } from "@/lib/utils";
 
 /**
@@ -13,7 +16,13 @@ import { cn } from "@/lib/utils";
  * Financial fields are certified placeholders only — never legacy PHP rates/deposits.
  */
 const PLAN_CARDS = [
-  ...PLANS_COPY.catalog.placeholders,
+  ...CERTIFIED_PUBLIC_PLANS.map((plan) => ({
+    name: plan.name,
+    duration: `${plan.durationDays} days`,
+    eligibility: `Minimum ${formatPlanMoney(plan.minDeposit)}`,
+    earnings: `${plan.dailyRoiPercent}% daily return (certified terms)`,
+    status: "Active",
+  })),
   {
     name: "Featured plan",
     duration: "Duration from certified catalog",
@@ -158,7 +167,7 @@ function PlansCarouselInner({ itemsPerView }: { itemsPerView: number }) {
         ))}
       </div>
       <p className="mt-4 px-3 text-center text-[12px] leading-5 text-[#666]">
-        {PLANS_COPY.catalog.emptyDescription}{" "}
+        Plan terms are sourced from the certified investment catalog (Silver, Gold, Classic, Master).{" "}
         <Link href="/legal/risk" className="underline underline-offset-2">
           Risk Disclosure
         </Link>

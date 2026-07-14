@@ -5,7 +5,6 @@ import { Check, ChevronDown } from "lucide-react";
 
 import {
   CERTIFIED_PUBLIC_PLANS,
-  formatPlanMoney,
   type CertifiedPublicPlan,
 } from "@/features/public/content/certified-plans";
 import { cn } from "@/lib/utils";
@@ -15,17 +14,21 @@ type PlanSelectionFieldProps = {
   onChange: (planSlug: string) => void;
   plans?: readonly CertifiedPublicPlan[];
   disabled?: boolean;
-  label?: string;
-  placeholder?: string;
+  loading?: boolean;
+  error?: string | null;
 };
 
+/**
+ * Presentation-only package selector — platform `plan-selection-field.tsx` parity.
+ * Does not bind investments during signup.
+ */
 export function PlanSelectionField({
   value,
   onChange,
   plans = CERTIFIED_PUBLIC_PLANS,
   disabled,
-  label = "Investment Package",
-  placeholder = "Tap to select a package",
+  loading,
+  error,
 }: PlanSelectionFieldProps) {
   const [open, setOpen] = useState(false);
   const selected = plans.find((plan) => plan.slug === value);
@@ -35,13 +38,22 @@ export function PlanSelectionField({
     setOpen(false);
   }
 
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Investment Package</p>
+        <div className="h-12 animate-pulse rounded-xl border border-border bg-muted/40" />
+      </div>
+    );
+  }
+
   if (!plans.length) {
     return <p className="text-sm text-muted-foreground">Packages unavailable.</p>;
   }
 
   return (
     <fieldset className="space-y-2" disabled={disabled}>
-      <legend className="mb-2 text-sm font-medium text-foreground">{label}</legend>
+      <legend className="mb-2 text-sm font-medium text-foreground">Investment Package</legend>
 
       <button
         type="button"
@@ -70,7 +82,7 @@ export function PlanSelectionField({
               selected ? "font-medium text-foreground" : "text-muted-foreground",
             )}
           >
-            {selected ? selected.name : placeholder}
+            {selected ? selected.name : "Tap to select a package"}
           </span>
         </span>
         <ChevronDown
@@ -113,18 +125,16 @@ export function PlanSelectionField({
                 >
                   {isSelected ? <Check className="h-3 w-3 text-primary-foreground" /> : null}
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium text-foreground">{plan.name}</span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {plan.dailyRoiPercent}% daily · {plan.durationDays} days · from{" "}
-                    {formatPlanMoney(plan.minDeposit)}
-                  </span>
-                </span>
+                <span className="text-sm font-medium">{plan.name}</span>
               </button>
             );
           })}
         </div>
       ) : null}
+
+      <input type="hidden" name="planIntent" value={value} readOnly aria-hidden />
+
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </fieldset>
   );
 }

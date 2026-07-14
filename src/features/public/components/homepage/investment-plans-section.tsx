@@ -77,7 +77,7 @@ function PlanCard({ plan }: { plan: CertifiedPublicPlan }) {
       <div
         className={cn(
           card.base,
-          "relative flex flex-1 flex-col bg-white text-slate-900 shadow-md dark:bg-slate-900 dark:text-slate-50 dark:shadow-none",
+          "relative flex flex-1 flex-col bg-card transition-shadow duration-300 hover:shadow-lg",
           featured &&
             "border-amber-300 ring-2 ring-amber-400/35 dark:border-amber-700 dark:ring-amber-500/25",
         )}
@@ -102,7 +102,7 @@ function PlanCard({ plan }: { plan: CertifiedPublicPlan }) {
                 <TierIcon className="h-3 w-3" aria-hidden />
                 {tierLabel}
               </span>
-              <h3 className="mt-3 text-lg font-semibold tracking-tight text-slate-900 sm:text-xl dark:text-white">
+              <h3 className="mt-3 text-lg font-semibold tracking-tight text-foreground sm:text-xl">
                 {plan.name}
               </h3>
               <div className="mt-2.5 flex gap-1" aria-hidden>
@@ -119,21 +119,21 @@ function PlanCard({ plan }: { plan: CertifiedPublicPlan }) {
             </div>
             <div
               className={cn(
-                "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800",
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50",
                 featured && "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40",
               )}
             >
               <TierIcon
                 className={cn(
                   "h-4 w-4",
-                  featured ? "text-amber-600 dark:text-amber-400" : "text-slate-500 dark:text-slate-400",
+                  featured ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
                 )}
                 aria-hidden
               />
             </div>
           </div>
 
-          <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-800/60">
+          <div className="mt-6 rounded-lg border border-border bg-muted/40 p-5 dark:bg-muted/25">
             <div className="flex items-end gap-0.5">
               <span
                 className={cn(
@@ -143,13 +143,13 @@ function PlanCard({ plan }: { plan: CertifiedPublicPlan }) {
               >
                 {plan.dailyRoiPercent}
               </span>
-              <span className="mb-1 text-lg font-medium text-slate-500 dark:text-slate-400">%</span>
+              <span className="mb-1 text-lg font-medium text-muted-foreground">%</span>
             </div>
-            <p className="mt-1 text-[11px] font-semibold tracking-[0.14em] text-slate-500 uppercase dark:text-slate-400">
+            <p className="mt-1 text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
               Daily return
             </p>
             {yieldTotal ? (
-              <p className="mt-3 text-xs text-slate-600 dark:text-slate-300">
+              <p className="mt-3 text-xs text-muted-foreground">
                 Up to{" "}
                 <span className="font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
                   {yieldTotal}%
@@ -159,7 +159,7 @@ function PlanCard({ plan }: { plan: CertifiedPublicPlan }) {
             ) : null}
           </div>
 
-          <ul className="mt-5 flex-1 divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900">
+          <ul className="mt-5 flex-1 divide-y divide-border rounded-lg border border-border bg-card">
             {[
               { icon: Wallet, label: "Minimum", value: formatPlanMoney(plan.minDeposit) },
               {
@@ -176,13 +176,13 @@ function PlanCard({ plan }: { plan: CertifiedPublicPlan }) {
               },
             ].map((row) => (
               <li key={row.label} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                  <row.icon className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <row.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/80" aria-hidden />
                   {row.label}
                 </span>
                 <span
                   className={cn(
-                    "font-semibold tabular-nums text-slate-900 dark:text-white",
+                    "font-semibold tabular-nums text-foreground",
                     row.highlight && "text-emerald-700 dark:text-emerald-400",
                   )}
                 >
@@ -194,31 +194,23 @@ function PlanCard({ plan }: { plan: CertifiedPublicPlan }) {
 
           <ul className="mt-4 space-y-2">
             {PERKS.map((perk) => (
-              <li
-                key={perk}
-                className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300"
-              >
+              <li key={perk} className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
                 {perk}
               </li>
             ))}
           </ul>
 
-          <div className="mt-6 flex flex-col gap-2">
-            <Link
-              href={`/auth/register?intent=${plan.slug}`}
-              className={cn(marketingPrimaryBtn("w-full"), "justify-center")}
-            >
-              Get started
-              <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
-            </Link>
-            <Link
-              href="/plans"
-              className={cn(marketingOutlineBtn("w-full"), "justify-center border-slate-300 dark:border-slate-600")}
-            >
-              View details
-            </Link>
-          </div>
+          <Link
+            href={`/auth/register?intent=${plan.slug}`}
+            className={cn(
+              featured ? marketingPrimaryBtn("mt-6 w-full") : marketingOutlineBtn("mt-6 w-full"),
+              "justify-center",
+            )}
+          >
+            Start with {tierLabel}
+            <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
+          </Link>
         </div>
       </div>
     </article>
@@ -228,65 +220,52 @@ function PlanCard({ plan }: { plan: CertifiedPublicPlan }) {
 type InvestmentPlansSectionProps = {
   plans?: readonly CertifiedPublicPlan[];
   compareHref?: string;
+  /** Hide the compare-details strip when already on the plans page. */
+  showCompareStrip?: boolean;
 };
 
 export function InvestmentPlansSection({
   plans = CERTIFIED_PUBLIC_PLANS,
   compareHref = "/plans",
+  showCompareStrip = true,
 }: InvestmentPlansSectionProps) {
   return (
     <section
-      className="relative overflow-hidden border-y border-slate-200 bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:border-slate-800 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
+      className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
       aria-label="Investment plans"
     >
       <div className={cn(section.container, section.padding)}>
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-xs font-semibold tracking-[0.14em] text-sky-700 uppercase dark:text-sky-400">
-            Investment plans
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-            Flexible plans for every portfolio
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-700 dark:text-slate-300">
+          <p className={section.eyebrow}>Investment plans</p>
+          <h2 className={section.heading}>Flexible plans for every portfolio</h2>
+          <p className={cn(section.body, "mx-auto text-center")}>
             Choose a tier that matches your goals — transparent terms, daily reporting, and full
             control from one secure investor dashboard.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:mt-14 xl:grid-cols-4 xl:gap-6">
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:mt-14 lg:grid-cols-2 xl:grid-cols-4 xl:gap-6">
           {plans.map((plan) => (
             <PlanCard key={plan.slug} plan={plan} />
           ))}
         </div>
 
-        <div className="mx-auto mt-12 max-w-4xl rounded-xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-900/5 sm:mt-14 sm:p-7 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <div className="flex flex-col items-center justify-between gap-5 sm:flex-row sm:gap-8">
-            <div className="text-center sm:text-left">
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">All plans include</p>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Referral rewards · Immutable ledger · 24/7 dashboard · Professional support
-              </p>
+        {showCompareStrip ? (
+          <div className="mx-auto mt-12 max-w-4xl rounded-xl border border-border bg-card p-6 shadow-md shadow-slate-900/5 sm:mt-14 sm:p-7 dark:shadow-none">
+            <div className="flex flex-col items-center justify-between gap-5 sm:flex-row sm:gap-8">
+              <div className="text-center sm:text-left">
+                <p className="text-sm font-semibold text-foreground">All plans include</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Referral rewards · Immutable ledger · 24/7 dashboard · Professional support
+                </p>
+              </div>
+              <Link href={compareHref} className={cn(marketingOutlineBtn("shrink-0"), "justify-center")}>
+                Compare full details
+                <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
+              </Link>
             </div>
-            <Link
-              href={compareHref}
-              className={cn(
-                marketingOutlineBtn("shrink-0"),
-                "border-slate-300 text-slate-900 dark:border-slate-600 dark:text-white",
-              )}
-            >
-              Compare full details
-              <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
-            </Link>
           </div>
-        </div>
-
-        <p className="mx-auto mt-6 max-w-2xl text-center text-xs text-slate-500 dark:text-slate-400">
-          Investments involve risk, including possible loss of capital. Returns are not guaranteed.{" "}
-          <Link href="/legal/risk" className="underline underline-offset-2">
-            Risk Disclosure
-          </Link>
-          .
-        </p>
+        ) : null}
       </div>
     </section>
   );
