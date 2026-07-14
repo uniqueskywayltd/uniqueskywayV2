@@ -132,3 +132,7 @@ export function StatCard(props: StatCardProps) {
 
   return <StatCardBody {...props} />;
 }
+
+export function statCardAccentBar(accent: StatCardAccent = "primary"): string {
+  return accentStyles[accent].bar;
+}

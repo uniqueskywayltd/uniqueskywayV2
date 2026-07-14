@@ -96,6 +96,56 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
         },
       });
     });
+
+    await page.route("**/api/customer/ledger", async (route) => {
+      await route.fulfill({
+        json: {
+          data: {
+            currency: "USD",
+            entries: [
+              {
+                id: "led_1",
+                transactionType: "deposit_confirmation",
+                label: "Deposit credited",
+                referenceType: "deposit",
+                referenceId: "dep_1",
+                description: null,
+                amountMinor: "12000",
+                direction: "credit",
+                currency: "USD",
+                walletCategory: "available",
+                postedAt: "2026-07-13T12:00:00.000Z",
+                href: "/ledger",
+              },
+            ],
+          },
+        },
+      });
+    });
+
+    await page.route("**/api/customer/notifications**", async (route) => {
+      await route.fulfill({
+        json: {
+          data: {
+            notifications: [
+              {
+                id: "notif_1",
+                type: "security.login",
+                title: "New sign-in detected",
+                body: "A new session was created for your account.",
+                priority: "high",
+                category: "security",
+                href: "/account/security",
+                readAt: null,
+                createdAt: "2026-07-13T14:00:00.000Z",
+                isToday: true,
+              },
+            ],
+            unreadCount: 1,
+          },
+        },
+      });
+    });
   });
 
   test("renders platform-aligned dashboard frame", async ({ page }) => {
@@ -154,5 +204,22 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
     await expect(summary.getByText("1", { exact: true }).first()).toBeVisible();
     await expect(summary.getByText("Pending deposits")).toBeVisible();
     await expect(summary.getByText("Open withdrawals")).toBeVisible();
+  });
+
+  test("renders certified activity and notifications", async ({ page }) => {
+    await page.goto("/dashboard");
+
+    await expect(page.getByText("You have 1 unread notification.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Review alerts" })).toHaveAttribute(
+      "href",
+      "/account/notifications",
+    );
+
+    const activity = page.getByRole("region", { name: "Activity" });
+    await expect(activity.getByText("Recent activity")).toBeVisible();
+    await expect(activity.getByText("Deposit credited")).toBeVisible();
+    await expect(activity.getByText("Notifications")).toBeVisible();
+    await expect(activity.getByText("New sign-in detected")).toBeVisible();
+    await expect(activity.getByText("1", { exact: true }).first()).toBeVisible();
   });
 });

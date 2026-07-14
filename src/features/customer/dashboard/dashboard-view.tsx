@@ -1,6 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui";
+import { DashboardActivitySection } from "@/features/customer/dashboard/dashboard-activity-section";
 import { useDashboardChrome } from "@/features/customer/dashboard/dashboard-chrome-context";
 import { DashboardMoneyCards } from "@/features/customer/dashboard/dashboard-money-cards";
 import { DashboardQuickActions } from "@/features/customer/dashboard/dashboard-quick-actions";
@@ -10,7 +11,7 @@ import {
   getPersonHandle,
 } from "@/lib/utils/person-display";
 
-/** DP1 frame + DP2 money cards. Activity / charts deferred to DP3+. */
+/** DP1–DP3: frame, money cards, activity. Charts / investments deferred to DP4+. */
 export function DashboardView() {
   const { summary, loaded } = useDashboardChrome();
 
@@ -42,6 +43,7 @@ export function DashboardView() {
       />
       <DashboardQuickActions />
       <DashboardMoneyCards />
+      <DashboardActivitySection />
       <p className="sr-only">Primary question: How am I doing today?</p>
     </div>
   );
