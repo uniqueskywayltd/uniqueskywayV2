@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** PF1 — Portfolio shell over certified investment read models. */
+/** PF1–PF5 — Portfolio certified: explains investments over certified reads. */
 export default function PortfolioPage() {
   return <PortfolioOverview />;
 }

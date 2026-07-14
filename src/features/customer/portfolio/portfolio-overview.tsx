@@ -8,7 +8,9 @@ import { Button, EmptyState, Input, Skeleton } from "@/components/ui";
 import { CurrencyDisplay } from "@/components/ui/display";
 import { getCustomerJson } from "@/features/customer/api-client";
 import { InvestmentCard } from "@/features/customer/portfolio/investment-card";
+import { PortfolioReveal } from "@/features/customer/portfolio/portfolio-motion";
 import { PortfolioQuickActions } from "@/features/customer/portfolio/portfolio-quick-actions";
+import { PortfolioStatusDistribution } from "@/features/customer/portfolio/portfolio-status-distribution";
 import { PortfolioWelcomeHero } from "@/features/customer/portfolio/portfolio-welcome-hero";
 import type { PortfolioListResponse } from "@/features/customer/portfolio/types";
 import { cn } from "@/lib/utils";
@@ -36,7 +38,8 @@ function PortfolioFrameSkeleton() {
           <Skeleton key={`nav-${index}`} className="h-8 w-28 rounded-lg" />
         ))}
       </div>
-      <Skeleton className="h-20 w-full rounded-xl" />
+      <Skeleton className="h-24 w-full rounded-xl" />
+      <Skeleton className="h-28 w-full rounded-xl" />
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: 5 }).map((_, index) => (
           <Skeleton key={`filter-${index}`} className="h-8 w-20 rounded-lg" />
@@ -50,7 +53,7 @@ function PortfolioFrameSkeleton() {
   );
 }
 
-/** PF1–PF2 — portfolio shell + certified investment cards. */
+/** PF1–PF5: certified portfolio surface (shell → cards → detail link → status counts + polish). */
 export function PortfolioOverview() {
   const [bucket, setBucket] = useState<(typeof BUCKETS)[number]["id"]>("all");
   const [sort, setSort] = useState<(typeof SORTS)[number]["id"]>("newest");
@@ -116,8 +119,13 @@ export function PortfolioOverview() {
     <div className="space-y-8 sm:space-y-9">
       <p className="sr-only">Primary question: How are my investments performing?</p>
 
-      <PortfolioWelcomeHero />
-      <PortfolioQuickActions />
+      <PortfolioReveal>
+        <PortfolioWelcomeHero />
+      </PortfolioReveal>
+
+      <PortfolioReveal delayMs={40}>
+        <PortfolioQuickActions />
+      </PortfolioReveal>
 
       {error && !data ? (
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5" role="alert">
@@ -134,87 +142,97 @@ export function PortfolioOverview() {
         </div>
       ) : null}
 
-      {data ? (
-        <PortfolioOrientation summary={data.summary} />
-      ) : loading ? (
-        <Skeleton className="h-20 w-full rounded-xl" />
-      ) : null}
-
-      <section aria-label="Investment filters" className="space-y-3">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div
-            className="flex flex-wrap gap-2"
-            role="tablist"
-            aria-label="Filter investments by status"
-          >
-            {BUCKETS.map((item) => {
-              const selected = bucket === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={selected}
-                  onClick={() => beginReload({ bucket: item.id })}
-                  className={cn(
-                    "rounded-lg border px-3 py-1.5 text-sm motion-safe:transition-colors motion-safe:duration-200 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    selected
-                      ? "border-primary/30 bg-primary/10 font-medium text-primary"
-                      : "border-border/70 bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-                  )}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
+      <PortfolioReveal delayMs={80}>
+        {data ? (
+          <div className="space-y-4">
+            <PortfolioOrientation summary={data.summary} />
+            <PortfolioStatusDistribution byStatus={data.summary.byStatus} />
           </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative w-full sm:w-60">
-              <Search
-                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              <label htmlFor="portfolio-search" className="sr-only">
-                Search investments
-              </label>
-              <Input
-                id="portfolio-search"
-                type="search"
-                placeholder="Search by plan name…"
-                value={query}
-                onChange={(event) => beginReload({ query: event.target.value })}
-                autoComplete="off"
-                className="pl-9"
-              />
-            </div>
-            <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="shrink-0">Sort by</span>
-              <select
-                className="h-9 min-w-[10.5rem] rounded-lg border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={sort}
-                aria-label="Sort investments"
-                onChange={(event) =>
-                  beginReload({ sort: event.target.value as (typeof SORTS)[number]["id"] })
-                }
-              >
-                {SORTS.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+        ) : loading ? (
+          <div className="space-y-3" aria-busy="true" aria-label="Loading portfolio summary">
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-28 w-full rounded-xl" />
           </div>
-        </div>
-
-        {data && !loading ? (
-          <p className="text-xs text-muted-foreground" aria-live="polite">
-            {resultCount === 1 ? "1 position shown" : `${resultCount} positions shown`}
-            {deferredQuery.trim() ? ` for “${deferredQuery.trim()}”` : null}
-          </p>
         ) : null}
-      </section>
+      </PortfolioReveal>
+
+      <PortfolioReveal delayMs={120}>
+        <section aria-label="Investment filters" className="space-y-3">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div
+              className="flex flex-wrap gap-2"
+              role="tablist"
+              aria-label="Filter investments by status"
+            >
+              {BUCKETS.map((item) => {
+                const selected = bucket === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    onClick={() => beginReload({ bucket: item.id })}
+                    className={cn(
+                      "rounded-lg border px-3 py-1.5 text-sm motion-safe:transition-colors motion-safe:duration-200 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      selected
+                        ? "border-primary/30 bg-primary/10 font-medium text-primary"
+                        : "border-border/70 bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative w-full sm:w-60">
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden
+                />
+                <label htmlFor="portfolio-search" className="sr-only">
+                  Search investments
+                </label>
+                <Input
+                  id="portfolio-search"
+                  type="search"
+                  placeholder="Search by plan name…"
+                  value={query}
+                  onChange={(event) => beginReload({ query: event.target.value })}
+                  autoComplete="off"
+                  className="pl-9"
+                />
+              </div>
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="shrink-0">Sort by</span>
+                <select
+                  className="h-9 min-w-[10.5rem] rounded-lg border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  value={sort}
+                  aria-label="Sort investments"
+                  onChange={(event) =>
+                    beginReload({ sort: event.target.value as (typeof SORTS)[number]["id"] })
+                  }
+                >
+                  {SORTS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
+
+          {data && !loading ? (
+            <p className="text-xs text-muted-foreground" aria-live="polite">
+              {resultCount === 1 ? "1 position shown" : `${resultCount} positions shown`}
+              {deferredQuery.trim() ? ` for “${deferredQuery.trim()}”` : null}
+            </p>
+          ) : null}
+        </section>
+      </PortfolioReveal>
 
       {error && data ? (
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5" role="alert">
@@ -230,22 +248,24 @@ export function PortfolioOverview() {
         </div>
       ) : null}
 
-      {!loading && !error && data && data.investments.length === 0 ? (
-        <PortfolioEmptyState
-          hasPortfolio={data.summary.totalCount > 0}
-          onClear={() => beginReload({ bucket: "all", query: "" })}
-        />
-      ) : null}
+      <PortfolioReveal delayMs={160}>
+        {!loading && !error && data && data.investments.length === 0 ? (
+          <PortfolioEmptyState
+            hasPortfolio={data.summary.totalCount > 0}
+            onClear={() => beginReload({ bucket: "all", query: "" })}
+          />
+        ) : null}
 
-      {!loading && data && data.investments.length > 0 ? (
-        <ul className="grid gap-4 md:grid-cols-2" aria-label="Investment positions">
-          {data.investments.map((investment) => (
-            <li key={investment.id}>
-              <InvestmentCard investment={investment} />
-            </li>
-          ))}
-        </ul>
-      ) : null}
+        {!loading && data && data.investments.length > 0 ? (
+          <ul className="grid gap-4 md:grid-cols-2" aria-label="Investment positions">
+            {data.investments.map((investment) => (
+              <li key={investment.id}>
+                <InvestmentCard investment={investment} />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </PortfolioReveal>
     </div>
   );
 }

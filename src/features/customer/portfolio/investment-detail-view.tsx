@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { Progress } from "@/components/ui/progress";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { PortfolioReveal } from "@/features/customer/portfolio/portfolio-motion";
 import {
   presentInvestmentStatus,
   presentScheduleStatus,
@@ -16,7 +17,7 @@ import {
 import type { PortfolioDetailResponse } from "@/features/customer/portfolio/types";
 import { cn } from "@/lib/utils";
 
-/** PF3 — investment passport over certified detail read models only. */
+/** PF3–PF5 — investment passport over certified detail read models only. */
 export function InvestmentDetailView({ investmentId }: { investmentId: string }) {
   const [data, setData] = useState<PortfolioDetailResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -90,26 +91,29 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
     <div className="space-y-6 sm:space-y-8">
       <p className="sr-only">Primary question: Tell me everything about this investment.</p>
 
-      <div className="flex flex-wrap gap-2">
-        <Link
-          href="/portfolio"
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          All investments
-        </Link>
-        <Link
-          href="/ledger"
-          className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-2")}
-        >
-          Open ledger
-        </Link>
-      </div>
+      <PortfolioReveal>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/portfolio"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            All investments
+          </Link>
+          <Link
+            href="/ledger"
+            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-2")}
+          >
+            Open ledger
+          </Link>
+        </div>
+      </PortfolioReveal>
 
-      <section
-        className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-7 md:p-8"
-        aria-label="Investment header"
-      >
+      <PortfolioReveal delayMs={40}>
+        <section
+          className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-7 md:p-8"
+          aria-label="Investment header"
+        >
         <div
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_45%),linear-gradient(225deg,rgba(139,92,246,0.14)_0%,transparent_55%)] opacity-[0.18] dark:opacity-[0.28]"
           aria-hidden
@@ -139,6 +143,7 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
           aria-hidden
         />
       </section>
+      </PortfolioReveal>
 
       {investment.status === "pending" ? (
         <section

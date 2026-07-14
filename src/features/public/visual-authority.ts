@@ -30,7 +30,9 @@
  * defects, ADRs, or accessibility fixes. Wallet is an operations center, not
  * an accounting engine.
  *
- * Customer portfolio migration: PF1–PF2 complete; PF3 investment detail in progress.
+ * Customer portfolio status: frozen (PF1–PF5). Further portfolio work only for
+ * defects, ADRs, or accessibility fixes. Portfolio explains investments; it
+ * does not evaluate them. Certified dates only — never client-derived.
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
@@ -39,12 +41,13 @@ export const VISUAL_AUTHORITY = {
   dashboardCommit: "f436f2e",
   walletMigration: "complete",
   walletFreezeCommit: "c4a9629",
-  portfolioMigration: "pf3-in-progress",
+  portfolioMigration: "complete",
+  portfolioFreezeCommit: "pending",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
   nextSurfaces: [
-    "customer portfolio PF4+ (analytics if certified, polish)",
+    "launch readiness audit",
     "profile & security",
     "notifications & communication",
     "admin (platform hard/auth portal)",

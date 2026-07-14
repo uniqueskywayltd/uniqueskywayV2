@@ -155,6 +155,10 @@ test.describe("sprint B2 portfolio experience", () => {
     await expect(page.getByRole("progressbar", { name: "Progress 40%" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add funds" })).toHaveCount(0);
     await expect(page.getByText("1 position shown")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Status distribution" })).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Status distribution" }).getByText("Active", { exact: true }),
+    ).toBeVisible();
     await expect(
       page.getByRole("region", { name: "Portfolio navigation" }).getByRole("link", {
         name: "Explore plans",
