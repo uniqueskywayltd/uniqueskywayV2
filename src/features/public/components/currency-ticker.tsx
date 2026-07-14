@@ -1,40 +1,51 @@
 "use client";
 
 import { LEGACY_CURRENCY_TICKER_ROWS } from "@/features/public/legacy/nav";
+import { cn } from "@/lib/utils";
 
 /**
- * Native currency ticker — visual parity with legacy exchangerates iframe.
- * No third-party script or iframe (HP1 / DEC third-party policy).
- * LP1 — rates are illustrative only, never presented as live data.
+ * Market illustration strip — platform placement (below sticky header).
+ * Rates remain illustrative only (never live market data).
  */
-export function CurrencyTicker() {
+export function CurrencyTicker({ className }: { className?: string }) {
   const loop = [...LEGACY_CURRENCY_TICKER_ROWS, ...LEGACY_CURRENCY_TICKER_ROWS];
 
   return (
     <div
-      className="overflow-hidden border-b border-[#000044]/30 bg-[#f0f0f0] font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif] text-[10px] leading-[30px] text-[#000044]"
+      className={cn(
+        "overflow-hidden border-b border-border/50 bg-muted/40 text-foreground",
+        className,
+      )}
       aria-label="Illustrative exchange rates — not live"
       role="region"
     >
-      <div className="relative flex h-[30px] items-center gap-4">
-        <p className="shrink-0 border-r border-[#000044]/20 px-3 font-bold tracking-wide whitespace-nowrap">
-          Illustrative exchange rates — not live
+      <div className="relative flex h-10 items-center">
+        <p className="shrink-0 border-r border-border/60 px-4 text-[11px] font-semibold tracking-wider whitespace-nowrap uppercase text-muted-foreground">
+          Illustrative — not live
         </p>
-        <div className="legacy-ticker-track flex w-max animate-[legacyTicker_40s_linear_infinite] gap-8 pr-4">
-          {loop.map((row, index) => (
-            <span
-              key={`${row.pair}-${index}`}
-              className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap"
-            >
-              <span className="font-bold">{row.pair}</span>
-              <span>{row.rate}</span>
+        <div className="legacy-ticker-track flex w-max animate-[legacyTicker_40s_linear_infinite] gap-0 pr-4">
+          {loop.map((row, index) => {
+            const positive = !row.change.startsWith("-");
+            return (
               <span
-                className={row.change.startsWith("-") ? "text-[#FF0000]" : "text-[#008000]"}
+                key={`${row.pair}-${index}`}
+                className="inline-flex shrink-0 items-center gap-3 border-r border-border/40 px-4 py-2.5"
               >
-                {row.change}
+                <span className="text-[11px] font-semibold tracking-wider uppercase text-foreground/80">
+                  {row.pair}
+                </span>
+                <span className="text-sm font-medium tabular-nums text-foreground">{row.rate}</span>
+                <span
+                  className={cn(
+                    "text-xs font-medium tabular-nums",
+                    positive ? "text-emerald-600" : "text-red-600",
+                  )}
+                >
+                  {positive ? "▲" : "▼"} {row.change}
+                </span>
               </span>
-            </span>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

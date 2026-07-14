@@ -51,7 +51,7 @@ export function LegalPageHero({
           <p className="text-sm font-medium tracking-[0.16em] text-muted-foreground uppercase">
             {eyebrow}
           </p>
-          <h1 className="mt-4 font-[family-name:var(--font-instrument-serif)] text-4xl tracking-normal text-foreground sm:text-5xl">
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
             {title}
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
@@ -67,7 +67,7 @@ export function LegalSectionBlock({ section }: { section: LegalSection }) {
   return (
     <section className="scroll-mt-24 py-8" id={slugify(section.title)}>
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-[family-name:var(--font-instrument-serif)] text-2xl tracking-normal text-foreground">
+        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
           {section.title}
         </h2>
         <span

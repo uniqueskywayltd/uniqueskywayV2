@@ -1,68 +1,45 @@
-"use client";
-
-import { type FormEvent, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Mail, MapPin, User } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 
-import { brandAssets } from "@/features/brand";
-import { LEGACY_FOOTER_BG, LEGACY_MUTED, LEGACY_NAVY } from "@/features/public/legacy/tokens";
-import { LEGACY_USEFUL_LINKS } from "@/features/public/legacy/nav";
+import { BrandMark } from "@/components/layout/brand-mark";
+import { PUBLIC_FOOTER_COLUMNS } from "@/features/public/navigation";
 
 export function PublicFooter() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-
-  function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    // Visual parity only in HP1 — no list vendor; honest UI feedback.
-    setMessage("Thanks — newsletter signup will be available through Contact.");
-    setName("");
-    setEmail("");
-  }
+  const company = PUBLIC_FOOTER_COLUMNS.find((column) => column.title === "Company");
+  const product = PUBLIC_FOOTER_COLUMNS.find((column) => column.title === "Product");
+  const legal = PUBLIC_FOOTER_COLUMNS.find((column) => column.title === "Legal");
+  const companyLinks = [
+    ...(company?.links ?? []),
+    ...(product?.links ?? []).filter((link) =>
+      ["/plans", "/how-it-works", "/security"].includes(link.href),
+    ),
+  ];
+  const supportLinks = [
+    { label: "FAQ", href: "/faq" },
+    { label: "Contact", href: "/contact" },
+    ...(legal?.links ?? []).filter((link) =>
+      ["/legal/privacy", "/legal/terms"].includes(link.href),
+    ),
+  ];
 
   return (
-    <footer className="font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif]" style={{ background: LEGACY_FOOTER_BG }}>
-      <div className="border-b border-white/10 px-4 py-[96px] sm:px-6">
-        <div className="mx-auto grid max-w-[1170px] gap-10 md:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <Link href="/" className="inline-block">
-              <Image
-                src={brandAssets.footer.onDark}
-                alt="UniqueSkyWay"
-                width={180}
-                height={60}
-                className="mb-[27px] h-auto w-[180px] object-contain"
-              />
-            </Link>
-            <p className="mb-3 text-sm leading-6" style={{ color: LEGACY_MUTED }}>
-              Our company brings you an opportunity to diversify your portfolio with successful
-              business projects and investments.
+    <footer className="border-t border-slate-800 bg-slate-950 text-slate-300">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid gap-12 md:grid-cols-4">
+          <div className="md:col-span-2">
+            <BrandMark surface="onDark" className="[&_img]:h-10 [&_img]:w-auto [&_img]:max-w-[160px]" />
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-400">
+              A modern investment and financial services platform built for transparency, security,
+              and long-term portfolio growth. Diversify your portfolio with confidence.
             </p>
-            <ul className="mb-4 space-y-1 text-sm" style={{ color: LEGACY_MUTED }}>
-              <li className="relative pl-[26px]">
-                <MapPin className="absolute top-[3px] left-0 size-4" aria-hidden="true" />
-                Fayetteville, Arkansas, United States of America
-              </li>
-              <li className="relative pl-[26px]">
-                <Mail className="absolute top-[3px] left-0 size-4" aria-hidden="true" />
-                Email{" "}
-                <a className="hover:underline" href="mailto:support@uniqueskyway.ltd">
-                  support@uniqueskyway.ltd
-                </a>
-              </li>
-            </ul>
           </div>
 
-          <div className="lg:pl-10">
-            <h4 className="relative mb-6 pb-3 text-lg font-bold text-white after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-10 after:bg-[#da2c46] after:content-['']">
-              Useful Links
-            </h4>
-            <ul className="space-y-3">
-              {LEGACY_USEFUL_LINKS.map((link) => (
-                <li key={link.href + link.label} className="relative pl-4 text-sm before:absolute before:top-[0.55em] before:left-0 before:size-1.5 before:rounded-full before:bg-[#da2c46] before:content-['']">
-                  <Link className="text-[#b6bbc0] transition-colors hover:text-white" href={link.href}>
+          <div>
+            <p className="text-sm font-semibold text-white">Company</p>
+            <ul className="mt-4 space-y-3 text-sm">
+              {companyLinks.map((link) => (
+                <li key={`${link.href}-${link.label}`}>
+                  <Link href={link.href} className="text-slate-400 hover:text-white">
                     {link.label}
                   </Link>
                 </li>
@@ -71,62 +48,43 @@ export function PublicFooter() {
           </div>
 
           <div>
-            <h4 className="relative mb-6 pb-3 text-lg font-bold text-white after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-10 after:bg-[#da2c46] after:content-['']">
-              Newsletter
-            </h4>
-            <p className="mb-4 text-sm" style={{ color: LEGACY_MUTED }}>
-              Get in your inbox the latest News
-            </p>
-            <form className="space-y-3" onSubmit={onNewsletterSubmit} noValidate>
-              <label className="relative block">
-                <span className="sr-only">Your Name</span>
-                <User className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#b6bbc0]" aria-hidden="true" />
-                <input
-                  name="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your Name"
-                  className="h-11 w-full border border-white/15 bg-transparent pl-10 pr-3 text-sm text-white outline-none placeholder:text-[#b6bbc0] focus:border-[#da2c46]"
-                  required
-                />
-              </label>
-              <label className="relative block">
-                <span className="sr-only">Email address</span>
-                <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#b6bbc0]" aria-hidden="true" />
-                <input
-                  type="email"
-                  name="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email address"
-                  className="h-11 w-full border border-white/15 bg-transparent pl-10 pr-3 text-sm text-white outline-none placeholder:text-[#b6bbc0] focus:border-[#da2c46]"
-                  required
-                />
-              </label>
-              <button
-                type="submit"
-                className="inline-block px-[28px] py-[10px] text-base font-bold text-white transition hover:opacity-90"
-                style={{ background: LEGACY_NAVY }}
-              >
-                subscribe
-              </button>
-              {message ? (
-                <p className="text-xs text-white/80" role="status">
-                  {message}
-                </p>
-              ) : null}
-            </form>
+            <p className="text-sm font-semibold text-white">Support & Legal</p>
+            <ul className="mt-4 space-y-3 text-sm">
+              {supportLinks.map((link) => (
+                <li key={`${link.href}-${link.label}`}>
+                  <Link href={link.href} className="text-slate-400 hover:text-white">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <ul className="mt-6 space-y-3 text-sm">
+              <li className="flex items-start gap-2">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <a href="mailto:info@uniqueskyway.com" className="text-slate-400 hover:text-white">
+                  info@uniqueskyway.com
+                </a>
+              </li>
+              <li className="flex items-start gap-2">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <span className="text-slate-400">
+                  Fayetteville, Arkansas
+                  <br />
+                  United States
+                </span>
+              </li>
+            </ul>
           </div>
         </div>
-      </div>
-      <div className="px-4 py-5 text-center text-sm sm:px-6" style={{ color: LEGACY_MUTED }}>
-        <p>
-          © 2023{" "}
-          <Link href="/" className="text-white hover:text-[#da2c46]">
-            UniqueSkyWay
-          </Link>{" "}
-          - Business &amp; Consulting. All rights reserved.
-        </p>
+
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 sm:flex-row">
+          <p className="text-sm text-slate-500">
+            © {new Date().getFullYear()} Unique Sky Way. All rights reserved.
+          </p>
+          <p className="text-xs text-slate-600">
+            uniqueskyway.com · Secure · Transparent · Professional
+          </p>
+        </div>
       </div>
     </footer>
   );
