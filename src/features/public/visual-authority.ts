@@ -36,7 +36,7 @@ export const VISUAL_AUTHORITY = {
   dashboardMigration: "complete",
   dashboardCommit: "f436f2e",
   walletMigration: "complete",
-  walletFreezeCommit: "pending",
+  walletFreezeCommit: "c4a9629",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
