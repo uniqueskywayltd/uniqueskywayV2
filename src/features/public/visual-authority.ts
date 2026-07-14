@@ -45,6 +45,10 @@
  * Notifications & Communication: frozen. Notification Center, Activity,
  * Communication Center, What’s New, and Help on DashboardShell — certified
  * notification/activity read models only. No announcement engine.
+ *
+ * Admin Visual Polish: frozen. Admin console chrome (shell, nav, tables,
+ * overview) matched to platform admin under presentation-only constraints.
+ * Further admin work only for defects, ADRs, or accessibility fixes.
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
@@ -61,11 +65,13 @@ export const VISUAL_AUTHORITY = {
   profileSecurityFreezeCommit: "46ae5dd",
   notificationsCommunicationMigration: "complete",
   notificationsCommunicationFreezeCommit: "864a63d",
+  adminVisualMigration: "complete",
+  adminVisualFreezeCommit: "1cf302d",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
   nextSurfaces: [
-    "admin polish (platform visual parity)",
+    "visual parity completion pass (whole-app mismatch fixes)",
     "auth / empty / error states (platform auth, errors, brand)",
   ],
 } as const;
