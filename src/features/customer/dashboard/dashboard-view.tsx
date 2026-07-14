@@ -3,6 +3,7 @@
 import { Skeleton } from "@/components/ui";
 import { DashboardActivitySection } from "@/features/customer/dashboard/dashboard-activity-section";
 import { useDashboardChrome } from "@/features/customer/dashboard/dashboard-chrome-context";
+import { DashboardInvestmentsSection } from "@/features/customer/dashboard/dashboard-investments-section";
 import { DashboardMoneyCards } from "@/features/customer/dashboard/dashboard-money-cards";
 import { DashboardQuickActions } from "@/features/customer/dashboard/dashboard-quick-actions";
 import { DashboardWelcomeHero } from "@/features/customer/dashboard/dashboard-welcome-hero";
@@ -11,7 +12,7 @@ import {
   getPersonHandle,
 } from "@/lib/utils/person-display";
 
-/** DP1–DP3: frame, money cards, activity. Charts / investments deferred to DP4+. */
+/** DP1–DP4: frame, money, investments, activity. DP5 polish deferred. */
 export function DashboardView() {
   const { summary, loaded } = useDashboardChrome();
 
@@ -43,6 +44,7 @@ export function DashboardView() {
       />
       <DashboardQuickActions />
       <DashboardMoneyCards />
+      <DashboardInvestmentsSection />
       <DashboardActivitySection />
       <p className="sr-only">Primary question: How am I doing today?</p>
     </div>

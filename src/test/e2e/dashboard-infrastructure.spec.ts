@@ -91,7 +91,44 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
               byStatus: { active: 1, pending: 1, maturing: 0, matured: 0, cancelled: 0, failed: 0 },
               activePrincipalMinor: "25000",
             },
-            investments: [],
+            investments: [
+              {
+                id: "inv_1",
+                planName: "Growth Plan",
+                currency: "USD",
+                principalMinor: "25000",
+                postedRoiMinor: "1000",
+                termDays: 30,
+                status: "active",
+                startAt: "2026-07-01T00:00:00.000Z",
+                firstSettlementDate: "2026-07-02",
+                maturityDate: "2026-07-31",
+                activatedAt: "2026-07-01T00:00:00.000Z",
+                maturedAt: null,
+                cancelledAt: null,
+                createdAt: "2026-07-01T00:00:00.000Z",
+                progressPercent: 40,
+                nextMilestone: { label: "Next settlement", date: "2026-07-15" },
+              },
+              {
+                id: "inv_2",
+                planName: "Starter Plan",
+                currency: "USD",
+                principalMinor: "5000",
+                postedRoiMinor: "0",
+                termDays: 14,
+                status: "pending",
+                startAt: null,
+                firstSettlementDate: null,
+                maturityDate: null,
+                activatedAt: null,
+                maturedAt: null,
+                cancelledAt: null,
+                createdAt: "2026-07-13T00:00:00.000Z",
+                progressPercent: 0,
+                nextMilestone: { label: "Awaiting activation", date: null },
+              },
+            ],
           },
         },
       });
@@ -221,5 +258,23 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
     await expect(activity.getByText("Notifications")).toBeVisible();
     await expect(activity.getByText("New sign-in detected")).toBeVisible();
     await expect(activity.getByText("1", { exact: true }).first()).toBeVisible();
+  });
+
+  test("renders certified investment widgets", async ({ page }) => {
+    await page.goto("/dashboard");
+
+    const investments = page.getByRole("region", { name: "Investments" });
+    await expect(investments.getByText("Active principal")).toBeVisible();
+    await expect(investments.getByText("Growth Plan")).toBeVisible();
+    await expect(investments.getByText("Next settlement")).toBeVisible();
+    await expect(investments.getByText("40%")).toBeVisible();
+    await expect(investments.getByRole("link", { name: "View portfolio" })).toHaveAttribute(
+      "href",
+      "/portfolio",
+    );
+    await expect(page.getByRole("link", { name: /Growth Plan/i })).toHaveAttribute(
+      "href",
+      "/portfolio/inv_1",
+    );
   });
 });
