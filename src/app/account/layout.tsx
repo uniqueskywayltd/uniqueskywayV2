@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
-import { CustomerShell } from "@/features/customer/components/customer-shell";
+import { DashboardShell } from "@/features/customer/dashboard/dashboard-shell";
 
+/** Bundle 1 — Profile & Security share money chrome with Dashboard / Wallet / Portfolio. */
 export default function AccountLayout({ children }: { children: ReactNode }) {
-  return <CustomerShell>{children}</CustomerShell>;
+  return <DashboardShell>{children}</DashboardShell>;
 }

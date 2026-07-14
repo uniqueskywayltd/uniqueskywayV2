@@ -1,11 +1,5 @@
-import { ProfileManagement } from "@/features/customer/components/profile-management";
-import { CustomerPageHeader } from "@/features/customer/components/page-header";
+import { ProfileSurface } from "@/features/customer/account/profile-surface";
 
 export default function ProfilePage() {
-  return (
-    <>
-      <CustomerPageHeader title="Profile" description="Manage your personal information." />
-      <ProfileManagement />
-    </>
-  );
+  return <ProfileSurface />;
 }

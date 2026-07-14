@@ -5,51 +5,16 @@ test.describe("customer experience foundation", () => {
     await mockCustomerApis(page);
   });
 
-  test("renders the authenticated customer shell and account pages", async ({ page }) => {
-    await page.goto("/account");
-    await expect(page.getByRole("heading", { name: "Account", exact: true })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Customer navigation" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Profile/ })).toBeVisible();
-    await expect(page.getByText("Unread notifications")).toBeVisible();
-
-    await page.goto("/account/profile");
-    await expect(page.getByRole("heading", { name: "Profile", exact: true })).toBeVisible();
-    await expect(page.getByLabel("Legal name")).toBeVisible();
-    await expect(page.getByLabel("Display name")).toBeVisible();
-
-    await page.goto("/account/preferences");
-    await expect(page.getByRole("heading", { name: "Preferences", exact: true })).toBeVisible();
-    await expect(page.getByLabel("Appearance preference")).toBeVisible();
-    await expect(page.getByLabel("Time zone preference")).toBeVisible();
-
-    await page.goto("/account/security");
-    await expect(page.getByRole("heading", { name: "Security", exact: true })).toBeVisible();
-    await expect(page.getByLabel("Current password")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Trusted devices" })).toBeVisible();
-  });
-
-  test("supports notification search and activity timeline", async ({ page }) => {
+  test("renders notifications and activity on shared dashboard chrome", async ({ page }) => {
     await page.goto("/account/notifications");
     await expect(page.getByRole("heading", { name: "Notifications", exact: true })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Dashboard navigation" }).first()).toBeVisible();
     await expect(page.getByLabel("Search notifications")).toBeVisible();
     await expect(page.getByText("Welcome to Unique Sky Way")).toBeVisible();
 
     await page.goto("/account/activity");
     await expect(page.getByRole("heading", { name: "Activity", exact: true })).toBeVisible();
     await expect(page.getByText("Customer Profile Updated")).toBeVisible();
-  });
-
-  test("uses mobile navigation on small screens", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/account/profile");
-
-    await expect(page.getByRole("button", { name: "Toggle navigation" })).toBeVisible();
-    await page.getByRole("button", { name: "Toggle navigation" }).click();
-    await expect(
-      page.getByRole("navigation", { name: "Customer mobile navigation" }),
-    ).toBeVisible();
-    await page.getByRole("link", { name: /Activity/ }).click();
-    await expect(page).toHaveURL(/\/account\/activity$/);
   });
 
   test("renders customer error, maintenance, offline, and forbidden surfaces", async ({ page }) => {

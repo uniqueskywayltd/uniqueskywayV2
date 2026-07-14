@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { compressAvatarToWebp } from "./profile-management";
+import { compressAvatarToWebp } from "@/features/customer/account/avatar-compress";
 
 describe("compressAvatarToWebp", () => {
   it("converts selected images to WebP before upload", async () => {
