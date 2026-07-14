@@ -171,7 +171,11 @@ export function CustomerShell({ children }: CustomerShellProps) {
             </nav>
           ) : null}
         </header>
-        <main className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 sm:px-6 lg:py-8 lg:pb-8">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 outline-none sm:px-6 lg:py-8 lg:pb-8"
+        >
           {children}
         </main>
       </div>

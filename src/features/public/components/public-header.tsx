@@ -47,7 +47,7 @@ export function PublicHeader() {
           className={cn(
             "transition-[background-color,box-shadow] duration-500",
             sticky
-              ? "bg-white shadow-[0_10px_20px_rgba(0,0,0,0.2)]"
+              ? "border-b border-border bg-background/95 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-background/80"
               : overlay
                 ? "bg-transparent"
                 : "bg-[color:var(--legacy-navy)]",
@@ -237,7 +237,7 @@ export function PublicHeader() {
             <div className="space-y-2 border-t p-4 text-sm text-[#666]">
               <p className="flex items-start gap-2">
                 <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                Fayetteville ARKANSAS, United Stated of Ameriaca
+                Fayetteville, Arkansas, United States of America
               </p>
               <p className="flex items-start gap-2">
                 <Mail className="mt-0.5 size-4 shrink-0" aria-hidden="true" />

@@ -12,7 +12,7 @@ export interface AuthShellProps {
 
 export function AuthShell({ title, description, children, footer }: AuthShellProps) {
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main id="main-content" tabIndex={-1} className="min-h-screen bg-background text-foreground outline-none">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-12">
         <div className="mb-10">
           <BrandMark />

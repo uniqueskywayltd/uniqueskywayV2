@@ -64,7 +64,7 @@ export function DashboardInvestmentsSection() {
   if (error || !data) {
     return (
       <p className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
-        Investments could not load. Open Portfolio directly, or refresh. {error}
+        Investments could not load. Open Investments directly, or refresh. {error}
       </p>
     );
   }
@@ -141,7 +141,7 @@ export function DashboardInvestmentsSection() {
               Active investments
             </h2>
             <Button asChild variant="link" className="h-auto px-0 text-sm">
-              <Link href="/portfolio">View portfolio</Link>
+              <Link href="/portfolio">View investments</Link>
             </Button>
           </div>
           <div className="grid gap-4">

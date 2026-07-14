@@ -132,10 +132,10 @@ export function DashboardShell({ children }: DashboardShellProps) {
     <DashboardChromeProvider value={{ summary, loaded }}>
       <div className="min-h-dvh bg-gradient-to-b from-muted/25 via-background to-background lg:flex">
         <a
-          href="#dashboard-main"
+          href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-md focus:ring-2 focus:ring-ring"
         >
-          Skip to dashboard content
+          Skip to main content
         </a>
 
         <aside className="hidden w-64 shrink-0 flex-col border-r border-border/60 bg-card/80 backdrop-blur-sm lg:sticky lg:top-0 lg:flex lg:h-dvh lg:overflow-y-auto">
@@ -230,7 +230,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
           </DialogPrimitive.Root>
 
           <main
-            id="dashboard-main"
+            id="main-content"
             tabIndex={-1}
             className="mx-auto max-w-6xl space-y-6 px-4 py-5 outline-none sm:space-y-8 sm:py-6 lg:px-8 lg:py-8"
           >

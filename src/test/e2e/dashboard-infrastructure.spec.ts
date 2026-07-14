@@ -188,13 +188,13 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
   test("renders platform-aligned dashboard frame", async ({ page }) => {
     await page.goto("/dashboard");
     await expect(page.getByRole("heading", { level: 1, name: "Avery" })).toBeVisible();
-    await expect(page.getByText("@USW-123")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Welcome" }).getByText("@USW-123")).toBeVisible();
     await expect(page.getByRole("region", { name: "Welcome" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Quick actions" })).toBeVisible();
-    await expect(page.locator("#dashboard-main")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Skip to dashboard content" })).toHaveAttribute(
+    await expect(page.locator("#main-content")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Skip to main content" }).first()).toHaveAttribute(
       "href",
-      "#dashboard-main",
+      "#main-content",
     );
   });
 
@@ -209,15 +209,15 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
 
   test("exposes platform quick actions with V3 routes", async ({ page }) => {
     await page.goto("/dashboard");
-    await expect(page.getByRole("link", { name: "Deposit" })).toHaveAttribute(
+    const quickActions = page.getByRole("region", { name: "Quick actions" });
+    await expect(quickActions.getByRole("link", { name: "Deposit", exact: true })).toHaveAttribute(
       "href",
       "/wallet/deposits/new",
     );
-    await expect(page.getByRole("link", { name: "Withdraw" })).toHaveAttribute(
+    await expect(quickActions.getByRole("link", { name: "Withdraw", exact: true })).toHaveAttribute(
       "href",
       "/wallet/withdrawals/new",
     );
-    const quickActions = page.getByRole("region", { name: "Quick actions" });
     await expect(quickActions.getByRole("link", { name: "Investments" })).toHaveAttribute(
       "href",
       "/portfolio",
@@ -233,11 +233,11 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
 
     const portfolio = page.getByRole("region", { name: "Portfolio balances" });
     await expect(portfolio.getByText("Portfolio value")).toBeVisible();
-    await expect(portfolio.getByText("$250.00")).toBeVisible();
+    await expect(portfolio.getByRole("link", { name: /Portfolio value/ })).toContainText("$250.00");
     await expect(portfolio.getByText("Available balance")).toBeVisible();
     await expect(portfolio.getByText("$120.00")).toBeVisible();
     await expect(portfolio.getByText("Locked balance")).toBeVisible();
-    await expect(portfolio.getByText("$250.00").nth(1)).toBeVisible();
+    await expect(portfolio.getByRole("link", { name: /Locked balance/ })).toContainText("$250.00");
     await expect(portfolio.getByText("Pending balance")).toBeVisible();
     await expect(portfolio.getByText("$5.00")).toBeVisible();
 
@@ -271,9 +271,9 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
     const investments = page.getByRole("region", { name: "Investments" });
     await expect(investments.getByText("Active principal")).toBeVisible();
     await expect(investments.getByText("Growth Plan")).toBeVisible();
-    await expect(investments.getByText("Next settlement")).toBeVisible();
+    await expect(investments.getByText("Next settlement").first()).toBeVisible();
     await expect(investments.getByText("40%")).toBeVisible();
-    await expect(investments.getByRole("link", { name: "View portfolio" })).toHaveAttribute(
+    await expect(investments.getByRole("link", { name: "View investments" })).toHaveAttribute(
       "href",
       "/portfolio",
     );

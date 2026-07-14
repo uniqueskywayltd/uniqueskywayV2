@@ -331,7 +331,7 @@ function PortfolioEmptyState({
     <EmptyState
       icon={PieChart}
       title="No investments yet"
-      description="When you activate a published plan, it appears here with progress and settlement cues — Portfolio is where performance lives."
+      description="When you activate a published plan, it appears here with progress and settlement cues — Investments is where performance lives."
       action={
         <div className="flex flex-wrap justify-center gap-3">
           <Button asChild>
