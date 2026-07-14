@@ -41,6 +41,10 @@
  * Profile & Security: frozen. Account controls on DashboardShell — profile,
  * preferences, password, devices, sessions, certified security activity.
  * Further work only for defects, ADRs, or accessibility fixes. No fake 2FA.
+ *
+ * Notifications & Communication: frozen. Notification Center, Activity,
+ * Communication Center, What’s New, and Help on DashboardShell — certified
+ * notification/activity read models only. No announcement engine.
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
@@ -55,11 +59,12 @@ export const VISUAL_AUTHORITY = {
   launchPolishCommit: "9fc1033",
   profileSecurityMigration: "complete",
   profileSecurityFreezeCommit: "46ae5dd",
+  notificationsCommunicationMigration: "complete",
+  notificationsCommunicationFreezeCommit: "864a63d",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
   nextSurfaces: [
-    "notifications & communication",
     "admin polish (platform visual parity)",
     "auth / empty / error states (platform auth, errors, brand)",
   ],
