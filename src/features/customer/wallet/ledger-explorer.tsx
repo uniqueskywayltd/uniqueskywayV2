@@ -5,10 +5,11 @@ import Link from "next/link";
 import { BookOpenText } from "lucide-react";
 
 import { Button, EmptyState, Skeleton } from "@/components/ui";
-import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { LedgerTransactionList } from "@/features/customer/wallet/ledger-transaction-list";
 import type { LedgerEntryRow } from "@/features/customer/wallet/types";
 
+/** Full ledger — certified history only; no search (API has no query params). */
 export function LedgerExplorer() {
   const [entries, setEntries] = useState<LedgerEntryRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +45,12 @@ export function LedgerExplorer() {
   }
 
   if (loading) {
-    return <Skeleton className="h-48 w-full rounded-xl" aria-label="Loading ledger" />;
+    return (
+      <div className="space-y-4" aria-busy="true" aria-label="Loading ledger">
+        <Skeleton className="h-5 w-full max-w-md rounded-md" />
+        <Skeleton className="h-64 w-full rounded-xl" />
+      </div>
+    );
   }
 
   if (entries.length === 0) {
@@ -65,41 +71,11 @@ export function LedgerExplorer() {
   return (
     <div className="space-y-4">
       <p className="sr-only">Primary question: What exactly happened?</p>
-      <ul className="divide-y divide-border/70 rounded-xl border border-border/80">
-        {entries.map((entry) => {
-          const content = (
-            <>
-              <div>
-                <p className="text-sm font-medium text-foreground">{entry.label}</p>
-                <p className="text-xs text-muted-foreground">
-                  <DateDisplay value={entry.postedAt} /> · {entry.walletCategory}
-                </p>
-              </div>
-              <CurrencyDisplay
-                amountMinor={Number(entry.amountMinor)}
-                className="text-sm font-medium"
-              />
-            </>
-          );
-
-          return (
-            <li key={entry.id}>
-              {entry.href ? (
-                <Link
-                  href={entry.href}
-                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30"
-                >
-                  {content}
-                </Link>
-              ) : (
-                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                  {content}
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+      <p className="text-sm text-muted-foreground">
+        The ledger is an historical record, not a financial summary. Entries appear in certified
+        posting order — nothing is hidden, merged, or reordered here.
+      </p>
+      <LedgerTransactionList entries={entries} />
     </div>
   );
 }

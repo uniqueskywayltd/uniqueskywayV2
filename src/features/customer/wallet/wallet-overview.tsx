@@ -7,6 +7,7 @@ import { Clock, Lock, PiggyBank, Wallet } from "lucide-react";
 import { Button, EmptyState, Skeleton } from "@/components/ui";
 import { StatCard } from "@/components/ui/stat-card";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { WalletLedgerPreview } from "@/features/customer/wallet/wallet-ledger-preview";
 import { WalletQuickActions } from "@/features/customer/wallet/wallet-quick-actions";
 import { WalletWelcomeHero } from "@/features/customer/wallet/wallet-welcome-hero";
 import type { WalletOverviewResponse } from "@/features/customer/wallet/types";
@@ -135,6 +136,8 @@ export function WalletOverview() {
           />
         </div>
       </section>
+
+      <WalletLedgerPreview />
 
       {isEmpty ? (
         <EmptyState

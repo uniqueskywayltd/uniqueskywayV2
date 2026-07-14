@@ -26,14 +26,14 @@
  * Customer dashboard status: frozen (DP1–DP5). Further dashboard work only for
  * defects, ADRs, or accessibility fixes.
  *
- * Wallet migration: WP1–WP2 complete; WP3 withdrawals in progress.
+ * Wallet migration: WP1–WP3 complete; WP4 ledger in progress.
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
   homepageFreezeTag: "homepage-migration-complete",
   dashboardMigration: "complete",
   dashboardCommit: "f436f2e",
-  walletMigration: "wp3-in-progress",
+  walletMigration: "wp4-in-progress",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",

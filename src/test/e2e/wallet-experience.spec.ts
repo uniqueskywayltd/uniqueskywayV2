@@ -278,16 +278,24 @@ test.describe("sprint B3 wallet experience", () => {
     await expect(page.getByText("Pending", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Invested", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Withdrawable now equals Available")).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Wallet navigation" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Deposit" }).first()).toHaveAttribute(
-      "href",
-      "/wallet/deposits/new",
-    );
-    await expect(page.getByRole("link", { name: "Withdraw" }).first()).toHaveAttribute(
-      "href",
-      "/wallet/withdrawals/new",
-    );
+    await expect(page.getByRole("region", { name: "Wallet navigation" })).toBeVisible();
+    await expect(
+      page
+        .getByRole("region", { name: "Wallet navigation" })
+        .getByRole("link", { name: "Deposit", exact: true }),
+    ).toHaveAttribute("href", "/wallet/deposits/new");
+    await expect(
+      page
+        .getByRole("region", { name: "Wallet navigation" })
+        .getByRole("link", { name: "Withdraw", exact: true }),
+    ).toHaveAttribute("href", "/wallet/withdrawals/new");
     await expect(page.getByText("Accrued earnings", { exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Recent wallet transactions" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Deposit credited" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Recent activity" })).toHaveAttribute(
+      "href",
+      "/ledger",
+    );
   });
 
   test("supports deposit history and anxiety-reducing withdrawal detail", async ({ page }) => {
@@ -298,10 +306,10 @@ test.describe("sprint B3 wallet experience", () => {
       "/wallet/deposits/new",
     );
     await expect(page.getByRole("group", { name: "Filter deposits by status" })).toBeVisible();
-    await page.getByRole("link", { name: "View" }).click();
+    await page.getByRole("main").getByRole("link", { name: "View", exact: true }).click();
     await expect(page).toHaveURL(/\/wallet\/deposits\/dep_1$/);
     await expect(page.getByText("Expected next step")).toBeVisible();
-    await expect(page.getByText("Timeline")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Timeline" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Contact support" })).toBeVisible();
 
     await page.goto("/wallet/withdrawals");
@@ -310,18 +318,24 @@ test.describe("sprint B3 wallet experience", () => {
       "href",
       "/wallet/withdrawals/new",
     );
-    await page.getByRole("link", { name: "View" }).click();
+    await page.getByRole("main").getByRole("link", { name: "View", exact: true }).click();
     await expect(page).toHaveURL(/\/wallet\/withdrawals\/wd_1$/);
     await expect(page.getByText("What is happening?")).toBeVisible();
     await expect(page.getByText("What happens next?")).toBeVisible();
     await expect(page.getByText("Do I need to do anything?")).toBeVisible();
-    await expect(page.getByText("Timeline")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Timeline" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Contact support" })).toBeVisible();
   });
 
   test("binds ledger to certified postings", async ({ page }) => {
     await page.goto("/ledger");
     await expect(page.getByRole("heading", { level: 1, name: "Ledger" })).toBeVisible();
-    await expect(page.getByText("Deposit credited")).toBeVisible();
+    await expect(
+      page.getByText("The ledger is an historical record, not a financial summary."),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Deposit credited" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Activity" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Amount" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Date" })).toBeVisible();
   });
 });
