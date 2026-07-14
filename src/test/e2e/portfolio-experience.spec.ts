@@ -168,9 +168,20 @@ test.describe("sprint B2 portfolio experience", () => {
     await page.getByRole("link", { name: /Growth Plan/ }).click();
     await expect(page).toHaveURL(/\/portfolio\/inv_1$/);
     await expect(page.getByRole("heading", { level: 1, name: "Growth Plan" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Investment header" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Investment details" })).toBeVisible();
+    await expect(page.getByText("ROI credited")).toBeVisible();
+    await expect(page.getByText("Maturity date")).toBeVisible();
+    await expect(page.getByText("What happens next?")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Lifecycle" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settlement schedule" })).toBeVisible();
     await expect(page.getByText("Credited").first()).toBeVisible();
+    await expect(page.getByRole("region", { name: "Important notices" })).toBeVisible();
     await expect(page.getByText("This page does not edit investments")).toBeVisible();
+    await expect(page.getByRole("link", { name: "All investments" })).toHaveAttribute(
+      "href",
+      "/portfolio",
+    );
   });
 });
 

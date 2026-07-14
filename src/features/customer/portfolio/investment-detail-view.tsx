@@ -2,16 +2,21 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { ArrowLeft, PieChart } from "lucide-react";
 
 import { Button, Skeleton, StatusChip } from "@/components/ui";
-import { CurrencyDisplay } from "@/components/ui/display";
+import { buttonVariants } from "@/components/ui/button";
+import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
+import { Progress } from "@/components/ui/progress";
 import { getCustomerJson } from "@/features/customer/api-client";
 import {
   presentInvestmentStatus,
   presentScheduleStatus,
 } from "@/features/customer/portfolio/status-presentation";
 import type { PortfolioDetailResponse } from "@/features/customer/portfolio/types";
+import { cn } from "@/lib/utils";
 
+/** PF3 — investment passport over certified detail read models only. */
 export function InvestmentDetailView({ investmentId }: { investmentId: string }) {
   const [data, setData] = useState<PortfolioDetailResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,23 +47,34 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
 
   if (loading) {
     return (
-      <div className="space-y-4" aria-busy="true">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-40 w-full rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-xl" />
+      <div className="space-y-6 sm:space-y-8" aria-busy="true" aria-label="Loading investment">
+        <Skeleton className="h-36 w-full rounded-2xl sm:h-40" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={index} className="h-24 w-full rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-28 w-full rounded-xl" />
+        <Skeleton className="h-56 w-full rounded-xl" />
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <section className="rounded-xl border border-destructive/30 p-6" role="alert">
-        <h2 className="text-base font-semibold text-foreground">Investment unavailable</h2>
+      <section
+        className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
+        role="alert"
+      >
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+          <PieChart className="h-5 w-5" aria-hidden />
+        </div>
+        <h1 className="mt-4 text-lg font-semibold text-foreground">Investment unavailable</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {error ?? "We could not find that investment."}
         </p>
         <Button asChild variant="outline" className="mt-4">
-          <Link href="/portfolio">Back to portfolio</Link>
+          <Link href="/portfolio">Back to investments</Link>
         </Button>
       </section>
     );
@@ -66,78 +82,222 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
 
   const { investment, schedule, lifecycle } = data;
   const status = presentInvestmentStatus(investment.status);
+  const progress = investment.progressPercent;
+  const isActiveLike = investment.status === "active" || investment.status === "maturing";
+  const activationDate = investment.activatedAt ?? investment.startAt;
 
   return (
-    <div className="space-y-8">
-      <p className="sr-only">Primary question: How is this investment progressing?</p>
+    <div className="space-y-6 sm:space-y-8">
+      <p className="sr-only">Primary question: Tell me everything about this investment.</p>
 
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">Investment</p>
-          <h1 className="text-2xl font-semibold tracking-normal text-foreground">
-            {investment.planName}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Read-only view of certified investment progress.
-          </p>
+      <div className="flex flex-wrap gap-2">
+        <Link
+          href="/portfolio"
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          All investments
+        </Link>
+        <Link
+          href="/ledger"
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-2")}
+        >
+          Open ledger
+        </Link>
+      </div>
+
+      <section
+        className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-7 md:p-8"
+        aria-label="Investment header"
+      >
+        <div
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_45%),linear-gradient(225deg,rgba(139,92,246,0.14)_0%,transparent_55%)] opacity-[0.18] dark:opacity-[0.28]"
+          aria-hidden
+        />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-medium tracking-wide text-primary/80">Investment passport</p>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              {investment.planName}
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              Certified state from the investment engine — progress and next steps, never estimated
+              earnings.
+            </p>
+          </div>
+          <StatusChip tone={status.tone}>{status.label}</StatusChip>
         </div>
-        <StatusChip tone={status.tone}>{status.label}</StatusChip>
-      </header>
+        <div
+          className={cn(
+            "absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r",
+            isActiveLike
+              ? "from-transparent via-emerald-500/70 to-transparent"
+              : investment.status === "pending"
+                ? "from-transparent via-amber-500/70 to-transparent"
+                : "from-transparent via-violet-500/70 to-transparent",
+          )}
+          aria-hidden
+        />
+      </section>
 
-      <section className="grid gap-4 sm:grid-cols-3" aria-label="Investment values">
-        <ValueCard
-          label="Principal"
-          value={
+      {investment.status === "pending" ? (
+        <section
+          className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5"
+          role="status"
+          aria-label="Activation notice"
+        >
+          <h2 className="text-sm font-semibold text-foreground">Activation in progress</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{status.explanation}</p>
+        </section>
+      ) : null}
+
+      <section aria-label="Investment details">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Investment details
+        </h2>
+        <dl className="grid gap-4 rounded-xl border border-border/70 bg-card/90 p-5 text-sm shadow-sm sm:grid-cols-2 lg:grid-cols-3">
+          <DetailField label="Principal">
             <CurrencyDisplay
               amountMinor={Number(investment.principalMinor)}
               currency={investment.currency}
             />
-          }
-        />
-        <ValueCard
-          label="ROI credited"
-          value={
+          </DetailField>
+          <DetailField label="ROI credited">
             <CurrencyDisplay
               amountMinor={Number(investment.postedRoiMinor)}
               currency={investment.currency}
             />
-          }
-        />
-        <ValueCard
-          label="Progress"
-          value={
-            <span className="font-mono tabular-nums">
-              {investment.progressPercent === null ? "—" : `${investment.progressPercent}%`}
+          </DetailField>
+          <DetailField label="Term">
+            <span className="tabular-nums">{investment.termDays} days</span>
+          </DetailField>
+          <DetailField label="Status">
+            <span>{status.label}</span>
+          </DetailField>
+          <DetailField label="Activated">
+            {activationDate ? <DateDisplay value={activationDate} /> : "—"}
+          </DetailField>
+          <DetailField label="Maturity date">
+            {investment.maturityDate ? <DateDisplay value={investment.maturityDate} /> : "—"}
+          </DetailField>
+          <DetailField label="First settlement">
+            {investment.firstSettlementDate ? (
+              <DateDisplay value={investment.firstSettlementDate} />
+            ) : (
+              "—"
+            )}
+          </DetailField>
+          <DetailField label="Progress">
+            <span className="tabular-nums">
+              {progress === null ? "—" : `${progress}%`}
             </span>
-          }
-        />
+          </DetailField>
+          <DetailField label="What happens next?" className="sm:col-span-2 lg:col-span-1">
+            <span>
+              {investment.nextMilestone.label}
+              {investment.nextMilestone.date ? (
+                <>
+                  {" · "}
+                  <DateDisplay value={investment.nextMilestone.date} />
+                </>
+              ) : null}
+            </span>
+          </DetailField>
+        </dl>
       </section>
 
+      {progress !== null ? (
+        <section aria-label="Progress">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Progress
+          </h2>
+          <div className="rounded-xl border border-border/70 bg-card/90 p-5 shadow-sm">
+            <div className="mb-2 flex justify-between text-xs text-muted-foreground">
+              <span>Toward maturity</span>
+              <span className="tabular-nums">{progress}%</span>
+            </div>
+            <Progress
+              value={progress}
+              className={cn(
+                isActiveLike && "[&_[data-slot=progress-indicator]]:bg-emerald-500",
+                investment.status === "matured" &&
+                  "[&_[data-slot=progress-indicator]]:bg-sky-500",
+              )}
+              aria-label={`Progress ${progress}%`}
+            />
+          </div>
+        </section>
+      ) : null}
+
       <section aria-label="Lifecycle">
-        <h2 className="text-base font-semibold text-foreground">Lifecycle</h2>
-        <ol className="mt-4 space-y-3 border-l border-border pl-4">
-          {lifecycle.map((step) => (
-            <li key={step.key}>
-              <p className="text-sm font-medium text-foreground">
-                {step.label}
-                {step.complete ? "" : " (upcoming)"}
-              </p>
-              <p className="text-sm text-muted-foreground">{step.at ?? "Not yet"}</p>
-            </li>
-          ))}
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Lifecycle
+        </h2>
+        <ol className="space-y-0 rounded-xl border border-border/70 bg-card/90 p-5 shadow-sm">
+          {lifecycle.map((step, index) => {
+            const isLast = index === lifecycle.length - 1;
+            return (
+              <li key={step.key} className="relative flex gap-4 pb-5 last:pb-0">
+                {!isLast ? (
+                  <span
+                    className="absolute top-3 left-[0.6875rem] h-[calc(100%-0.5rem)] w-px bg-border"
+                    aria-hidden
+                  />
+                ) : null}
+                <span
+                  className={cn(
+                    "relative z-[1] mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold",
+                    step.complete
+                      ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                      : "border-border bg-muted text-muted-foreground",
+                  )}
+                  aria-hidden
+                >
+                  {step.complete ? "✓" : index + 1}
+                </span>
+                <div className="min-w-0 pt-0.5">
+                  <p className="text-sm font-medium text-foreground">
+                    {step.label}
+                    {!step.complete ? (
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        upcoming
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {step.at ? <DateDisplay value={step.at} /> : "Not yet"}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
         </ol>
       </section>
 
       <section aria-label="Settlement schedule">
-        <h2 className="text-base font-semibold text-foreground">ROI / settlement schedule</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Dates use America/New_York settlement days. Credited means posted — not guaranteed future
-          amounts.
-        </p>
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Settlement schedule
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Certified New York settlement days. Credited means posted — not a promise of future
+              amounts.
+            </p>
+          </div>
+          <Link
+            href="/ledger"
+            className="text-xs font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            View ledger
+          </Link>
+        </div>
         {schedule.length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">No schedule items yet.</p>
+          <p className="rounded-xl border border-dashed border-border/80 p-5 text-sm text-muted-foreground">
+            No schedule items yet.
+          </p>
         ) : (
-          <ul className="mt-4 divide-y divide-border rounded-xl border border-border/80">
+          <ul className="divide-y divide-border/70 overflow-hidden rounded-xl border border-border/70 bg-card/90 shadow-sm">
             {schedule.map((item) => {
               const scheduleStatus = presentScheduleStatus(item.status);
               return (
@@ -145,13 +305,22 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
                   key={item.id}
                   className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground">
-                      #{item.sequenceNumber} · Earn {item.earningDate}
+                      #{item.sequenceNumber}
+                      <span className="font-normal text-muted-foreground">
+                        {" · Earn "}
+                        <DateDisplay value={item.earningDate} />
+                      </span>
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Settle {item.settlementDate}
-                      {item.postedAt ? ` · Posted ${item.postedAt.slice(0, 10)}` : ""}
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Settle <DateDisplay value={item.settlementDate} />
+                      {item.postedAt ? (
+                        <>
+                          {" · Posted "}
+                          <DateDisplay value={item.postedAt} />
+                        </>
+                      ) : null}
                     </p>
                   </div>
                   <StatusChip tone={scheduleStatus.tone}>{scheduleStatus.label}</StatusChip>
@@ -162,27 +331,41 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
         )}
       </section>
 
-      <section aria-label="Important notices" className="rounded-xl border border-border/80 p-5">
-        <h2 className="text-base font-semibold text-foreground">Important notices</h2>
+      <section
+        aria-label="Important notices"
+        className="rounded-xl border border-border/70 bg-muted/20 p-5 sm:p-6"
+      >
+        <h2 className="text-sm font-semibold text-foreground">Important notices</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
           <li>{status.explanation}</li>
           <li>This page does not edit investments or move money.</li>
-          <li>Returns are not guaranteed. Accrued schedule rows are not withdrawable until credited.</li>
+          <li>
+            Returns are not guaranteed. Schedule rows are not withdrawable until credited to your
+            wallet.
+          </li>
+          <li>
+            Every date shown here comes from the certified investment engine — never estimated in
+            the browser.
+          </li>
         </ul>
       </section>
-
-      <Button asChild variant="outline">
-        <Link href="/portfolio">Back to portfolio</Link>
-      </Button>
     </div>
   );
 }
 
-function ValueCard({ label, value }: { label: string; value: ReactNode }) {
+function DetailField({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="rounded-xl border border-border/80 p-4">
-      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{label}</p>
-      <div className="mt-2 text-lg font-semibold text-foreground">{value}</div>
+    <div className={className}>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 font-semibold text-foreground">{children}</dd>
     </div>
   );
 }

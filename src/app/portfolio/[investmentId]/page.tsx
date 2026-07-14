@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/** PF3 — Investment passport over certified investment detail. */
 export default async function InvestmentDetailPage({ params }: PageProps) {
   const { investmentId } = await params;
   return <InvestmentDetailView investmentId={investmentId} />;
