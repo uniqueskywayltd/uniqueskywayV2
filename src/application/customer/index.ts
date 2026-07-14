@@ -1,3 +1,4 @@
+export { CustomerLearningService } from "./learning-service";
 export { CustomerStatementService } from "./statement-service";
 export type { StatementType } from "./statement-service";
 export { CustomerExperienceService } from "./customer-experience-service";

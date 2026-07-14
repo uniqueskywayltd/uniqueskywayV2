@@ -1815,3 +1815,23 @@ G2 delivered ledger-projected statements with understanding-first reading order,
 ### Consequences
 
 - Later sprints may deep-link to statements; they do not reopen ledger math.
+
+## DEC-0054: Sprint G3 Learning Experience (proposed acceptance)
+
+- Date: 2026-07-13
+- Status: **Proposed** — awaiting consultancy review of `SPRINT_G3_CERTIFICATION.md`
+- Future Review: After Accepted, G3 learning surfaces require ADR-level change control
+
+### Context
+
+G2 frozen (`DEC-0051`/`DEC-0053`). Learning Experience Principles adopted (`DEC-0052`). G3 implemented recommended-next learning without LMS gamification.
+
+### Decision (pending)
+
+1. Accept Sprint G3 as certified.
+2. Merge `milestone-6-sprint-g3-education` into `main`.
+3. Authorize Sprint G4 Referral Experience only after acceptance.
+
+### Consequences (when accepted)
+
+- Learn home/paths/lessons become frozen Customer Success surfaces.

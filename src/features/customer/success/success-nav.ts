@@ -14,7 +14,7 @@ export const SUCCESS_HUB_LINKS = [
     title: "Learning",
     description: "Understand the platform before you act — concepts, not hype.",
     icon: BookOpen,
-    sprintNote: "Content deepens in Sprint G3.",
+    sprintNote: "Learning experience available now.",
   },
   {
     href: "/account/statements",

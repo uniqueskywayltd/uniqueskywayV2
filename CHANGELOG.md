@@ -19,6 +19,8 @@ Added:
 - Sprint G1 (in progress): Customer Success Hub shells — `/account/success`, learn, milestones, statements entry, progress framework (no business logic).
 - Sprint G1 merged and frozen (`DEC-0048` / `DEC-0049`); `STATEMENT_DESIGN_PRINCIPLES.md` adopted (`DEC-0050`).
 - Sprint G2 (in progress): Ledger-projected statements — list, detail, filters, download history, CSV export.
+- Sprint G2 merged and frozen (`DEC-0051` / `DEC-0053`); `LEARNING_EXPERIENCE_PRINCIPLES.md` adopted (`DEC-0052`).
+- Sprint G3 (in progress): Learning experience — recommended next lesson, paths, lesson detail, progress, search.
 
 ## v3.1.0 - 2026-07-13
 

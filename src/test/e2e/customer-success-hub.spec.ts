@@ -69,9 +69,31 @@ test.describe("sprint G1 customer success hub", () => {
   });
 
   test("learning, milestones, and statements shells are reachable", async ({ page }) => {
+    await page.route("**/api/customer/learn**", async (route) => {
+      await route.fulfill({
+        json: {
+          data: {
+            understanding: "What should I learn next?",
+            recommended: {
+              slug: "welcome-after-sign-in",
+              title: "What happens after I sign in?",
+              summary: "Orient calmly.",
+              reason: "Start here.",
+              href: "/account/learn/welcome-after-sign-in",
+              estimatedMinutes: 2,
+            },
+            progress: { completedCount: 0, totalCount: 13, completed: [] },
+            paths: [],
+            lessons: [],
+            emptyHint: null,
+          },
+        },
+      });
+    });
+
     await page.goto("/account/learn");
     await expect(page.getByRole("heading", { level: 1, name: "Learning" })).toBeVisible();
-    await expect(page.getByText("Coming in Sprint G3").first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Recommended next" })).toBeVisible();
 
     await page.goto("/account/milestones");
     await expect(page.getByRole("heading", { level: 1, name: "Milestones" })).toBeVisible();
