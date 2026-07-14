@@ -21,6 +21,8 @@ Added:
 - Sprint G2 (in progress): Ledger-projected statements — list, detail, filters, download history, CSV export.
 - Sprint G2 merged and frozen (`DEC-0051` / `DEC-0053`); `LEARNING_EXPERIENCE_PRINCIPLES.md` adopted (`DEC-0052`).
 - Sprint G3 (in progress): Learning experience — recommended next lesson, paths, lesson detail, progress, search.
+- Sprint G3 merged and frozen (`DEC-0054` / `DEC-0056`); `REFERRAL_ETHICS_GUIDE.md` adopted (`DEC-0055`).
+- Sprint G4 (in progress): Responsible referral hub — share/QR, status, rewards, guidance over frozen referral engine.
 
 ## v3.1.0 - 2026-07-13
 

@@ -1876,3 +1876,23 @@ G3 delivered Learn home, paths, lessons, calm progress, and search without LMS g
 ### Consequences
 
 - G4 may deep-link to the referrals lesson; it does not reopen Learning.
+
+## DEC-0057: Sprint G4 Referral Experience (proposed acceptance)
+
+- Date: 2026-07-13
+- Status: **Proposed** — awaiting consultancy review of `SPRINT_G4_CERTIFICATION.md`
+- Future Review: After Accepted, G4 referral hub requires ADR-level change control
+
+### Context
+
+G3 frozen (`DEC-0054`/`DEC-0056`). Referral Ethics Guide adopted (`DEC-0055`). G4 deepened the referral hub for responsible invitations over the frozen referral engine.
+
+### Decision (pending)
+
+1. Accept Sprint G4 as certified.
+2. Merge `milestone-6-sprint-g4-referrals` into `main`.
+3. Authorize Sprint G5 Certification only after acceptance (including `STATEMENT_DATA_DICTIONARY.md`).
+
+### Consequences (when accepted)
+
+- Referral hub becomes a frozen Customer Success surface.

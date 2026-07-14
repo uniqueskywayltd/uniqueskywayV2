@@ -1,14 +1,14 @@
 import { CustomerPageHeader } from "@/features/customer/components/page-header";
-import { ReferralSummary } from "@/features/customer/components/referral-summary";
+import { ReferralHub } from "@/features/customer/referrals/referral-hub";
 
 export default function ReferralsPage() {
   return (
     <>
       <CustomerPageHeader
         title="Referrals"
-        description="Read-only summary from the frozen referral engine — no invented rewards."
+        description="How do I recommend this platform responsibly? Invitation tools over the frozen referral engine — no spam, no invented rewards."
       />
-      <ReferralSummary />
+      <ReferralHub />
     </>
   );
 }

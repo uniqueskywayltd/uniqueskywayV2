@@ -129,6 +129,8 @@ test.describe("sprint B4 communication experience", () => {
       await route.fulfill({
         json: {
           data: {
+            northStar: "How do I recommend this platform responsibly?",
+            understanding: "Referrals are invitations — not pressure.",
             code: {
               id: "code_1",
               code: "SKY-AVERY",
@@ -137,25 +139,54 @@ test.describe("sprint B4 communication experience", () => {
               createdAt: "2026-07-01T00:00:00.000Z",
             },
             codes: [],
+            share: {
+              url: "http://localhost:3000/auth/register?referral=SKY-AVERY",
+              text: "Invite with SKY-AVERY",
+              disclaimer: "This is an invitation, not financial advice.",
+            },
+            guidance: [
+              {
+                id: "privacy",
+                title: "Privacy",
+                body: "You will not see other people’s balances.",
+              },
+            ],
             summary: {
               referralCount: 1,
               qualifiedCount: 1,
               pendingCount: 0,
+              rewardedCount: 1,
               postedRewardCount: 1,
               pendingRewardCount: 0,
               postedRewardAmountMinor: "2500",
             },
-            referrals: [],
+            referrals: [
+              {
+                id: "ref_1",
+                status: "qualified",
+                statusLabel: "Qualified",
+                createdAt: "2026-07-05T00:00:00.000Z",
+                qualifiedAt: "2026-07-06T00:00:00.000Z",
+              },
+            ],
             rewards: [
               {
                 id: "rw_1",
                 currency: "USD",
                 amountMinor: "2500",
                 status: "posted",
+                statusLabel: "Reward credited",
                 postedAt: "2026-07-10T00:00:00.000Z",
                 createdAt: "2026-07-10T00:00:00.000Z",
+                ledgerHint: "Credited to your ledger — not a points balance.",
               },
             ],
+            links: {
+              learnHref: "/account/learn/referrals-responsible",
+              helpHref: "/account/help",
+              ledgerHref: "/ledger",
+              successHref: "/account/success",
+            },
           },
         },
       });
@@ -179,7 +210,7 @@ test.describe("sprint B4 communication experience", () => {
     await expect(page.getByRole("heading", { name: "Accrued earnings vs credited earnings" })).toBeVisible();
 
     await page.goto("/account/referrals");
-    await expect(page.getByText("SKY-AVERY")).toBeVisible();
+    await expect(page.getByText("SKY-AVERY", { exact: true })).toBeVisible();
 
     await page.goto("/account/communications");
     await expect(page.getByRole("heading", { level: 1, name: "Communication Center" })).toBeVisible();

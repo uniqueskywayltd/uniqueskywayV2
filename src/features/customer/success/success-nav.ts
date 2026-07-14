@@ -28,7 +28,7 @@ export const SUCCESS_HUB_LINKS = [
     title: "Referrals",
     description: "Recommend Unique Sky Way responsibly and privately.",
     icon: Gift,
-    sprintNote: "Invite experience deepens in Sprint G4.",
+    sprintNote: "Responsible referral hub available now.",
   },
   {
     href: "/account/milestones",
