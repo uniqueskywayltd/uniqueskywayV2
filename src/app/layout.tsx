@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { legacyArimo } from "@/features/public/legacy/fonts";
 import { translate } from "@/i18n";
 import { getRequestLanguage } from "@/i18n/request-language";
 import { DefaultStructuredData } from "@/lib/seo/structured-data";
@@ -53,7 +54,7 @@ export default async function RootLayout({
     <html
       lang={language}
       dir={direction}
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${legacyArimo.variable}`}
     >
       <body className="font-sans antialiased">
         <a
