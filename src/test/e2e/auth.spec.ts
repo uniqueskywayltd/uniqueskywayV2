@@ -3,13 +3,14 @@ import { expect, test } from "@playwright/test";
 test.describe("identity UI", () => {
   test("renders authentication entry pages", async ({ page }) => {
     await page.goto("/auth/login");
-    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
-    await expect(page.getByLabel("Email")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
+    await expect(page.getByLabel("Email address")).toBeVisible();
     await expect(page.getByLabel("Password")).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+    await expect(page.getByText("Secure Platform")).toBeVisible();
 
     await page.goto("/auth/register");
-    await expect(page.getByRole("heading", { name: "Create account" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
     await expect(page.getByLabel("Name")).toBeVisible();
     await expect(page.getByRole("button", { name: "Create account" })).toBeVisible();
 
@@ -18,7 +19,7 @@ test.describe("identity UI", () => {
     await expect(page.getByLabel("Verification code")).toBeVisible();
 
     await page.goto("/auth/forgot-password");
-    await expect(page.getByRole("heading", { name: "Reset password" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Forgot password?" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Send reset code" })).toBeVisible();
 
     await page.goto("/auth/reset-password");

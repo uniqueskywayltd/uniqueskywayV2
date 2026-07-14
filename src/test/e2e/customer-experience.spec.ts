@@ -22,7 +22,7 @@ test.describe("customer experience foundation", () => {
     await expect(page.getByRole("heading", { name: "Access restricted" })).toBeVisible();
 
     await page.goto("/maintenance");
-    await expect(page.getByRole("heading", { name: "Maintenance in progress" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Under maintenance" })).toBeVisible();
 
     await page.goto("/offline");
     await expect(page.getByRole("heading", { name: "You are offline" })).toBeVisible();

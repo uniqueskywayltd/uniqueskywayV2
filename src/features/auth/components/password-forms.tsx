@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { KeyRound, Lock, Mail } from "lucide-react";
 
-import { Alert, AlertDescription, Button, Input, Label } from "@/components/ui";
+import { Alert, AlertDescription, Button, Input } from "@/components/ui";
 
 import { postAuthJson } from "../api-client";
+import { AuthField, AuthInputIcon } from "./auth-field";
+import { authSubmitClass } from "./auth-shell";
 
 export function ForgotPasswordForm() {
   const [error, setError] = useState<string | null>(null);
@@ -30,11 +33,21 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form action={submit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
-      </div>
+    <form action={submit} className="space-y-5" aria-busy={pending}>
+      <AuthField label="Email address" htmlFor="email">
+        <AuthInputIcon icon={<Mail className="h-4 w-4" aria-hidden />}>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+            disabled={pending}
+          />
+        </AuthInputIcon>
+      </AuthField>
+
       {error ? (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -45,7 +58,8 @@ export function ForgotPasswordForm() {
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       ) : null}
-      <Button type="submit" className="w-full" disabled={pending}>
+
+      <Button type="submit" className={authSubmitClass} disabled={pending}>
         {pending ? "Sending" : "Send reset code"}
       </Button>
     </form>
@@ -78,19 +92,48 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <form action={submit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="token">Reset code</Label>
-        <Input id="token" name="token" inputMode="numeric" autoComplete="one-time-code" required />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="password">New password</Label>
-        <Input id="password" name="password" type="password" autoComplete="new-password" required />
-      </div>
+    <form action={submit} className="space-y-5" aria-busy={pending}>
+      <AuthField label="Email address" htmlFor="email">
+        <AuthInputIcon icon={<Mail className="h-4 w-4" aria-hidden />}>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+            disabled={pending}
+          />
+        </AuthInputIcon>
+      </AuthField>
+
+      <AuthField label="Reset code" htmlFor="token">
+        <AuthInputIcon icon={<KeyRound className="h-4 w-4" aria-hidden />}>
+          <Input
+            id="token"
+            name="token"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            required
+            disabled={pending}
+          />
+        </AuthInputIcon>
+      </AuthField>
+
+      <AuthField label="New password" htmlFor="password">
+        <AuthInputIcon icon={<Lock className="h-4 w-4" aria-hidden />}>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="Enter a new password"
+            autoComplete="new-password"
+            required
+            disabled={pending}
+          />
+        </AuthInputIcon>
+      </AuthField>
+
       {error ? (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -101,7 +144,8 @@ export function ResetPasswordForm() {
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       ) : null}
-      <Button type="submit" className="w-full" disabled={pending}>
+
+      <Button type="submit" className={authSubmitClass} disabled={pending}>
         {pending ? "Resetting" : "Reset password"}
       </Button>
     </form>

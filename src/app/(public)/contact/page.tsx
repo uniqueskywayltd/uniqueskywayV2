@@ -37,6 +37,9 @@ export default function ContactPage() {
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
         lead={copy.hero.lead}
+        image="/brand/contact.webp"
+        imageAlt="Contact Unique Sky Way"
+        align="center"
       />
 
       <TrustSection title={copy.channels.title}>

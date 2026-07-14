@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui";
@@ -11,27 +12,54 @@ export function TrustPageHero({
   title,
   lead,
   purpose,
+  image = "/brand/global-markets.webp",
+  imageAlt = "Unique Sky Way",
+  align = "left",
 }: {
   eyebrow: string;
   title: string;
   lead: string;
   purpose: string;
+  image?: string;
+  imageAlt?: string;
+  align?: "left" | "center";
 }) {
   return (
-    <header
-      className="border-b border-border/70 bg-[radial-gradient(90%_80%_at_0%_0%,oklch(0.94_0.015_250)_0%,oklch(0.985_0.004_250)_55%)]"
-      aria-label={purpose}
-      data-purpose={purpose}
-    >
-      <PublicPageContainer className="py-16 sm:py-20">
-        <FadeIn className="max-w-3xl">
-          <p className="text-sm font-medium tracking-[0.16em] text-muted-foreground uppercase">
-            {eyebrow}
-          </p>
-          <h1 className="mt-4 font-[family-name:var(--font-instrument-serif)] text-4xl tracking-normal text-foreground sm:text-5xl">
+    <header className="relative overflow-hidden" aria-label={purpose} data-purpose={purpose}>
+      <div className="absolute inset-0 -z-10">
+        <Image
+          src={image}
+          alt={imageAlt}
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/92 via-slate-950/75 to-slate-950/50" />
+      </div>
+
+      <PublicPageContainer
+        className={cn(
+          "py-20 sm:py-24 lg:py-28",
+          align === "center" && "text-center",
+        )}
+      >
+        <FadeIn className={cn("max-w-3xl", align === "center" && "mx-auto")}>
+          <p className="text-xs font-medium tracking-[0.14em] text-slate-300 uppercase">{eyebrow}</p>
+          <h1
+            className={cn(
+              "mt-3 max-w-3xl text-3xl font-semibold leading-[1.12] tracking-tight text-white sm:text-4xl lg:text-5xl",
+              align === "center" && "mx-auto",
+            )}
+          >
             {title}
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+          <p
+            className={cn(
+              "mt-5 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg",
+              align === "center" && "mx-auto",
+            )}
+          >
             {lead}
           </p>
         </FadeIn>
