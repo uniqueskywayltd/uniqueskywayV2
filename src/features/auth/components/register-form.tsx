@@ -11,11 +11,6 @@ import { cn } from "@/lib/utils";
 
 import { postAuthJson } from "../api-client";
 import { AuthField, AuthInputIcon, authCalloutClass, authCheckboxClass } from "./auth-field";
-import {
-  isMathCaptchaCorrect,
-  MathCaptchaField,
-  randomMathDigit,
-} from "./math-captcha-field";
 import { PasswordInput } from "./password-input";
 import { PlanSelectionField } from "./plan-selection-field";
 import { authLinkClass, authSubmitClass } from "./auth-shell";
@@ -46,9 +41,6 @@ function RegisterFormInner() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [password, setPassword] = useState("");
-  const [mathA] = useState(() => randomMathDigit());
-  const [mathB] = useState(() => randomMathDigit());
-  const [mathAnswer, setMathAnswer] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [planIntent, setPlanIntent] = useState(planIntentFromUrl);
   const strength = getPasswordStrength(password);
@@ -57,12 +49,6 @@ function RegisterFormInner() {
     setPending(true);
     setError(null);
     setMessage(null);
-
-    if (!isMathCaptchaCorrect(mathA, mathB, mathAnswer)) {
-      setError(t("auth.incorrect_security"));
-      setPending(false);
-      return;
-    }
 
     if (!termsAccepted) {
       setError(t("auth.accept_terms"));
@@ -111,9 +97,7 @@ function RegisterFormInner() {
       window.sessionStorage.setItem("usw_register_username", username);
     }
 
-    setMessage(
-      t("auth.verify_queued", { email: result.data?.email ?? "your email" }),
-    );
+    setMessage(t("auth.verify_queued", { email: result.data?.email ?? "your email" }));
     setPending(false);
   }
 
@@ -217,11 +201,7 @@ function RegisterFormInner() {
         </AuthInputIcon>
       </AuthField>
 
-      <PlanSelectionField
-        value={planIntent}
-        onChange={setPlanIntent}
-        disabled={pending}
-      />
+      <PlanSelectionField value={planIntent} onChange={setPlanIntent} disabled={pending} />
 
       <AuthField label={t("auth.referral_code")} htmlFor="referral">
         <AuthInputIcon icon={<Gift className="h-4 w-4" aria-hidden />}>
@@ -235,16 +215,6 @@ function RegisterFormInner() {
           />
         </AuthInputIcon>
       </AuthField>
-
-      <div className={authCalloutClass}>
-        <MathCaptchaField
-          a={mathA}
-          b={mathB}
-          value={mathAnswer}
-          onChange={setMathAnswer}
-          disabled={pending}
-        />
-      </div>
 
       <div className={cn("flex items-start gap-3", authCalloutClass)}>
         <Checkbox

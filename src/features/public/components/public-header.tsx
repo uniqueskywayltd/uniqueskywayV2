@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
 import { BrandMark } from "@/components/layout/brand-mark";
@@ -37,7 +37,7 @@ function NavLink({
       {...(active ? { "aria-current": "page" as const } : {})}
       className={cn(
         "relative font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        mobile ? "rounded-lg px-3 py-2.5 text-base" : "py-2 text-sm",
+        mobile ? "rounded-lg px-3 py-3 text-base" : "py-2 text-sm",
         active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
         !mobile &&
           "after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:bg-primary after:transition-transform after:duration-200 after:content-['']",
@@ -54,16 +54,37 @@ function NavLink({
 }
 
 export function PublicHeader() {
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
   const { t } = useI18n();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [menuPath, setMenuPath] = useState(pathname);
+
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
+    if (mobileOpen) setMobileOpen(false);
+  }
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [mobileOpen]);
 
   return (
-    <header className="relative z-40 border-b border-border/50 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
+      <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:px-8">
         <BrandMark
           surface="theme"
           width={128}
-          className="min-w-0 max-w-[45%] shrink sm:max-w-none [&_img]:w-[96px] sm:[&_img]:w-[112px] md:[&_img]:w-[128px]"
+          className="min-w-0 max-w-[7.5rem] shrink sm:max-w-[9rem] md:max-w-none [&_img]:w-[88px] sm:[&_img]:w-[112px] md:[&_img]:w-[128px]"
         />
 
         <nav className="hidden items-center gap-10 lg:flex" aria-label="Main navigation">
@@ -85,9 +106,10 @@ export function PublicHeader() {
           </div>
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
-            onClick={() => setMobileOpen(!mobileOpen)}
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+            onClick={() => setMobileOpen((open) => !open)}
             aria-expanded={mobileOpen}
+            aria-controls="public-mobile-nav"
             aria-label={mobileOpen ? t("chrome.close_nav") : t("chrome.open_nav")}
           >
             {mobileOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
@@ -96,23 +118,10 @@ export function PublicHeader() {
       </div>
 
       {mobileOpen ? (
-        <div className="border-t border-border/50 bg-background px-4 py-5 md:hidden">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <BrandMark
-              surface="theme"
-              width={112}
-              priority={false}
-              className="[&_img]:w-[104px]"
-            />
-            <button
-              type="button"
-              className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={() => setMobileOpen(false)}
-              aria-label={t("chrome.close_nav")}
-            >
-              <X className="h-5 w-5" aria-hidden />
-            </button>
-          </div>
+        <div
+          id="public-mobile-nav"
+          className="border-t border-border/50 bg-background px-4 py-5 md:hidden"
+        >
           <nav className="flex flex-col gap-0.5" aria-label="Mobile navigation">
             {PUBLIC_MOBILE_NAV.map((link) => (
               <NavLink

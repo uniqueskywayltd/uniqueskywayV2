@@ -92,9 +92,9 @@ export function AuthShell({
       </div>
 
       <div className="relative flex flex-col bg-background">
-        <div className="flex items-center justify-between gap-2 border-b border-border/50 px-4 py-4 sm:gap-3 sm:px-6 sm:py-5 lg:px-10">
-          <div className="min-w-0 max-w-[52%] shrink sm:max-w-none lg:hidden">
-            <BrandMark surface="theme" width={112} className="[&_img]:max-h-8" />
+        <div className="flex items-center justify-between gap-2 border-b border-border/50 px-3 py-3 sm:gap-3 sm:px-6 sm:py-5 lg:px-10">
+          <div className="min-w-0 max-w-[6.5rem] shrink-0 sm:max-w-none lg:hidden">
+            <BrandMark surface="theme" width={96} className="[&_img]:max-h-7" />
           </div>
           <AuthChromeControls />
         </div>

@@ -23,6 +23,7 @@
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
     "db:migrate": "node scripts/database/run-migrations.mjs",
+    "db:review-accounts": "node --env-file=.env.local scripts/create-review-accounts.mjs",
     "prepare": "husky || true"
   },
   "keywords": [

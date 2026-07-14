@@ -19,8 +19,8 @@ test.describe("identity UI", () => {
     await expect(page.getByText("Investment Package")).toBeVisible();
     await expect(page.getByRole("button", { name: /Tap to select a package|Silver Plan|Gold Plan|Classic Plan|Master Plan/ })).toBeVisible();
     await expect(page.getByLabel("Referral code")).toBeVisible();
-    await expect(page.getByText("Security check")).toBeVisible();
-    await expect(page.getByText("256-bit encryption")).toBeVisible();
+    await expect(page.getByText("Security check")).toHaveCount(0);
+    await expect(page.getByText("Enter the sum to confirm you are not a bot.")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Create account" })).toBeVisible();
 
     await page.goto("/auth/verify-email");
