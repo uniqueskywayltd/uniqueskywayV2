@@ -55,6 +55,11 @@
  * architecture. Further UI only for confirmed bugs, screenshot-backed polish,
  * product decisions, accessibility, or responsive defects. No speculative
  * redesign. Next major train: v3.3.0 International Platform.
+ *
+ * Launch Candidate LC1: Architecture complete, visual migration complete,
+ * feature complete for the certified V2 platform. Additive work only from here
+ * (internationalization, refinements). Immutable git reference:
+ * `release/v3.2-final`.
  */
 export const VISUAL_AUTHORITY = {
   homepageMigration: "complete",
@@ -75,6 +80,8 @@ export const VISUAL_AUTHORITY = {
   adminVisualFreezeCommit: "1cf302d",
   visualParityCompletion: "complete",
   visualParityCompletionFreezeCommit: "f461660",
+  launchCandidate: "LC1",
+  launchCandidateReleaseBranch: "release/v3.2-final",
   visualSpecRoot: "uniqueskyway/platform",
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
