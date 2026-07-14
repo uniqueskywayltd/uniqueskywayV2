@@ -38,6 +38,9 @@ export default function PlansPage() {
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
         lead={copy.hero.lead}
+        image="/brand/investments.webp"
+        imageAlt="Investment opportunities"
+        align="center"
       />
 
       <TrustSection title={copy.howTermsWork.title}>

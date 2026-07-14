@@ -71,7 +71,7 @@ export const VISUAL_AUTHORITY = {
   implementationRoot: "uniqueskywayV2",
   phpStatus: "historical-reference-only",
   nextSurfaces: [
-    "visual parity completion pass (whole-app mismatch fixes)",
-    "auth / empty / error states (platform auth, errors, brand)",
+    "screenshot walkthrough fixes only",
+    "v3.3.0 international platform (i18n, RTL, locale formatting)",
   ],
 } as const;

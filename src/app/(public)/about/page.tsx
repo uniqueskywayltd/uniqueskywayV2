@@ -36,6 +36,8 @@ export default function AboutPage() {
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
         lead={copy.hero.lead}
+        image="/brand/about-1.webp"
+        imageAlt="Unique Sky Way team"
       />
 
       <TrustSection title={copy.who.title}>

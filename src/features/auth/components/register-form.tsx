@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Lock, Mail, User } from "lucide-react";
 
-import { Alert, AlertDescription, Button, Checkbox, Input, Label } from "@/components/ui";
+import { Alert, AlertDescription, Button, Checkbox, Input } from "@/components/ui";
 
 import { postAuthJson } from "../api-client";
+import { AuthField, AuthInputIcon } from "./auth-field";
+import { authSubmitClass } from "./auth-shell";
 
 export function RegisterForm() {
   const [message, setMessage] = useState<string | null>(null);
@@ -33,23 +36,54 @@ export function RegisterForm() {
   }
 
   return (
-    <form action={submit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="displayName">Name</Label>
-        <Input id="displayName" name="displayName" autoComplete="name" />
+    <form action={submit} className="space-y-5" aria-busy={pending}>
+      <AuthField label="Name" htmlFor="displayName">
+        <AuthInputIcon icon={<User className="h-4 w-4" aria-hidden />}>
+          <Input
+            id="displayName"
+            name="displayName"
+            autoComplete="name"
+            placeholder="Your name"
+            disabled={pending}
+          />
+        </AuthInputIcon>
+      </AuthField>
+
+      <AuthField label="Email address" htmlFor="email">
+        <AuthInputIcon icon={<Mail className="h-4 w-4" aria-hidden />}>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+            disabled={pending}
+          />
+        </AuthInputIcon>
+      </AuthField>
+
+      <AuthField label="Password" htmlFor="password">
+        <AuthInputIcon icon={<Lock className="h-4 w-4" aria-hidden />}>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="Create a password"
+            autoComplete="new-password"
+            required
+            disabled={pending}
+          />
+        </AuthInputIcon>
+      </AuthField>
+
+      <div className="flex items-center gap-2.5">
+        <Checkbox id="rememberMe" name="rememberMe" defaultChecked disabled={pending} />
+        <label htmlFor="rememberMe" className="text-sm font-medium text-foreground/80">
+          Remember this browser
+        </label>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input id="password" name="password" type="password" autoComplete="new-password" required />
-      </div>
-      <div className="flex items-center gap-2">
-        <Checkbox id="rememberMe" name="rememberMe" defaultChecked />
-        <Label htmlFor="rememberMe">Remember this browser</Label>
-      </div>
+
       {error ? (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -60,7 +94,8 @@ export function RegisterForm() {
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       ) : null}
-      <Button type="submit" className="w-full" disabled={pending}>
+
+      <Button type="submit" className={authSubmitClass} disabled={pending}>
         {pending ? "Creating account" : "Create account"}
       </Button>
     </form>

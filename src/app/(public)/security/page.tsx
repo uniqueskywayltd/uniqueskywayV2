@@ -36,6 +36,8 @@ export default function SecurityPage() {
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
         lead={copy.hero.lead}
+        image="/brand/security.webp"
+        imageAlt="Platform security"
       />
 
       <TrustSection title={copy.account.title}>

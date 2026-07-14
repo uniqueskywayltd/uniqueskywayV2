@@ -54,6 +54,9 @@ export default function HowItWorksPage() {
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
         lead={copy.hero.lead}
+        image="/brand/global-markets.webp"
+        imageAlt="Investment portfolio"
+        align="center"
       />
 
       <TrustSection title="The journey">

@@ -44,6 +44,9 @@ export default function FaqPage() {
         eyebrow={copy.hero.eyebrow}
         title={copy.hero.title}
         lead={copy.hero.lead}
+        image="/brand/trust.webp"
+        imageAlt="Support and guidance"
+        align="center"
       />
 
       <FaqExplorer />
