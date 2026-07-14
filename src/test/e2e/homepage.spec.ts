@@ -11,6 +11,10 @@ test.describe("sprint A2 homepage", () => {
     await expect(page.getByRole("heading", { name: /9TH YEAR SUCCESS/i })).toBeVisible();
     await expect(page.getByRole("region", { name: "Areas of practice" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "What We Can Do for You" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Projects and sectors" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Collectible Digital World" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Annual statistics" })).toBeVisible();
+    await expect(page.getByText("Financial & Consulting Award 2020-2021")).toBeVisible();
 
     await expect(page.getByRole("region", { name: "Remove initial skepticism." })).toBeVisible();
     await expect(
