@@ -21,6 +21,8 @@ test.describe("identity UI", () => {
     await expect(page.getByLabel("Referral code")).toBeVisible();
     await expect(page.getByText("Security check")).toHaveCount(0);
     await expect(page.getByText("Enter the sum to confirm you are not a bot.")).toHaveCount(0);
+    await expect(page.getByRole("group", { name: /\d+ plus \d+/ })).toBeVisible();
+    await expect(page.getByLabel("Answer")).toBeVisible();
     await expect(page.getByRole("button", { name: "Create account" })).toBeVisible();
 
     await page.goto("/auth/verify-email");

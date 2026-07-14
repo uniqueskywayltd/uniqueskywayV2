@@ -176,7 +176,7 @@ export const FAQ_COPY = {
       category: "Support",
       question: "How do I reach Unique Sky Way?",
       answer:
-        "Use the Contact page. Channels marked pending are not invented—use the form intake, and we publish approved channels when ready.",
+        "Use the Contact page intake form. We publish approved public channels only when counsel and operations are ready.",
     },
     {
       category: "Support",
@@ -198,30 +198,7 @@ export const CONTACT_COPY = {
   hero: {
     eyebrow: "Contact",
     title: "Ask clearly. We answer calmly.",
-    lead: "Reach Unique Sky Way without pressure. Channels that are not approved yet are marked pending—never invented.",
-  },
-  channels: {
-    title: "Channels",
-    items: [
-      {
-        label: "Email",
-        value: "Pending approval",
-        status: "pending" as const,
-        note: "Support inbox publish when counsel/ops approve the public address.",
-      },
-      {
-        label: "Phone",
-        value: "Pending approval",
-        status: "pending" as const,
-        note: "No public phone number until an approved line exists.",
-      },
-      {
-        label: "Office address",
-        value: "Pending approval",
-        status: "pending" as const,
-        note: "We will not invent an address or plaque for prestige.",
-      },
-    ],
+    lead: "Reach Unique Sky Way without pressure. Send a message through the intake form — we respond when we can help clearly.",
   },
   expectations: {
     title: "What to expect",

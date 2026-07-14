@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 import { Badge, Button, Card } from "@/components/ui";
+import { appPath } from "@/lib/app-path";
 
 import { getAdminJson, mutateAdminJson } from "../api-client";
 import { AdminDataTable, AdminMetricGrid, AdminToolbar } from "./admin-data-table";
@@ -377,9 +378,9 @@ export function ReportsPanel() {
     setBusy(true);
     setFeedback(null);
     try {
-      const csrfResponse = await fetch("/api/auth/csrf", { credentials: "include" });
+      const csrfResponse = await fetch(appPath("/api/auth/csrf"), { credentials: "include" });
       const csrfPayload = (await csrfResponse.json()) as { data?: { csrfToken?: string } };
-      const response = await fetch("/api/admin/reports/export", {
+      const response = await fetch(appPath("/api/admin/reports/export"), {
         method: "POST",
         credentials: "include",
         headers: {

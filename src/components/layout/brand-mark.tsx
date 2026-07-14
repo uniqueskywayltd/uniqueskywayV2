@@ -35,7 +35,8 @@ function scaledHeight(
   return Math.round((targetWidth * source.height) / source.width);
 }
 
-const logoImageClass = "h-auto max-h-10 w-auto max-w-full object-contain sm:max-h-11";
+const logoImageClass =
+  "h-auto max-h-10 w-auto max-w-full object-contain sm:max-h-11 [height:auto] [width:auto]";
 
 /**
  * Brand mark. Dark theme always uses `/brand/dark-logo.webp`.

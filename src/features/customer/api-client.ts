@@ -1,12 +1,14 @@
 "use client";
 
+import { appPath } from "@/lib/app-path";
+
 export interface ApiResult<TData> {
   data?: TData;
   error?: string;
 }
 
 export async function getCustomerJson<TData>(url: string): Promise<ApiResult<TData>> {
-  const response = await fetch(url, {
+  const response = await fetch(appPath(url), {
     method: "GET",
     credentials: "include",
   });
@@ -29,7 +31,7 @@ export async function patchCustomerJson<TData>(
   const csrfToken = await getCsrfToken();
   if (!csrfToken) return { error: "Security token could not be created." };
 
-  const response = await fetch(url, {
+  const response = await fetch(appPath(url), {
     method: "PATCH",
     credentials: "include",
     headers: {
@@ -58,7 +60,7 @@ export async function postCustomerJson<TData>(
   const csrfToken = await getCsrfToken();
   if (!csrfToken) return { error: "Security token could not be created." };
 
-  const response = await fetch(url, {
+  const response = await fetch(appPath(url), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -87,7 +89,7 @@ export async function postCustomerForm<TData>(
   const csrfToken = await getCsrfToken();
   if (!csrfToken) return { error: "Security token could not be created." };
 
-  const response = await fetch(url, {
+  const response = await fetch(appPath(url), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -108,7 +110,7 @@ export async function postCustomerForm<TData>(
 }
 
 async function getCsrfToken(): Promise<string | null> {
-  const response = await fetch("/api/auth/csrf", {
+  const response = await fetch(appPath("/api/auth/csrf"), {
     method: "GET",
     credentials: "include",
   });

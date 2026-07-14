@@ -72,7 +72,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
     <div className="min-h-screen bg-background text-foreground">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-sidebar lg:flex lg:flex-col">
         <div className="border-b p-5">
-          <BrandMark />
+          <BrandMark surface="theme" />
         </div>
         <nav className="flex-1 space-y-6 overflow-y-auto p-3" aria-label="Customer navigation">
           <NavGroup label={t("nav.money")} items={moneyNav} pathname={pathname} summary={summary} />
@@ -115,7 +115,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
                 <span className="sr-only">Toggle navigation</span>
               </Button>
               <div className="lg:hidden">
-                <BrandMark />
+                <BrandMark surface="theme" width={120} className="[&_img]:h-auto [&_img]:max-h-8" />
               </div>
             </div>
             <div className="flex items-center gap-2">

@@ -11,6 +11,11 @@ import { cn } from "@/lib/utils";
 
 import { postAuthJson } from "../api-client";
 import { AuthField, AuthInputIcon, authCalloutClass, authCheckboxClass } from "./auth-field";
+import {
+  isMathCaptchaCorrect,
+  MathCaptchaField,
+  randomMathDigit,
+} from "./math-captcha-field";
 import { PasswordInput } from "./password-input";
 import { PlanSelectionField } from "./plan-selection-field";
 import { authLinkClass, authSubmitClass } from "./auth-shell";
@@ -43,6 +48,9 @@ function RegisterFormInner() {
   const [password, setPassword] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [planIntent, setPlanIntent] = useState(planIntentFromUrl);
+  const [captchaA] = useState(() => randomMathDigit());
+  const [captchaB] = useState(() => randomMathDigit());
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
   const strength = getPasswordStrength(password);
 
   async function submit(formData: FormData) {
@@ -52,6 +60,12 @@ function RegisterFormInner() {
 
     if (!termsAccepted) {
       setError(t("auth.accept_terms"));
+      setPending(false);
+      return;
+    }
+
+    if (!isMathCaptchaCorrect(captchaA, captchaB, captchaAnswer)) {
+      setError(t("auth.incorrect_security"));
       setPending(false);
       return;
     }
@@ -215,6 +229,14 @@ function RegisterFormInner() {
           />
         </AuthInputIcon>
       </AuthField>
+
+      <MathCaptchaField
+        a={captchaA}
+        b={captchaB}
+        value={captchaAnswer}
+        onChange={setCaptchaAnswer}
+        disabled={pending}
+      />
 
       <div className={cn("flex items-start gap-3", authCalloutClass)}>
         <Checkbox

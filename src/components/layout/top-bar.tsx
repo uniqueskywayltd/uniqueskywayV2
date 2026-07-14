@@ -23,7 +23,7 @@ export function TopBar({ actions = [], trailing, className }: TopBarProps) {
       )}
     >
       <div className="mx-auto flex h-16 w-full max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <BrandMark />
+        <BrandMark surface="theme" />
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
           {actions.map((action) => (
             <a

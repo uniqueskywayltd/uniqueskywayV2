@@ -35,7 +35,7 @@ export function InvestmentPlansSection({
           </p>
         </div>
 
-        <div className="mt-12 grid gap-px overflow-hidden border border-border/70 bg-border/70 sm:mt-14 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-12 grid gap-5 sm:mt-14 sm:grid-cols-2 xl:grid-cols-4">
           {plans.map((plan) => (
             <CertifiedPlanCard key={plan.slug} plan={plan} />
           ))}

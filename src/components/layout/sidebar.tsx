@@ -23,7 +23,7 @@ export function Sidebar({ items, footer, className }: SidebarProps) {
       className={cn("hidden min-h-screen w-72 border-r bg-sidebar lg:flex lg:flex-col", className)}
     >
       <div className="border-b p-5">
-        <BrandMark />
+        <BrandMark surface="theme" />
       </div>
       <nav className="flex-1 space-y-1 p-3" aria-label="Sidebar">
         {items.map((item) => {

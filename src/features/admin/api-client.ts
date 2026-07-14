@@ -1,5 +1,7 @@
 "use client";
 
+import { appPath } from "@/lib/app-path";
+
 export interface ApiResult<TData> {
   data?: TData;
   error?: string;
@@ -8,7 +10,7 @@ export interface ApiResult<TData> {
 
 export async function getAdminJson<TData>(url: string): Promise<ApiResult<TData>> {
   try {
-    const response = await fetch(url, { method: "GET", credentials: "include" });
+    const response = await fetch(appPath(url), { method: "GET", credentials: "include" });
     const payload = (await response.json()) as {
       data?: TData;
       error?: { message?: string };
@@ -43,7 +45,7 @@ export async function mutateAdminJson<TData>(
       },
     };
     if (body) init.body = JSON.stringify(body);
-    const response = await fetch(url, init);
+    const response = await fetch(appPath(url), init);
     const payload = (await response.json()) as {
       data?: TData;
       error?: { message?: string };
@@ -61,7 +63,7 @@ export async function mutateAdminJson<TData>(
 }
 
 async function getCsrfToken(): Promise<string | null> {
-  const response = await fetch("/api/auth/csrf", {
+  const response = await fetch(appPath("/api/auth/csrf"), {
     method: "GET",
     credentials: "include",
   });

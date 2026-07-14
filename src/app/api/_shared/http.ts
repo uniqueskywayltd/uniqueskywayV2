@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { z } from "zod";
 
 import { AppError, isAppError } from "@/application/errors";
-import { AUTH_COOKIE_NAMES } from "@/application/auth";
 import {
   createCsrfToken,
   createRequestId,
@@ -11,6 +10,8 @@ import {
   type RequestSecurityContext,
 } from "@/application/auth/security";
 import { REQUEST_HEADERS } from "@/config/constants";
+
+import { csrfCookieNames, resolveCsrfCookie } from "./csrf-cookie";
 
 export interface ApiSuccess<TData> {
   data: TData;
@@ -99,22 +100,38 @@ export function createRequestContext(request: NextRequest): RequestSecurityConte
 export async function createCsrfResponse(requestId: string) {
   const token = createCsrfToken();
   const response = jsonOk({ csrfToken: token }, requestId);
+  const cookie = resolveCsrfCookie();
 
   // Cookie flags only — avoid full getServerEnv() so guest chrome (locale) keeps working
   // when optional service credentials are absent in local review.
-  response.cookies.set(AUTH_COOKIE_NAMES.csrf, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
+  response.cookies.set(cookie.name, token, {
+    httpOnly: cookie.httpOnly,
+    secure: cookie.secure,
+    sameSite: cookie.sameSite,
+    path: cookie.path,
   });
+
+  // Clear the alternate CSRF cookie name so double-cookie mismatches cannot linger.
+  for (const name of csrfCookieNames()) {
+    if (name !== cookie.name) {
+      response.cookies.set(name, "", {
+        httpOnly: true,
+        secure: name.startsWith("__Host-"),
+        sameSite: "lax",
+        path: "/",
+        maxAge: 0,
+      });
+    }
+  }
 
   return response;
 }
 
 export async function requireCsrf(request: NextRequest) {
   const cookieStore = await cookies();
-  const cookieToken = cookieStore.get(AUTH_COOKIE_NAMES.csrf)?.value;
+  const cookieToken = csrfCookieNames()
+    .map((name) => cookieStore.get(name)?.value)
+    .find((value): value is string => Boolean(value));
   const headerToken = request.headers.get("x-csrf-token");
 
   if (!cookieToken || !headerToken || !safeCompare(cookieToken, headerToken)) {

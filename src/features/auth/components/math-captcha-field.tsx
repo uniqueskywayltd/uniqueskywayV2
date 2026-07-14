@@ -10,7 +10,6 @@ type MathCaptchaFieldProps = {
   onChange: (value: string) => void;
   disabled?: boolean;
   className?: string;
-  label?: string;
 };
 
 const digitClass = "text-sm font-medium tabular-nums text-foreground";
@@ -36,6 +35,7 @@ export function isMathCaptchaCorrect(a: number, b: number, answer: string | numb
   );
 }
 
+/** Equation + answer only — no headings, helper copy, or “Security check” chrome. */
 export function MathCaptchaField({
   a,
   b,
@@ -43,35 +43,30 @@ export function MathCaptchaField({
   onChange,
   disabled,
   className,
-  label = "Security check",
 }: MathCaptchaFieldProps) {
   return (
-    <div className={cn("space-y-2", className)}>
-      <p className="text-sm font-medium text-foreground">{label}</p>
-      <div
-        className="flex flex-wrap items-center gap-2"
-        role="group"
-        aria-label={`${label}: ${a} plus ${b}`}
-      >
-        <span className={digitClass}>{a}</span>
-        <span className={operatorClass}>+</span>
-        <span className={digitClass}>{b}</span>
-        <span className={operatorClass}>=</span>
-        <Input
-          type="number"
-          inputMode="numeric"
-          min={2}
-          max={18}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          disabled={disabled}
-          className={answerInputClass}
-          autoComplete="off"
-          required
-          aria-label="Your answer"
-        />
-      </div>
-      <p className="text-xs text-muted-foreground">Enter the sum to confirm you are not a bot.</p>
+    <div
+      className={cn("flex flex-wrap items-center gap-2", className)}
+      role="group"
+      aria-label={`${a} plus ${b}`}
+    >
+      <span className={digitClass}>{a}</span>
+      <span className={operatorClass}>+</span>
+      <span className={digitClass}>{b}</span>
+      <span className={operatorClass}>=</span>
+      <Input
+        type="number"
+        inputMode="numeric"
+        min={2}
+        max={18}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        className={answerInputClass}
+        autoComplete="off"
+        required
+        aria-label="Answer"
+      />
     </div>
   );
 }

@@ -17,6 +17,7 @@ import {
   listSelectableLanguages,
   type AppLanguage,
 } from "@/i18n";
+import { appPath } from "@/lib/app-path";
 import { cn } from "@/lib/utils";
 
 const SHORT_LABEL: Record<AppLanguage, string> = {
@@ -34,7 +35,7 @@ const SHORT_LABEL: Record<AppLanguage, string> = {
 
 async function getCsrfToken(): Promise<string | null> {
   try {
-    const response = await fetch("/api/auth/csrf", { credentials: "include" });
+    const response = await fetch(appPath("/api/auth/csrf"), { credentials: "include" });
     if (!response.ok) return null;
     const payload = (await response.json()) as { data?: { csrfToken?: string } };
     return payload.data?.csrfToken ?? null;
@@ -80,7 +81,7 @@ export function LanguageSelector({ className, compact = true }: LanguageSelector
     try {
       const csrfToken = await getCsrfToken();
       if (csrfToken) {
-        await fetch("/api/locale", {
+        await fetch(appPath("/api/locale"), {
           method: "POST",
           credentials: "include",
           headers: {

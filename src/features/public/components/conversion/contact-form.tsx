@@ -2,6 +2,11 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 
+import {
+  isMathCaptchaCorrect,
+  MathCaptchaField,
+  randomMathDigit,
+} from "@/features/auth/components/math-captcha-field";
 import { submitContactIntake } from "@/features/public/actions/contact-intake";
 import { CONTACT_COPY } from "@/features/public/content/conversion-pages";
 import { Button } from "@/components/ui";
@@ -13,11 +18,20 @@ export function ContactForm() {
   const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorHint, setErrorHint] = useState<string | null>(null);
+  const [captchaA] = useState(() => randomMathDigit());
+  const [captchaB] = useState(() => randomMathDigit());
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
+
+    if (!isMathCaptchaCorrect(captchaA, captchaB, captchaAnswer)) {
+      setStatus("error");
+      setErrorHint("Check the sum and try again.");
+      return;
+    }
 
     startTransition(async () => {
       const result = await submitContactIntake({
@@ -31,6 +45,7 @@ export function ContactForm() {
       if (result.ok) {
         setStatus("success");
         setErrorHint(null);
+        setCaptchaAnswer("");
         form.reset();
         return;
       }
@@ -65,7 +80,7 @@ export function ContactForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="relative space-y-5 rounded-xl border border-border/80 bg-background p-6"
+      className="relative space-y-5 rounded-xl border border-border/80 bg-card p-6 text-foreground shadow-sm"
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
@@ -91,7 +106,7 @@ export function ContactForm() {
           id="contact-topic"
           name="topic"
           required
-          className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-xs focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           defaultValue=""
         >
           <option value="" disabled>
@@ -109,6 +124,14 @@ export function ContactForm() {
         <Label htmlFor="contact-message">{copy.messageLabel}</Label>
         <Textarea id="contact-message" name="message" required maxLength={4000} rows={6} />
       </div>
+
+      <MathCaptchaField
+        a={captchaA}
+        b={captchaB}
+        value={captchaAnswer}
+        onChange={setCaptchaAnswer}
+        disabled={pending}
+      />
 
       <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
         <label htmlFor="companyWebsite">{copy.honeypotLabel}</label>

@@ -45,7 +45,7 @@ function NavLink({
           (active
             ? "after:scale-x-100"
             : "after:origin-left after:scale-x-0 hover:after:scale-x-100"),
-        mobile && active && "bg-muted/50 text-foreground",
+        mobile && active && "bg-muted text-foreground",
       )}
     >
       {label}
@@ -84,7 +84,7 @@ export function PublicHeader() {
         <BrandMark
           surface="theme"
           width={128}
-          className="min-w-0 max-w-[7.5rem] shrink sm:max-w-[9rem] md:max-w-none [&_img]:w-[88px] sm:[&_img]:w-[112px] md:[&_img]:w-[128px]"
+          className="min-w-0 max-w-[7.5rem] shrink sm:max-w-[9rem] md:max-w-none [&_img]:h-auto [&_img]:w-[88px] sm:[&_img]:w-[112px] md:[&_img]:w-[128px]"
         />
 
         <nav className="hidden items-center gap-10 lg:flex" aria-label="Main navigation">
@@ -94,8 +94,10 @@ export function PublicHeader() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5">
-          <ThemeToggle compact />
-          <LanguageSelector compact />
+          <div className="hidden items-center gap-0.5 sm:gap-1.5 md:flex">
+            <ThemeToggle compact />
+            <LanguageSelector compact />
+          </div>
           <div className="hidden items-center gap-1.5 md:flex">
             <Link href="/auth/login" className={marketingHeaderOutlineBtn()}>
               {t("chrome.sign_in")}
@@ -107,12 +109,12 @@ export function PublicHeader() {
           <button
             type="button"
             className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
-            onClick={() => setMobileOpen((open) => !open)}
+            onClick={() => setMobileOpen(true)}
             aria-expanded={mobileOpen}
             aria-controls="public-mobile-nav"
-            aria-label={mobileOpen ? t("chrome.close_nav") : t("chrome.open_nav")}
+            aria-label={t("chrome.open_nav")}
           >
-            {mobileOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
+            <Menu className="h-5 w-5" aria-hidden />
           </button>
         </div>
       </div>
@@ -120,9 +122,35 @@ export function PublicHeader() {
       {mobileOpen ? (
         <div
           id="public-mobile-nav"
-          className="border-t border-border/50 bg-background px-4 py-5 md:hidden"
+          className="fixed inset-0 z-[80] flex flex-col bg-background md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("chrome.open_nav")}
         >
-          <nav className="flex flex-col gap-0.5" aria-label="Mobile navigation">
+          <div className="flex h-[4.25rem] items-center justify-between gap-3 border-b border-border/50 px-4">
+            <BrandMark
+              surface="theme"
+              width={112}
+              className="min-w-0 [&_img]:h-auto [&_img]:w-[100px]"
+            />
+            <div className="flex shrink-0 items-center gap-0.5">
+              <ThemeToggle compact />
+              <LanguageSelector compact />
+              <button
+                type="button"
+                className="inline-flex size-11 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => setMobileOpen(false)}
+                aria-label={t("chrome.close_nav")}
+              >
+                <X className="h-5 w-5" aria-hidden />
+              </button>
+            </div>
+          </div>
+
+          <nav
+            className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-4 py-4"
+            aria-label="Mobile navigation"
+          >
             {PUBLIC_MOBILE_NAV.map((link) => (
               <NavLink
                 key={link.href}
@@ -132,7 +160,7 @@ export function PublicHeader() {
                 onClick={() => setMobileOpen(false)}
               />
             ))}
-            <div className="mt-4 flex flex-col gap-2.5 border-t border-border/50 pt-4">
+            <div className="mt-auto flex flex-col gap-2.5 border-t border-border/50 pt-4 pb-6">
               <Link
                 href="/auth/login"
                 className={cn(marketingHeaderOutlineBtn(), "h-11 w-full justify-center")}
