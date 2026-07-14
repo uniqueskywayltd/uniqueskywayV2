@@ -13,10 +13,10 @@ export const metadata: Metadata = {
 /** WP2 — Deposit overview / history over certified deposit engine. */
 export default function DepositHistoryPage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 sm:space-y-9">
       <DepositSurfaceHero
         title="Deposits"
-        description="Funding intents from the certified money-movement engine — status and timelines only. No invented balances."
+        description="Tracking funding status and next steps — add funds when you’re ready."
         showNewDeposit
       />
       <DepositHistory />

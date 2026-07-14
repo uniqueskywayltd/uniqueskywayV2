@@ -91,7 +91,7 @@ export function WithdrawalHistory() {
       <EmptyState
         icon={ArrowUpRight}
         title="No withdrawals"
-        description="When you request a withdrawal, status and next steps stay visible so you always know what happens next."
+        description="When you request a withdrawal, status and next steps stay visible so you always know what to expect."
         action={
           <Button asChild>
             <Link href="/wallet/withdrawals/new">New withdrawal</Link>
@@ -117,7 +117,7 @@ export function WithdrawalHistory() {
               onClick={() => setFilter(option.value)}
               aria-pressed={active}
               className={cn(
-                "rounded-lg border px-3 py-1.5 text-sm motion-safe:transition-colors motion-safe:duration-200",
+                "rounded-lg border px-3 py-1.5 text-sm motion-safe:transition-colors motion-safe:duration-200 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 active
                   ? "border-primary/30 bg-primary/10 font-medium text-primary"
                   : "border-border/70 bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground",
@@ -177,7 +177,7 @@ export function WithdrawalHistory() {
                     <TableCell className="text-right">
                       <Link
                         href={`/wallet/withdrawals/${withdrawal.id}`}
-                        className="text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
                         View
                       </Link>

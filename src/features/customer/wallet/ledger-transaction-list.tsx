@@ -49,7 +49,7 @@ export function LedgerTransactionTable({ entries }: { entries: LedgerEntryRow[] 
                 {entry.href ? (
                   <Link
                     href={entry.href}
-                    className="hover:text-primary hover:underline underline-offset-4"
+                    className="hover:text-primary hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
                   >
                     {entry.label}
                   </Link>
@@ -96,7 +96,7 @@ export function LedgerTransactionCards({ entries }: { entries: LedgerEntryRow[] 
             {entry.href ? (
               <Link
                 href={entry.href}
-                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset motion-safe:transition-colors motion-safe:duration-200 motion-reduce:transition-none"
               >
                 {content}
               </Link>

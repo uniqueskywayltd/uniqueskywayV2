@@ -39,7 +39,10 @@ export function WithdrawalSurfaceHero({
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>
         </div>
         {showNewWithdrawal ? (
-          <Link href="/wallet/withdrawals/new" className={cn(buttonVariants(), "shrink-0")}>
+          <Link
+            href="/wallet/withdrawals/new"
+            className={cn(buttonVariants(), "shrink-0 focus-visible:ring-offset-2")}
+          >
             New withdrawal
           </Link>
         ) : null}

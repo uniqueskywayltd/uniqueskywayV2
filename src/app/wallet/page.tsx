@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** WP1 — Wallet shell over certified wallet read model. */
+/** WP1–WP5 — Wallet shell certified: operations center over certified reads. */
 export default function WalletPage() {
   return <WalletOverview />;
 }

@@ -36,8 +36,8 @@ export function WalletWelcomeHero({ className }: WalletWelcomeHeroProps) {
             Wallet
           </h1>
           <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground sm:mt-2">
-            How do I safely move money? Operational balances from the certified ledger — not a bank
-            lookalike or an investment list.
+            An operations center for your money — what is available, what is pending, what just
+            happened, and what you can do next.
           </p>
         </div>
       </div>

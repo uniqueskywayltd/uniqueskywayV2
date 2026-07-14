@@ -277,8 +277,10 @@ test.describe("sprint B3 wallet experience", () => {
     await expect(page.getByText("Withdrawable", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Pending", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Invested", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("Withdrawable now equals Available")).toBeVisible();
+    await expect(page.getByText("Ready to invest or withdraw.")).toBeVisible();
+    await expect(page.getByText("Cash you can send out now.")).toBeVisible();
     await expect(page.getByRole("region", { name: "Wallet navigation" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Skip to dashboard content" })).toBeAttached();
     await expect(
       page
         .getByRole("region", { name: "Wallet navigation" })
@@ -296,6 +298,9 @@ test.describe("sprint B3 wallet experience", () => {
       "href",
       "/ledger",
     );
+    await expect(
+      page.getByText("An operations center for your money", { exact: false }),
+    ).toBeVisible();
   });
 
   test("supports deposit history and anxiety-reducing withdrawal detail", async ({ page }) => {

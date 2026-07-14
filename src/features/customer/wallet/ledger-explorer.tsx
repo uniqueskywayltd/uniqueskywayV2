@@ -47,8 +47,12 @@ export function LedgerExplorer() {
   if (loading) {
     return (
       <div className="space-y-4" aria-busy="true" aria-label="Loading ledger">
-        <Skeleton className="h-5 w-full max-w-md rounded-md" />
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <Skeleton className="h-5 w-full max-w-xl rounded-md" />
+        <div className="space-y-2 rounded-xl border border-border/70 p-4">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={index} className="h-12 w-full rounded-lg" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -58,7 +62,7 @@ export function LedgerExplorer() {
       <EmptyState
         icon={BookOpenText}
         title="No ledger entries yet"
-        description="Credited deposits, ROI, reservations, and withdrawals appear here after they post — never invented."
+        description="Posted deposits, credits, reservations, and withdrawals appear here after they settle — never invented."
         action={
           <Button asChild>
             <Link href="/wallet/deposits/new">Add funds</Link>

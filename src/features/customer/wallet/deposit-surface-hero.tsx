@@ -39,7 +39,10 @@ export function DepositSurfaceHero({
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>
         </div>
         {showNewDeposit ? (
-          <Link href="/wallet/deposits/new" className={cn(buttonVariants(), "shrink-0")}>
+          <Link
+            href="/wallet/deposits/new"
+            className={cn(buttonVariants(), "shrink-0 focus-visible:ring-offset-2")}
+          >
             New deposit
           </Link>
         ) : null}

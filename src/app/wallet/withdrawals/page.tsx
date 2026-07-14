@@ -13,10 +13,10 @@ export const metadata: Metadata = {
 /** WP3 — Withdrawal overview / history over certified withdrawal engine. */
 export default function WithdrawalHistoryPage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 sm:space-y-9">
       <WithdrawalSurfaceHero
         title="Withdrawals"
-        description="Every request keeps certified status and next-step guidance so you always know what is happening — without invented ETAs."
+        description="See where each request stands and what happens next — status from the engine, never invented timelines."
         showNewWithdrawal
       />
       <WithdrawalHistory />

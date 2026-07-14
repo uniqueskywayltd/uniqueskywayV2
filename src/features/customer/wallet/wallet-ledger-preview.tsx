@@ -43,7 +43,15 @@ export function WalletLedgerPreview() {
   if (loading) {
     return (
       <section aria-busy="true" aria-label="Loading recent wallet transactions">
-        <Skeleton className="h-[280px] w-full rounded-xl" />
+        <div className="overflow-hidden rounded-xl border border-border/70 bg-card/90 shadow-sm">
+          <Skeleton className="h-1 w-full rounded-none" />
+          <div className="space-y-3 p-5">
+            <Skeleton className="h-5 w-36 rounded-md" />
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-10 w-full rounded-lg" />
+            ))}
+          </div>
+        </div>
       </section>
     );
   }
