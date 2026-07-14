@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Button, Input, Label } from "@/components/ui";
+import { Button, Input, Label, Skeleton } from "@/components/ui";
 import { CurrencyDisplay } from "@/components/ui/display";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
 import type { WalletOverviewResponse } from "@/features/customer/wallet/types";
@@ -13,6 +13,7 @@ interface CreateWithdrawalResponse {
   withdrawal: { id: string };
 }
 
+/** WP3 — withdrawal CTA/journey presentation; engine calls unchanged. */
 export function WithdrawalJourney() {
   const router = useRouter();
   const [availableMinor, setAvailableMinor] = useState<string | null>(null);
@@ -89,7 +90,7 @@ export function WithdrawalJourney() {
 
   if (loadError) {
     return (
-      <section className="rounded-xl border border-border/80 p-5">
+      <section className="rounded-xl border border-border/80 bg-card p-5 shadow-sm">
         <h2 className="text-base font-semibold">Withdrawal unavailable</h2>
         <p className="mt-2 text-sm text-muted-foreground">{loadError}</p>
         <Button asChild variant="outline" className="mt-4">
@@ -99,29 +100,46 @@ export function WithdrawalJourney() {
     );
   }
 
+  if (availableMinor === null) {
+    return (
+      <div className="mx-auto max-w-lg space-y-4" aria-busy="true" aria-label="Loading withdrawal">
+        <Skeleton className="h-24 w-full rounded-2xl" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <p className="sr-only">Primary question: How do I get my money?</p>
 
-      <section className="rounded-xl border border-border/80 p-4">
-        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Available / withdrawable
+      <section className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_50%)] opacity-[0.1] dark:opacity-[0.18]"
+          aria-hidden
+        />
+        <p className="relative text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          Available to withdraw
         </p>
-        <p className="mt-1 text-2xl font-semibold">
-          {availableMinor === null ? (
-            "…"
-          ) : (
-            <CurrencyDisplay amountMinor={Number(availableMinor)} />
-          )}
+        <p className="relative mt-2 text-2xl font-semibold tracking-tight">
+          <CurrencyDisplay amountMinor={Number(availableMinor)} />
         </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Withdrawals reduce anxiety with clear status → next step → expectancy → support.
+        <p className="relative mt-2 text-sm text-muted-foreground">
+          After you submit, the certified engine reserves funds so they cannot be spent twice.
+          Status updates explain progress — not bank processing times.
         </p>
       </section>
 
       {step === "amount" ? (
-        <form onSubmit={onContinue} className="space-y-4 rounded-xl border border-border/80 p-5">
-          <div className="space-y-2">
+        <form
+          onSubmit={onContinue}
+          className="relative overflow-hidden space-y-4 rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-6"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_50%)] opacity-[0.08] dark:opacity-[0.16]"
+            aria-hidden
+          />
+          <div className="relative space-y-2">
             <Label htmlFor="withdraw-amount">Amount (USD)</Label>
             <Input
               id="withdraw-amount"
@@ -130,7 +148,7 @@ export function WithdrawalJourney() {
               onChange={(event) => setAmount(event.target.value)}
             />
           </div>
-          <div className="space-y-2">
+          <div className="relative space-y-2">
             <Label htmlFor="withdraw-destination">Destination reference</Label>
             <Input
               id="withdraw-destination"
@@ -142,8 +160,8 @@ export function WithdrawalJourney() {
               Uses the certified payout destination type. No alternate providers in this release.
             </p>
           </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <div className="flex gap-3">
+          {error ? <p className="relative text-sm text-destructive">{error}</p> : null}
+          <div className="relative flex gap-3">
             <Button type="submit">Continue</Button>
             <Button asChild type="button" variant="ghost">
               <Link href="/wallet">Cancel</Link>
@@ -151,33 +169,36 @@ export function WithdrawalJourney() {
           </div>
         </form>
       ) : (
-        <div className="space-y-4 rounded-xl border border-border/80 p-5">
-          <h2 className="text-base font-semibold">Confirm withdrawal</h2>
-          <p className="text-sm text-muted-foreground">
+        <div className="relative overflow-hidden space-y-4 rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-6">
+          <div
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_50%)] opacity-[0.08] dark:opacity-[0.16]"
+            aria-hidden
+          />
+          <h2 className="relative text-base font-semibold text-foreground">Confirm withdrawal</h2>
+          <p className="relative text-sm text-muted-foreground">
             After you submit, this amount is reserved so it cannot be spent twice. Review may occur
-            before payout — timing is expectancy, not a promise.
+            before payout. Timing is expectancy — not a promise.
           </p>
-          <dl className="space-y-2 text-sm">
-            <div className="flex justify-between gap-4">
+          <dl className="relative space-y-3 text-sm">
+            <div className="flex justify-between gap-4 border-b border-border/60 py-2">
               <dt className="text-muted-foreground">Amount</dt>
-              <dd className="font-mono">${Number(amount).toFixed(2)} USD</dd>
+              <dd className="font-mono font-medium tabular-nums">
+                ${Number(amount).toFixed(2)} USD
+              </dd>
             </div>
-            <div className="flex justify-between gap-4">
+            <div className="flex justify-between gap-4 py-2">
               <dt className="text-muted-foreground">Destination</dt>
               <dd className="max-w-[14rem] truncate text-right">{destination}</dd>
             </div>
-            {available !== null && amountMinor !== null ? (
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Remaining available after request</dt>
-                <dd>
-                  <CurrencyDisplay amountMinor={Math.max(available - amountMinor, 0)} />
-                </dd>
-              </div>
-            ) : null}
           </dl>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <div className="flex flex-wrap gap-3">
-            <Button type="button" onClick={() => void onSubmit()} disabled={step === "submitting"}>
+          {error ? <p className="relative text-sm text-destructive">{error}</p> : null}
+          <div className="relative flex flex-wrap gap-3">
+            <Button
+              type="button"
+              onClick={() => void onSubmit()}
+              disabled={step === "submitting"}
+              aria-busy={step === "submitting"}
+            >
               {step === "submitting" ? "Submitting…" : "Submit withdrawal"}
             </Button>
             <Button
@@ -189,7 +210,7 @@ export function WithdrawalJourney() {
               Back
             </Button>
           </div>
-          <Button asChild variant="ghost" size="sm">
+          <Button asChild variant="ghost" size="sm" className="relative">
             <Link href="/contact">Need help? Contact support</Link>
           </Button>
         </div>

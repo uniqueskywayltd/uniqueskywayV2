@@ -4,11 +4,28 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { Button, Skeleton, StatusChip } from "@/components/ui";
+import { DashboardPanelCard } from "@/components/ui/dashboard-panel-card";
 import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { getCustomerJson } from "@/features/customer/api-client";
 import { presentWithdrawalStatus } from "@/features/customer/wallet/status-presentation";
 import type { TimelineStep, WalletWithdrawal } from "@/features/customer/wallet/types";
+import { cn } from "@/lib/utils";
 
+function customerActionGuidance(status: string): string {
+  switch (status) {
+    case "rejected":
+    case "failed":
+      return "Yes — read any review note, then contact support or start a new request if appropriate.";
+    case "paid":
+      return "Optional — confirm receipt at your destination.";
+    case "cancelled":
+      return "No — you can start a new withdrawal when you’re ready.";
+    default:
+      return "No — wait for the next certified status update. You do not need to do anything right now.";
+  }
+}
+
+/** WP3 — withdrawal detail: clarity over density, certified fields only. */
 export function WithdrawalDetailView({ withdrawalId }: { withdrawalId: string }) {
   const [withdrawal, setWithdrawal] = useState<WalletWithdrawal | null>(null);
   const [timeline, setTimeline] = useState<TimelineStep[]>([]);
@@ -37,16 +54,22 @@ export function WithdrawalDetailView({ withdrawalId }: { withdrawalId: string })
   }, [withdrawalId]);
 
   if (loading) {
-    return <Skeleton className="h-64 w-full rounded-xl" aria-label="Loading withdrawal" />;
+    return (
+      <div className="space-y-4" aria-busy="true" aria-label="Loading withdrawal">
+        <Skeleton className="h-28 w-full rounded-xl" />
+        <Skeleton className="h-40 w-full rounded-xl" />
+        <Skeleton className="h-56 w-full rounded-xl" />
+      </div>
+    );
   }
 
   if (error || !withdrawal) {
     return (
-      <section className="rounded-xl border border-border/80 p-6">
+      <section className="rounded-xl border border-border/80 bg-card p-6 shadow-sm">
         <h2 className="text-base font-semibold">Withdrawal unavailable</h2>
         <p className="mt-2 text-sm text-muted-foreground">{error ?? "Not found."}</p>
         <Button asChild variant="outline" className="mt-4">
-          <Link href="/wallet/withdrawals">Back to withdrawal history</Link>
+          <Link href="/wallet/withdrawals">Back to withdrawals</Link>
         </Button>
       </section>
     );
@@ -54,77 +77,97 @@ export function WithdrawalDetailView({ withdrawalId }: { withdrawalId: string })
 
   const status = presentWithdrawalStatus(withdrawal.status);
   const current = timeline.find((step) => step.current) ?? timeline[timeline.length - 1];
+  const nextStep = current?.nextExpectedStep ?? status.nextExpectedStep;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-3xl font-semibold">
-            <CurrencyDisplay amountMinor={Number(withdrawal.amountMinor)} />
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Requested <DateDisplay value={withdrawal.createdAt} />
-          </p>
-        </div>
-        <StatusChip tone={status.tone}>{status.label}</StatusChip>
-      </div>
-
-      <section className="grid gap-3 rounded-xl border border-border/80 p-5 sm:grid-cols-2">
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">Current status</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{status.explanation}</p>
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">Expected next step</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {current?.nextExpectedStep ?? status.nextExpectedStep}
-          </p>
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">Expected timeline</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Review and payout can take longer than a payment. We show progress — not clock
-            promises.
-          </p>
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">Support path</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            If something looks wrong, contact support with this withdrawal id.
-          </p>
-          <Button asChild variant="outline" size="sm" className="mt-2">
-            <Link href="/contact">Contact support</Link>
-          </Button>
+      <section
+        className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-7"
+        aria-label="Withdrawal summary"
+      >
+        <div
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_50%)] opacity-[0.12] dark:opacity-[0.2]"
+          aria-hidden
+        />
+        <div className="relative flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              Withdrawal amount
+            </p>
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+              <CurrencyDisplay
+                amountMinor={Number(withdrawal.amountMinor)}
+                currency={withdrawal.currency}
+              />
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Requested <DateDisplay value={withdrawal.createdAt} />
+              {withdrawal.paidAt ? (
+                <>
+                  {" · "}
+                  Paid <DateDisplay value={withdrawal.paidAt} />
+                </>
+              ) : null}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              <span className="capitalize">
+                {withdrawal.destinationType.replaceAll("_", " ")}
+              </span>
+              {" · "}
+              <span className="font-mono text-xs">{withdrawal.destinationReference}</span>
+            </p>
+          </div>
+          <StatusChip tone={status.tone}>{status.label}</StatusChip>
         </div>
       </section>
 
+      <section
+        className="grid gap-4 sm:grid-cols-3"
+        aria-label="Withdrawal clarity"
+      >
+        <DashboardPanelCard title="What is happening?" accent="rose">
+          <p className="text-sm font-medium text-foreground">{status.label}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{status.explanation}</p>
+        </DashboardPanelCard>
+        <DashboardPanelCard title="What happens next?" accent="amber">
+          <p className="text-sm text-muted-foreground">{nextStep}</p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Progress is shown from certified status updates — not clock promises or bank ETAs.
+          </p>
+        </DashboardPanelCard>
+        <DashboardPanelCard title="Do I need to do anything?" accent="sky">
+          <p className="text-sm text-muted-foreground">
+            {customerActionGuidance(withdrawal.status)}
+          </p>
+        </DashboardPanelCard>
+      </section>
+
       {withdrawal.reviewReason ? (
-        <section className="rounded-xl border border-border/80 p-5">
-          <h2 className="text-base font-semibold">Review note</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{withdrawal.reviewReason}</p>
-        </section>
+        <DashboardPanelCard title="Review note" accent="primary">
+          <p className="text-sm text-muted-foreground">{withdrawal.reviewReason}</p>
+        </DashboardPanelCard>
       ) : null}
 
-      <section className="rounded-xl border border-border/80 p-5">
-        <h2 className="text-base font-semibold">Progress timeline</h2>
-        <ol className="mt-4 space-y-3">
+      <DashboardPanelCard title="Timeline" accent="primary">
+        <ol className="space-y-4">
           {timeline.map((step) => (
             <li key={step.key} className="flex gap-3">
               <span
-                className={
+                className={cn(
+                  "mt-1.5 size-2.5 shrink-0 rounded-full",
                   step.current
-                    ? "mt-1 size-2.5 shrink-0 rounded-full bg-foreground"
+                    ? "bg-primary ring-4 ring-primary/20"
                     : step.complete
-                      ? "mt-1 size-2.5 shrink-0 rounded-full bg-foreground/40"
-                      : "mt-1 size-2.5 shrink-0 rounded-full border border-border"
-                }
+                      ? "bg-foreground/45"
+                      : "border border-border bg-transparent",
+                )}
                 aria-hidden
               />
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground">{step.label}</p>
                 <p className="text-sm text-muted-foreground">{step.nextExpectedStep}</p>
                 {step.at ? (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     <DateDisplay value={step.at} />
                   </p>
                 ) : null}
@@ -132,11 +175,14 @@ export function WithdrawalDetailView({ withdrawalId }: { withdrawalId: string })
             </li>
           ))}
         </ol>
-      </section>
+      </DashboardPanelCard>
 
       <div className="flex flex-wrap gap-3">
+        <Button asChild variant="outline">
+          <Link href="/contact">Contact support</Link>
+        </Button>
         <Button asChild variant="ghost">
-          <Link href="/wallet/withdrawals">Withdrawal history</Link>
+          <Link href="/wallet/withdrawals">Withdrawals</Link>
         </Button>
         <Button asChild variant="ghost">
           <Link href="/wallet">Wallet</Link>

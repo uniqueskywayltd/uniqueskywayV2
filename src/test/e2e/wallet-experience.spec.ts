@@ -304,10 +304,18 @@ test.describe("sprint B3 wallet experience", () => {
     await expect(page.getByText("Timeline")).toBeVisible();
     await expect(page.getByRole("link", { name: "Contact support" })).toBeVisible();
 
-    await page.goto("/wallet/withdrawals/wd_1");
-    await expect(page.getByText("Current status")).toBeVisible();
-    await expect(page.getByText("Expected next step")).toBeVisible();
-    await expect(page.getByText("Expected timeline")).toBeVisible();
+    await page.goto("/wallet/withdrawals");
+    await expect(page.getByRole("heading", { level: 1, name: "Withdrawals" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "New withdrawal" }).first()).toHaveAttribute(
+      "href",
+      "/wallet/withdrawals/new",
+    );
+    await page.getByRole("link", { name: "View" }).click();
+    await expect(page).toHaveURL(/\/wallet\/withdrawals\/wd_1$/);
+    await expect(page.getByText("What is happening?")).toBeVisible();
+    await expect(page.getByText("What happens next?")).toBeVisible();
+    await expect(page.getByText("Do I need to do anything?")).toBeVisible();
+    await expect(page.getByText("Timeline")).toBeVisible();
     await expect(page.getByRole("link", { name: "Contact support" })).toBeVisible();
   });
 
