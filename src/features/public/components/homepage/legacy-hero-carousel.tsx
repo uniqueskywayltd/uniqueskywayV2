@@ -32,9 +32,10 @@ const HERO_SLIDES = [
 ] as const;
 
 const FLOATING_NOTES = [
-  "Alex from London just Withdrew $1,250",
-  "Maria from Lagos just Registered",
-  "James from Singapore just Invested $5,000",
+  "Your dashboard updates after settlement.",
+  "Need help? Visit the Help Centre.",
+  "Complete verification to unlock all features.",
+  "Statements are available from your account.",
 ] as const;
 
 /**
