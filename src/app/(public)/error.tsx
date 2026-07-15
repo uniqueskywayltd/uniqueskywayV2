@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui";
-import { PublicPageContainer } from "@/features/public/components/public-shell";
+import { Button } from "../../components/ui";
+import { PublicPageContainer } from "../../features/public/components/public-shell";
 
 export default function PublicError({
   reset,
