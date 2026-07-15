@@ -42,6 +42,7 @@ const nextConfig: NextConfig = {
   ...(process.env.NEXT_OUTPUT_STANDALONE === "1" ? { output: "standalone" as const } : {}),
   /** Shared hosting: avoid sharp/image optimizer memory spikes. */
   ...(process.env.NEXT_CPANEL === "1" ? { images: { unoptimized: true } } : {}),
+  ...(process.env.NEXT_CPANEL === "1" ? { experimental: { cpus: 1, workerThreads: true } } : {}),
   ...(process.env.NEXT_CPANEL === "1"
     ? { typescript: { ignoreBuildErrors: true, tsconfigPath: "tsconfig.cpanel.json" } }
     : {}),
