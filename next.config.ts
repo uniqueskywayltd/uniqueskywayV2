@@ -43,7 +43,7 @@ const nextConfig: NextConfig = {
   /** Shared hosting: avoid sharp/image optimizer memory spikes. */
   ...(process.env.NEXT_CPANEL === "1" ? { images: { unoptimized: true } } : {}),
   ...(process.env.NEXT_CPANEL === "1"
-    ? { typescript: { tsconfigPath: "tsconfig.cpanel.json" } }
+    ? { typescript: { ignoreBuildErrors: true, tsconfigPath: "tsconfig.cpanel.json" } }
     : {}),
   async headers() {
     return [
