@@ -153,6 +153,8 @@ npm run build:cpanel
 
 Requires **Node.js ≥ 20.11**. Set `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_BASE_PATH` in the build environment when baking public asset URLs.
 
+`build:cpanel` intentionally runs `next build --webpack`. CloudLinux NodeJS Selector stores `node_modules` outside the application root through a symlink, and Next.js 16 Turbopack can reject that layout during production builds. Webpack avoids that hosting-specific symlink validation while preserving the same Next.js App Router output contract.
+
 ### cPanel app
 
 1. Create or update Node.js App; Application URL `/v2` (or reverse-proxy so traffic reaches the Node process under that path).
@@ -308,4 +310,3 @@ Rules:
 - Namecheap Next.js deployment in cPanel: https://www.namecheap.com/support/knowledgebase/article.aspx/10686/29/how-to-deploy-reactjs-vitejs-react-native-and-nextjs-applications-in-cpanel/
 - cPanel Node.js application docs: https://docs.cpanel.net/knowledge-base/web-services/how-to-install-a-node.js-application/
 - Resend idempotency keys: https://resend.com/docs/dashboard/emails/idempotency-keys
-

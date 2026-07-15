@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cpanel": "NEXT_OUTPUT_STANDALONE=1 NEXT_CPANEL=1 NEXT_PUBLIC_BASE_PATH=/v2 next build && node scripts/prepare-standalone.mjs",
+    "build:cpanel": "NEXT_OUTPUT_STANDALONE=1 NEXT_CPANEL=1 NEXT_PUBLIC_BASE_PATH=/v2 next build --webpack && node scripts/prepare-standalone.mjs",
     "start": "next start",
     "start:standalone": "node .next/standalone/server.js",
     "lint": "eslint .",

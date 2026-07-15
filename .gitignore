@@ -29,3 +29,4 @@ pnpm-debug.log*
 
 # System
 .DS_Store
+deploy/
