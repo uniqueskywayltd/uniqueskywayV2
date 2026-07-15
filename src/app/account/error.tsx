@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, CardContent, CardHeader, CardTitle } from "../../components/ui";
+import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 
 export default function AccountError({ reset }: { error: Error; reset: () => void }) {
   return (
