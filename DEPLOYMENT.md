@@ -158,7 +158,7 @@ Requires **Node.js ≥ 20.11**. Set `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_BASE_
 ### cPanel app
 
 1. Create or update Node.js App; Application URL `/v2` (or reverse-proxy so traffic reaches the Node process under that path).
-2. Application startup file: `.next/standalone/server.js` (upload standalone tree so paths resolve).
+2. Application startup file: `server.js`. The root launcher delegates to `.next/standalone/server.js` after a cPanel build.
 3. Set `HOSTNAME=127.0.0.1`, `PORT` to the cPanel-assigned port.
 4. Start the app; smoke `GET /v2/api/health` (or proxied equivalent).
 5. Keep settlement / outbox on **external cron** calling authenticated job routes — do not rely on an always-on worker inside shared hosting.
@@ -174,7 +174,7 @@ Keep the previous standalone artifact tarball. Swap files + restart Node app. Do
 3. Run migration review (do not auto-migrate on boot).
 4. Upload `.next/standalone` (and any required parent layout) to the Node app root.
 5. Configure production env vars in cPanel (including `/v2` URL + base path).
-6. Start Node app (`server.js` from standalone).
+6. Start Node app (`server.js` root launcher).
 7. Hit `/api/health` (under `/v2`).
 8. Smoke public home, login, and one authenticated money surface.
 9. Verify external cron for settlement and outbox.
