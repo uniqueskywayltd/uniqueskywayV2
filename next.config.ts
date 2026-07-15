@@ -1,4 +1,4 @@
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { NextConfig } from "next";
@@ -27,6 +27,15 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   turbopack: {
     root: projectRoot,
+  },
+  webpack(config) {
+    config.resolve ??= {};
+    config.resolve.alias = {
+      ...(config.resolve.alias ?? {}),
+      "@": join(projectRoot, "src"),
+    };
+
+    return config;
   },
   ...(basePath ? { basePath } : {}),
   /** cPanel / self-hosted Node — set NEXT_OUTPUT_STANDALONE=1 for deploy builds. */
