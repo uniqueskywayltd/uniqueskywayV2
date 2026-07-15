@@ -2,7 +2,7 @@
 
 import { AlertTriangle } from "lucide-react";
 
-import { Button } from "@/components/ui";
+import { Button } from "../components/ui";
 
 export default function AppError({ reset }: { error: Error; reset: () => void }) {
   return (
