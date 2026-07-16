@@ -290,6 +290,7 @@ export const enMessages = {
   "admin.section.platform": "Platform",
   "admin.nav.dashboard": "Dashboard",
   "admin.nav.customers": "Customers",
+  "admin.nav.funding_wallets": "Funding wallets",
   "admin.nav.deposits": "Deposits",
   "admin.nav.withdrawals": "Withdrawals",
   "admin.nav.investments": "Investments",

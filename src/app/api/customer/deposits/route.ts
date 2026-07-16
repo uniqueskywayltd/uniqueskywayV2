@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     return jsonOk(
       {
         depositIntent: serializeDepositIntent(result.depositIntent),
-        providerAction: serializeDepositProviderAction(result.providerAction),
+        providerAction: serializeDepositProviderAction(),
         idempotent: result.idempotent,
       },
       context.requestId,

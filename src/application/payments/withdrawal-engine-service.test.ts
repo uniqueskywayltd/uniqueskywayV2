@@ -4,6 +4,7 @@ import type { AuthenticatedUser } from "@/application/auth";
 import { AppError } from "@/application/errors";
 import type { WithdrawalRequestRecord } from "@/infrastructure/database";
 
+import { MANUAL_WITHDRAWAL_PROVIDER } from "./funding-constants";
 import { WithdrawalEngineService } from "./withdrawal-engine-service";
 
 describe("WithdrawalEngineService", () => {
@@ -14,8 +15,8 @@ describe("WithdrawalEngineService", () => {
       {
         amountMinor: 10_000n,
         currency: "USD",
-        destinationType: "paystack_recipient",
-        destinationReference: "RCP_test_1",
+        destinationType: "crypto_wallet",
+        destinationReference: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
         idempotencyKey: "withdrawal:create:1",
       },
       auditContext,
@@ -24,8 +25,8 @@ describe("WithdrawalEngineService", () => {
       {
         amountMinor: 10_000n,
         currency: "USD",
-        destinationType: "paystack_recipient",
-        destinationReference: "RCP_test_1",
+        destinationType: "crypto_wallet",
+        destinationReference: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
         idempotencyKey: "withdrawal:create:1",
       },
       auditContext,
@@ -34,6 +35,7 @@ describe("WithdrawalEngineService", () => {
     expect(first.idempotent).toBe(false);
     expect(second.idempotent).toBe(true);
     expect(first.withdrawal.status).toBe("under_review");
+    expect(first.withdrawal.provider).toBe(MANUAL_WITHDRAWAL_PROVIDER);
     expect(fixture.ledgerRepository.postLedgerTransaction).toHaveBeenCalledTimes(1);
     expect(fixture.state.withdrawals).toHaveLength(1);
   });
@@ -46,8 +48,8 @@ describe("WithdrawalEngineService", () => {
         {
           amountMinor: 10_000n,
           currency: "USD",
-          destinationType: "paystack_recipient",
-          destinationReference: "RCP_test_1",
+          destinationType: "bank_transfer",
+          destinationReference: "Acct 1234567890",
           idempotencyKey: "withdrawal:create:insufficient",
         },
         auditContext,
@@ -87,7 +89,7 @@ describe("WithdrawalEngineService", () => {
     );
   });
 
-  it("approves, queues payout, and marks paid once on replay", async () => {
+  it("approves and marks paid directly from approved status without a payment provider", async () => {
     const fixture = createFixture({ withAdmin: true });
     fixture.state.withdrawals.push(
       createWithdrawal({
@@ -104,9 +106,6 @@ describe("WithdrawalEngineService", () => {
     );
     expect(approved.withdrawal.status).toBe("approved");
 
-    const queued = await fixture.service.queueWithdrawalPayout("withdrawal_1", auditContext);
-    expect(queued.withdrawal.status).toBe("processing");
-
     const paid = await fixture.service.markWithdrawalPaid({
       withdrawalId: "withdrawal_1",
       providerPayoutReference: "USWWTH-PAID-1",
@@ -120,8 +119,36 @@ describe("WithdrawalEngineService", () => {
       context: auditContext,
     });
     expect(paidReplay.idempotent).toBe(true);
-    expect(fixture.provider.initiatePayout).toHaveBeenCalledTimes(1);
     expect(fixture.ledgerRepository.postLedgerTransaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("queues manual payout processing and marks paid from processing status", async () => {
+    const fixture = createFixture({ withAdmin: true });
+    fixture.state.withdrawals.push(
+      createWithdrawal({
+        id: "withdrawal_1",
+        status: "under_review",
+        reservationLedgerTransactionId: "ledger_reservation_1",
+      }),
+    );
+
+    await fixture.service.approveWithdrawal(
+      "withdrawal_1",
+      { reason: "Approved after review." },
+      auditContext,
+    );
+
+    const queued = await fixture.service.queueWithdrawalPayout("withdrawal_1", auditContext);
+    expect(queued.withdrawal.status).toBe("processing");
+    expect(queued.withdrawal.provider).toBe(MANUAL_WITHDRAWAL_PROVIDER);
+    expect(queued.withdrawal.providerPayoutReference).toMatch(/^USWWTH-/);
+
+    const paid = await fixture.service.markWithdrawalPaid({
+      withdrawalId: "withdrawal_1",
+      providerPayoutReference: queued.withdrawal.providerPayoutReference!,
+      context: auditContext,
+    });
+    expect(paid.withdrawal.status).toBe("paid");
   });
 
   it("blocks a second open withdrawal for the same currency", async () => {
@@ -139,8 +166,8 @@ describe("WithdrawalEngineService", () => {
         {
           amountMinor: 10_000n,
           currency: "USD",
-          destinationType: "paystack_recipient",
-          destinationReference: "RCP_test_2",
+          destinationType: "crypto_wallet",
+          destinationReference: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb2",
           idempotencyKey: "withdrawal:create:pending-rule",
         },
         auditContext,
@@ -351,19 +378,6 @@ function createFixture(options: { availableBalanceMinor?: bigint; withAdmin?: bo
   const operationsRepository = {
     appendAuditLog: vi.fn(async () => ({})),
   };
-  const provider = {
-    provider: "paystack" as const,
-    initializeDeposit: vi.fn(),
-    verifyDeposit: vi.fn(),
-    verifyWebhookSignature: vi.fn(() => true),
-    initiatePayout: vi.fn(async (input: { reference: string }) => ({
-      provider: "paystack" as const,
-      providerPayoutReference: input.reference,
-      status: "pending" as const,
-      metadata: {},
-    })),
-    verifyPayout: vi.fn(),
-  };
 
   const service = new WithdrawalEngineService({
     identityProvider: identityProvider as never,
@@ -375,13 +389,11 @@ function createFixture(options: { availableBalanceMinor?: bigint; withAdmin?: bo
     ledgerRepository: ledgerRepository as never,
     notificationRepository: notificationRepository as never,
     operationsRepository: operationsRepository as never,
-    paymentProvider: provider,
   });
 
   return {
     service,
     state,
-    provider,
     ledgerRepository,
   };
 }
@@ -392,15 +404,15 @@ function createWithdrawal(values: Partial<WithdrawalRequestRecord>): WithdrawalR
     userId: "user_1",
     currency: "USD",
     amountMinor: 10_000n,
-    destinationType: "paystack_recipient",
-    destinationReference: "RCP_test_1",
+    destinationType: "crypto_wallet",
+    destinationReference: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
     status: "requested",
     riskScore: null,
     reviewedBy: null,
     reviewedAt: null,
     reviewReason: null,
     idempotencyKey: "withdrawal:create:1",
-    provider: null,
+    provider: MANUAL_WITHDRAWAL_PROVIDER,
     providerPayoutReference: null,
     providerMetadata: {},
     failureReason: null,

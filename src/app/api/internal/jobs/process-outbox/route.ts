@@ -3,10 +3,6 @@ import type { NextRequest } from "next/server";
 import { createRequestContext, jsonError, jsonOk } from "@/app/api/_shared/http";
 import { dispatchQueuedEmails } from "@/app/api/auth/_shared/dispatch-emails";
 import {
-  createDepositEngineService,
-  createWithdrawalEngineService,
-} from "@/app/api/payments/_shared/service";
-import {
   DrizzleTransactionManager,
   NotificationRepository,
   getDatabaseConnection,
@@ -27,13 +23,6 @@ async function processOutboxJob(request: NextRequest) {
 
     const emailFlush = await dispatchQueuedEmails(50);
 
-    const depositEngine = await createDepositEngineService();
-    const withdrawalEngine = await createWithdrawalEngineService();
-    const [depositRecovery, withdrawalRecovery] = await Promise.all([
-      depositEngine.recoverProviderEvents(50),
-      withdrawalEngine.recoverProviderEvents(50),
-    ]);
-
     const { db } = getDatabaseConnection();
     const notifications = new NotificationRepository(db);
     const transactions = new DrizzleTransactionManager(db);
@@ -49,8 +38,6 @@ async function processOutboxJob(request: NextRequest) {
 
     const result = {
       emailFlush,
-      depositRecovery,
-      withdrawalRecovery,
       outbox: {
         attempted: pending.length,
         processed: outboxProcessed,

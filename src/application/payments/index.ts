@@ -5,41 +5,27 @@ export {
   type CreateDepositIntentCommand,
   type CreateDepositIntentResult,
   type DepositEngineServiceDependencies,
-  type DepositProviderAction,
-  type ProcessPaystackWebhookInput,
-  type ProcessPaystackWebhookResult,
-  type RecoverProviderEventsResult,
   type RequestAuditContext,
   type ReverseDepositIntentOptions,
 } from "./deposit-engine-service";
 export {
   WithdrawalEngineService,
   type AdminWithdrawalActionResult,
-  type ConfirmPayoutFromProviderInput,
   type CreateWithdrawalRequestCommand,
   type CreateWithdrawalRequestResult,
-  type FailPayoutFromProviderInput,
   type MarkWithdrawalFailedInput,
   type MarkWithdrawalPaidInput,
-  type ProcessPaystackTransferWebhookInput,
-  type ProcessPaystackTransferWebhookResult,
   type QueueWithdrawalPayoutResult,
   type WithdrawalEngineServiceDependencies,
 } from "./withdrawal-engine-service";
-export type {
-  DepositInitializationResult,
-  DepositPaymentProvider,
-  InitializeDepositInput,
-  InitiatePayoutInput,
-  PaymentProvider,
-  PaymentProviderName,
-  PayoutInitializationResult,
-  VerifiedDepositResult,
-  VerifiedPayoutResult,
-  VerifyDepositInput,
-  VerifyPayoutInput,
-  VerifyWebhookSignatureInput,
-} from "./payment-provider";
+export {
+  FUNDING_ASSETS,
+  MANUAL_DEPOSIT_PROVIDER,
+  MANUAL_WITHDRAWAL_PROVIDER,
+  WITHDRAWAL_DESTINATION_TYPES,
+  type FundingAsset,
+  type WithdrawalDestinationType,
+} from "./funding-constants";
 export {
   adminDepositReviewInputSchema,
   adminWithdrawalReviewInputSchema,
@@ -47,20 +33,12 @@ export {
   createWithdrawalRequestInputSchema,
   supportedDepositCurrencySchema,
   supportedWithdrawalCurrencySchema,
+  upsertFundingWalletInputSchema,
 } from "./schemas";
 export type {
   AdminDepositReviewInput,
   AdminWithdrawalReviewInput,
   CreateDepositIntentInput,
   CreateWithdrawalRequestInput,
+  UpsertFundingWalletInput,
 } from "./schemas";
-export {
-  MAX_PROVIDER_EVENT_ATTEMPTS,
-  computeRetryBackoffMs,
-  createProviderEventId,
-  hashWebhookPayload,
-  parsePaystackWebhook,
-  peekPaystackWebhookEventType,
-  requireProviderReference,
-  type PaystackWebhookEvent,
-} from "./webhook-processing";

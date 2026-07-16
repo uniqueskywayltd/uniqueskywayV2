@@ -23,9 +23,7 @@ describe("customer wallet helpers", () => {
   });
 
   it("builds deposit timeline with next steps", () => {
-    const timeline = buildDepositTimeline(
-      makeDeposit({ status: "pending" }),
-    );
+    const timeline = buildDepositTimeline(makeDeposit({ status: "pending" }));
     expect(timeline.some((step) => step.key === "pending" && step.current)).toBe(true);
     expect(timeline[0]?.nextExpectedStep).toContain("payment");
   });
@@ -40,7 +38,13 @@ describe("customer wallet helpers", () => {
   it("merges money timeline newest first", () => {
     const items = buildMoneyTimeline(
       [makeDeposit({ id: "d1", status: "confirmed", updatedAt: new Date("2026-07-02T00:00:00Z") })],
-      [makeWithdrawal({ id: "w1", status: "requested", updatedAt: new Date("2026-07-03T00:00:00Z") })],
+      [
+        makeWithdrawal({
+          id: "w1",
+          status: "requested",
+          updatedAt: new Date("2026-07-03T00:00:00Z"),
+        }),
+      ],
       [],
     );
     expect(items[0]?.kind).toBe("withdrawal");
@@ -69,7 +73,7 @@ function makeDeposit(overrides: Partial<DepositIntentRecord> = {}): DepositInten
   return {
     id: "dep_1",
     userId: "user_1",
-    provider: "paystack",
+    provider: "manual",
     providerIntentId: "ref_1",
     currency: "USD",
     amountMinor: 10_000n,
@@ -78,6 +82,11 @@ function makeDeposit(overrides: Partial<DepositIntentRecord> = {}): DepositInten
     providerAuthorizationUrl: null,
     providerAccessCode: null,
     providerMetadata: {},
+    fundingAsset: null,
+    fundingNetwork: null,
+    transactionHash: null,
+    customerNote: null,
+    fundingWalletId: null,
     failureReason: null,
     confirmationLedgerTransactionId: null,
     reversalLedgerTransactionId: null,
@@ -94,7 +103,7 @@ function makeWithdrawal(overrides: Partial<WithdrawalRequestRecord> = {}): Withd
     userId: "user_1",
     currency: "USD",
     amountMinor: 5_000n,
-    destinationType: "paystack_recipient",
+    destinationType: "crypto_wallet",
     destinationReference: "RCP_1",
     status: "requested",
     riskScore: null,

@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   UserCog,
   Users,
+  Wallet,
   Workflow,
 } from "lucide-react";
 
@@ -42,6 +43,7 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
     labelKey: "admin.section.operations",
     items: [
       { href: "/admin/customers", labelKey: "admin.nav.customers", icon: Users },
+      { href: "/admin/funding-wallets", labelKey: "admin.nav.funding_wallets", icon: Wallet },
       { href: "/admin/deposits", labelKey: "admin.nav.deposits", icon: ArrowDownLeft },
       { href: "/admin/withdrawals", labelKey: "admin.nav.withdrawals", icon: ArrowUpRight },
       { href: "/admin/investments", labelKey: "admin.nav.investments", icon: PieChart },

@@ -1073,6 +1073,208 @@ function useResourceList<T extends { id: string }>(
   return { q, setQ, status, setStatus, state, setState, error, rows, load };
 }
 
+export function FundingWalletsPanel() {
+  const [state, setState] = useState<LoadState>("loading");
+  const [error, setError] = useState<{ message: string; status?: number } | null>(null);
+  const [rows, setRows] = useState<
+    Array<{
+      id: string;
+      asset: string;
+      network: string;
+      address: string;
+      status: string;
+      qrCodeUrl: string | null;
+      instructions: string | null;
+      displayOrder: number;
+    }>
+  >([]);
+  const [busy, setBusy] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [asset, setAsset] = useState("USDT");
+  const [network, setNetwork] = useState("TRC20");
+  const [address, setAddress] = useState("");
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [instructions, setInstructions] = useState("");
+
+  const load = useCallback(async () => {
+    const result = await getAdminJson<{
+      wallets: Array<{
+        id: string;
+        asset: string;
+        network: string;
+        address: string;
+        status: string;
+        qrCodeUrl: string | null;
+        instructions: string | null;
+        displayOrder: number;
+      }>;
+    }>("/api/admin/funding-wallets");
+    if (result.error) {
+      setError({ message: result.error, ...(result.status ? { status: result.status } : {}) });
+      setState("error");
+      return;
+    }
+    setRows(result.data?.wallets ?? []);
+    setState("ready");
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function createWallet() {
+    setBusy(true);
+    setFeedback(null);
+    const result = await mutateAdminJson("POST", "/api/admin/funding-wallets", {
+      asset,
+      network,
+      address,
+      qrCodeUrl: qrCodeUrl.trim() || null,
+      instructions: instructions.trim() || null,
+      status: "active",
+      displayOrder: rows.length,
+    });
+    setBusy(false);
+    if (result.error) {
+      setFeedback(result.error);
+      return;
+    }
+    setAddress("");
+    setQrCodeUrl("");
+    setInstructions("");
+    setFeedback("Funding wallet saved.");
+    await load();
+  }
+
+  async function toggleStatus(id: string, current: string, row: (typeof rows)[number]) {
+    setBusy(true);
+    const result = await mutateAdminJson("PATCH", `/api/admin/funding-wallets/${id}`, {
+      asset: row.asset,
+      network: row.network,
+      address: row.address,
+      qrCodeUrl: row.qrCodeUrl,
+      instructions: row.instructions,
+      status: current === "active" ? "disabled" : "active",
+      displayOrder: row.displayOrder,
+    });
+    setBusy(false);
+    if (result.error) {
+      setFeedback(result.error);
+      return;
+    }
+    await load();
+  }
+
+  return (
+    <div>
+      <AdminPageHeader
+        title="Funding wallets"
+        description="Configure BTC, ETH, and USDT receive addresses shown to customers for manual deposits."
+      />
+      {feedback ? (
+        <p className="mb-4 rounded-md border bg-card px-3 py-2 text-sm" role="status">
+          {feedback}
+        </p>
+      ) : null}
+      <Card className="mb-6 space-y-3 p-4">
+        <h2 className="text-sm font-semibold">Add wallet</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="grid gap-1 text-sm">
+            <span>Asset</span>
+            <select
+              className="rounded-md border bg-background px-3 py-2"
+              value={asset}
+              onChange={(event) => setAsset(event.target.value)}
+            >
+              <option value="BTC">BTC</option>
+              <option value="ETH">ETH</option>
+              <option value="USDT">USDT</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm">
+            <span>Network</span>
+            <Input value={network} onChange={(event) => setNetwork(event.target.value)} />
+          </label>
+          <label className="grid gap-1 text-sm sm:col-span-2">
+            <span>Address</span>
+            <Input value={address} onChange={(event) => setAddress(event.target.value)} />
+          </label>
+          <label className="grid gap-1 text-sm sm:col-span-2">
+            <span>QR code URL (optional)</span>
+            <Input value={qrCodeUrl} onChange={(event) => setQrCodeUrl(event.target.value)} />
+          </label>
+          <label className="grid gap-1 text-sm sm:col-span-2">
+            <span>Instructions (optional)</span>
+            <Textarea
+              value={instructions}
+              onChange={(event) => setInstructions(event.target.value)}
+            />
+          </label>
+        </div>
+        <Button
+          type="button"
+          disabled={busy || address.trim().length < 8 || network.trim().length < 1}
+          onClick={() => void createWallet()}
+        >
+          {busy ? "Saving…" : "Save wallet"}
+        </Button>
+      </Card>
+      {state === "loading" ? <AdminLoadingBlock /> : null}
+      {state === "error" && error ? (
+        <AdminErrorBlock
+          message={error.message}
+          {...(error.status ? { status: error.status } : {})}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
+        />
+      ) : null}
+      {state === "ready" ? (
+        <div className="space-y-3">
+          {rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No funding wallets configured yet.</p>
+          ) : (
+            rows.map((row) => (
+              <Card key={row.id} className="space-y-2 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="font-semibold">
+                      {row.asset} · {row.network}
+                    </p>
+                    <p className="break-all font-mono text-xs text-muted-foreground">
+                      {row.address}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StatusChip tone={row.status === "active" ? "active" : "neutral"}>
+                      {row.status}
+                    </StatusChip>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => void toggleStatus(row.id, row.status, row)}
+                    >
+                      {row.status === "active" ? "Disable" : "Enable"}
+                    </Button>
+                  </div>
+                </div>
+                {row.instructions ? (
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {row.instructions}
+                  </p>
+                ) : null}
+              </Card>
+            ))
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function DepositsPanel() {
   const mapRow = useCallback(
     (row: Record<string, unknown>) => ({
@@ -1640,7 +1842,9 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [confirmAction, setConfirmAction] = useState<"approve" | "reject" | "queue" | null>(null);
+  const [confirmAction, setConfirmAction] = useState<"approve" | "reject" | "complete" | null>(
+    null,
+  );
 
   const base = kind === "deposit" ? `/api/admin/deposits/${id}` : `/api/admin/withdrawals/${id}`;
 
@@ -1662,12 +1866,10 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
   async function runAction() {
     if (!confirmAction) return;
     setBusy(true);
-    const path = confirmAction === "queue" ? `${base}/queue` : `${base}/${confirmAction}`;
-    const result = await mutateAdminJson(
-      "POST",
-      path,
-      confirmAction === "queue" ? {} : { reason: reason.trim() || "Administrative review" },
-    );
+    const path = confirmAction === "complete" ? `${base}/complete` : `${base}/${confirmAction}`;
+    const result = await mutateAdminJson("POST", path, {
+      reason: reason.trim() || "Administrative review",
+    });
     setBusy(false);
     setConfirmAction(null);
     if (result.error) {
@@ -1731,9 +1933,9 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
               type="button"
               variant="outline"
               disabled={busy}
-              onClick={() => setConfirmAction("queue")}
+              onClick={() => setConfirmAction("complete")}
             >
-              Queue payout
+              Mark completed
             </Button>
           ) : null}
         </div>

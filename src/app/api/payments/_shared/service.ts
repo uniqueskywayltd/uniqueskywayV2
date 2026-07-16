@@ -3,7 +3,6 @@ import {
   DepositEngineService,
   WithdrawalEngineService,
   createPaymentAuditContext,
-  type DepositProviderAction,
 } from "@/application/payments";
 import type { DepositIntentRecord, WithdrawalRequestRecord } from "@/infrastructure/database";
 import {
@@ -21,7 +20,6 @@ import {
   createSupabaseAdminAuthClient,
   createSupabaseRouteClient,
 } from "@/infrastructure/auth";
-import { createPaystackPaymentProvider } from "@/infrastructure/payments";
 import { systemClock } from "@/infrastructure/time/system-clock";
 
 export interface CreateDepositEngineServiceOptions {
@@ -47,7 +45,6 @@ export async function createDepositEngineService(options: CreateDepositEngineSer
     ledgerRepository: new LedgerRepository(db),
     notificationRepository: new NotificationRepository(db),
     operationsRepository: new OperationsRepository(db),
-    paymentProvider: createPaystackPaymentProvider(),
   });
 }
 
@@ -72,7 +69,6 @@ export async function createWithdrawalEngineService(
     ledgerRepository: new LedgerRepository(db),
     notificationRepository: new NotificationRepository(db),
     operationsRepository: new OperationsRepository(db),
-    paymentProvider: createPaystackPaymentProvider(),
   });
 }
 
@@ -96,15 +92,8 @@ export function serializeDepositIntent(deposit: DepositIntentRecord) {
   };
 }
 
-export function serializeDepositProviderAction(action: DepositProviderAction | null) {
-  if (!action) return null;
-
-  return {
-    provider: action.provider,
-    authorizationUrl: action.authorizationUrl,
-    accessCode: action.accessCode,
-    reference: action.reference,
-  };
+export function serializeDepositProviderAction() {
+  return null;
 }
 
 export function serializeWithdrawalRequest(withdrawal: WithdrawalRequestRecord) {

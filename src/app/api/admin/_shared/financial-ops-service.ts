@@ -29,7 +29,6 @@ import {
   createSupabaseAdminAuthClient,
   createSupabaseRouteClient,
 } from "@/infrastructure/auth";
-import { createPaystackPaymentProvider } from "@/infrastructure/payments";
 import { systemClock } from "@/infrastructure/time/system-clock";
 
 export async function createAdminFinancialOpsService() {
@@ -49,7 +48,6 @@ export async function createAdminFinancialOpsService() {
   const settlementRepository = new SettlementRepository(db);
   const referralRepository = new ReferralRepository(db);
   const transactionManager = new DrizzleTransactionManager(db);
-  const paymentProvider = createPaystackPaymentProvider();
 
   const depositEngine = new DepositEngineService({
     identityProvider,
@@ -61,7 +59,6 @@ export async function createAdminFinancialOpsService() {
     ledgerRepository,
     notificationRepository,
     operationsRepository,
-    paymentProvider,
   });
 
   const withdrawalEngine = new WithdrawalEngineService({
@@ -74,7 +71,6 @@ export async function createAdminFinancialOpsService() {
     ledgerRepository,
     notificationRepository,
     operationsRepository,
-    paymentProvider,
   });
 
   return new AdminFinancialOpsService({

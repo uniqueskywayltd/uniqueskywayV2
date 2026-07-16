@@ -31,8 +31,6 @@ export const serverEnvSchema = clientEnvSchema.extend({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   RESEND_API_KEY: z.string().min(1),
   RESEND_FROM_EMAIL: resendFromEmailSchema,
-  PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
-  PAYSTACK_BASE_URL: z.string().url().default("https://api.paystack.co"),
   INTERNAL_JOB_TOKEN: z.string().min(16),
   LOG_LEVEL: logLevelSchema.default("info"),
   CONTACT_SUPPORT_EMAIL: z.preprocess(

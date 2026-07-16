@@ -14,7 +14,12 @@ import {
 } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
-import { depositIntents, paymentProviderEvents, withdrawalRequests } from "../schema";
+import {
+  depositIntents,
+  paymentProviderEvents,
+  platformFundingWallets,
+  withdrawalRequests,
+} from "../schema";
 import type { DrizzleTransactionContext } from "../transactions";
 import type { AppDatabaseExecutor } from "../types";
 import {
@@ -27,6 +32,7 @@ import {
 export type DepositIntentRecord = InferSelectModel<typeof depositIntents>;
 export type WithdrawalRequestRecord = InferSelectModel<typeof withdrawalRequests>;
 export type PaymentProviderEventRecord = InferSelectModel<typeof paymentProviderEvents>;
+export type PlatformFundingWalletRecord = InferSelectModel<typeof platformFundingWallets>;
 
 /** Lease window while a worker holds status=processing; expired leases are reclaimable. */
 export const PROVIDER_EVENT_PROCESSING_LEASE_MS = 2 * 60 * 1000;
@@ -905,5 +911,44 @@ export class PaymentRepository extends BaseDrizzleRepository {
       .where(sql`${paymentProviderEvents.payload}::text ilike ${`%${reference}%`}`)
       .orderBy(desc(paymentProviderEvents.receivedAt))
       .limit(limit);
+  }
+
+  async listFundingWallets(
+    options: { activeOnly?: boolean } = {},
+  ): Promise<PlatformFundingWalletRecord[]> {
+    const conditions = options.activeOnly ? [eq(platformFundingWallets.status, "active")] : [];
+    return this.db
+      .select()
+      .from(platformFundingWallets)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(platformFundingWallets.displayOrder, platformFundingWallets.asset);
+  }
+
+  async findFundingWalletById(id: string): Promise<PlatformFundingWalletRecord | null> {
+    const rows = await this.db
+      .select()
+      .from(platformFundingWallets)
+      .where(eq(platformFundingWallets.id, id))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
+  async createFundingWallet(
+    values: InferInsertModel<typeof platformFundingWallets>,
+  ): Promise<PlatformFundingWalletRecord> {
+    const rows = await this.db.insert(platformFundingWallets).values(values).returning();
+    return singleRow(rows, "createFundingWallet");
+  }
+
+  async updateFundingWallet(
+    id: string,
+    values: Partial<InferInsertModel<typeof platformFundingWallets>>,
+  ): Promise<PlatformFundingWalletRecord> {
+    const rows = await this.db
+      .update(platformFundingWallets)
+      .set({ ...values, updatedAt: new Date() })
+      .where(eq(platformFundingWallets.id, id))
+      .returning();
+    return singleRow(rows, "updateFundingWallet");
   }
 }

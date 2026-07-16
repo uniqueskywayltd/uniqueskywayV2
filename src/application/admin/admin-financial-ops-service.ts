@@ -359,6 +359,19 @@ export class AdminFinancialOpsService {
     return this.deps.withdrawalEngine.queueWithdrawalPayout(withdrawalId, context);
   }
 
+  async completeWithdrawal(
+    withdrawalId: string,
+    _reason: string,
+    context: RequestAuditContext,
+  ): Promise<AdminWithdrawalActionResult> {
+    await requireAdminActor(this.deps, "withdrawals.approve");
+    return this.deps.withdrawalEngine.markWithdrawalPaid({
+      withdrawalId,
+      providerPayoutReference: `MANUAL-${withdrawalId.slice(0, 8)}-${Date.now()}`,
+      context,
+    });
+  }
+
   async listProcessingQueue(limit = 50): Promise<WithdrawalRequestRecord[]> {
     await requireAdminActor(this.deps, "withdrawals.read");
     const result = await this.deps.paymentRepository.searchWithdrawals({

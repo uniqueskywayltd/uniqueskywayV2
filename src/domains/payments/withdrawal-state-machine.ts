@@ -14,7 +14,7 @@ const allowedTransitions: Readonly<Record<WithdrawalStatus, readonly WithdrawalS
   requested: ["reserved"],
   reserved: ["under_review", "approved", "cancelled"],
   under_review: ["approved", "rejected"],
-  approved: ["processing"],
+  approved: ["processing", "paid"],
   processing: ["paid", "failed"],
   paid: [],
   rejected: [],

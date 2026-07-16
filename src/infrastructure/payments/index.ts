@@ -1,5 +1,1 @@
-export {
-  PaystackPaymentProvider,
-  createPaystackPaymentProvider,
-} from "./paystack-payment-provider";
-export type { PaystackPaymentProviderOptions } from "./paystack-payment-provider";
+// Manual crypto funding — no external payment provider integrations.

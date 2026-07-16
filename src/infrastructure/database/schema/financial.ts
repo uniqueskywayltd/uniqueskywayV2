@@ -271,6 +271,11 @@ export const depositIntents = pgTable(
       .$type<Record<string, unknown>>()
       .notNull()
       .default(sql`'{}'::jsonb`),
+    fundingAsset: varchar("funding_asset", { length: 20 }),
+    fundingNetwork: varchar("funding_network", { length: 80 }),
+    transactionHash: varchar("transaction_hash", { length: 200 }),
+    customerNote: text("customer_note"),
+    fundingWalletId: uuid("funding_wallet_id"),
     failureReason: text("failure_reason"),
     confirmationLedgerTransactionId: uuid("confirmation_ledger_transaction_id").references(
       () => ledgerTransactions.id,
@@ -313,7 +318,7 @@ export const withdrawalRequests = pgTable(
     currency: varchar("currency", { length: 3 }).notNull(),
     amountMinor: bigint("amount_minor", { mode: "bigint" }).notNull(),
     destinationType: varchar("destination_type", { length: 80 }).notNull(),
-    destinationReference: varchar("destination_reference", { length: 240 }).notNull(),
+    destinationReference: varchar("destination_reference", { length: 500 }).notNull(),
     status: withdrawalStatusEnum("status").notNull().default("requested"),
     riskScore: integer("risk_score"),
     reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
@@ -357,9 +362,7 @@ export const withdrawalRequests = pgTable(
       .where(sql`${table.releaseLedgerTransactionId} is not null`),
     uniqueIndex("withdrawal_requests_provider_payout_uidx")
       .on(table.provider, table.providerPayoutReference)
-      .where(
-        sql`${table.provider} is not null and ${table.providerPayoutReference} is not null`,
-      ),
+      .where(sql`${table.provider} is not null and ${table.providerPayoutReference} is not null`),
     index("withdrawal_requests_user_id_idx").on(table.userId),
     index("withdrawal_requests_status_idx").on(table.status),
     index("withdrawal_requests_created_at_idx").on(table.createdAt),
@@ -579,5 +582,29 @@ export const referralRewards = pgTable(
       table.investmentId,
     ),
     index("referral_rewards_status_idx").on(table.status),
+  ],
+);
+
+export const platformFundingWallets = pgTable(
+  "platform_funding_wallets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    asset: varchar("asset", { length: 10 }).notNull(),
+    network: varchar("network", { length: 80 }).notNull(),
+    address: text("address").notNull(),
+    qrCodeUrl: text("qr_code_url"),
+    instructions: text("instructions"),
+    status: varchar("status", { length: 20 }).notNull().default("active"),
+    displayOrder: integer("display_order").notNull().default(0),
+    updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("platform_funding_wallets_asset_status_idx").on(
+      table.asset,
+      table.status,
+      table.displayOrder,
+    ),
   ],
 );

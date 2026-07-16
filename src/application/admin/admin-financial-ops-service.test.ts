@@ -213,7 +213,7 @@ function createFixture(options: FixtureOptions = {}) {
       {
         id: "deposit_1",
         userId: "user_1",
-        provider: "paystack",
+        provider: "manual",
         providerIntentId: "USWDEP-1",
         currency: "USD",
         amountMinor: 100_00n,

@@ -1,20 +1,25 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { AuthenticatedUser } from "@/application/auth";
-import type { DepositIntentRecord, PaymentProviderEventRecord } from "@/infrastructure/database";
+import type { DepositIntentRecord } from "@/infrastructure/database";
 
 import { DepositEngineService } from "./deposit-engine-service";
-import { hashWebhookPayload } from "./webhook-processing";
+import { MANUAL_DEPOSIT_PROVIDER } from "./funding-constants";
+
+const FUNDING_WALLET_ID = "00000000-0000-4000-8000-000000000001";
 
 describe("DepositEngineService", () => {
-  it("creates provider checkout once for repeated deposit idempotency keys", async () => {
+  it("creates a pending manual deposit once for repeated idempotency keys", async () => {
     const fixture = createFixture();
 
     const first = await fixture.service.createDepositIntent(
       {
         amountMinor: 25_000n,
         currency: "USD",
-        provider: "paystack",
+        provider: MANUAL_DEPOSIT_PROVIDER,
+        asset: "USDT",
+        fundingWalletId: FUNDING_WALLET_ID,
+        transactionHash: "0xabc123def456",
         idempotencyKey: "deposit:create:1",
       },
       auditContext,
@@ -23,7 +28,10 @@ describe("DepositEngineService", () => {
       {
         amountMinor: 25_000n,
         currency: "USD",
-        provider: "paystack",
+        provider: MANUAL_DEPOSIT_PROVIDER,
+        asset: "USDT",
+        fundingWalletId: FUNDING_WALLET_ID,
+        transactionHash: "0xabc123def456",
         idempotencyKey: "deposit:create:1",
       },
       auditContext,
@@ -31,64 +39,52 @@ describe("DepositEngineService", () => {
 
     expect(first.idempotent).toBe(false);
     expect(second.idempotent).toBe(true);
-    expect(first.providerAction?.reference).toMatch(/^USWDEP-/);
-    expect(first.providerAction?.authorizationUrl).toBe(
-      `https://checkout.paystack.test/${first.providerAction?.reference}`,
-    );
-    expect(fixture.provider.initializeDeposit).toHaveBeenCalledTimes(1);
+    expect(first.providerAction).toBeNull();
+    expect(first.depositIntent.status).toBe("pending");
+    expect(first.depositIntent.provider).toBe(MANUAL_DEPOSIT_PROVIDER);
+    expect(first.depositIntent.fundingAsset).toBe("USDT");
+    expect(first.depositIntent.transactionHash).toBe("0xabc123def456");
     expect(fixture.state.deposits).toHaveLength(1);
+    expect(fixture.notificationRepository.enqueueOutboxEvent).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ eventType: "deposit.initiated" }),
+    );
   });
 
-  it("confirms a deposit once when Paystack webhooks are replayed, claiming the event and using the provider event id for ledger idempotency", async () => {
-    const fixture = createFixture();
+  it("confirms a pending deposit once when admin approval is replayed", async () => {
+    const fixture = createFixture({ withAdmin: true });
     const deposit = createDeposit({
       id: "deposit_1",
+      provider: MANUAL_DEPOSIT_PROVIDER,
       providerIntentId: "USWDEP-1",
       status: "pending",
-      providerAuthorizationUrl: "https://checkout.paystack.test/USWDEP-1",
-      providerAccessCode: "access",
+      fundingAsset: "USDT",
+      transactionHash: "0xabc123def456",
+      fundingWalletId: FUNDING_WALLET_ID,
     });
     fixture.state.deposits.push(deposit);
 
-    const rawBody = JSON.stringify({
-      event: "charge.success",
-      data: {
-        id: 12345,
-        reference: "USWDEP-1",
-        amount: 25_000,
-        currency: "USD",
-      },
-    });
+    const first = await fixture.service.adminApproveDeposit(
+      "deposit_1",
+      "Verified on-chain transfer.",
+      auditContext,
+    );
+    const second = await fixture.service.adminApproveDeposit(
+      "deposit_1",
+      "Verified on-chain transfer.",
+      auditContext,
+    );
 
-    const first = await fixture.service.processPaystackWebhook({
-      rawBody,
-      signature: "valid",
-      context: auditContext,
-    });
-    const second = await fixture.service.processPaystackWebhook({
-      rawBody,
-      signature: "valid",
-      context: auditContext,
-    });
-
-    expect(first.status).toBe("processed");
-    expect(second.status).toBe("duplicate");
+    expect(first.idempotent).toBe(false);
+    expect(second.idempotent).toBe(true);
     expect(fixture.ledgerRepository.postLedgerTransaction).toHaveBeenCalledTimes(1);
     expect(fixture.state.deposits[0]?.status).toBe("confirmed");
     expect(fixture.state.deposits[0]?.confirmationLedgerTransactionId).toBe("ledger_tx_1");
-
-    expect(fixture.paymentRepository.claimProviderEventForProcessing).toHaveBeenCalledTimes(1);
-    const claimedEvent = fixture.state.providerEvents.find(
-      (event) => event.providerEventId === "charge.success:12345",
-    );
-    expect(claimedEvent?.attemptCount).toBe(1);
-    expect(claimedEvent?.status).toBe("processed");
-
     expect(fixture.ledgerRepository.postLedgerTransaction).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         transaction: expect.objectContaining({
-          idempotencyKey: "deposit_confirmation:paystack:charge.success:12345",
+          idempotencyKey: "deposit_confirmation:manual:manual:deposit_1",
         }),
       }),
     );
@@ -96,7 +92,7 @@ describe("DepositEngineService", () => {
 
   it("cancels a created or pending deposit for the owning customer and is idempotent on replay", async () => {
     const fixture = createFixture();
-    const deposit = createDeposit({ id: "deposit_1", status: "created" });
+    const deposit = createDeposit({ id: "deposit_1", status: "pending" });
     fixture.state.deposits.push(deposit);
 
     const first = await fixture.service.cancelDepositIntent("deposit_1", auditContext);
@@ -153,12 +149,13 @@ describe("DepositEngineService", () => {
       status: "confirmed",
       confirmationLedgerTransactionId: "ledger_tx_confirmed",
       amountMinor: 25_000n,
+      provider: MANUAL_DEPOSIT_PROVIDER,
     });
     fixture.state.deposits.push(deposit);
 
     const result = await fixture.service.reverseDepositIntent("deposit_1", auditContext, {
       reason: "chargeback",
-      providerEventId: "charge.dispute:999",
+      providerEventId: "manual:999",
     });
 
     expect(result.depositIntent.status).toBe("reversed");
@@ -167,135 +164,10 @@ describe("DepositEngineService", () => {
       expect.objectContaining({
         transaction: expect.objectContaining({
           transactionType: "deposit_reversal",
-          idempotencyKey: "deposit_reversal:paystack:charge.dispute:999",
+          idempotencyKey: "deposit_reversal:manual:manual:999",
         }),
       }),
     );
-  });
-
-  it("retries a failed provider event with backoff and dead-letters it after exhausting attempts", async () => {
-    const fixture = createFixture();
-    const deposit = createDeposit({
-      id: "deposit_1",
-      providerIntentId: "USWDEP-1",
-      status: "pending",
-    });
-    fixture.state.deposits.push(deposit);
-
-    const rawBody = JSON.stringify({
-      event: "charge.success",
-      data: { id: 12345, reference: "USWDEP-1", amount: 25_000, currency: "USD" },
-    });
-    fixture.state.providerEvents.push(
-      createProviderEvent({
-        id: "event_1",
-        providerEventId: "charge.success:12345",
-        eventType: "charge.success",
-        payloadHash: hashWebhookPayload(rawBody),
-        payload: JSON.parse(rawBody),
-        status: "failed",
-        attemptCount: 9,
-        nextRetryAt: null,
-        deadLetteredAt: null,
-      }),
-    );
-    fixture.provider.verifyDeposit.mockResolvedValueOnce({
-      provider: "paystack",
-      providerReference: "USWDEP-1",
-      status: "failed" as never,
-      amountMinor: 25_000n,
-      currency: "USD",
-      metadata: {},
-    });
-
-    await expect(
-      fixture.service.processPaystackWebhook({
-        rawBody,
-        signature: "valid",
-        context: auditContext,
-      }),
-    ).rejects.toMatchObject({ code: "PROVIDER_ERROR" });
-
-    const event = fixture.state.providerEvents.find((candidate) => candidate.id === "event_1");
-    expect(event?.attemptCount).toBe(10);
-    expect(event?.deadLetteredAt).not.toBeNull();
-    expect(fixture.paymentRepository.markProviderEventDeadLettered).toHaveBeenCalledTimes(1);
-    expect(fixture.notificationRepository.enqueueOutboxEvent).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ eventType: "payment.provider_event.dead_lettered" }),
-    );
-  });
-
-  it("schedules a retry with next_retry_at backoff when attempts remain", async () => {
-    const fixture = createFixture();
-    const deposit = createDeposit({
-      id: "deposit_1",
-      providerIntentId: "USWDEP-1",
-      status: "pending",
-    });
-    fixture.state.deposits.push(deposit);
-
-    const rawBody = JSON.stringify({
-      event: "charge.success",
-      data: { id: 12345, reference: "USWDEP-1", amount: 25_000, currency: "USD" },
-    });
-    fixture.provider.verifyDeposit.mockResolvedValueOnce({
-      provider: "paystack",
-      providerReference: "USWDEP-1",
-      status: "failed" as never,
-      amountMinor: 25_000n,
-      currency: "USD",
-      metadata: {},
-    });
-
-    await expect(
-      fixture.service.processPaystackWebhook({
-        rawBody,
-        signature: "valid",
-        context: auditContext,
-      }),
-    ).rejects.toMatchObject({ code: "PROVIDER_ERROR" });
-
-    const event = fixture.state.providerEvents.find(
-      (candidate) => candidate.providerEventId === "charge.success:12345",
-    );
-    expect(event?.status).toBe("failed");
-    expect(event?.attemptCount).toBe(1);
-    expect(event?.deadLetteredAt).toBeNull();
-    expect(event?.nextRetryAt).toEqual(new Date("2026-07-13T12:01:00.000Z"));
-  });
-
-  it("recovers a previously failed provider event and confirms the deposit on retry", async () => {
-    const fixture = createFixture();
-    const deposit = createDeposit({
-      id: "deposit_1",
-      providerIntentId: "USWDEP-1",
-      status: "pending",
-    });
-    fixture.state.deposits.push(deposit);
-    fixture.state.providerEvents.push(
-      createProviderEvent({
-        id: "event_1",
-        providerEventId: "charge.success:12345",
-        eventType: "charge.success",
-        payload: {
-          event: "charge.success",
-          data: { id: 12345, reference: "USWDEP-1", amount: 25_000, currency: "USD" },
-        },
-        status: "failed",
-        attemptCount: 1,
-        nextRetryAt: new Date("2026-07-13T11:00:00.000Z"),
-        deadLetteredAt: null,
-      }),
-    );
-
-    const result = await fixture.service.recoverProviderEvents();
-
-    expect(result).toEqual({ attempted: 1, processed: 1, failed: 0, deadLettered: 0 });
-    expect(fixture.state.deposits[0]?.status).toBe("confirmed");
-    const event = fixture.state.providerEvents.find((candidate) => candidate.id === "event_1");
-    expect(event?.status).toBe("processed");
-    expect(event?.attemptCount).toBe(2);
   });
 });
 
@@ -308,7 +180,6 @@ const auditContext = {
 function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: bigint } = {}) {
   const state = {
     deposits: [] as DepositIntentRecord[],
-    providerEvents: [] as PaymentProviderEventRecord[],
   };
   const currentUser: AuthenticatedUser = {
     authUserId: "00000000-0000-0000-0000-000000000001",
@@ -384,18 +255,6 @@ function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: b
       async (_tx: unknown, id: string) =>
         state.deposits.find((deposit) => deposit.id === id) ?? null,
     ),
-    updateDepositIntentProviderAction: vi.fn(
-      async (_tx: unknown, id: string, values: Partial<DepositIntentRecord>) => {
-        const deposit = requireDeposit(state, id);
-        Object.assign(deposit, values, { updatedAt: new Date("2026-07-13T12:01:00.000Z") });
-        return deposit;
-      },
-    ),
-    markDepositIntentFailed: vi.fn(async (_tx: unknown, id: string, failureReason: string) => {
-      const deposit = requireDeposit(state, id);
-      Object.assign(deposit, { status: "failed", failureReason });
-      return deposit;
-    }),
     markDepositIntentCancelled: vi.fn(async (_tx: unknown, id: string, failureReason: string) => {
       const deposit = requireDeposit(state, id);
       Object.assign(deposit, { status: "cancelled", failureReason });
@@ -408,10 +267,6 @@ function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: b
         return deposit;
       },
     ),
-    findDepositIntentByProviderIntent: vi.fn(
-      async (_provider: string, providerIntentId: string) =>
-        state.deposits.find((deposit) => deposit.providerIntentId === providerIntentId) ?? null,
-    ),
     markDepositIntentConfirmed: vi.fn(
       async (_tx: unknown, id: string, values: Partial<DepositIntentRecord>) => {
         const deposit = requireDeposit(state, id);
@@ -423,52 +278,6 @@ function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: b
         return deposit;
       },
     ),
-    recordProviderEvent: vi.fn(
-      async (_tx: unknown, values: Partial<PaymentProviderEventRecord>) => {
-        const existing = state.providerEvents.find(
-          (event) =>
-            event.provider === values.provider && event.providerEventId === values.providerEventId,
-        );
-        if (existing) return existing;
-        const event = createProviderEvent(values);
-        state.providerEvents.push(event);
-        return event;
-      },
-    ),
-    updateProviderEventStatus: vi.fn(
-      async (_tx: unknown, id: string, values: Partial<PaymentProviderEventRecord>) => {
-        const event = state.providerEvents.find((candidate) => candidate.id === id);
-        if (!event) throw new Error("Missing provider event.");
-        Object.assign(event, values);
-        return event;
-      },
-    ),
-    lockProviderEventById: vi.fn(
-      async (_tx: unknown, id: string) =>
-        state.providerEvents.find((event) => event.id === id) ?? null,
-    ),
-    claimProviderEventForProcessing: vi.fn(async (_tx: unknown, id: string) => {
-      const event = state.providerEvents.find((candidate) => candidate.id === id);
-      if (!event) return null;
-      event.status = "processing";
-      event.attemptCount += 1;
-      return event;
-    }),
-    listRetryableProviderEvents: vi.fn(async (limit = 50) =>
-      state.providerEvents
-        .filter((event) => event.status === "failed" && !event.deadLetteredAt)
-        .slice(0, limit),
-    ),
-    markProviderEventDeadLettered: vi.fn(async (_tx: unknown, id: string, errorMessage: string) => {
-      const event = state.providerEvents.find((candidate) => candidate.id === id);
-      if (!event) throw new Error("Missing provider event.");
-      Object.assign(event, {
-        status: "failed",
-        deadLetteredAt: new Date("2026-07-13T12:00:00.000Z"),
-        errorMessage,
-      });
-      return event;
-    }),
     listDepositIntentsByUserId: vi.fn(async () => state.deposits),
     listDepositIntents: vi.fn(async () => state.deposits),
   };
@@ -485,15 +294,6 @@ function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: b
       withdrawnBalanceMinor: 0n,
       lastEntryAt: null,
     })),
-    findWalletAccountByCategory: vi.fn(async () => ({
-      id: "available_account_1",
-      ownerType: "user",
-      ownerId: "user_1",
-      accountType: "customer_available_cash",
-      currency: "USD",
-      status: "active",
-      createdAt: new Date("2026-07-13T12:00:00.000Z"),
-    })),
     findWalletAccountByCategoryInTransaction: vi.fn(async () => ({
       id: "available_account_1",
       ownerType: "user",
@@ -506,7 +306,7 @@ function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: b
     ensureLedgerAccount: vi.fn(async () => ({
       id: "provider_clearing_1",
       ownerType: "provider",
-      ownerId: "paystack",
+      ownerId: MANUAL_DEPOSIT_PROVIDER,
       accountType: "provider_cash_clearing",
       currency: "USD",
       status: "active",
@@ -516,10 +316,10 @@ function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: b
       transaction: {
         id: "ledger_tx_1",
         transactionType: "deposit_confirmation",
-        idempotencyKey: "deposit_confirmation:paystack:deposit_1",
+        idempotencyKey: "deposit_confirmation:manual:manual:deposit_1",
         referenceType: "deposit_intent",
         referenceId: "deposit_1",
-        description: "Customer deposit confirmation",
+        description: "Manual admin deposit confirmation",
         metadata: {},
         postedAt: new Date("2026-07-13T12:02:00.000Z"),
         createdBy: null,
@@ -536,27 +336,6 @@ function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: b
   const operationsRepository = {
     appendAuditLog: vi.fn(async () => ({})),
   };
-  const provider = {
-    provider: "paystack" as const,
-    initializeDeposit: vi.fn(async (input: { reference: string }) => ({
-      provider: "paystack" as const,
-      providerReference: input.reference,
-      authorizationUrl: `https://checkout.paystack.test/${input.reference}`,
-      accessCode: "access",
-      metadata: {},
-    })),
-    verifyDeposit: vi.fn(async (input: { reference: string }) => ({
-      provider: "paystack" as const,
-      providerReference: input.reference,
-      status: "success" as const,
-      amountMinor: 25_000n,
-      currency: "USD",
-      metadata: {},
-    })),
-    verifyWebhookSignature: vi.fn(() => true),
-    initiatePayout: vi.fn(),
-    verifyPayout: vi.fn(),
-  };
 
   const service = new DepositEngineService({
     identityProvider: identityProvider as never,
@@ -568,13 +347,11 @@ function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: b
     ledgerRepository: ledgerRepository as never,
     notificationRepository: notificationRepository as never,
     operationsRepository: operationsRepository as never,
-    paymentProvider: provider,
   });
 
   return {
     service,
     state,
-    provider,
     ledgerRepository,
     paymentRepository,
     notificationRepository,
@@ -585,7 +362,7 @@ function createDeposit(values: Partial<DepositIntentRecord>): DepositIntentRecor
   return {
     id: "deposit_1",
     userId: "user_1",
-    provider: "paystack",
+    provider: MANUAL_DEPOSIT_PROVIDER,
     providerIntentId: "USWDEP-1",
     currency: "USD",
     amountMinor: 25_000n,
@@ -594,33 +371,17 @@ function createDeposit(values: Partial<DepositIntentRecord>): DepositIntentRecor
     providerAuthorizationUrl: null,
     providerAccessCode: null,
     providerMetadata: {},
+    fundingAsset: null,
+    fundingNetwork: null,
+    transactionHash: null,
+    customerNote: null,
+    fundingWalletId: null,
     failureReason: null,
     confirmationLedgerTransactionId: null,
     reversalLedgerTransactionId: null,
     createdAt: new Date("2026-07-13T12:00:00.000Z"),
     confirmedAt: null,
     updatedAt: new Date("2026-07-13T12:00:00.000Z"),
-    ...values,
-  };
-}
-
-function createProviderEvent(
-  values: Partial<PaymentProviderEventRecord>,
-): PaymentProviderEventRecord {
-  return {
-    id: `event_${values.providerEventId ?? "1"}`,
-    provider: "paystack",
-    providerEventId: "charge.success:12345",
-    eventType: "charge.success",
-    payloadHash: "hash",
-    payload: {},
-    status: "received",
-    attemptCount: 0,
-    nextRetryAt: null,
-    deadLetteredAt: null,
-    receivedAt: new Date("2026-07-13T12:00:00.000Z"),
-    processedAt: null,
-    errorMessage: null,
     ...values,
   };
 }

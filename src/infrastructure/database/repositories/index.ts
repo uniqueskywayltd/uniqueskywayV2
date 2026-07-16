@@ -52,6 +52,7 @@ export type {
   ListProviderEventsQuery,
   ListProviderEventsResult,
   PaymentProviderEventRecord,
+  PlatformFundingWalletRecord,
   SearchDepositIntentsQuery,
   SearchDepositIntentsResult,
   SearchWithdrawalsQuery,

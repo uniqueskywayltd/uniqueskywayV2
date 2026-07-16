@@ -12,6 +12,7 @@ describe("withdrawal state machine", () => {
     expect(canTransitionWithdrawal("reserved", "under_review")).toBe(true);
     expect(canTransitionWithdrawal("under_review", "approved")).toBe(true);
     expect(canTransitionWithdrawal("approved", "processing")).toBe(true);
+    expect(canTransitionWithdrawal("approved", "paid")).toBe(true);
     expect(canTransitionWithdrawal("processing", "paid")).toBe(true);
     expect(canTransitionWithdrawal("under_review", "rejected")).toBe(true);
     expect(canTransitionWithdrawal("processing", "failed")).toBe(true);
@@ -22,9 +23,7 @@ describe("withdrawal state machine", () => {
     expect(() => assertWithdrawalTransition("requested", "paid")).toThrow(
       WithdrawalStateTransitionError,
     );
-    expect(() => assertWithdrawalTransition("approved", "paid")).toThrow(
-      WithdrawalStateTransitionError,
-    );
+    expect(canTransitionWithdrawal("approved", "paid")).toBe(true);
     expect(() => assertWithdrawalTransition("rejected", "paid")).toThrow(
       WithdrawalStateTransitionError,
     );

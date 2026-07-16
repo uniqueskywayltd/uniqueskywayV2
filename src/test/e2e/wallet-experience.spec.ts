@@ -114,7 +114,7 @@ test.describe("sprint B3 wallet experience", () => {
             data: {
               deposit: {
                 id: "dep_1",
-                provider: "paystack",
+                provider: "manual",
                 currency: "USD",
                 amountMinor: "5000",
                 status: "pending",
@@ -162,7 +162,7 @@ test.describe("sprint B3 wallet experience", () => {
             deposits: [
               {
                 id: "dep_1",
-                provider: "paystack",
+                provider: "manual",
                 currency: "USD",
                 amountMinor: "5000",
                 status: "pending",
@@ -187,7 +187,7 @@ test.describe("sprint B3 wallet experience", () => {
                 id: "wd_1",
                 currency: "USD",
                 amountMinor: "10000",
-                destinationType: "paystack_recipient",
+                destinationType: "crypto_wallet",
                 destinationReference: "RCP_1",
                 status: "under_review",
                 reviewReason: null,
@@ -228,7 +228,7 @@ test.describe("sprint B3 wallet experience", () => {
                 id: "wd_1",
                 currency: "USD",
                 amountMinor: "10000",
-                destinationType: "paystack_recipient",
+                destinationType: "crypto_wallet",
                 destinationReference: "RCP_1",
                 status: "under_review",
                 reviewReason: null,
@@ -343,6 +343,8 @@ test.describe("sprint B3 wallet experience", () => {
     await expect(page.getByRole("columnheader", { name: "Activity" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Amount" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Date" })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Dashboard navigation" }).first()).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Dashboard navigation" }).first(),
+    ).toBeVisible();
   });
 });
