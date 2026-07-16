@@ -951,4 +951,8 @@ export class PaymentRepository extends BaseDrizzleRepository {
       .returning();
     return singleRow(rows, "updateFundingWallet");
   }
+
+  async deleteFundingWallet(id: string): Promise<void> {
+    await this.db.delete(platformFundingWallets).where(eq(platformFundingWallets.id, id));
+  }
 }

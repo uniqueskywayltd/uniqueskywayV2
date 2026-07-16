@@ -28,7 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { getAdminJson, mutateAdminJson } from "../api-client";
+import { getAdminJson, mutateAdminFormData, mutateAdminJson } from "../api-client";
 import { AdminDataTable, AdminMetricGrid, AdminToolbar } from "./admin-data-table";
 import {
   AdminEmptyBlock,
@@ -1019,42 +1019,46 @@ function useResourceList<T extends { id: string }>(
   return { q, setQ, status, setStatus, state, setState, error, rows, load };
 }
 
+type FundingWalletRow = {
+  id: string;
+  asset: string;
+  network: string;
+  address: string;
+  status: string;
+  qrCodeUrl: string | null;
+  instructions: string | null;
+  displayOrder: number;
+};
+
+const FUNDING_NETWORK_PRESETS: Record<string, string[]> = {
+  BTC: ["Bitcoin"],
+  ETH: ["ERC20"],
+  USDT: ["TRC20", "ERC20", "BEP20"],
+};
+
+const EMPTY_FUNDING_WALLET_FORM = {
+  asset: "USDT",
+  network: "TRC20",
+  address: "",
+  qrCodeUrl: "",
+  instructions: "",
+  status: "active" as "active" | "disabled",
+  displayOrder: 0,
+};
+
 export function FundingWalletsPanel() {
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState<{ message: string; status?: number } | null>(null);
-  const [rows, setRows] = useState<
-    Array<{
-      id: string;
-      asset: string;
-      network: string;
-      address: string;
-      status: string;
-      qrCodeUrl: string | null;
-      instructions: string | null;
-      displayOrder: number;
-    }>
-  >([]);
+  const [rows, setRows] = useState<FundingWalletRow[]>([]);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [asset, setAsset] = useState("USDT");
-  const [network, setNetwork] = useState("TRC20");
-  const [address, setAddress] = useState("");
-  const [qrCodeUrl, setQrCodeUrl] = useState("");
-  const [instructions, setInstructions] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(EMPTY_FUNDING_WALLET_FORM);
 
   const load = useCallback(async () => {
-    const result = await getAdminJson<{
-      wallets: Array<{
-        id: string;
-        asset: string;
-        network: string;
-        address: string;
-        status: string;
-        qrCodeUrl: string | null;
-        instructions: string | null;
-        displayOrder: number;
-      }>;
-    }>("/api/admin/funding-wallets");
+    const result = await getAdminJson<{ wallets: FundingWalletRow[] }>(
+      "/api/admin/funding-wallets",
+    );
     if (result.error) {
       setError({ message: result.error, ...(result.status ? { status: result.status } : {}) });
       setState("error");
@@ -1068,39 +1072,59 @@ export function FundingWalletsPanel() {
     void load();
   }, [load]);
 
-  async function createWallet() {
+  function beginCreate() {
+    setEditingId(null);
+    setForm({ ...EMPTY_FUNDING_WALLET_FORM, displayOrder: rows.length });
+  }
+
+  function beginEdit(row: FundingWalletRow) {
+    setEditingId(row.id);
+    setForm({
+      asset: row.asset,
+      network: row.network,
+      address: row.address,
+      qrCodeUrl: row.qrCodeUrl ?? "",
+      instructions: row.instructions ?? "",
+      status: row.status === "disabled" ? "disabled" : "active",
+      displayOrder: row.displayOrder,
+    });
+  }
+
+  async function saveWallet() {
     setBusy(true);
     setFeedback(null);
-    const result = await mutateAdminJson("POST", "/api/admin/funding-wallets", {
-      asset,
-      network,
-      address,
-      qrCodeUrl: qrCodeUrl.trim() || null,
-      instructions: instructions.trim() || null,
-      status: "active",
-      displayOrder: rows.length,
-    });
+    const body = {
+      asset: form.asset,
+      network: form.network.trim(),
+      address: form.address.trim(),
+      qrCodeUrl: form.qrCodeUrl.trim() || null,
+      instructions: form.instructions.trim() || null,
+      status: form.status,
+      displayOrder: form.displayOrder,
+    };
+    const result = editingId
+      ? await mutateAdminJson("PATCH", `/api/admin/funding-wallets/${editingId}`, body)
+      : await mutateAdminJson("POST", "/api/admin/funding-wallets", body);
     setBusy(false);
     if (result.error) {
       setFeedback(result.error);
       return;
     }
-    setAddress("");
-    setQrCodeUrl("");
-    setInstructions("");
-    setFeedback("Funding wallet saved.");
+    setFeedback(editingId ? "Funding wallet updated." : "Funding wallet saved.");
+    beginCreate();
     await load();
   }
 
-  async function toggleStatus(id: string, current: string, row: (typeof rows)[number]) {
+  async function toggleStatus(row: FundingWalletRow) {
     setBusy(true);
-    const result = await mutateAdminJson("PATCH", `/api/admin/funding-wallets/${id}`, {
+    setFeedback(null);
+    const result = await mutateAdminJson("PATCH", `/api/admin/funding-wallets/${row.id}`, {
       asset: row.asset,
       network: row.network,
       address: row.address,
       qrCodeUrl: row.qrCodeUrl,
       instructions: row.instructions,
-      status: current === "active" ? "disabled" : "active",
+      status: row.status === "active" ? "disabled" : "active",
       displayOrder: row.displayOrder,
     });
     setBusy(false);
@@ -1110,6 +1134,79 @@ export function FundingWalletsPanel() {
     }
     await load();
   }
+
+  async function deleteWallet(row: FundingWalletRow) {
+    if (!window.confirm(`Delete ${row.asset} · ${row.network} wallet?`)) return;
+    setBusy(true);
+    setFeedback(null);
+    const result = await mutateAdminJson("DELETE", `/api/admin/funding-wallets/${row.id}`);
+    setBusy(false);
+    if (result.error) {
+      setFeedback(result.error);
+      return;
+    }
+    if (editingId === row.id) beginCreate();
+    setFeedback("Funding wallet deleted.");
+    await load();
+  }
+
+  async function moveWallet(row: FundingWalletRow, direction: -1 | 1) {
+    const ordered = [...rows].sort((a, b) => a.displayOrder - b.displayOrder);
+    const index = ordered.findIndex((item) => item.id === row.id);
+    const swapWith = ordered[index + direction];
+    if (!swapWith) return;
+    setBusy(true);
+    setFeedback(null);
+    const first = await mutateAdminJson("PATCH", `/api/admin/funding-wallets/${row.id}`, {
+      asset: row.asset,
+      network: row.network,
+      address: row.address,
+      qrCodeUrl: row.qrCodeUrl,
+      instructions: row.instructions,
+      status: row.status,
+      displayOrder: swapWith.displayOrder,
+    });
+    if (first.error) {
+      setBusy(false);
+      setFeedback(first.error);
+      return;
+    }
+    const second = await mutateAdminJson("PATCH", `/api/admin/funding-wallets/${swapWith.id}`, {
+      asset: swapWith.asset,
+      network: swapWith.network,
+      address: swapWith.address,
+      qrCodeUrl: swapWith.qrCodeUrl,
+      instructions: swapWith.instructions,
+      status: swapWith.status,
+      displayOrder: row.displayOrder,
+    });
+    setBusy(false);
+    if (second.error) {
+      setFeedback(second.error);
+      return;
+    }
+    await load();
+  }
+
+  async function uploadQr(file: File) {
+    setBusy(true);
+    setFeedback(null);
+    const formData = new FormData();
+    formData.set("file", file);
+    const result = await mutateAdminFormData<{ url: string }>(
+      "/api/admin/funding-wallets/upload-qr",
+      formData,
+    );
+    setBusy(false);
+    if (result.error || !result.data?.url) {
+      setFeedback(result.error ?? "QR upload failed.");
+      return;
+    }
+    setForm((current) => ({ ...current, qrCodeUrl: result.data!.url }));
+    setFeedback("QR image uploaded.");
+  }
+
+  const networkOptions = FUNDING_NETWORK_PRESETS[form.asset] ?? ["Other"];
 
   return (
     <div>
@@ -1123,14 +1220,29 @@ export function FundingWalletsPanel() {
         </p>
       ) : null}
       <Card className="mb-6 space-y-3 p-4">
-        <h2 className="text-sm font-semibold">Add wallet</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold">{editingId ? "Edit wallet" : "Add wallet"}</h2>
+          {editingId ? (
+            <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={beginCreate}>
+              Cancel edit
+            </Button>
+          ) : null}
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="grid gap-1 text-sm">
             <span>Asset</span>
             <select
               className="rounded-md border bg-background px-3 py-2"
-              value={asset}
-              onChange={(event) => setAsset(event.target.value)}
+              value={form.asset}
+              onChange={(event) => {
+                const nextAsset = event.target.value;
+                const presets = FUNDING_NETWORK_PRESETS[nextAsset] ?? ["Other"];
+                setForm((current) => ({
+                  ...current,
+                  asset: nextAsset,
+                  network: presets[0] ?? current.network,
+                }));
+              }}
             >
               <option value="BTC">BTC</option>
               <option value="ETH">ETH</option>
@@ -1139,30 +1251,120 @@ export function FundingWalletsPanel() {
           </label>
           <label className="grid gap-1 text-sm">
             <span>Network</span>
-            <Input value={network} onChange={(event) => setNetwork(event.target.value)} />
+            <select
+              className="rounded-md border bg-background px-3 py-2"
+              value={networkOptions.includes(form.network) ? form.network : "__custom__"}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (value === "__custom__") {
+                  setForm((current) => ({ ...current, network: "" }));
+                  return;
+                }
+                setForm((current) => ({ ...current, network: value }));
+              }}
+            >
+              {networkOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+              <option value="__custom__">Custom…</option>
+            </select>
+            {!networkOptions.includes(form.network) ? (
+              <Input
+                className="mt-2"
+                value={form.network}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, network: event.target.value }))
+                }
+                placeholder="Custom network"
+              />
+            ) : null}
           </label>
           <label className="grid gap-1 text-sm sm:col-span-2">
             <span>Address</span>
-            <Input value={address} onChange={(event) => setAddress(event.target.value)} />
+            <Input
+              value={form.address}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, address: event.target.value }))
+              }
+            />
           </label>
           <label className="grid gap-1 text-sm sm:col-span-2">
-            <span>QR code URL (optional)</span>
-            <Input value={qrCodeUrl} onChange={(event) => setQrCodeUrl(event.target.value)} />
+            <span>QR code</span>
+            <Input
+              value={form.qrCodeUrl}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, qrCodeUrl: event.target.value }))
+              }
+              placeholder="https://… or upload below"
+            />
+            <Input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              className="mt-2"
+              disabled={busy}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void uploadQr(file);
+                event.target.value = "";
+              }}
+            />
+            {form.qrCodeUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={form.qrCodeUrl}
+                alt="QR preview"
+                className="mt-2 h-28 w-28 rounded-md border bg-white object-contain p-1"
+              />
+            ) : null}
           </label>
           <label className="grid gap-1 text-sm sm:col-span-2">
             <span>Instructions (optional)</span>
             <Textarea
-              value={instructions}
-              onChange={(event) => setInstructions(event.target.value)}
+              value={form.instructions}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, instructions: event.target.value }))
+              }
+            />
+          </label>
+          <label className="grid gap-1 text-sm">
+            <span>Status</span>
+            <select
+              className="rounded-md border bg-background px-3 py-2"
+              value={form.status}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  status: event.target.value === "disabled" ? "disabled" : "active",
+                }))
+              }
+            >
+              <option value="active">Active</option>
+              <option value="disabled">Disabled</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm">
+            <span>Display order</span>
+            <Input
+              type="number"
+              min={0}
+              value={form.displayOrder}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  displayOrder: Number(event.target.value) || 0,
+                }))
+              }
             />
           </label>
         </div>
         <Button
           type="button"
-          disabled={busy || address.trim().length < 8 || network.trim().length < 1}
-          onClick={() => void createWallet()}
+          disabled={busy || form.address.trim().length < 8 || form.network.trim().length < 1}
+          onClick={() => void saveWallet()}
         >
-          {busy ? "Saving…" : "Save wallet"}
+          {busy ? "Saving…" : editingId ? "Update wallet" : "Save wallet"}
         </Button>
       </Card>
       {state === "loading" ? <AdminLoadingBlock /> : null}
@@ -1181,39 +1383,86 @@ export function FundingWalletsPanel() {
           {rows.length === 0 ? (
             <p className="text-sm text-muted-foreground">No funding wallets configured yet.</p>
           ) : (
-            rows.map((row) => (
-              <Card key={row.id} className="space-y-2 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="font-semibold">
-                      {row.asset} · {row.network}
-                    </p>
-                    <p className="break-all font-mono text-xs text-muted-foreground">
-                      {row.address}
-                    </p>
+            [...rows]
+              .sort((a, b) => a.displayOrder - b.displayOrder)
+              .map((row, index, ordered) => (
+                <Card key={row.id} className="space-y-2 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="font-semibold">
+                        {row.asset} · {row.network}
+                      </p>
+                      <p className="break-all font-mono text-xs text-muted-foreground">
+                        {row.address}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">Order {row.displayOrder}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusChip tone={row.status === "active" ? "active" : "neutral"}>
+                        {row.status}
+                      </StatusChip>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busy || index === 0}
+                        onClick={() => void moveWallet(row, -1)}
+                      >
+                        Up
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busy || index === ordered.length - 1}
+                        onClick={() => void moveWallet(row, 1)}
+                      >
+                        Down
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => beginEdit(row)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => void toggleStatus(row)}
+                      >
+                        {row.status === "active" ? "Disable" : "Enable"}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        disabled={busy}
+                        onClick={() => void deleteWallet(row)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <StatusChip tone={row.status === "active" ? "active" : "neutral"}>
-                      {row.status}
-                    </StatusChip>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => void toggleStatus(row.id, row.status, row)}
-                    >
-                      {row.status === "active" ? "Disable" : "Enable"}
-                    </Button>
-                  </div>
-                </div>
-                {row.instructions ? (
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {row.instructions}
-                  </p>
-                ) : null}
-              </Card>
-            ))
+                  {row.qrCodeUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={row.qrCodeUrl}
+                      alt={`${row.asset} QR`}
+                      className="h-20 w-20 rounded-md border bg-white object-contain p-1"
+                    />
+                  ) : null}
+                  {row.instructions ? (
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {row.instructions}
+                    </p>
+                  ) : null}
+                </Card>
+              ))
           )}
         </div>
       ) : null}

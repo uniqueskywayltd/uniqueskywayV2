@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Button, Input, Label, Skeleton } from "@/components/ui";
 import { FormStepIndicator } from "@/components/ui/form-step-indicator";
-import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
+import {
+  getCustomerJson,
+  postCustomerForm,
+  postCustomerJson,
+} from "@/features/customer/api-client";
 import { useI18n } from "@/features/i18n/i18n-provider";
 
 type FundingAsset = "BTC" | "ETH" | "USDT";
@@ -30,15 +34,28 @@ export function DepositJourney() {
   const { t } = useI18n();
   const router = useRouter();
   const [asset, setAsset] = useState<FundingAsset>("USDT");
+  const [walletId, setWalletId] = useState<string | null>(null);
   const [wallets, setWallets] = useState<FundingWallet[]>([]);
   const [walletsLoading, setWalletsLoading] = useState(true);
   const [amount, setAmount] = useState("100.00");
   const [txHash, setTxHash] = useState("");
   const [note, setNote] = useState("");
+  const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [step, setStep] = useState<"select" | "transfer" | "notify" | "submitting">("select");
   const [error, setError] = useState<string | null>(null);
 
-  const selectedWallet = wallets.find((wallet) => wallet.asset === asset) ?? wallets[0] ?? null;
+  const assetWallets = useMemo(
+    () => wallets.filter((wallet) => wallet.asset === asset),
+    [asset, wallets],
+  );
+  const selectedWallet = useMemo(() => {
+    if (walletId) {
+      const match = assetWallets.find((wallet) => wallet.id === walletId);
+      if (match) return match;
+    }
+    return assetWallets[0] ?? null;
+  }, [assetWallets, walletId]);
   const amountMinor = dollarsToMinor(amount);
 
   useEffect(() => {
@@ -59,6 +76,11 @@ export function DepositJourney() {
     };
   }, []);
 
+  function selectAsset(next: FundingAsset) {
+    setAsset(next);
+    setWalletId(null);
+  }
+
   function onSelectContinue(event: FormEvent) {
     event.preventDefault();
     setError(null);
@@ -72,6 +94,31 @@ export function DepositJourney() {
   function onTransferContinue(event: FormEvent) {
     event.preventDefault();
     setStep("notify");
+  }
+
+  async function copyAddress() {
+    if (!selectedWallet) return;
+    try {
+      await navigator.clipboard.writeText(selectedWallet.address);
+      setCopyFeedback("Address copied.");
+    } catch {
+      setCopyFeedback("Could not copy. Select the address manually.");
+    }
+  }
+
+  async function uploadEvidence(file: File) {
+    setError(null);
+    const formData = new FormData();
+    formData.set("file", file);
+    const result = await postCustomerForm<{ url: string }>(
+      "/api/customer/deposits/evidence",
+      formData,
+    );
+    if (result.error || !result.data?.url) {
+      setError(result.error ?? "Screenshot upload failed.");
+      return;
+    }
+    setEvidenceUrl(result.data.url);
   }
 
   async function onSubmit() {
@@ -93,6 +140,7 @@ export function DepositJourney() {
         fundingWalletId: selectedWallet.id,
         transactionHash: txHash.trim(),
         ...(note.trim() ? { customerNote: note.trim() } : {}),
+        ...(evidenceUrl ? { evidenceUrl } : {}),
       },
       { idempotencyKey: crypto.randomUUID() },
     );
@@ -127,13 +175,32 @@ export function DepositJourney() {
                   key={option}
                   type="button"
                   variant={asset === option ? "default" : "outline"}
-                  onClick={() => setAsset(option)}
+                  onClick={() => selectAsset(option)}
                 >
                   {option}
                 </Button>
               ))}
             </div>
           </div>
+          {assetWallets.length > 1 ? (
+            <div className="space-y-2">
+              <Label htmlFor="funding-network">Network</Label>
+              <select
+                id="funding-network"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                value={selectedWallet?.id ?? ""}
+                onChange={(event) => setWalletId(event.target.value)}
+              >
+                {assetWallets.map((wallet) => (
+                  <option key={wallet.id} value={wallet.id}>
+                    {wallet.network}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : selectedWallet ? (
+            <p className="text-sm text-muted-foreground">Network: {selectedWallet.network}</p>
+          ) : null}
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="w-full">
             Continue
@@ -152,6 +219,14 @@ export function DepositJourney() {
             <p className="mt-1 break-all rounded-md border bg-muted/40 px-3 py-2 font-mono text-sm">
               {selectedWallet.address}
             </p>
+            <div className="mt-2 flex items-center gap-2">
+              <Button type="button" size="sm" variant="outline" onClick={() => void copyAddress()}>
+                Copy address
+              </Button>
+              {copyFeedback ? (
+                <span className="text-xs text-muted-foreground">{copyFeedback}</span>
+              ) : null}
+            </div>
           </div>
           {selectedWallet.qrCodeUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -179,6 +254,14 @@ export function DepositJourney() {
 
       {step === "notify" || step === "submitting" ? (
         <div className="space-y-4 rounded-2xl border bg-card p-5">
+          <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+            <p>
+              <span className="text-muted-foreground">Asset:</span> {selectedWallet?.asset}
+            </p>
+            <p>
+              <span className="text-muted-foreground">Network:</span> {selectedWallet?.network}
+            </p>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="deposit-amount">Amount to credit (USD)</Label>
             <Input
@@ -211,6 +294,23 @@ export function DepositJourney() {
               onChange={(event) => setNote(event.target.value)}
               disabled={step === "submitting"}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="deposit-screenshot">Optional screenshot</Label>
+            <Input
+              id="deposit-screenshot"
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              disabled={step === "submitting"}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void uploadEvidence(file);
+                event.target.value = "";
+              }}
+            />
+            {evidenceUrl ? (
+              <p className="text-xs text-muted-foreground">Screenshot attached for admin review.</p>
+            ) : null}
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <div className="flex gap-2">

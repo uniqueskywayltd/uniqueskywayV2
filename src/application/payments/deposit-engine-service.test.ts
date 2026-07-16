@@ -280,6 +280,23 @@ function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: b
     ),
     listDepositIntentsByUserId: vi.fn(async () => state.deposits),
     listDepositIntents: vi.fn(async () => state.deposits),
+    findFundingWalletById: vi.fn(async (id: string) =>
+      id === FUNDING_WALLET_ID
+        ? {
+            id: FUNDING_WALLET_ID,
+            asset: "USDT",
+            network: "TRC20",
+            address: "TXexampleFundingWalletAddress123",
+            qrCodeUrl: null,
+            instructions: null,
+            status: "active",
+            displayOrder: 0,
+            updatedBy: null,
+            createdAt: new Date("2026-07-13T12:00:00.000Z"),
+            updatedAt: new Date("2026-07-13T12:00:00.000Z"),
+          }
+        : null,
+    ),
   };
   const ledgerRepository = {
     lockWalletByUserCurrency: vi.fn(async () => undefined),

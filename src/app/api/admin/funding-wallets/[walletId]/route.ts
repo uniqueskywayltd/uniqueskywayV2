@@ -88,3 +88,22 @@ export async function PATCH(request: NextRequest, routeContext: RouteContext) {
     return jsonError(error, context.requestId);
   }
 }
+
+export async function DELETE(request: NextRequest, routeContext: RouteContext) {
+  const context = createRequestContext(request);
+  try {
+    requireSameOrigin(request);
+    await requireCsrf(request);
+    const deps = await createDeps();
+    await requireAdminActor(deps, "system.manage");
+    const { walletId } = await routeContext.params;
+    const existing = await deps.paymentRepository.findFundingWalletById(walletId);
+    if (!existing) {
+      throw new AppError({ code: "NOT_FOUND", message: "Funding wallet was not found." });
+    }
+    await deps.paymentRepository.deleteFundingWallet(walletId);
+    return jsonOk({ deleted: true, id: walletId }, context.requestId);
+  } catch (error) {
+    return jsonError(error, context.requestId);
+  }
+}

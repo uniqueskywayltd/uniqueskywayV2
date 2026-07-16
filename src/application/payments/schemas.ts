@@ -28,6 +28,7 @@ export const createDepositIntentInputSchema = z.object({
   fundingWalletId: z.string().uuid(),
   transactionHash: z.string().trim().min(6, "Transaction hash is required.").max(200),
   customerNote: z.string().trim().max(2000).optional(),
+  evidenceUrl: z.string().url().max(1000).optional(),
 });
 
 export type CreateDepositIntentInput = z.infer<typeof createDepositIntentInputSchema>;

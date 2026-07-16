@@ -153,6 +153,7 @@ export class DepositEngineService {
       transactionHash: input.transactionHash,
       customerNote: input.customerNote ?? null,
       address: fundingWallet.address,
+      ...(input.evidenceUrl ? { evidenceUrl: input.evidenceUrl } : {}),
     };
 
     const pending = await this.deps.transactionManager.runInTransaction(async (tx) => {

@@ -21,7 +21,9 @@ export async function getAdminJson<TData>(url: string): Promise<ApiResult<TData>
         status: response.status,
       };
     }
-    return payload.data === undefined ? { status: response.status } : { data: payload.data, status: response.status };
+    return payload.data === undefined
+      ? { status: response.status }
+      : { data: payload.data, status: response.status };
   } catch {
     return { error: "Network unavailable. Check your connection and retry." };
   }
@@ -56,7 +58,41 @@ export async function mutateAdminJson<TData>(
         status: response.status,
       };
     }
-    return payload.data === undefined ? { status: response.status } : { data: payload.data, status: response.status };
+    return payload.data === undefined
+      ? { status: response.status }
+      : { data: payload.data, status: response.status };
+  } catch {
+    return { error: "Network unavailable. Check your connection and retry." };
+  }
+}
+
+export async function mutateAdminFormData<TData>(
+  url: string,
+  formData: FormData,
+): Promise<ApiResult<TData>> {
+  const csrfToken = await getCsrfToken();
+  if (!csrfToken) return { error: "Security token could not be created." };
+
+  try {
+    const response = await fetch(appPath(url), {
+      method: "POST",
+      credentials: "include",
+      headers: { "x-csrf-token": csrfToken },
+      body: formData,
+    });
+    const payload = (await response.json()) as {
+      data?: TData;
+      error?: { message?: string };
+    };
+    if (!response.ok) {
+      return {
+        error: payload.error?.message ?? "Request failed.",
+        status: response.status,
+      };
+    }
+    return payload.data === undefined
+      ? { status: response.status }
+      : { data: payload.data, status: response.status };
   } catch {
     return { error: "Network unavailable. Check your connection and retry." };
   }
