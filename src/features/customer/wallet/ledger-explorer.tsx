@@ -1,19 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BookOpenText } from "lucide-react";
 
-import { Button, EmptyState, Skeleton } from "@/components/ui";
+import { Button, EmptyState, Input, Skeleton } from "@/components/ui";
 import { getCustomerJson } from "@/features/customer/api-client";
 import { LedgerTransactionList } from "@/features/customer/wallet/ledger-transaction-list";
 import type { LedgerEntryRow } from "@/features/customer/wallet/types";
 
-/** Full ledger — certified history only; no search (API has no query params). */
+/** Full ledger — certified history with client-side search/filters (V1 parity). */
 export function LedgerExplorer() {
   const [entries, setEntries] = useState<LedgerEntryRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   useEffect(() => {
     let active = true;
@@ -31,6 +33,26 @@ export function LedgerExplorer() {
       active = false;
     };
   }, []);
+
+  const transactionTypes = useMemo(() => {
+    const set = new Set(entries.map((entry) => entry.transactionType));
+    return ["all", ...Array.from(set).sort()];
+  }, [entries]);
+
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return entries.filter((entry) => {
+      if (typeFilter !== "all" && entry.transactionType !== typeFilter) return false;
+      if (!needle) return true;
+      return (
+        entry.label.toLowerCase().includes(needle) ||
+        entry.transactionType.toLowerCase().includes(needle) ||
+        entry.referenceType.toLowerCase().includes(needle) ||
+        entry.referenceId.toLowerCase().includes(needle) ||
+        (entry.description?.toLowerCase().includes(needle) ?? false)
+      );
+    });
+  }, [entries, query, typeFilter]);
 
   if (error) {
     return (
@@ -79,7 +101,36 @@ export function LedgerExplorer() {
         The ledger is an historical record, not a financial summary. Entries appear in certified
         posting order — nothing is hidden, merged, or reordered here.
       </p>
-      <LedgerTransactionList entries={entries} />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <label className="block flex-1 space-y-1.5 text-sm">
+          <span className="font-medium text-foreground">Search</span>
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Label, type, reference…"
+            autoComplete="off"
+          />
+        </label>
+        <label className="block space-y-1.5 text-sm sm:w-56">
+          <span className="font-medium text-foreground">Type</span>
+          <select
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value)}
+          >
+            {transactionTypes.map((type) => (
+              <option key={type} value={type}>
+                {type === "all" ? "All types" : type}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No entries match these filters.</p>
+      ) : (
+        <LedgerTransactionList entries={filtered} />
+      )}
     </div>
   );
 }

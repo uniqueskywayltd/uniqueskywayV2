@@ -1,8 +1,10 @@
 import { CustomerPortfolioService } from "@/application/customer/portfolio-service";
 import {
   CoreRepository,
+  DrizzleTransactionManager,
   IdentityRepository,
   InvestmentRepository,
+  LedgerRepository,
   SettlementRepository,
   getDatabaseConnection,
 } from "@/infrastructure/database";
@@ -23,5 +25,8 @@ export async function createCustomerPortfolioService() {
     investmentRepository: new InvestmentRepository(db),
     settlementRepository: new SettlementRepository(db),
     coreRepository: new CoreRepository(db),
+    ledgerRepository: new LedgerRepository(db),
+    transactionManager: new DrizzleTransactionManager(db),
+    clock: { now: () => new Date() },
   });
 }

@@ -8,7 +8,9 @@ import {
   Flag,
   LayoutDashboard,
   LineChart,
+  Mail,
   PieChart,
+  ScrollText,
   Settings2,
   ShieldAlert,
   UserCog,
@@ -32,7 +34,9 @@ export type AdminNavSection = {
 export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
   {
     labelKey: "admin.section.overview",
-    items: [{ href: "/admin", labelKey: "admin.nav.dashboard", icon: LayoutDashboard, exact: true }],
+    items: [
+      { href: "/admin", labelKey: "admin.nav.dashboard", icon: LayoutDashboard, exact: true },
+    ],
   },
   {
     labelKey: "admin.section.operations",
@@ -57,6 +61,8 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
     labelKey: "admin.section.platform",
     items: [
       { href: "/admin/reports", labelKey: "admin.nav.reports", icon: LineChart },
+      { href: "/admin/audit", labelKey: "admin.nav.audit", icon: ScrollText },
+      { href: "/admin/email-templates", labelKey: "admin.nav.email_templates", icon: Mail },
       { href: "/admin/feature-flags", labelKey: "admin.nav.feature_flags", icon: Flag },
       { href: "/admin/settings", labelKey: "admin.nav.settings", icon: Settings2 },
       { href: "/admin/system", labelKey: "admin.nav.system", icon: Activity },

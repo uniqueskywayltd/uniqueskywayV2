@@ -2,11 +2,15 @@ import "server-only";
 
 import { AppError } from "@/application/errors";
 import type { IdentityProvider } from "@/application/auth";
+import type { Clock } from "@/application/ports";
+import { InvestmentEngineService } from "@/application/investments/investment-engine-service";
 import type {
   CoreRepository,
+  DrizzleTransactionManager,
   IdentityRepository,
   InvestmentRecord,
   InvestmentRepository,
+  LedgerRepository,
   RoiScheduleItemRecord,
   SettlementRepository,
 } from "@/infrastructure/database";
@@ -21,12 +25,21 @@ export interface ListCustomerInvestmentsInput {
   limit?: number;
 }
 
+export interface ActivateCustomerInvestmentInput {
+  planVersionId: string;
+  principalMinor: bigint;
+  idempotencyKey: string;
+}
+
 export interface CustomerPortfolioServiceDependencies {
   identityProvider: IdentityProvider;
   identityRepository: IdentityRepository;
   investmentRepository: InvestmentRepository;
   settlementRepository: SettlementRepository;
   coreRepository: CoreRepository;
+  ledgerRepository: LedgerRepository;
+  transactionManager: DrizzleTransactionManager;
+  clock: Clock;
 }
 
 const BUCKET_STATUSES: Record<Exclude<PortfolioBucket, "all">, InvestmentRecord["status"][]> = {
@@ -38,6 +51,50 @@ const BUCKET_STATUSES: Record<Exclude<PortfolioBucket, "all">, InvestmentRecord[
 
 export class CustomerPortfolioService {
   constructor(private readonly deps: CustomerPortfolioServiceDependencies) {}
+
+  async listPublishedPlans() {
+    await this.requireCurrentAppUser();
+    const rows = await this.deps.coreRepository.listActivePublishedPlanVersions();
+    return {
+      plans: rows.map(({ plan, version }) => ({
+        planId: plan.id,
+        planVersionId: version.id,
+        slug: plan.slug,
+        name: plan.name,
+        description: plan.description,
+        currency: version.currency,
+        minPrincipalMinor: version.minPrincipalMinor.toString(),
+        maxPrincipalMinor: version.maxPrincipalMinor.toString(),
+        termDays: version.termDays,
+        dailyRoiBps: version.dailyRoiBps,
+        totalRoiBps: version.totalRoiBps,
+      })),
+    };
+  }
+
+  async activateInvestment(input: ActivateCustomerInvestmentInput) {
+    const appUser = await this.requireCurrentAppUser();
+    const engine = new InvestmentEngineService({
+      clock: this.deps.clock,
+      transactionManager: this.deps.transactionManager,
+      coreRepository: this.deps.coreRepository,
+      investmentRepository: this.deps.investmentRepository,
+      ledgerRepository: this.deps.ledgerRepository,
+      settlementRepository: this.deps.settlementRepository,
+    });
+
+    const result = await engine.activateInvestment({
+      userId: appUser.id,
+      planVersionId: input.planVersionId,
+      principalMinor: input.principalMinor,
+      idempotencyKey: input.idempotencyKey,
+    });
+
+    return {
+      investment: await this.toPortfolioCard(result.investment),
+      idempotent: result.idempotent,
+    };
+  }
 
   async listInvestments(input: ListCustomerInvestmentsInput = {}) {
     const appUser = await this.requireCurrentAppUser();
@@ -178,10 +235,7 @@ export function buildPortfolioSummary(rows: InvestmentRecord[]) {
   };
 }
 
-export function sortInvestments(
-  rows: InvestmentRecord[],
-  sort: PortfolioSort,
-): InvestmentRecord[] {
+export function sortInvestments(rows: InvestmentRecord[], sort: PortfolioSort): InvestmentRecord[] {
   const copy = [...rows];
   if (sort === "maturity") {
     return copy.sort((a, b) => (a.maturityDate ?? "9999").localeCompare(b.maturityDate ?? "9999"));
@@ -197,7 +251,8 @@ export function computeProgressPercent(investment: InvestmentRecord): number | n
   if (investment.status === "matured") return 100;
   if (investment.status === "pending") return 0;
 
-  const start = investment.firstSettlementDate ?? investment.activatedAt?.toISOString().slice(0, 10);
+  const start =
+    investment.firstSettlementDate ?? investment.activatedAt?.toISOString().slice(0, 10);
   if (!start) return null;
 
   const startMs = Date.parse(`${start}T12:00:00.000Z`);

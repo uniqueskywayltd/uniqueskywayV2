@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 
+import { SmartsuppChat } from "@/components/providers/smartsupp-chat";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { I18nProvider } from "@/features/i18n/i18n-provider";
 import type { AppLanguage } from "@/i18n";
@@ -15,7 +16,10 @@ export function AppProviders({
 }) {
   return (
     <ThemeProvider>
-      <I18nProvider initialLanguage={language}>{children}</I18nProvider>
+      <I18nProvider initialLanguage={language}>
+        {children}
+        <SmartsuppChat />
+      </I18nProvider>
     </ThemeProvider>
   );
 }

@@ -56,7 +56,14 @@ export function SettlementsPanel() {
         title="Settlements"
         description="Read-only settlement run viewer over certified settlement data."
         action={
-          <Button type="button" variant="outline" onClick={() => { setState("loading"); void load(); }}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setState("loading");
+              void load();
+            }}
+          >
             Refresh
           </Button>
         }
@@ -66,10 +73,15 @@ export function SettlementsPanel() {
         <AdminErrorBlock
           message={error.message}
           {...(error.status ? { status: error.status } : {})}
-          onRetry={() => { setState("loading"); void load(); }}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
         />
       ) : null}
-      {state === "ready" && rows.length === 0 ? <AdminEmptyBlock title="No settlement runs" /> : null}
+      {state === "ready" && rows.length === 0 ? (
+        <AdminEmptyBlock title="No settlement runs" />
+      ) : null}
       {state === "ready" && rows.length > 0 ? (
         <AdminDataTable
           caption="Settlement runs"
@@ -122,7 +134,10 @@ export function SettlementDetailPanel({ runId }: { runId: string }) {
       <AdminErrorBlock
         message={error.message}
         {...(error.status ? { status: error.status } : {})}
-        onRetry={() => { setState("loading"); void load(); }}
+        onRetry={() => {
+          setState("loading");
+          void load();
+        }}
       />
     );
   }
@@ -191,7 +206,14 @@ export function StaffPanel() {
         ]}
         onStatusChange={setStatus}
         trailing={
-          <Button type="button" variant="outline" onClick={() => { setState("loading"); void load(); }}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setState("loading");
+              void load();
+            }}
+          >
             Refresh
           </Button>
         }
@@ -201,7 +223,10 @@ export function StaffPanel() {
         <AdminErrorBlock
           message={error.message}
           {...(error.status ? { status: error.status } : {})}
-          onRetry={() => { setState("loading"); void load(); }}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
         />
       ) : null}
       {state === "ready" && rows.length === 0 ? <AdminEmptyBlock title="No staff found" /> : null}
@@ -261,7 +286,10 @@ export function StaffDetailPanel({ userId }: { userId: string }) {
       <AdminErrorBlock
         message={error.message}
         {...(error.status ? { status: error.status } : {})}
-        onRetry={() => { setState("loading"); void load(); }}
+        onRetry={() => {
+          setState("loading");
+          void load();
+        }}
       />
     );
   }
@@ -312,7 +340,14 @@ export function RolesPanel() {
         title="Roles"
         description="Configurable roles and permission grants from the admin RBAC catalog."
         action={
-          <Button type="button" variant="outline" onClick={() => { setState("loading"); void load(); }}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setState("loading");
+              void load();
+            }}
+          >
             Refresh
           </Button>
         }
@@ -322,7 +357,10 @@ export function RolesPanel() {
         <AdminErrorBlock
           message={error.message}
           {...(error.status ? { status: error.status } : {})}
-          onRetry={() => { setState("loading"); void load(); }}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
         />
       ) : null}
       {state === "ready" && rows.length === 0 ? <AdminEmptyBlock title="No roles found" /> : null}
@@ -409,14 +447,16 @@ export function ReportsPanel() {
   }
 
   const customers =
-    (dashboard?.customers as { total?: number; verified?: number; suspended?: number } | undefined) ??
-    {};
+    (dashboard?.customers as
+      { total?: number; verified?: number; suspended?: number } | undefined) ?? {};
   const money =
-    (dashboard?.moneyMovement as {
-      pendingDeposits?: number;
-      pendingWithdrawals?: number;
-      totalRoiPaidMinor?: string;
-    } | undefined) ?? {};
+    (dashboard?.moneyMovement as
+      | {
+          pendingDeposits?: number;
+          pendingWithdrawals?: number;
+          totalRoiPaidMinor?: string;
+        }
+      | undefined) ?? {};
 
   return (
     <div>
@@ -425,7 +465,12 @@ export function ReportsPanel() {
         description="Read-only reporting projections with audited CSV/Excel exports."
         action={
           <div className="flex gap-2">
-            <Button type="button" variant="outline" disabled={busy} onClick={() => void exportReport("csv")}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => void exportReport("csv")}
+            >
               Export CSV
             </Button>
             <Button type="button" disabled={busy} onClick={() => void exportReport("xlsx")}>
@@ -444,7 +489,10 @@ export function ReportsPanel() {
         <AdminErrorBlock
           message={error.message}
           {...(error.status ? { status: error.status } : {})}
-          onRetry={() => { setState("loading"); void load(); }}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
         />
       ) : null}
       {state === "ready" ? (
@@ -492,9 +540,11 @@ export function JobsPanel() {
     }>("/api/admin/jobs?limit=50");
     if (result.error) {
       // listJobs returns { rows, nextCursor } directly from service as jsonOk(jobs)
-      const alt = await getAdminJson<{
-        rows?: Array<{ id: string; jobType: string; status: string; createdAt: string }>;
-      } & Record<string, unknown>>("/api/admin/jobs");
+      const alt = await getAdminJson<
+        {
+          rows?: Array<{ id: string; jobType: string; status: string; createdAt: string }>;
+        } & Record<string, unknown>
+      >("/api/admin/jobs");
       if (alt.error) {
         setError({ message: alt.error, ...(alt.status ? { status: alt.status } : {}) });
         setState("error");
@@ -527,7 +577,10 @@ export function JobsPanel() {
         <AdminErrorBlock
           message={error.message}
           {...(error.status ? { status: error.status } : {})}
-          onRetry={() => { setState("loading"); void load(); }}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
         />
       ) : null}
       {state === "ready" && rows.length === 0 ? <AdminEmptyBlock title="No jobs found" /> : null}
@@ -591,7 +644,10 @@ export function SecurityPanel() {
       <AdminErrorBlock
         message={error.message}
         {...(error.status ? { status: error.status } : {})}
-        onRetry={() => { setState("loading"); void load(); }}
+        onRetry={() => {
+          setState("loading");
+          void load();
+        }}
       />
     );
   }
@@ -652,7 +708,10 @@ export function FeatureFlagsPanel() {
         <AdminErrorBlock
           message={error.message}
           {...(error.status ? { status: error.status } : {})}
-          onRetry={() => { setState("loading"); void load(); }}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
         />
       ) : null}
       {state === "ready" && rows.length === 0 ? <AdminEmptyBlock title="No feature flags" /> : null}
@@ -718,7 +777,10 @@ export function SettingsPanel() {
         <AdminErrorBlock
           message={error.message}
           {...(error.status ? { status: error.status } : {})}
-          onRetry={() => { setState("loading"); void load(); }}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
         />
       ) : null}
       {state === "ready" && rows.length === 0 ? <AdminEmptyBlock title="No settings" /> : null}
@@ -767,7 +829,10 @@ export function SystemPanel() {
       <AdminErrorBlock
         message={error.message}
         {...(error.status ? { status: error.status } : {})}
-        onRetry={() => { setState("loading"); void load(); }}
+        onRetry={() => {
+          setState("loading");
+          void load();
+        }}
       />
     );
   }
@@ -789,6 +854,184 @@ export function SystemPanel() {
       <Card className="p-4">
         <pre className="overflow-x-auto text-xs">{JSON.stringify(health, null, 2)}</pre>
       </Card>
+    </div>
+  );
+}
+
+export function AuditLogsPanel() {
+  const [action, setAction] = useState("");
+  const [state, setState] = useState<LoadState>("loading");
+  const [error, setError] = useState<{ message: string; status?: number } | null>(null);
+  const [rows, setRows] = useState<
+    Array<{
+      id: string;
+      action: string;
+      actorType: string;
+      actorUserId: string | null;
+      targetType: string | null;
+      targetId: string | null;
+      createdAt: string;
+    }>
+  >([]);
+
+  const load = useCallback(async () => {
+    const params = new URLSearchParams({ limit: "100" });
+    if (action.trim()) params.set("action", action.trim());
+    const result = await getAdminJson<{
+      auditLogs: Array<{
+        id: string;
+        action: string;
+        actorType: string;
+        actorUserId: string | null;
+        targetType: string | null;
+        targetId: string | null;
+        createdAt: string;
+      }>;
+    }>(`/api/admin/audit-logs?${params}`);
+    if (result.error) {
+      setError({ message: result.error, ...(result.status ? { status: result.status } : {}) });
+      setState("error");
+      return;
+    }
+    setRows(result.data?.auditLogs ?? []);
+    setState("ready");
+  }, [action]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return (
+    <div>
+      <AdminPageHeader
+        title="Audit logs"
+        description="Certified admin and system audit trail."
+        action={
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setState("loading");
+              void load();
+            }}
+          >
+            Refresh
+          </Button>
+        }
+      />
+      <AdminToolbar searchLabel="Action" searchValue={action} onSearchChange={setAction} />
+      {state === "loading" ? <AdminLoadingBlock /> : null}
+      {state === "error" && error ? (
+        <AdminErrorBlock
+          message={error.message}
+          {...(error.status ? { status: error.status } : {})}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
+        />
+      ) : null}
+      {state === "ready" && rows.length === 0 ? <AdminEmptyBlock title="No audit logs" /> : null}
+      {state === "ready" && rows.length > 0 ? (
+        <AdminDataTable
+          caption="Audit logs"
+          rows={rows}
+          columns={[
+            {
+              key: "createdAt",
+              header: "When",
+              cell: (row) => new Date(row.createdAt).toLocaleString(),
+            },
+            { key: "action", header: "Action", cell: (row) => row.action },
+            { key: "actor", header: "Actor", cell: (row) => row.actorType },
+            {
+              key: "target",
+              header: "Target",
+              cell: (row) => (row.targetType ? `${row.targetType}:${row.targetId ?? "—"}` : "—"),
+            },
+          ]}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+export function EmailTemplatesPanel() {
+  const [state, setState] = useState<LoadState>("loading");
+  const [error, setError] = useState<{ message: string; status?: number } | null>(null);
+  const [rows, setRows] = useState<
+    Array<{ id: string; key: string; status: string; currentVersion: string; updatedAt?: string }>
+  >([]);
+
+  const load = useCallback(async () => {
+    const result = await getAdminJson<{
+      templates: Array<{ key: string; status: string; currentVersion: string; updatedAt?: string }>;
+    }>("/api/admin/email-templates");
+    if (result.error) {
+      setError({ message: result.error, ...(result.status ? { status: result.status } : {}) });
+      setState("error");
+      return;
+    }
+    setRows(
+      (result.data?.templates ?? []).map((template) => ({
+        id: template.key,
+        ...template,
+      })),
+    );
+    setState("ready");
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return (
+    <div>
+      <AdminPageHeader
+        title="Email templates"
+        description="Identity and transactional email templates managed by the platform."
+        action={
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setState("loading");
+              void load();
+            }}
+          >
+            Refresh
+          </Button>
+        }
+      />
+      {state === "loading" ? <AdminLoadingBlock /> : null}
+      {state === "error" && error ? (
+        <AdminErrorBlock
+          message={error.message}
+          {...(error.status ? { status: error.status } : {})}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
+        />
+      ) : null}
+      {state === "ready" && rows.length === 0 ? (
+        <AdminEmptyBlock title="No email templates" />
+      ) : null}
+      {state === "ready" && rows.length > 0 ? (
+        <AdminDataTable
+          caption="Email templates"
+          rows={rows}
+          columns={[
+            { key: "key", header: "Key", cell: (row) => row.key },
+            {
+              key: "status",
+              header: "Status",
+              cell: (row) => <Badge variant="secondary">{row.status}</Badge>,
+            },
+            { key: "version", header: "Version", cell: (row) => row.currentVersion },
+          ]}
+        />
+      ) : null}
     </div>
   );
 }

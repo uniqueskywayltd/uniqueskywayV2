@@ -283,6 +283,8 @@ export const enMessages = {
   "admin.nav.roles": "Roles",
   "admin.nav.security": "Security",
   "admin.nav.reports": "Reports",
+  "admin.nav.audit": "Audit",
+  "admin.nav.email_templates": "Email templates",
   "admin.nav.feature_flags": "Feature Flags",
   "admin.nav.settings": "Settings",
   "admin.nav.system": "System",

@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { LayoutDashboard, ScrollText, Sparkles, Wallet } from "lucide-react";
+import { LayoutDashboard, PieChart, ScrollText, Sparkles, Wallet } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const actions = [
+  { href: "/portfolio/activate", label: "Activate investment", icon: PieChart },
   { href: "/plans", label: "Explore plans", icon: Sparkles },
   { href: "/wallet", label: "Wallet", icon: Wallet },
   { href: "/ledger", label: "Ledger", icon: ScrollText },

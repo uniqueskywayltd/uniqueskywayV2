@@ -284,6 +284,25 @@ export class CoreRepository extends BaseDrizzleRepository {
     return rows[0] ?? null;
   }
 
+  async listActivePublishedPlanVersions(): Promise<
+    Array<{
+      plan: InvestmentPlanRecord;
+      version: InvestmentPlanVersionRecord;
+    }>
+  > {
+    const rows = await this.db
+      .select({
+        plan: investmentPlans,
+        version: investmentPlanVersions,
+      })
+      .from(investmentPlanVersions)
+      .innerJoin(investmentPlans, eq(investmentPlanVersions.planId, investmentPlans.id))
+      .where(and(eq(investmentPlans.status, "active"), eq(investmentPlanVersions.status, "active")))
+      .orderBy(investmentPlans.name);
+
+    return rows;
+  }
+
   async searchCustomers(query: SearchCustomersQuery): Promise<SearchCustomersResult> {
     const conditions = [];
 
