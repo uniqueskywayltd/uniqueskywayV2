@@ -12,6 +12,7 @@ import {
 } from "@/application/auth/security";
 import { AppError } from "@/application/errors";
 import { getServerEnv } from "@/config/server-env";
+import { resolvePublicAppUrl } from "@/config/public-app-url";
 import { assertBalancedLedgerPosting } from "@/domains/ledger/posting";
 import type {
   AuditLogRecord,
@@ -154,7 +155,7 @@ export class AdminCustomerService {
           legalName,
         });
 
-        const appUrl = getServerEnv().NEXT_PUBLIC_APP_URL;
+        const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
         const loginUrl = `${appUrl}${AUTH_ROUTES.login}`;
 
         await this.deps.notificationRepository.enqueueEmail(tx, {
@@ -299,7 +300,7 @@ export class AdminCustomerService {
     const temporaryPassword = generateTemporaryPassword();
     await this.deps.identityProvider.adminUpdatePassword(user.authUserId, temporaryPassword);
 
-    const appUrl = getServerEnv().NEXT_PUBLIC_APP_URL;
+    const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
     await this.deps.transactionManager.runInTransaction(async (tx) => {
       await this.deps.notificationRepository.enqueueEmail(tx, {
         recipientUserId: user.id,

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { KeyRound, Lock, Mail } from "lucide-react";
 
+import { OTP_MAX_LENGTH, sanitizeOtpInput } from "@/application/auth/otp";
 import { Alert, AlertDescription, Button, Input } from "@/components/ui";
 
 import { postAuthJson } from "../api-client";
@@ -114,8 +115,13 @@ export function ResetPasswordForm() {
             name="token"
             inputMode="numeric"
             autoComplete="one-time-code"
+            maxLength={OTP_MAX_LENGTH}
             required
             disabled={pending}
+            onChange={(event) => {
+              event.currentTarget.value = sanitizeOtpInput(event.currentTarget.value);
+            }}
+            placeholder="Enter code from email"
           />
         </AuthInputIcon>
       </AuthField>

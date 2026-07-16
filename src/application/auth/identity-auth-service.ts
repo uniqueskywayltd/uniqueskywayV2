@@ -1,6 +1,7 @@
 import "server-only";
 
 import { AppError } from "@/application/errors";
+import { resolvePublicAppUrl, sanitizeAuthActionLink } from "@/config/public-app-url";
 import { getServerEnv } from "@/config/server-env";
 import type {
   CoreRepository,
@@ -112,11 +113,12 @@ export class IdentityAuthService {
       });
     }
 
-    const appUrl = getServerEnv().NEXT_PUBLIC_APP_URL;
+    const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
+    const redirectTo = `${appUrl}${AUTH_ROUTES.verifyEmail}`;
     const generatedEmail = await this.deps.identityProvider.generateSignupEmail({
       email: input.email,
       password: input.password,
-      redirectTo: `${appUrl}${AUTH_ROUTES.verifyEmail}`,
+      redirectTo,
       ...(displayName ? { displayName } : {}),
     });
 
@@ -141,7 +143,7 @@ export class IdentityAuthService {
         idempotencyKey: `auth.verify_email:${appUser.id}:${generatedEmail.hashedToken}`,
         metadata: {
           otp: generatedEmail.emailOtp,
-          actionLink: generatedEmail.actionLink,
+          actionLink: sanitizeAuthActionLink(generatedEmail.actionLink, redirectTo),
           hashedToken: generatedEmail.hashedToken,
         },
       });
@@ -197,10 +199,11 @@ export class IdentityAuthService {
       });
     }
 
-    const appUrl = getServerEnv().NEXT_PUBLIC_APP_URL;
+    const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
+    const redirectTo = `${appUrl}${AUTH_ROUTES.verifyEmail}`;
     const generatedEmail = await this.deps.identityProvider.generateEmailVerificationLink({
       email: input.email,
-      redirectTo: `${appUrl}${AUTH_ROUTES.verifyEmail}`,
+      redirectTo,
     });
 
     await this.deps.transactionManager.runInTransaction(async (tx) => {
@@ -211,7 +214,7 @@ export class IdentityAuthService {
         idempotencyKey: `auth.verify_email_resend:${appUser.id}:${generatedEmail.hashedToken}`,
         metadata: {
           otp: generatedEmail.emailOtp,
-          actionLink: generatedEmail.actionLink,
+          actionLink: sanitizeAuthActionLink(generatedEmail.actionLink, redirectTo),
           hashedToken: generatedEmail.hashedToken,
         },
       });
@@ -357,10 +360,11 @@ export class IdentityAuthService {
       });
     }
 
-    const appUrl = getServerEnv().NEXT_PUBLIC_APP_URL;
+    const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
+    const redirectTo = `${appUrl}${AUTH_ROUTES.resetPassword}`;
     const generatedEmail = await this.deps.identityProvider.generatePasswordResetEmail({
       email: input.email,
-      redirectTo: `${appUrl}${AUTH_ROUTES.resetPassword}`,
+      redirectTo,
     });
 
     if (generatedEmail) {
@@ -376,7 +380,7 @@ export class IdentityAuthService {
           idempotencyKey: `auth.password_reset:${generatedEmail.authUserId}:${generatedEmail.hashedToken}`,
           metadata: {
             otp: generatedEmail.emailOtp,
-            actionLink: generatedEmail.actionLink,
+            actionLink: sanitizeAuthActionLink(generatedEmail.actionLink, redirectTo),
             hashedToken: generatedEmail.hashedToken,
           },
         });

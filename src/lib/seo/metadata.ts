@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { resolvePublicAppUrl } from "@/config/public-app-url";
 import { brandAssets } from "@/features/brand";
 
 const DEFAULT_SITE_NAME = "Unique Sky Way";
@@ -7,24 +8,7 @@ const DEFAULT_DESCRIPTION =
   "Structured investment with transparent processes, verified accounts, and clear money movement.";
 
 export function getSiteUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_APP_URL;
-  if (configured) {
-    try {
-      const url = new URL(configured);
-      const path = url.pathname.replace(/\/$/, "");
-      // Preserve subdirectory deploys (e.g. https://uniqueskyway.com/v2).
-      return path && path !== "/" ? `${url.origin}${path}` : url.origin;
-    } catch {
-      // fall through
-    }
-  }
-
-  const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/$/, "");
-  if (basePath) {
-    return `http://localhost:3000${basePath}`;
-  }
-
-  return "http://localhost:3000";
+  return resolvePublicAppUrl(process.env.NEXT_PUBLIC_APP_URL);
 }
 
 export type PageMetadataInput = {

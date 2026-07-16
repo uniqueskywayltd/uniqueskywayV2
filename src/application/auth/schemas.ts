@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isValidOtp, normalizeOtpToken } from "./otp";
+
 const emailSchema = z
   .string()
   .trim()
@@ -10,7 +12,8 @@ const passwordSchema = z.string().min(8).max(128);
 const otpSchema = z
   .string()
   .trim()
-  .regex(/^[0-9]{6}$/, "Enter the 6-digit code.");
+  .transform((value) => normalizeOtpToken(value))
+  .refine(isValidOtp, "Enter the verification code from your email (6–8 digits).");
 
 const usernameSchema = z
   .string()

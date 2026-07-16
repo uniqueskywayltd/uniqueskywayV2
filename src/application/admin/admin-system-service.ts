@@ -8,6 +8,7 @@ import path from "node:path";
 import type { IdentityProvider } from "@/application/auth";
 import { AppError } from "@/application/errors";
 import type { Clock } from "@/application/ports";
+import { resolvePublicAppUrl } from "@/config/public-app-url";
 import type {
   DrizzleTransactionContext,
   DrizzleTransactionManager,
@@ -598,9 +599,7 @@ export class AdminSystemService {
 
     const reset = await this.deps.identityProvider.generatePasswordResetEmail({
       email: user.email,
-      redirectTo: process.env.NEXT_PUBLIC_APP_URL
-        ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`
-        : "http://localhost:3000/auth/reset-password",
+      redirectTo: `${resolvePublicAppUrl(process.env.NEXT_PUBLIC_APP_URL)}/auth/reset-password`,
     });
 
     return this.deps.transactionManager.runInTransaction(async (tx) => {

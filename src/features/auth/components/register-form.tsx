@@ -18,6 +18,7 @@ import {
   DialogTitle,
   Input,
 } from "@/components/ui";
+import { OTP_MAX_LENGTH, isValidOtp, sanitizeOtpInput } from "@/application/auth/otp";
 import { useI18n } from "@/features/i18n/i18n-provider";
 import { appPath } from "@/lib/app-path";
 import { cn } from "@/lib/utils";
@@ -211,7 +212,7 @@ function RegisterFormInner() {
   }
 
   async function verifyOtp() {
-    if (!/^\d{6}$/.test(otp.trim())) {
+    if (!isValidOtp(otp)) {
       setVerifyError(t("auth.otp_invalid"));
       return;
     }
@@ -226,7 +227,7 @@ function RegisterFormInner() {
       message?: string;
     }>("/api/auth/verify-email", {
       email: verifyEmail,
-      token: otp.trim(),
+      token: sanitizeOtpInput(otp),
       rememberMe: true,
     });
 
@@ -471,11 +472,11 @@ function RegisterFormInner() {
               id="otp"
               inputMode="numeric"
               autoComplete="one-time-code"
-              maxLength={6}
+              maxLength={OTP_MAX_LENGTH}
               value={otp}
               disabled={verifyPending}
-              onChange={(event) => setOtp(event.target.value.replace(/[^\d]/g, "").slice(0, 6))}
-              placeholder="123456"
+              onChange={(event) => setOtp(sanitizeOtpInput(event.target.value))}
+              placeholder="Enter code from email"
             />
           </AuthField>
 

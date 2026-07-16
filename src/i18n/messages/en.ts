@@ -122,7 +122,7 @@ export const enMessages = {
   "auth.change_email": "Change Email",
   "auth.resend_wait": "Resend available in {seconds}s",
   "auth.verifying": "Verifying...",
-  "auth.otp_invalid": "Enter the 6-digit verification code.",
+  "auth.otp_invalid": "Enter the verification code from your email (6–8 digits).",
   "auth.checking_availability": "Checking availability…",
   "auth.email_verified_sign_in": "Email verified successfully. Please sign in to continue.",
 

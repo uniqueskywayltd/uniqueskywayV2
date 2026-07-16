@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { KeyRound, Mail } from "lucide-react";
 
+import { OTP_MAX_LENGTH, sanitizeOtpInput } from "@/application/auth/otp";
 import { Alert, AlertDescription, Button, Checkbox, Input } from "@/components/ui";
 import { useI18n } from "@/features/i18n/i18n-provider";
 import { appPath } from "@/lib/app-path";
@@ -129,7 +130,9 @@ function VerifyEmailFormInner() {
             required
             disabled={pending}
             value={token}
-            onChange={(event) => setToken(event.target.value.replace(/[^\d]/g, "").slice(0, 6))}
+            onChange={(event) => setToken(sanitizeOtpInput(event.target.value))}
+            maxLength={OTP_MAX_LENGTH}
+            placeholder="Enter code from email"
           />
         </AuthInputIcon>
       </AuthField>

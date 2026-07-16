@@ -33,15 +33,20 @@ export async function createSupabaseRouteClient(options: SupabaseRouteClientOpti
         return cookieStore.getAll();
       },
       setAll(cookiesToSet) {
-        for (const cookie of cookiesToSet) {
-          cookieStore.set(cookie.name, cookie.value, {
-            ...cookie.options,
-            path: cookie.options.path ?? "/",
-            sameSite: "lax",
-            secure,
-            httpOnly: true,
-            ...(maxAge === undefined ? {} : { maxAge }),
-          });
+        // Server Components cannot mutate cookies; refresh runs via Route Handlers / middleware.
+        try {
+          for (const cookie of cookiesToSet) {
+            cookieStore.set(cookie.name, cookie.value, {
+              ...cookie.options,
+              path: cookie.options.path ?? "/",
+              sameSite: "lax",
+              secure,
+              httpOnly: true,
+              ...(maxAge === undefined ? {} : { maxAge }),
+            });
+          }
+        } catch {
+          // Ignore RSC cookie writes — prevents /admin crash on session refresh.
         }
       },
     },
