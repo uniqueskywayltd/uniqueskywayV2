@@ -11,7 +11,12 @@ import {
   postCustomerForm,
   postCustomerJson,
 } from "@/features/customer/api-client";
+import {
+  DepositSuccessModal,
+  type DepositSuccessSummary,
+} from "@/features/customer/wallet/deposit-success-modal";
 import { useI18n } from "@/features/i18n/i18n-provider";
+import { formatDateTime, formatMoneyMinorUnits } from "@/i18n/format";
 
 type FundingAsset = "BTC" | "ETH" | "USDT";
 
@@ -25,7 +30,16 @@ interface FundingWallet {
 }
 
 interface CreateDepositResponse {
-  depositIntent: { id: string };
+  depositIntent: {
+    id: string;
+    currency: string;
+    amountMinor: string;
+    providerIntentId: string;
+    fundingAsset: string | null;
+    fundingNetwork: string | null;
+    createdAt: string;
+  };
+  customerFirstName: string | null;
 }
 
 const ASSETS: FundingAsset[] = ["BTC", "ETH", "USDT"];
@@ -44,6 +58,7 @@ export function DepositJourney() {
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [step, setStep] = useState<"select" | "transfer" | "notify" | "submitting">("select");
   const [error, setError] = useState<string | null>(null);
+  const [successSummary, setSuccessSummary] = useState<DepositSuccessSummary | null>(null);
 
   const assetWallets = useMemo(
     () => wallets.filter((wallet) => wallet.asset === asset),
@@ -151,7 +166,27 @@ export function DepositJourney() {
       return;
     }
 
-    router.push(`/wallet/deposits/${result.data.depositIntent.id}`);
+    const intent = result.data.depositIntent;
+    const minor = Number(intent.amountMinor);
+    const amountLabel = Number.isFinite(minor)
+      ? formatMoneyMinorUnits("en", minor, intent.currency || "USD")
+      : amount;
+    const firstName = result.data.customerFirstName?.trim() || "Investor";
+
+    setSuccessSummary({
+      firstName,
+      amountLabel,
+      currency: intent.currency || "USD",
+      network: intent.fundingNetwork || selectedWallet.network,
+      reference: intent.providerIntentId || intent.id,
+      submittedAtLabel: formatDateTime("en", intent.createdAt || new Date().toISOString()),
+    });
+    setStep("notify");
+  }
+
+  function onSuccessConfirm() {
+    setSuccessSummary(null);
+    router.push("/wallet");
   }
 
   if (walletsLoading) {
@@ -160,6 +195,11 @@ export function DepositJourney() {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
+      <DepositSuccessModal
+        open={successSummary !== null}
+        summary={successSummary}
+        onConfirm={onSuccessConfirm}
+      />
       <FormStepIndicator
         steps={["Asset", "Transfer", "Notify", "Status"]}
         currentStep={step === "select" ? 1 : step === "transfer" ? 2 : 3}

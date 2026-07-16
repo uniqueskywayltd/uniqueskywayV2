@@ -84,6 +84,8 @@ export function serializeDepositIntent(deposit: DepositIntentRecord) {
     currency: deposit.currency,
     amountMinor: deposit.amountMinor.toString(),
     status: deposit.status,
+    fundingAsset: deposit.fundingAsset,
+    fundingNetwork: deposit.fundingNetwork,
     providerAuthorizationUrl: deposit.providerAuthorizationUrl,
     confirmationLedgerTransactionId: deposit.confirmationLedgerTransactionId,
     createdAt: deposit.createdAt.toISOString(),

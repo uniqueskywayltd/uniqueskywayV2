@@ -15,6 +15,7 @@ import {
   DepositApprovedEmail,
   DepositRejectedEmail,
   DepositSubmittedEmail,
+  AdminDepositSubmittedEmail,
   InvestmentActivatedEmail,
   InvestmentMaturedEmail,
   ReferralCommissionEmail,
@@ -289,9 +290,51 @@ function buildEmail(
     case "deposit.initiated":
       return {
         previewId: "deposit-submitted",
-        subject: "Deposit submitted",
-        text: financialPlainText.depositSubmitted({ ...base, status: status ?? "Pending review" }),
-        element: DepositSubmittedEmail({ ...base, status: status ?? "Pending review" }),
+        subject: "Deposit submitted successfully",
+        text: financialPlainText.depositSubmitted({
+          ...base,
+          status: status ?? "Awaiting Review",
+        }),
+        element: DepositSubmittedEmail({ ...base, status: status ?? "Awaiting Review" }),
+      };
+    case "admin.deposit_submitted":
+      return {
+        previewId: "deposit-submitted",
+        subject: `New deposit awaiting review — ${referenceId ?? "deposit"}`,
+        text: [
+          "New deposit submitted",
+          "",
+          `Customer: ${name}`,
+          readString(metadata.customerEmail)
+            ? `Email: ${readString(metadata.customerEmail)}`
+            : null,
+          amount ? `Amount: ${amount}` : null,
+          readString(metadata.fundingNetwork) || readString(metadata.paymentMethod)
+            ? `Network/Method: ${readString(metadata.fundingNetwork) ?? readString(metadata.paymentMethod)}`
+            : null,
+          referenceId ? `Reference: ${referenceId}` : null,
+          readString(metadata.requestDate)
+            ? `Submitted: ${readString(metadata.requestDate)}`
+            : null,
+          "",
+          `Review: ${readString(metadata.adminDashboardUrl) ?? dashboardUrl}`,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        element: AdminDepositSubmittedEmail({
+          ...base,
+          name: "Finance Team",
+          status: status ?? "Awaiting Review",
+          ...(readString(metadata.customerEmail)
+            ? { customerEmail: readString(metadata.customerEmail)! }
+            : {}),
+          ...(readString(metadata.fundingNetwork)
+            ? { network: readString(metadata.fundingNetwork)! }
+            : {}),
+          ...(readString(metadata.adminDashboardUrl)
+            ? { adminDashboardUrl: readString(metadata.adminDashboardUrl)! }
+            : {}),
+        }),
       };
     case "deposit.confirmed":
       return {

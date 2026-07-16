@@ -28,6 +28,11 @@ import type {
   PaymentRepository,
 } from "@/infrastructure/database";
 
+import { PLATFORM_SUPPORT_EMAIL } from "@/config/email-identity";
+import { getServerEnv } from "@/config/server-env";
+import { resolvePublicAppUrl } from "@/config/public-app-url";
+import { formatEmailDateTime } from "@/emails/format-datetime";
+import { formatMoneyMinorUnits } from "@/i18n/format";
 import { MANUAL_DEPOSIT_PROVIDER } from "./funding-constants";
 import type { CreateDepositIntentInput } from "./schemas";
 
@@ -41,6 +46,7 @@ const FINANCE_ADMIN_ROLES = new Set([
 ]);
 const DEPOSIT_EMAIL_TEMPLATES = {
   initiated: "deposit.initiated",
+  adminInitiated: "admin.deposit_submitted",
   confirmed: "deposit.confirmed",
   failed: "deposit.failed",
   cancelled: "deposit.cancelled",
@@ -73,6 +79,7 @@ export interface CreateDepositIntentResult {
   depositIntent: DepositIntentRecord;
   providerAction: null;
   idempotent: boolean;
+  customerFirstName: string | null;
 }
 
 export interface AdminDepositActionResult {
@@ -120,13 +127,14 @@ export class DepositEngineService {
 
     const appUser = await this.requireCurrentVerifiedAppUser();
     await this.requireActiveCustomerAccount(appUser.id);
+    const customerFirstName = await this.resolveCustomerFirstName(appUser.id);
 
     const existing = await this.deps.paymentRepository.findDepositIntentByIdempotencyKey(
       input.idempotencyKey,
     );
     if (existing) {
       this.assertIdempotencyOwnership(existing, appUser.id);
-      return this.toCreateDepositIntentResult(existing, true);
+      return this.toCreateDepositIntentResult(existing, true, customerFirstName);
     }
 
     const fundingWallet = await this.deps.paymentRepository.findFundingWalletById(
@@ -182,11 +190,17 @@ export class DepositEngineService {
         transactionHash: input.transactionHash,
       });
 
-      await this.enqueueDepositInitiatedSideEffects(tx, deposit, appUser.email, context);
+      await this.enqueueDepositInitiatedSideEffects(
+        tx,
+        deposit,
+        appUser.email,
+        customerFirstName,
+        context,
+      );
       return deposit;
     });
 
-    return this.toCreateDepositIntentResult(pending, false);
+    return this.toCreateDepositIntentResult(pending, false, customerFirstName);
   }
 
   async cancelDepositIntent(
@@ -581,25 +595,58 @@ export class DepositEngineService {
   private toCreateDepositIntentResult(
     depositIntent: DepositIntentRecord,
     idempotent: boolean,
+    customerFirstName: string | null,
   ): CreateDepositIntentResult {
     return {
       depositIntent,
       idempotent,
       providerAction: null,
+      customerFirstName,
     };
+  }
+
+  private async resolveCustomerFirstName(userId: string): Promise<string | null> {
+    const profile = await this.deps.coreRepository.findCustomerProfileByUserId(userId);
+    const source = (profile?.legalName ?? profile?.displayName ?? "").trim();
+    if (!source) return null;
+    const token = source.split(/\s+/)[0]?.replace(/[^A-Za-zÀ-ÿ'-]/g, "") ?? "";
+    if (token.length < 2) return null;
+    return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
   }
 
   private async enqueueDepositInitiatedSideEffects(
     tx: DrizzleTransactionContext,
     deposit: DepositIntentRecord,
     email: string,
+    customerFirstName: string | null,
     context: RequestAuditContext,
   ) {
+    const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
+    const amountLabel = formatMoneyMinorUnits("en", Number(deposit.amountMinor), deposit.currency);
+    const network = deposit.fundingNetwork ?? "—";
+    const asset = deposit.fundingAsset ?? "";
+    const paymentMethod = asset ? `${asset} (${network})` : network;
+    const requestDate = formatEmailDateTime(deposit.createdAt.toISOString());
+    const firstName = customerFirstName ?? "Investor";
+    const payload = {
+      ...depositEventPayload(deposit),
+      name: firstName,
+      firstName,
+      amount: amountLabel,
+      paymentMethod,
+      fundingNetwork: network,
+      requestDate,
+      status: "Awaiting Review",
+      dashboardUrl: `${appUrl}/wallet/deposits/${deposit.id}`,
+      adminDashboardUrl: `${appUrl}/admin/deposits/${deposit.id}`,
+      customerEmail: email,
+    };
+
     await this.deps.notificationRepository.enqueueOutboxEvent(tx, {
       eventType: "deposit.initiated",
       aggregateType: "deposit_intent",
       aggregateId: deposit.id,
-      payload: depositEventPayload(deposit),
+      payload,
     });
     await this.deps.notificationRepository.createNotification(tx, {
       userId: deposit.userId,
@@ -607,7 +654,7 @@ export class DepositEngineService {
       title: "Deposit submitted",
       body: "Your deposit is awaiting manual review.",
       priority: "info",
-      data: depositEventPayload(deposit),
+      data: payload,
     });
     await this.deps.notificationRepository.enqueueEmail(tx, {
       recipientUserId: deposit.userId,
@@ -615,8 +662,19 @@ export class DepositEngineService {
       templateKey: DEPOSIT_EMAIL_TEMPLATES.initiated,
       templateVersion: "v1",
       idempotencyKey: `deposit.initiated:${deposit.id}`,
-      metadata: depositEventPayload(deposit),
+      metadata: payload,
     });
+
+    const adminEmail = getServerEnv().CONTACT_SUPPORT_EMAIL?.trim() || PLATFORM_SUPPORT_EMAIL;
+    await this.deps.notificationRepository.enqueueEmail(tx, {
+      recipientUserId: null,
+      toEmail: adminEmail,
+      templateKey: DEPOSIT_EMAIL_TEMPLATES.adminInitiated,
+      templateVersion: "v1",
+      idempotencyKey: `admin.deposit_submitted:${deposit.id}`,
+      metadata: payload,
+    });
+
     await this.appendCustomerAudit(tx, deposit.userId, "deposit.initiated", deposit.id, context);
   }
 
@@ -795,6 +853,7 @@ function depositEventPayload(deposit: DepositIntentRecord) {
     currency: deposit.currency,
     status: deposit.status,
     fundingAsset: deposit.fundingAsset,
+    fundingNetwork: deposit.fundingNetwork,
     transactionHash: deposit.transactionHash,
   };
 }

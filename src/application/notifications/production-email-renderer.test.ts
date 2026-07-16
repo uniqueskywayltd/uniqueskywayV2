@@ -112,6 +112,28 @@ describe("renderProductionEmail", () => {
     expect(rendered.html).toContain("Deposit approved");
   });
 
+  it("renders admin.deposit_submitted for finance notification", async () => {
+    const rendered = await renderProductionEmail({
+      templateKey: "admin.deposit_submitted",
+      metadata: {
+        name: "Alex Morgan",
+        customerEmail: "alex@example.com",
+        amountMinor: "250000",
+        currency: "USD",
+        providerIntentId: "USWDEP-TEST",
+        fundingNetwork: "TRC20",
+        adminDashboardUrl: "https://uniqueskyway.com/admin/deposits/dep_1",
+        status: "Awaiting Review",
+      },
+    });
+
+    expect(rendered.subject).toContain("New deposit awaiting review");
+    expect(rendered.html).toContain("New deposit submitted");
+    expect(rendered.html).toContain("alex@example.com");
+    expect(rendered.html).toContain("TRC20");
+    expect(rendered.html).toContain("Review deposit");
+  });
+
   it("renders daily ROI template", async () => {
     const rendered = await renderProductionEmail({
       templateKey: "investment.roi_credited",

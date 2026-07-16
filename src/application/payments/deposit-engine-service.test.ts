@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AuthenticatedUser } from "@/application/auth";
 import type { DepositIntentRecord } from "@/infrastructure/database";
@@ -8,7 +8,31 @@ import { MANUAL_DEPOSIT_PROVIDER } from "./funding-constants";
 
 const FUNDING_WALLET_ID = "00000000-0000-4000-8000-000000000001";
 
+const serverEnv = {
+  NODE_ENV: "test",
+  NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+  NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
+  DATABASE_URL: "postgres://postgres:postgres@localhost:5432/unique_sky_way_v2",
+  SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
+  RESEND_API_KEY: "resend-key",
+  RESEND_FROM_EMAIL: "security@uniqueskyway.example",
+  INTERNAL_JOB_TOKEN: "development-job-token",
+  LOG_LEVEL: "info",
+  CONTACT_SUPPORT_EMAIL: "finance@uniqueskyway.example",
+};
+
 describe("DepositEngineService", () => {
+  beforeEach(() => {
+    for (const [key, value] of Object.entries(serverEnv)) {
+      vi.stubEnv(key, value);
+    }
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("creates a pending manual deposit once for repeated idempotency keys", async () => {
     const fixture = createFixture();
 
@@ -49,6 +73,21 @@ describe("DepositEngineService", () => {
       expect.anything(),
       expect.objectContaining({ eventType: "deposit.initiated" }),
     );
+    expect(fixture.notificationRepository.enqueueEmail).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        templateKey: "deposit.initiated",
+        toEmail: "customer@example.com",
+      }),
+    );
+    expect(fixture.notificationRepository.enqueueEmail).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        templateKey: "admin.deposit_submitted",
+        toEmail: "finance@uniqueskyway.example",
+      }),
+    );
+    expect(first.customerFirstName).toBe("Avery");
   });
 
   it("confirms a pending deposit once when admin approval is replayed", async () => {
@@ -236,6 +275,16 @@ function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: b
       closedAt: null,
       createdAt: new Date("2026-07-13T12:00:00.000Z"),
       updatedAt: new Date("2026-07-13T12:00:00.000Z"),
+    })),
+    findCustomerProfileByUserId: vi.fn(async () => ({
+      id: "profile_1",
+      userId: "user_1",
+      legalName: "Avery Investor",
+      displayName: "Avery",
+      phone: null,
+      country: null,
+      stateRegion: null,
+      dateOfBirth: null,
     })),
   };
   const paymentRepository = {

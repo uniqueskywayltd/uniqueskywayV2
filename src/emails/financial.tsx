@@ -43,17 +43,51 @@ export function DepositSubmittedEmail(props: BaseProps) {
   return (
     <TransactionalEmail
       preview="Your deposit has been submitted for review"
-      heading="Deposit submitted"
-      badge={{ label: "Pending review", tone: "warning" }}
+      heading="Deposit submitted successfully"
+      badge={{ label: "Awaiting Review", tone: "warning" }}
       name={props.name}
-      intro="We received your deposit request and our finance team is reviewing it. You will be notified once a decision is made."
+      intro="Thank you — we received your deposit request and our Finance Team is reviewing it. Your blockchain transaction will be verified, and once confirmed your wallet will be credited automatically."
       details={details(props)}
-      cta={{ label: "View deposit", href: props.dashboardUrl ?? defaultDashboard() }}
+      footerNote="If additional information is required, our team will contact you using your registered email address."
+      cta={{ label: "View wallet", href: props.dashboardUrl ?? defaultDashboard() }}
     />
   );
 }
 
 DepositSubmittedEmail.PreviewProps = sampleBase;
+
+export function AdminDepositSubmittedEmail(
+  props: BaseProps & {
+    customerEmail?: string;
+    network?: string;
+    adminDashboardUrl?: string;
+  },
+) {
+  return (
+    <TransactionalEmail
+      preview="New deposit awaiting finance review"
+      heading="New deposit submitted"
+      badge={{ label: "Awaiting Review", tone: "warning" }}
+      name="Finance Team"
+      intro="A customer deposit request was submitted and requires review."
+      details={details(props, [
+        ...(props.customerEmail ? [{ label: "Customer email", value: props.customerEmail }] : []),
+        ...(props.network ? [{ label: "Network", value: props.network }] : []),
+      ])}
+      cta={{
+        label: "Review deposit",
+        href: props.adminDashboardUrl ?? props.dashboardUrl ?? defaultDashboard(),
+      }}
+    />
+  );
+}
+
+AdminDepositSubmittedEmail.PreviewProps = {
+  ...sampleBase,
+  customerEmail: "investor@example.com",
+  network: "TRC20",
+  adminDashboardUrl: "https://uniqueskyway.com/admin/deposits/deposit_1",
+};
 
 export function DepositApprovedEmail(props: BaseProps) {
   return (

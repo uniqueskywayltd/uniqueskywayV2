@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
         depositIntent: serializeDepositIntent(result.depositIntent),
         providerAction: serializeDepositProviderAction(),
         idempotent: result.idempotent,
+        customerFirstName: result.customerFirstName,
       },
       context.requestId,
       { status: result.idempotent ? 200 : 201 },

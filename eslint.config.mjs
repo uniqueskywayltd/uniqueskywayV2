@@ -7,6 +7,7 @@ export default defineConfig([
   ...nextTypescript,
   globalIgnores([
     ".next/**",
+    ".vercel/**",
     "coverage/**",
     "dist/**",
     "node_modules/**",
