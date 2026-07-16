@@ -40,6 +40,7 @@ export interface WalletWithdrawal {
   destinationReference: string;
   status: string;
   reviewReason: string | null;
+  providerPayoutReference?: string | null;
   createdAt: string;
   paidAt: string | null;
   updatedAt: string;

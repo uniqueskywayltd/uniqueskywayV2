@@ -17,6 +17,10 @@ import {
 import { getCustomerJson } from "@/features/customer/api-client";
 import { presentWithdrawalStatus } from "@/features/customer/wallet/status-presentation";
 import type { WalletWithdrawal } from "@/features/customer/wallet/types";
+import {
+  withdrawalDestinationSummary,
+  parseWithdrawalDestination,
+} from "@/lib/withdrawal-destination";
 import { cn } from "@/lib/utils";
 
 const FILTERS = [
@@ -103,11 +107,7 @@ export function WithdrawalHistory() {
 
   return (
     <div className="space-y-4">
-      <div
-        className="flex flex-wrap gap-2"
-        role="group"
-        aria-label="Filter withdrawals by status"
-      >
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Filter withdrawals by status">
         {FILTERS.map((option) => {
           const active = filter === option.value;
           return (
@@ -158,11 +158,13 @@ export function WithdrawalHistory() {
                       />
                     </TableCell>
                     <TableCell>
-                      <p className="capitalize text-sm text-foreground">
-                        {withdrawal.destinationType.replaceAll("_", " ")}
-                      </p>
-                      <p className="max-w-[10rem] truncate font-mono text-xs text-muted-foreground">
-                        {withdrawal.destinationReference}
+                      <p className="text-sm text-foreground">
+                        {withdrawalDestinationSummary(
+                          parseWithdrawalDestination(
+                            withdrawal.destinationType,
+                            withdrawal.destinationReference,
+                          ),
+                        )}
                       </p>
                     </TableCell>
                     <TableCell>

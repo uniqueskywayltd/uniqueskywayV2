@@ -180,6 +180,22 @@ export class AdminCustomerService {
           },
         });
 
+        const account = await this.deps.coreRepository.findCustomerAccountByUserId(appUser.id);
+        const { enqueueAdminEmail } = await import("@/application/notifications/admin-email");
+        await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+          eventType: "admin.customer_created",
+          idempotencyKey: `admin.customer_created:${appUser.id}`,
+          customerId: appUser.id,
+          metadata: {
+            customerName: legalName,
+            username,
+            customerEmail: appUser.email,
+            accountNumber: account?.accountNumber ?? null,
+            customerId: appUser.id,
+            adminDashboardUrl: `${appUrl}/admin/customers/${appUser.id}`,
+          },
+        });
+
         await this.appendAdminAudit(tx, admin.appUser.id, "customer.created", appUser.id, context, {
           email: appUser.email,
           createdByAdmin: true,

@@ -1,8 +1,10 @@
 import "server-only";
 
 import { AppError, isAppError } from "@/application/errors";
+import { enqueueAdminEmail } from "@/application/notifications/admin-email";
 import { resolvePublicAppUrl } from "@/config/public-app-url";
 import { getServerEnv } from "@/config/server-env";
+import { formatEmailDateTime } from "@/emails/format-datetime";
 import type {
   CoreRepository,
   DrizzleTransactionContext,
@@ -237,6 +239,28 @@ export class IdentityAuthService {
           },
         });
 
+        const account = await this.deps.coreRepository.findCustomerAccountByUserId(appUser.id);
+        const profile = await this.deps.coreRepository.findCustomerProfileByUserId(appUser.id);
+        await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+          eventType: "admin.registration",
+          idempotencyKey: `admin.registration:${appUser.id}`,
+          customerId: appUser.id,
+          metadata: {
+            customerName: legalName ?? displayName ?? name,
+            username: displayName ?? username ?? null,
+            customerEmail: appUser.email,
+            email: appUser.email,
+            country: profile?.country ?? context.approximateLocation ?? null,
+            stateRegion: profile?.stateRegion ?? context.approximateRegion ?? null,
+            registeredAt: formatEmailDateTime(new Date().toISOString()),
+            accountNumber: account?.accountNumber ?? null,
+            customerId: appUser.id,
+            referralCode: null,
+            verificationStatus: "Unverified",
+            adminDashboardUrl: `${appUrl}/admin/customers/${appUser.id}`,
+          },
+        });
+
         await this.appendAudit(tx, appUser.id, "auth.registered", "user", appUser.id, context);
       });
 
@@ -426,6 +450,19 @@ export class IdentityAuthService {
           requestId: context.requestId,
         },
       });
+
+      const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
+      await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+        eventType: "admin.email_verified",
+        idempotencyKey: `admin.email_verified:${appUser.id}`,
+        customerId: appUser.id,
+        metadata: {
+          customerName: appUser.email.split("@")[0] ?? "Customer",
+          customerEmail: appUser.email,
+          customerId: appUser.id,
+          adminDashboardUrl: `${appUrl}/admin/customers/${appUser.id}`,
+        },
+      });
     });
 
     this.clearPendingVerifyCookie();
@@ -562,6 +599,21 @@ export class IdentityAuthService {
             displayName: profile?.displayName ?? null,
             trigger: "auth.forgot_password",
             requestId: context.requestId,
+          },
+        });
+
+        await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+          eventType: "admin.password_reset_requested",
+          idempotencyKey: `admin.password_reset_requested:${generatedEmail.authUserId}:${authEmail.hashedToken}`,
+          customerId: appUser?.id ?? null,
+          metadata: {
+            customerName: name,
+            customerEmail: generatedEmail.email,
+            customerId: appUser?.id ?? null,
+            requestDate: formatEmailDateTime(new Date().toISOString()),
+            adminDashboardUrl: appUser
+              ? `${resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL)}/admin/customers/${appUser.id}`
+              : `${resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL)}/admin/customers`,
           },
         });
 
@@ -880,6 +932,24 @@ export class IdentityAuthService {
 
       if (!existingAppUser?.emailVerifiedAt) {
         await this.appendAudit(tx, appUser.id, "auth.email_verified", "user", appUser.id, context);
+      }
+
+      const previousEmail = existingAppUser?.email?.toLowerCase() ?? null;
+      const nextEmail = user.email!.toLowerCase();
+      if (previousEmail && previousEmail !== nextEmail) {
+        const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
+        await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+          eventType: "admin.email_changed",
+          idempotencyKey: `admin.email_changed:${appUser.id}:${previousEmail}:${nextEmail}`,
+          customerId: appUser.id,
+          metadata: {
+            customerName: user.displayName ?? nextEmail.split("@")[0] ?? "Customer",
+            previousEmail,
+            customerEmail: nextEmail,
+            customerId: appUser.id,
+            adminDashboardUrl: `${appUrl}/admin/customers/${appUser.id}`,
+          },
+        });
       }
 
       return appUser;

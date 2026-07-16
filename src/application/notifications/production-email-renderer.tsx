@@ -15,7 +15,6 @@ import {
   DepositApprovedEmail,
   DepositRejectedEmail,
   DepositSubmittedEmail,
-  AdminDepositSubmittedEmail,
   InvestmentActivatedEmail,
   InvestmentMaturedEmail,
   ReferralCommissionEmail,
@@ -27,6 +26,13 @@ import {
   WithdrawalSubmittedEmail,
   financialPlainText,
 } from "@/emails/financial";
+import {
+  AdminDepositReviewEmail,
+  AdminGenericNoticeEmail,
+  AdminInvestmentStartedEmail,
+  AdminNewRegistrationEmail,
+  AdminWithdrawalReviewEmail,
+} from "@/emails/admin-events";
 import NewDeviceLoginEmail from "@/emails/new-device-login";
 import PasswordChangedEmail from "@/emails/password-changed";
 import PasswordResetEmail from "@/emails/password-reset";
@@ -300,36 +306,359 @@ function buildEmail(
     case "admin.deposit_submitted":
       return {
         previewId: "deposit-submitted",
-        subject: `New deposit awaiting review — ${referenceId ?? "deposit"}`,
+        subject: "💰 New Deposit Awaiting Review",
         text: [
-          "New deposit submitted",
+          "New deposit awaiting review",
           "",
-          `Customer: ${name}`,
+          `Customer: ${readString(metadata.customerName) ?? name}`,
           readString(metadata.customerEmail)
             ? `Email: ${readString(metadata.customerEmail)}`
             : null,
           amount ? `Amount: ${amount}` : null,
-          readString(metadata.fundingNetwork) || readString(metadata.paymentMethod)
-            ? `Network/Method: ${readString(metadata.fundingNetwork) ?? readString(metadata.paymentMethod)}`
+          readString(metadata.fundingNetwork) || readString(metadata.network)
+            ? `Network: ${readString(metadata.fundingNetwork) ?? readString(metadata.network)}`
             : null,
           referenceId ? `Reference: ${referenceId}` : null,
-          readString(metadata.requestDate)
-            ? `Submitted: ${readString(metadata.requestDate)}`
-            : null,
           "",
           `Review: ${readString(metadata.adminDashboardUrl) ?? dashboardUrl}`,
         ]
           .filter(Boolean)
           .join("\n"),
-        element: AdminDepositSubmittedEmail({
-          ...base,
-          name: "Finance Team",
-          status: status ?? "Awaiting Review",
+        element: AdminDepositReviewEmail({
+          customerName: readString(metadata.customerName) ?? name,
           ...(readString(metadata.customerEmail)
             ? { customerEmail: readString(metadata.customerEmail)! }
             : {}),
-          ...(readString(metadata.fundingNetwork)
-            ? { network: readString(metadata.fundingNetwork)! }
+          currency: readString(metadata.currency) ?? "USD",
+          ...((readString(metadata.fundingNetwork) ?? readString(metadata.network))
+            ? {
+                network: (readString(metadata.fundingNetwork) ?? readString(metadata.network))!,
+              }
+            : {}),
+          ...(amount ? { amount } : {}),
+          ...(readString(metadata.transactionHash)
+            ? { transactionHash: readString(metadata.transactionHash)! }
+            : {}),
+          ...(referenceId ? { referenceId } : {}),
+          ...(readString(metadata.requestDate)
+            ? { requestDate: readString(metadata.requestDate)! }
+            : {}),
+          ...(readString(metadata.adminDashboardUrl)
+            ? { adminDashboardUrl: readString(metadata.adminDashboardUrl)! }
+            : {}),
+        }),
+      };
+    case "admin.deposit_approved":
+      return {
+        previewId: "deposit-approved",
+        subject: "✅ Deposit Approved",
+        text: `Deposit approved\n\nCustomer: ${readString(metadata.customerName) ?? name}\nAmount: ${amount ?? "—"}\nReference: ${referenceId ?? "—"}`,
+        element: AdminDepositReviewEmail({
+          heading: "Deposit Approved",
+          intro: "A customer deposit was approved and the wallet was credited.",
+          badgeLabel: "Approved",
+          badgeTone: "success",
+          ctaLabel: "View Deposit",
+          customerName: readString(metadata.customerName) ?? name,
+          ...(readString(metadata.customerEmail)
+            ? { customerEmail: readString(metadata.customerEmail)! }
+            : {}),
+          currency: readString(metadata.currency) ?? "USD",
+          ...(amount ? { amount } : {}),
+          ...(referenceId ? { referenceId } : {}),
+          ...(readString(metadata.adminDashboardUrl)
+            ? { adminDashboardUrl: readString(metadata.adminDashboardUrl)! }
+            : {}),
+        }),
+      };
+    case "admin.deposit_rejected":
+      return {
+        previewId: "deposit-rejected",
+        subject: "❌ Deposit Rejected",
+        text: `Deposit rejected\n\nCustomer: ${readString(metadata.customerName) ?? name}\nAmount: ${amount ?? "—"}\nReference: ${referenceId ?? "—"}`,
+        element: AdminDepositReviewEmail({
+          heading: "Deposit Rejected",
+          intro: "A customer deposit was rejected.",
+          badgeLabel: "Rejected",
+          badgeTone: "danger",
+          ctaLabel: "View Deposit",
+          customerName: readString(metadata.customerName) ?? name,
+          ...(readString(metadata.customerEmail)
+            ? { customerEmail: readString(metadata.customerEmail)! }
+            : {}),
+          currency: readString(metadata.currency) ?? "USD",
+          ...(amount ? { amount } : {}),
+          ...(referenceId ? { referenceId } : {}),
+          ...(readString(metadata.adminDashboardUrl)
+            ? { adminDashboardUrl: readString(metadata.adminDashboardUrl)! }
+            : {}),
+        }),
+      };
+    case "admin.withdrawal_requested":
+      return {
+        previewId: "withdrawal-submitted",
+        subject: "📤 New Withdrawal Request",
+        text: `New withdrawal request\n\nCustomer: ${readString(metadata.customerName) ?? name}\nAmount: ${amount ?? "—"}\nDestination: ${readString(metadata.destination) ?? "—"}`,
+        element: AdminWithdrawalReviewEmail({
+          customerName: readString(metadata.customerName) ?? name,
+          ...(amount ? { amount } : {}),
+          currency: readString(metadata.currency) ?? "USD",
+          ...(readString(metadata.destination)
+            ? { destination: readString(metadata.destination)! }
+            : {}),
+          ...(referenceId ? { referenceId } : {}),
+          ...(readString(metadata.requestDate)
+            ? { requestDate: readString(metadata.requestDate)! }
+            : {}),
+          ...(readString(metadata.adminDashboardUrl)
+            ? { adminDashboardUrl: readString(metadata.adminDashboardUrl)! }
+            : {}),
+        }),
+      };
+    case "admin.withdrawal_approved":
+      return {
+        previewId: "withdrawal-approved",
+        subject: "✅ Withdrawal Approved",
+        text: `Withdrawal approved\n\nCustomer: ${readString(metadata.customerName) ?? name}\nAmount: ${amount ?? "—"}`,
+        element: AdminWithdrawalReviewEmail({
+          heading: "Withdrawal Approved",
+          intro: "A customer withdrawal was approved.",
+          badgeLabel: "Approved",
+          badgeTone: "success",
+          ctaLabel: "View Withdrawal",
+          customerName: readString(metadata.customerName) ?? name,
+          ...(amount ? { amount } : {}),
+          currency: readString(metadata.currency) ?? "USD",
+          ...(readString(metadata.destination)
+            ? { destination: readString(metadata.destination)! }
+            : {}),
+          ...(referenceId ? { referenceId } : {}),
+          ...(readString(metadata.adminDashboardUrl)
+            ? { adminDashboardUrl: readString(metadata.adminDashboardUrl)! }
+            : {}),
+        }),
+      };
+    case "admin.withdrawal_rejected":
+      return {
+        previewId: "withdrawal-rejected",
+        subject: "❌ Withdrawal Rejected",
+        text: `Withdrawal rejected\n\nCustomer: ${readString(metadata.customerName) ?? name}\nAmount: ${amount ?? "—"}`,
+        element: AdminWithdrawalReviewEmail({
+          heading: "Withdrawal Rejected",
+          intro: "A customer withdrawal was rejected.",
+          badgeLabel: "Rejected",
+          badgeTone: "danger",
+          ctaLabel: "View Withdrawal",
+          customerName: readString(metadata.customerName) ?? name,
+          ...(amount ? { amount } : {}),
+          currency: readString(metadata.currency) ?? "USD",
+          ...(readString(metadata.destination)
+            ? { destination: readString(metadata.destination)! }
+            : {}),
+          ...(referenceId ? { referenceId } : {}),
+          ...(readString(metadata.adminDashboardUrl)
+            ? { adminDashboardUrl: readString(metadata.adminDashboardUrl)! }
+            : {}),
+        }),
+      };
+    case "admin.investment_started":
+      return {
+        previewId: "investment-activated",
+        subject: "📈 New Investment Started",
+        text: `New investment started\n\nCustomer: ${readString(metadata.customerName) ?? name}\nPlan: ${readString(metadata.planName) ?? "—"}\nAmount: ${amount ?? "—"}`,
+        element: AdminInvestmentStartedEmail({
+          customerName: readString(metadata.customerName) ?? name,
+          ...(readString(metadata.planName) ? { planName: readString(metadata.planName)! } : {}),
+          ...(amount ? { amount } : {}),
+          ...(readString(metadata.dailyRoi) || readString(metadata.dailyRate)
+            ? { dailyRoi: readString(metadata.dailyRoi) ?? readString(metadata.dailyRate)! }
+            : {}),
+          ...(readString(metadata.duration) ? { duration: readString(metadata.duration)! } : {}),
+          ...(readString(metadata.expectedRoi) || readString(metadata.expectedProfit)
+            ? {
+                expectedRoi:
+                  readString(metadata.expectedRoi) ?? readString(metadata.expectedProfit)!,
+              }
+            : {}),
+          ...(readString(metadata.maturityValue)
+            ? { maturityValue: readString(metadata.maturityValue)! }
+            : {}),
+          ...(readString(metadata.startDateTime)
+            ? { startDateTime: readString(metadata.startDateTime)! }
+            : {}),
+          ...(referenceId ? { referenceId } : {}),
+          ...(readString(metadata.adminDashboardUrl)
+            ? { adminDashboardUrl: readString(metadata.adminDashboardUrl)! }
+            : {}),
+        }),
+      };
+    case "admin.investment_stopped":
+      return {
+        previewId: "investment-matured",
+        subject: "⏹ Investment Stopped Early",
+        text: `Investment stopped early\n\nCustomer: ${readString(metadata.customerName) ?? name}\nReference: ${referenceId ?? "—"}`,
+        element: AdminGenericNoticeEmail({
+          preview: "Investment stopped early",
+          heading: "Investment Stopped Early",
+          intro: "A customer stopped an investment before maturity.",
+          badgeLabel: "Stopped",
+          badgeTone: "warning",
+          details: [
+            { label: "Customer Name", value: readString(metadata.customerName) ?? name },
+            { label: "Amount Released", value: amount ?? "—" },
+            { label: "Reference", value: referenceId ?? "—" },
+          ],
+          ctaLabel: "View Investment",
+          ctaHref:
+            readString(metadata.adminDashboardUrl) ??
+            (referenceId
+              ? `${brand.url}/admin/investments/${referenceId}`
+              : `${brand.url}/admin/investments`),
+        }),
+      };
+    case "admin.investment_matured":
+      return {
+        previewId: "investment-matured",
+        subject: "🏁 Investment Matured",
+        text: `Investment matured\n\nCustomer: ${readString(metadata.customerName) ?? name}\nReference: ${referenceId ?? "—"}`,
+        element: AdminGenericNoticeEmail({
+          preview: "Investment matured",
+          heading: "Investment Matured",
+          intro: "A customer investment reached maturity.",
+          badgeLabel: "Matured",
+          badgeTone: "success",
+          details: [
+            { label: "Customer Name", value: readString(metadata.customerName) ?? name },
+            { label: "Plan", value: readString(metadata.planName) ?? "—" },
+            { label: "Amount", value: amount ?? "—" },
+            { label: "Reference", value: referenceId ?? "—" },
+          ],
+          ctaLabel: "View Investment",
+          ctaHref:
+            readString(metadata.adminDashboardUrl) ??
+            (referenceId
+              ? `${brand.url}/admin/investments/${referenceId}`
+              : `${brand.url}/admin/investments`),
+        }),
+      };
+    case "admin.registration":
+      return {
+        previewId: "welcome",
+        subject: "🆕 New Customer Registration",
+        text: `New customer registration\n\nName: ${readString(metadata.customerName) ?? name}\nEmail: ${readString(metadata.customerEmail) ?? "—"}\nCustomer ID: ${readString(metadata.accountNumber) ?? readString(metadata.customerId) ?? "—"}`,
+        element: AdminNewRegistrationEmail({
+          customerName: readString(metadata.customerName) ?? name,
+          ...(readString(metadata.username) ? { username: readString(metadata.username)! } : {}),
+          ...(readString(metadata.customerEmail) || readString(metadata.email)
+            ? { email: readString(metadata.customerEmail) ?? readString(metadata.email)! }
+            : {}),
+          ...(readString(metadata.country) ? { country: readString(metadata.country)! } : {}),
+          ...(readString(metadata.stateRegion)
+            ? { stateRegion: readString(metadata.stateRegion)! }
+            : {}),
+          ...(readString(metadata.registeredAt)
+            ? { registeredAt: readString(metadata.registeredAt)! }
+            : {}),
+          ...(readString(metadata.accountNumber) || readString(metadata.customerId)
+            ? {
+                customerId: readString(metadata.accountNumber) ?? readString(metadata.customerId)!,
+              }
+            : {}),
+          ...(readString(metadata.referralCode)
+            ? { referralCode: readString(metadata.referralCode)! }
+            : {}),
+          verificationStatus: readString(metadata.verificationStatus) ?? "Unverified",
+          ...(readString(metadata.adminDashboardUrl)
+            ? { adminDashboardUrl: readString(metadata.adminDashboardUrl)! }
+            : {}),
+        }),
+      };
+    case "admin.email_verified":
+      return {
+        previewId: "welcome",
+        subject: "✅ Customer Email Verified",
+        text: `Customer email verified\n\nEmail: ${readString(metadata.customerEmail) ?? "—"}\nCustomer ID: ${readString(metadata.customerId) ?? "—"}`,
+        element: AdminGenericNoticeEmail({
+          preview: "Customer email verified",
+          heading: "Customer Email Verified",
+          intro: "A customer verified their email address.",
+          badgeLabel: "Verified",
+          badgeTone: "success",
+          details: [
+            { label: "Customer Name", value: readString(metadata.customerName) ?? name },
+            { label: "Email Address", value: readString(metadata.customerEmail) ?? "—" },
+            { label: "Customer ID", value: readString(metadata.customerId) ?? "—" },
+          ],
+          ctaLabel: "View Customer",
+          ctaHref:
+            readString(metadata.adminDashboardUrl) ??
+            (readString(metadata.customerId)
+              ? `${brand.url}/admin/customers/${readString(metadata.customerId)}`
+              : `${brand.url}/admin/customers`),
+        }),
+      };
+    case "admin.email_changed":
+      return {
+        previewId: "welcome",
+        subject: "✉️ Customer Email Changed",
+        text: `Customer email changed\n\nPrevious: ${readString(metadata.previousEmail) ?? "—"}\nNew: ${readString(metadata.customerEmail) ?? "—"}`,
+        element: AdminGenericNoticeEmail({
+          preview: "Customer email changed",
+          heading: "Customer Email Changed",
+          intro: "A customer account email address was updated.",
+          badgeLabel: "Email changed",
+          badgeTone: "warning",
+          details: [
+            { label: "Customer Name", value: readString(metadata.customerName) ?? name },
+            { label: "Previous Email", value: readString(metadata.previousEmail) ?? "—" },
+            { label: "New Email", value: readString(metadata.customerEmail) ?? "—" },
+            { label: "Customer ID", value: readString(metadata.customerId) ?? "—" },
+          ],
+          ctaLabel: "View Customer",
+          ctaHref:
+            readString(metadata.adminDashboardUrl) ??
+            (readString(metadata.customerId)
+              ? `${brand.url}/admin/customers/${readString(metadata.customerId)}`
+              : `${brand.url}/admin/customers`),
+        }),
+      };
+    case "admin.password_reset_requested":
+      return {
+        previewId: "welcome",
+        subject: "🔑 Password Reset Requested",
+        text: `Password reset requested\n\nEmail: ${readString(metadata.customerEmail) ?? "—"}`,
+        element: AdminGenericNoticeEmail({
+          preview: "Password reset requested",
+          heading: "Password Reset Requested",
+          intro: "A customer requested a password reset.",
+          badgeLabel: "Security",
+          badgeTone: "warning",
+          details: [
+            { label: "Customer Name", value: readString(metadata.customerName) ?? name },
+            { label: "Email Address", value: readString(metadata.customerEmail) ?? "—" },
+            { label: "Customer ID", value: readString(metadata.customerId) ?? "—" },
+            { label: "Requested At", value: readString(metadata.requestDate) ?? "—" },
+          ],
+          ctaLabel: "View Customers",
+          ctaHref: readString(metadata.adminDashboardUrl) ?? `${brand.url}/admin/customers`,
+        }),
+      };
+    case "admin.customer_created":
+      return {
+        previewId: "welcome",
+        subject: "🆕 Administrator Created Customer",
+        text: `Administrator created a customer\n\nEmail: ${readString(metadata.customerEmail) ?? "—"}\nUsername: ${readString(metadata.username) ?? "—"}`,
+        element: AdminNewRegistrationEmail({
+          customerName: readString(metadata.customerName) ?? name,
+          ...(readString(metadata.username) ? { username: readString(metadata.username)! } : {}),
+          ...(readString(metadata.customerEmail)
+            ? { email: readString(metadata.customerEmail)! }
+            : {}),
+          verificationStatus: "Verified (admin created)",
+          ...(readString(metadata.accountNumber) || readString(metadata.customerId)
+            ? {
+                customerId: readString(metadata.accountNumber) ?? readString(metadata.customerId)!,
+              }
             : {}),
           ...(readString(metadata.adminDashboardUrl)
             ? { adminDashboardUrl: readString(metadata.adminDashboardUrl)! }

@@ -21,8 +21,8 @@ import {
   formatUsdFromMinor,
   friendlyClientError,
   fundingMethodLabel,
-  humanizeStatus,
 } from "../lib/presentation";
+import { parseWithdrawalDestination, shortenWalletAddress } from "@/lib/withdrawal-destination";
 import { AdminInfoRow, AdminInfoSection, AdminStatusBadge } from "./admin-info";
 import { AdminErrorBlock, AdminLoadingBlock, AdminPageHeader } from "./admin-states";
 
@@ -228,19 +228,44 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
         </AdminInfoSection>
       ) : (
         <AdminInfoSection title="Withdrawal Information">
-          <AdminInfoRow label="Amount" value={amount} emphasize />
+          <AdminInfoRow label="Withdrawal Amount" value={amount} emphasize />
           <AdminInfoRow label="Currency" value={currency} />
-          <AdminInfoRow
-            label="Deposit Method"
-            value={fundingMethodLabel(withdrawal?.provider) || "Manual"}
-          />
-          <AdminInfoRow
-            label="Destination Type"
-            value={humanizeStatus(withdrawal?.destinationType ?? "")}
-          />
-          <AdminInfoRow label="Destination" value={withdrawal?.destinationReference || "—"} mono />
+          {(() => {
+            const destination = parseWithdrawalDestination(
+              withdrawal?.destinationType,
+              withdrawal?.destinationReference,
+            );
+            if (destination.kind === "crypto") {
+              return (
+                <>
+                  <AdminInfoRow label="Withdrawal Method" value={destination.methodLabel} />
+                  <AdminInfoRow label="Network" value={destination.networkLabel} />
+                  <AdminInfoRow
+                    label="Wallet Address"
+                    value={shortenWalletAddress(destination.address)}
+                    mono
+                  />
+                  <AdminInfoRow label="Full Wallet Address" value={destination.address} mono />
+                </>
+              );
+            }
+            if (destination.kind === "bank") {
+              return (
+                <>
+                  <AdminInfoRow label="Withdrawal Method" value="Bank Transfer" />
+                  <AdminInfoRow label="Bank Name" value={destination.bankName} />
+                  <AdminInfoRow label="Account Name" value={destination.accountName} />
+                  <AdminInfoRow label="Account Number" value={destination.accountNumber} />
+                </>
+              );
+            }
+            return <AdminInfoRow label="Destination" value={destination.summary} />;
+          })()}
           <AdminInfoRow label="Submitted" value={formatAdminDateTime(withdrawal?.createdAt)} />
           <AdminInfoRow label="Reference" value={withdrawal?.providerPayoutReference || "—"} mono />
+          {withdrawal?.reviewReason ? (
+            <AdminInfoRow label="Reason" value={withdrawal.reviewReason} />
+          ) : null}
           {withdrawal?.paidAt ? (
             <AdminInfoRow label="Paid" value={formatAdminDateTime(withdrawal.paidAt)} />
           ) : null}

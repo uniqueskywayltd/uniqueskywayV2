@@ -10,6 +10,11 @@ import { FormStepIndicator } from "@/components/ui/form-step-indicator";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
 import { useI18n } from "@/features/i18n/i18n-provider";
 import type { WalletOverviewResponse } from "@/features/customer/wallet/types";
+import {
+  cryptoMethodLabel,
+  networkDisplayLabel,
+  shortenWalletAddress,
+} from "@/lib/withdrawal-destination";
 
 interface CreateWithdrawalResponse {
   withdrawal: { id: string };
@@ -245,20 +250,56 @@ export function WithdrawalJourney() {
 
       {step === "confirm" || step === "submitting" ? (
         <div className="space-y-4 rounded-2xl border bg-card p-5">
-          <p className="text-sm">
-            Withdraw{" "}
-            <strong>
-              {amountMinor !== null ? (
-                <CurrencyDisplay amountMinor={amountMinor} currency="USD" />
-              ) : (
-                amount
-              )}
-            </strong>{" "}
-            via {mode === "crypto_wallet" ? `${asset} wallet` : "bank transfer"}.
-          </p>
-          <pre className="overflow-x-auto rounded-md border bg-muted/30 p-3 text-xs">
-            {destinationReference()}
-          </pre>
+          <p className="text-sm text-muted-foreground">Please confirm your withdrawal request.</p>
+          <dl className="space-y-2 text-sm">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Amount</dt>
+              <dd className="font-semibold">
+                {amountMinor !== null ? (
+                  <CurrencyDisplay amountMinor={amountMinor} currency="USD" />
+                ) : (
+                  amount
+                )}
+              </dd>
+            </div>
+            {mode === "crypto_wallet" ? (
+              <>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Withdrawal Method</dt>
+                  <dd>{cryptoMethodLabel(asset)}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Network</dt>
+                  <dd>{networkDisplayLabel(network)}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Destination Wallet</dt>
+                  <dd className="font-mono text-xs">
+                    {shortenWalletAddress(walletAddress.trim())}
+                  </dd>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Withdrawal Method</dt>
+                  <dd>Bank Transfer</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Bank Name</dt>
+                  <dd>{bankName.trim()}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Account Name</dt>
+                  <dd>{accountName.trim()}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Account Number</dt>
+                  <dd>{accountNumber.trim()}</dd>
+                </div>
+              </>
+            )}
+          </dl>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <div className="flex gap-2">
             <Button

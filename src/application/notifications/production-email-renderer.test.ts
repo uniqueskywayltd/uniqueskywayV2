@@ -127,11 +127,45 @@ describe("renderProductionEmail", () => {
       },
     });
 
-    expect(rendered.subject).toContain("New deposit awaiting review");
-    expect(rendered.html).toContain("New deposit submitted");
+    expect(rendered.subject).toContain("New Deposit Awaiting Review");
+    expect(rendered.html).toContain("New Deposit Awaiting Review");
     expect(rendered.html).toContain("alex@example.com");
     expect(rendered.html).toContain("TRC20");
-    expect(rendered.html).toContain("Review deposit");
+    expect(rendered.html).toContain("Review Deposit");
+  });
+
+  it("renders admin.registration for administrator notification", async () => {
+    const rendered = await renderProductionEmail({
+      templateKey: "admin.registration",
+      metadata: {
+        customerName: "Alex Morgan",
+        username: "alex",
+        customerEmail: "alex@example.com",
+        country: "US",
+        accountNumber: "USW-1001",
+        verificationStatus: "Unverified",
+        adminDashboardUrl: "https://uniqueskyway.com/admin/customers/1",
+      },
+    });
+    expect(rendered.subject).toContain("New Customer Registration");
+    expect(rendered.html).toContain("View Customer");
+  });
+
+  it("renders admin.withdrawal_requested without raw JSON", async () => {
+    const rendered = await renderProductionEmail({
+      templateKey: "admin.withdrawal_requested",
+      metadata: {
+        customerName: "Alex",
+        amountMinor: "250000",
+        currency: "USD",
+        destination: "Bitcoin (BTC) · e43tgb...gtfred",
+        providerPayoutReference: "USWWTH-1",
+        adminDashboardUrl: "https://uniqueskyway.com/admin/withdrawals/1",
+      },
+    });
+    expect(rendered.subject).toContain("New Withdrawal Request");
+    expect(rendered.html).toContain("Review Withdrawal");
+    expect(rendered.html).not.toContain('{"asset"');
   });
 
   it("renders daily ROI template", async () => {

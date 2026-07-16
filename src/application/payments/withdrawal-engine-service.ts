@@ -24,6 +24,15 @@ import type {
   WithdrawalRequestRecord,
 } from "@/infrastructure/database";
 
+import { enqueueAdminEmail } from "@/application/notifications/admin-email";
+import { getServerEnv } from "@/config/server-env";
+import { resolvePublicAppUrl } from "@/config/public-app-url";
+import { formatEmailDateTime } from "@/emails/format-datetime";
+import { formatMoneyMinorUnits } from "@/i18n/format";
+import {
+  parseWithdrawalDestination,
+  withdrawalDestinationSummary,
+} from "@/lib/withdrawal-destination";
 import { createPaymentAuditContext, type RequestAuditContext } from "./deposit-engine-service";
 import { MANUAL_WITHDRAWAL_PROVIDER } from "./funding-constants";
 import type { AdminWithdrawalReviewInput, CreateWithdrawalRequestInput } from "./schemas";
@@ -740,6 +749,9 @@ export class WithdrawalEngineService {
       idempotencyKey: `withdrawal.requested:${withdrawal.id}`,
       metadata: withdrawalEventPayload(withdrawal),
     });
+
+    await this.enqueueAdminWithdrawalNotice(tx, withdrawal, "admin.withdrawal_requested", email);
+
     await this.appendCustomerAudit(
       tx,
       withdrawal.userId,
@@ -782,6 +794,14 @@ export class WithdrawalEngineService {
         metadata: withdrawalEventPayload(withdrawal),
       });
     }
+
+    await this.enqueueAdminWithdrawalNotice(
+      tx,
+      withdrawal,
+      "admin.withdrawal_approved",
+      user?.email,
+    );
+
     await this.appendCustomerAudit(
       tx,
       withdrawal.userId,
@@ -821,6 +841,14 @@ export class WithdrawalEngineService {
         metadata: withdrawalEventPayload(withdrawal),
       });
     }
+
+    await this.enqueueAdminWithdrawalNotice(
+      tx,
+      withdrawal,
+      "admin.withdrawal_rejected",
+      user?.email,
+    );
+
     await this.appendCustomerAudit(
       tx,
       withdrawal.userId,
@@ -831,6 +859,44 @@ export class WithdrawalEngineService {
         releaseLedgerTransactionId: withdrawal.releaseLedgerTransactionId,
       },
     );
+  }
+
+  private async enqueueAdminWithdrawalNotice(
+    tx: DrizzleTransactionContext,
+    withdrawal: WithdrawalRequestRecord,
+    eventType:
+      "admin.withdrawal_requested" | "admin.withdrawal_approved" | "admin.withdrawal_rejected",
+    customerEmail?: string | null,
+  ) {
+    const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
+    const amountLabel = formatMoneyMinorUnits(
+      "en",
+      Number(withdrawal.amountMinor),
+      withdrawal.currency,
+    );
+    const destination = parseWithdrawalDestination(
+      withdrawal.destinationType,
+      withdrawal.destinationReference,
+    );
+    const profile = await this.deps.coreRepository.findCustomerProfileByUserId(withdrawal.userId);
+    await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+      eventType,
+      idempotencyKey: `${eventType}:${withdrawal.id}`,
+      customerId: withdrawal.userId,
+      metadata: {
+        ...withdrawalEventPayload(withdrawal),
+        customerName:
+          profile?.legalName?.trim() ||
+          profile?.displayName?.trim() ||
+          customerEmail?.split("@")[0] ||
+          "Customer",
+        amount: amountLabel,
+        destination: withdrawalDestinationSummary(destination),
+        referenceId: withdrawal.providerPayoutReference ?? withdrawal.id,
+        requestDate: formatEmailDateTime(withdrawal.createdAt.toISOString()),
+        adminDashboardUrl: `${appUrl}/admin/withdrawals/${withdrawal.id}`,
+      },
+    });
   }
 
   private async enqueueWithdrawalPaidSideEffects(

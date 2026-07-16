@@ -248,6 +248,25 @@ export class InvestmentEngineService {
           currentYear: emailFields.currentYear,
           amountMinor: String(input.principalMinor),
         });
+
+        const { enqueueAdminEmail } = await import("@/application/notifications/admin-email");
+        await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+          eventType: "admin.investment_started",
+          idempotencyKey: `admin.investment_started:${activatedInvestment.id}`,
+          customerId: input.userId,
+          metadata: {
+            customerName: profile?.legalName?.trim() || profile?.displayName?.trim() || "Customer",
+            planName: emailFields.planName,
+            amount: emailFields.principal,
+            dailyRoi: emailFields.dailyRate,
+            duration: emailFields.duration,
+            expectedRoi: emailFields.expectedProfit,
+            maturityValue: emailFields.maturityValue,
+            startDateTime: emailFields.startDateTime,
+            referenceId: emailFields.reference,
+            adminDashboardUrl: `${brand.url}/admin/investments/${activatedInvestment.id}`,
+          },
+        });
       }
 
       await this.enqueueReferralCommissionEmail(tx, {
@@ -465,6 +484,25 @@ export class InvestmentEngineService {
         creditRoiMinor: String(creditRoiMinor),
         principalReleasedMinor: String(fresh.principalMinor),
       });
+
+      if (this.deps.notificationRepository) {
+        const { enqueueAdminEmail } = await import("@/application/notifications/admin-email");
+        const { getBrand } = await import("@/emails/brand");
+        const { formatMoneyMinorUnits } = await import("@/i18n/format");
+        const profile = await this.deps.coreRepository.findCustomerProfileByUserId(fresh.userId);
+        const brand = getBrand();
+        await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+          eventType: "admin.investment_stopped",
+          idempotencyKey: `admin.investment_stopped:${fresh.id}`,
+          customerId: fresh.userId,
+          metadata: {
+            customerName: profile?.legalName?.trim() || profile?.displayName?.trim() || "Customer",
+            amount: formatMoneyMinorUnits("en", Number(fresh.principalMinor), fresh.currency),
+            referenceId: fresh.id,
+            adminDashboardUrl: `${brand.url}/admin/investments/${fresh.id}`,
+          },
+        });
+      }
 
       return {
         investment: cancelled,
@@ -759,6 +797,7 @@ export class InvestmentEngineService {
           investmentId: investment.id,
           settlementDate,
         });
+        await this.enqueueAdminInvestmentMatured(tx, investment);
       } else if (isFinalEarningDate) {
         await this.deps.investmentRepository.markInvestmentMaturing(
           tx,
@@ -769,6 +808,7 @@ export class InvestmentEngineService {
           investmentId: investment.id,
           settlementDate,
         });
+        await this.enqueueAdminInvestmentMatured(tx, investment);
       } else {
         await this.deps.investmentRepository.updateInvestmentResidual(
           tx,
@@ -786,6 +826,29 @@ export class InvestmentEngineService {
       }
 
       return { investmentId: investment.id, status: "posted" };
+    });
+  }
+
+  private async enqueueAdminInvestmentMatured(
+    tx: DrizzleTransactionContext,
+    investment: InvestmentRecord,
+  ) {
+    if (!this.deps.notificationRepository) return;
+    const { enqueueAdminEmail } = await import("@/application/notifications/admin-email");
+    const { getBrand } = await import("@/emails/brand");
+    const { formatMoneyMinorUnits } = await import("@/i18n/format");
+    const profile = await this.deps.coreRepository.findCustomerProfileByUserId(investment.userId);
+    const brand = getBrand();
+    await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+      eventType: "admin.investment_matured",
+      idempotencyKey: `admin.investment_matured:${investment.id}`,
+      customerId: investment.userId,
+      metadata: {
+        customerName: profile?.legalName?.trim() || profile?.displayName?.trim() || "Customer",
+        amount: formatMoneyMinorUnits("en", Number(investment.principalMinor), investment.currency),
+        referenceId: investment.id,
+        adminDashboardUrl: `${brand.url}/admin/investments/${investment.id}`,
+      },
     });
   }
 

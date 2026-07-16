@@ -28,7 +28,10 @@ import type {
   PaymentRepository,
 } from "@/infrastructure/database";
 
-import { PLATFORM_SUPPORT_EMAIL } from "@/config/email-identity";
+import {
+  enqueueAdminEmail,
+  resolveAdminNotifyEmail,
+} from "@/application/notifications/admin-email";
 import { getServerEnv } from "@/config/server-env";
 import { resolvePublicAppUrl } from "@/config/public-app-url";
 import { formatEmailDateTime } from "@/emails/format-datetime";
@@ -47,6 +50,8 @@ const FINANCE_ADMIN_ROLES = new Set([
 const DEPOSIT_EMAIL_TEMPLATES = {
   initiated: "deposit.initiated",
   adminInitiated: "admin.deposit_submitted",
+  adminApproved: "admin.deposit_approved",
+  adminRejected: "admin.deposit_rejected",
   confirmed: "deposit.confirmed",
   failed: "deposit.failed",
   cancelled: "deposit.cancelled",
@@ -504,6 +509,29 @@ export class DepositEngineService {
         reason,
       });
       await this.enqueueDepositCancelledSideEffects(tx, cancelled, context);
+
+      const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
+      const amountLabel = formatMoneyMinorUnits(
+        "en",
+        Number(cancelled.amountMinor),
+        cancelled.currency,
+      );
+      const user = await this.deps.identityRepository.findUserById(cancelled.userId);
+      await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+        eventType: "admin.deposit_rejected",
+        idempotencyKey: `admin.deposit_rejected:${cancelled.id}`,
+        customerId: cancelled.userId,
+        metadata: {
+          ...depositEventPayload(cancelled),
+          customerName: (await this.resolveCustomerFirstName(cancelled.userId)) ?? "Customer",
+          customerEmail: user?.email ?? null,
+          amount: amountLabel,
+          referenceId: cancelled.providerIntentId,
+          reason,
+          adminDashboardUrl: `${appUrl}/admin/deposits/${cancelled.id}`,
+        },
+      });
+
       return { depositIntent: cancelled, idempotent: false };
     });
   }
@@ -665,14 +693,17 @@ export class DepositEngineService {
       metadata: payload,
     });
 
-    const adminEmail = getServerEnv().CONTACT_SUPPORT_EMAIL?.trim() || PLATFORM_SUPPORT_EMAIL;
+    const adminEmail = resolveAdminNotifyEmail();
     await this.deps.notificationRepository.enqueueEmail(tx, {
       recipientUserId: null,
       toEmail: adminEmail,
       templateKey: DEPOSIT_EMAIL_TEMPLATES.adminInitiated,
       templateVersion: "v1",
       idempotencyKey: `admin.deposit_submitted:${deposit.id}`,
-      metadata: payload,
+      metadata: {
+        ...payload,
+        customerName: firstName,
+      },
     });
 
     await this.appendCustomerAudit(tx, deposit.userId, "deposit.initiated", deposit.id, context);
@@ -708,6 +739,23 @@ export class DepositEngineService {
         metadata: depositEventPayload(deposit),
       });
     }
+
+    const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
+    const amountLabel = formatMoneyMinorUnits("en", Number(deposit.amountMinor), deposit.currency);
+    await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+      eventType: "admin.deposit_approved",
+      idempotencyKey: `admin.deposit_approved:${deposit.id}`,
+      customerId: deposit.userId,
+      metadata: {
+        ...depositEventPayload(deposit),
+        customerName: (await this.resolveCustomerFirstName(deposit.userId)) ?? "Customer",
+        customerEmail: user?.email ?? null,
+        amount: amountLabel,
+        referenceId: deposit.providerIntentId,
+        adminDashboardUrl: `${appUrl}/admin/deposits/${deposit.id}`,
+      },
+    });
+
     await this.appendCustomerAudit(tx, deposit.userId, "deposit.confirmed", deposit.id, context, {
       ledgerTransactionId: deposit.confirmationLedgerTransactionId,
     });
