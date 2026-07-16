@@ -18,7 +18,11 @@ import { compressAvatarToWebp } from "@/features/customer/account/avatar-compres
 import { AccountReveal } from "@/features/customer/account/account-motion";
 import { AccountSurfaceNav } from "@/features/customer/account/account-surface-nav";
 import { AccountWelcomeHero } from "@/features/customer/account/account-welcome-hero";
-import { getCustomerJson, patchCustomerJson, postCustomerForm } from "@/features/customer/api-client";
+import {
+  getCustomerJson,
+  patchCustomerJson,
+  postCustomerForm,
+} from "@/features/customer/api-client";
 import type { CustomerSummary } from "@/features/customer/types";
 
 type ReferralSummary = {
@@ -136,7 +140,10 @@ export function ProfileSurface() {
           icon={UserRound}
           ariaLabel="Profile header"
         />
-        <section className="rounded-xl border border-destructive/40 bg-destructive/5 p-6" role="alert">
+        <section
+          className="rounded-xl border border-destructive/40 bg-destructive/5 p-6"
+          role="alert"
+        >
           <h2 className="text-base font-semibold text-destructive">Profile unavailable</h2>
           <p className="mt-2 text-sm text-muted-foreground">{error}</p>
           <Button asChild variant="outline" className="mt-4">
@@ -149,7 +156,7 @@ export function ProfileSurface() {
 
   const profile = summary?.profile;
   const fallback = getInitials(
-    profile?.displayName ?? profile?.legalName ?? summary?.user.email ?? "US",
+    profile?.legalName ?? profile?.displayName ?? summary?.user.email ?? "US",
   );
 
   return (
@@ -183,22 +190,18 @@ export function ProfileSurface() {
       </AccountReveal>
 
       <AccountReveal delayMs={100}>
-        <form
-          action={submit}
-          className="space-y-6"
-          aria-label="Personal information"
-        >
+        <form action={submit} className="space-y-6" aria-label="Personal information">
           <section className="space-y-4 rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
             <div>
               <h2 className="text-lg font-semibold text-foreground">Personal information</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Keep legal and display names current for your account.
+                Keep your legal name and username current for your account.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Legal name" name="legalName" defaultValue={profile?.legalName ?? ""} />
               <Field
-                label="Display name"
+                label="Username"
                 name="displayName"
                 defaultValue={profile?.displayName ?? ""}
               />
@@ -246,7 +249,7 @@ export function ProfileSurface() {
               </p>
             </div>
             <dl className="grid gap-4 sm:grid-cols-2">
-              <InfoRow label="Account number" value={summary?.account?.accountNumber ?? "—"} />
+              <InfoRow label="Customer ID" value={summary?.account?.accountNumber ?? "—"} />
               <InfoRow label="Account status" value={summary?.account?.status ?? "—"} />
               <InfoRow label="Verification (KYC)" value={profile?.kycStatus ?? "—"} />
               <InfoRow
@@ -334,7 +337,7 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="rounded-xl border border-border/50 bg-muted/20 px-4 py-3">
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="mt-1 text-sm font-medium text-foreground capitalize">{value}</dd>
+      <dd className="mt-1 text-sm font-medium text-foreground">{value}</dd>
     </div>
   );
 }

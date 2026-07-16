@@ -123,15 +123,11 @@ export function AccountHubSurface() {
             <InfoTile
               label="Member since"
               value={
-                summary?.account?.openedAt ? (
-                  <DateDisplay value={summary.account.openedAt} />
-                ) : (
-                  "—"
-                )
+                summary?.account?.openedAt ? <DateDisplay value={summary.account.openedAt} /> : "—"
               }
             />
             <InfoTile label="Verification (KYC)" value={summary?.profile?.kycStatus ?? "—"} />
-            <InfoTile label="Account number" value={summary?.account?.accountNumber ?? "—"} />
+            <InfoTile label="Customer ID" value={summary?.account?.accountNumber ?? "—"} />
           </dl>
         </section>
       </AccountReveal>

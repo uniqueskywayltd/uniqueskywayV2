@@ -182,7 +182,7 @@ export class IdentityAuthService {
         legalName: legalName ?? null,
       });
 
-      const name = displayName ?? legalName ?? appUser.email.split("@")[0] ?? "Investor";
+      const name = legalName ?? displayName ?? appUser.email.split("@")[0] ?? "Investor";
 
       const verificationMessage = await this.emailQueue.enqueue(tx, {
         recipientUserId: appUser.id,
@@ -279,7 +279,7 @@ export class IdentityAuthService {
 
     const profile = await this.deps.coreRepository.findCustomerProfileByUserId(appUser.id);
     const name =
-      profile?.displayName ?? profile?.legalName ?? appUser.email.split("@")[0] ?? "Investor";
+      profile?.legalName ?? profile?.displayName ?? appUser.email.split("@")[0] ?? "Investor";
 
     const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
     const redirectTo = `${appUrl}${AUTH_ROUTES.verifyEmail}`;
@@ -488,8 +488,8 @@ export class IdentityAuthService {
         ? await this.deps.coreRepository.findCustomerProfileByUserId(appUser.id)
         : null;
       const name =
-        profile?.displayName ??
         profile?.legalName ??
+        profile?.displayName ??
         generatedEmail.email.split("@")[0] ??
         "Investor";
       const authEmail = buildAuthEmailAction({

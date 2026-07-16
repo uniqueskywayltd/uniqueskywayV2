@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import {
@@ -55,6 +55,28 @@ const WALLET_CATEGORY_PRIORITY: Record<WalletLedgerEventRecord["walletCategory"]
   withdrawn: 4,
 };
 
+function coerceDate(value: Date | string | number): Date {
+  if (value instanceof Date) return value;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error(`Invalid ledger postedAt value: ${String(value)}`);
+  }
+  return parsed;
+}
+
+function coerceBigInt(value: bigint | number | string): bigint {
+  if (typeof value === "bigint") return value;
+  return BigInt(value);
+}
+
+function normalizeWalletLedgerEvent(row: WalletLedgerEventRecord): WalletLedgerEventRecord {
+  return {
+    ...row,
+    postedAt: coerceDate(row.postedAt),
+    amountMinor: coerceBigInt(row.amountMinor),
+  };
+}
+
 /** Prefer the customer-facing leg when a posting touches multiple wallet categories. */
 export function pickPrimaryWalletLedgerEvents(
   rows: WalletLedgerEventRecord[],
@@ -63,22 +85,59 @@ export function pickPrimaryWalletLedgerEvents(
   const byTransaction = new Map<string, WalletLedgerEventRecord>();
 
   for (const row of rows) {
-    const existing = byTransaction.get(row.transactionId);
+    const normalized = normalizeWalletLedgerEvent(row);
+    const existing = byTransaction.get(normalized.transactionId);
     if (!existing) {
-      byTransaction.set(row.transactionId, row);
+      byTransaction.set(normalized.transactionId, normalized);
       continue;
     }
 
     const existingRank = WALLET_CATEGORY_PRIORITY[existing.walletCategory] ?? 99;
-    const nextRank = WALLET_CATEGORY_PRIORITY[row.walletCategory] ?? 99;
+    const nextRank = WALLET_CATEGORY_PRIORITY[normalized.walletCategory] ?? 99;
     if (nextRank < existingRank) {
-      byTransaction.set(row.transactionId, row);
+      byTransaction.set(normalized.transactionId, normalized);
     }
   }
 
   return [...byTransaction.values()]
     .sort((left, right) => right.postedAt.getTime() - left.postedAt.getTime())
     .slice(0, limit);
+}
+
+function rowsFromExecute<T>(result: unknown): T[] {
+  if (Array.isArray(result)) return result as T[];
+  if (result && typeof result === "object" && Array.isArray((result as { rows?: unknown }).rows)) {
+    return (result as { rows: T[] }).rows;
+  }
+  return [];
+}
+
+function mapWalletBalanceRow(row: Record<string, unknown>): WalletBalanceRecord {
+  return {
+    walletId: String(row.walletId ?? row.wallet_id),
+    userId: String(row.userId ?? row.user_id),
+    currency: String(row.currency),
+    pendingBalanceMinor: coerceBigInt(
+      (row.pendingBalanceMinor ?? row.pending_balance_minor ?? 0) as string | number | bigint,
+    ),
+    availableBalanceMinor: coerceBigInt(
+      (row.availableBalanceMinor ?? row.available_balance_minor ?? 0) as string | number | bigint,
+    ),
+    lockedBalanceMinor: coerceBigInt(
+      (row.lockedBalanceMinor ?? row.locked_balance_minor ?? 0) as string | number | bigint,
+    ),
+    reservedBalanceMinor: coerceBigInt(
+      (row.reservedBalanceMinor ?? row.reserved_balance_minor ?? 0) as string | number | bigint,
+    ),
+    withdrawnBalanceMinor: coerceBigInt(
+      (row.withdrawnBalanceMinor ?? row.withdrawn_balance_minor ?? 0) as string | number | bigint,
+    ),
+    lastEntryAt: (() => {
+      const raw = row.lastEntryAt ?? row.last_entry_at;
+      if (raw == null || raw === "") return null;
+      return coerceDate(raw as Date | string | number);
+    })(),
+  };
 }
 
 export class LedgerRepository extends BaseDrizzleRepository {
@@ -241,7 +300,8 @@ export class LedgerRepository extends BaseDrizzleRepository {
   }
 
   async findWalletBalance(walletId: string): Promise<WalletBalanceRecord | null> {
-    const rows = (await this.db.execute(sql`
+    const rows = rowsFromExecute<Record<string, unknown>>(
+      await this.db.execute(sql`
       select
         wallet_id as "walletId",
         user_id as "userId",
@@ -255,16 +315,18 @@ export class LedgerRepository extends BaseDrizzleRepository {
       from public.wallet_balances
       where wallet_id = ${walletId}
       limit 1
-    `)) as unknown as WalletBalanceRecord[];
+    `),
+    );
 
-    return rows[0] ?? null;
+    return rows[0] ? mapWalletBalanceRow(rows[0]) : null;
   }
 
   async findWalletBalanceByUserCurrency(
     userId: string,
     currency: string,
   ): Promise<WalletBalanceRecord | null> {
-    const rows = (await this.db.execute(sql`
+    const rows = rowsFromExecute<Record<string, unknown>>(
+      await this.db.execute(sql`
       select
         wallet_id as "walletId",
         user_id as "userId",
@@ -279,9 +341,10 @@ export class LedgerRepository extends BaseDrizzleRepository {
       where user_id = ${userId}
         and currency = ${currency}
       limit 1
-    `)) as unknown as WalletBalanceRecord[];
+    `),
+    );
 
-    return rows[0] ?? null;
+    return rows[0] ? mapWalletBalanceRow(rows[0]) : null;
   }
 
   async findWalletBalanceByUserCurrencyInTransaction(
@@ -289,7 +352,8 @@ export class LedgerRepository extends BaseDrizzleRepository {
     userId: string,
     currency: string,
   ): Promise<WalletBalanceRecord | null> {
-    const rows = (await context.db.execute(sql`
+    const rows = rowsFromExecute<Record<string, unknown>>(
+      await context.db.execute(sql`
       select
         wallet_id as "walletId",
         user_id as "userId",
@@ -304,9 +368,10 @@ export class LedgerRepository extends BaseDrizzleRepository {
       where user_id = ${userId}
         and currency = ${currency}
       limit 1
-    `)) as unknown as WalletBalanceRecord[];
+    `),
+    );
 
-    return rows[0] ?? null;
+    return rows[0] ? mapWalletBalanceRow(rows[0]) : null;
   }
 
   async listWalletLedgerEvents(
@@ -314,27 +379,34 @@ export class LedgerRepository extends BaseDrizzleRepository {
     currency: string,
     limit = 50,
   ): Promise<WalletLedgerEventRecord[]> {
-    const rows = (await this.db.execute(sql`
-      select
-        lt.id as "transactionId",
-        lt.transaction_type as "transactionType",
-        lt.reference_type as "referenceType",
-        lt.reference_id as "referenceId",
-        lt.description as "description",
-        lt.posted_at as "postedAt",
-        le.amount_minor as "amountMinor",
-        le.direction as "direction",
-        le.currency as "currency",
-        wal.category as "walletCategory"
-      from public.ledger_transactions lt
-      inner join public.ledger_entries le on le.ledger_transaction_id = lt.id
-      inner join public.wallet_account_links wal on wal.ledger_account_id = le.account_id
-      inner join public.wallets w on w.id = wal.wallet_id
-      where w.user_id = ${userId}
-        and w.currency = ${currency}
-      order by lt.posted_at desc, lt.id desc, le.created_at desc
-      limit ${Math.min(Math.max(limit, 1), 200) * 8}
-    `)) as unknown as WalletLedgerEventRecord[];
+    const fetchLimit = Math.min(Math.max(limit, 1), 200) * 8;
+    const rows = await this.db
+      .select({
+        transactionId: ledgerTransactions.id,
+        transactionType: ledgerTransactions.transactionType,
+        referenceType: ledgerTransactions.referenceType,
+        referenceId: ledgerTransactions.referenceId,
+        description: ledgerTransactions.description,
+        postedAt: ledgerTransactions.postedAt,
+        amountMinor: ledgerEntries.amountMinor,
+        direction: ledgerEntries.direction,
+        currency: ledgerEntries.currency,
+        walletCategory: walletAccountLinks.category,
+      })
+      .from(ledgerTransactions)
+      .innerJoin(ledgerEntries, eq(ledgerEntries.ledgerTransactionId, ledgerTransactions.id))
+      .innerJoin(
+        walletAccountLinks,
+        eq(walletAccountLinks.ledgerAccountId, ledgerEntries.accountId),
+      )
+      .innerJoin(wallets, eq(wallets.id, walletAccountLinks.walletId))
+      .where(and(eq(wallets.userId, userId), eq(wallets.currency, currency)))
+      .orderBy(
+        desc(ledgerTransactions.postedAt),
+        desc(ledgerTransactions.id),
+        desc(ledgerEntries.createdAt),
+      )
+      .limit(fetchLimit);
 
     return pickPrimaryWalletLedgerEvents(rows, limit);
   }

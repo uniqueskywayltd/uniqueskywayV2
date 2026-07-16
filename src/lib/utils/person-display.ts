@@ -1,17 +1,28 @@
 import type { CustomerSummary } from "@/features/customer/types";
 
+/**
+ * Customer display name: legal/full name first.
+ * `customer_profiles.display_name` stores the username (registration uniqueness),
+ * not the person's real name — never prefer it over legalName for greetings.
+ */
 export function getPersonFullName(summary: CustomerSummary): string {
-  return (
-    summary.profile?.displayName ??
-    summary.profile?.legalName ??
-    summary.user.email
-  );
+  const legalName = summary.profile?.legalName?.trim();
+  if (legalName) return legalName;
+
+  const displayName = summary.profile?.displayName?.trim();
+  if (displayName) return displayName;
+
+  return summary.user.email;
 }
 
-/** Platform shows @username; V3 uses account number or email local-part. */
+/**
+ * Public @username handle from `customer_profiles.display_name`.
+ * Never use account numbers / customer IDs as the username.
+ */
 export function getPersonHandle(summary: CustomerSummary): string {
-  if (summary.account?.accountNumber) {
-    return summary.account.accountNumber;
+  const username = summary.profile?.displayName?.trim();
+  if (username) {
+    return username.startsWith("@") ? username.slice(1) : username;
   }
 
   const email = summary.user.email;

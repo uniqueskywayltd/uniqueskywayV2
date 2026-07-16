@@ -18,12 +18,10 @@ import {
 } from "@/features/customer/dashboard/dashboard-nav-items";
 import { DashboardChromeProvider } from "@/features/customer/dashboard/dashboard-chrome-context";
 import { DashboardSignOutButton } from "@/features/customer/dashboard/dashboard-sign-out-button";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { LanguageSelector } from "@/features/i18n/language-selector";
 import { useI18n } from "@/features/i18n/i18n-provider";
-import {
-  getPersonFullName,
-  getPersonHandle,
-  getPersonInitials,
-} from "@/lib/utils/person-display";
+import { getPersonFullName, getPersonHandle, getPersonInitials } from "@/lib/utils/person-display";
 import { getTimeGreeting } from "@/lib/utils/time-greeting";
 import { cn } from "@/lib/utils";
 
@@ -186,12 +184,16 @@ export function DashboardShell({ children }: DashboardShellProps) {
                 {!isOverview ? (
                   <p className="truncate text-xs text-muted-foreground">Investor portal</p>
                 ) : (
-                  <p className="truncate text-xs text-muted-foreground lg:hidden">Investor portal</p>
+                  <p className="truncate text-xs text-muted-foreground lg:hidden">
+                    Investor portal
+                  </p>
                 )}
               </div>
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
+              <ThemeToggle compact />
+              <LanguageSelector compact />
               <DashboardSignOutButton />
             </div>
           </header>
@@ -222,10 +224,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
                 </div>
                 <div className="flex max-h-[calc(100dvh-3.25rem)] flex-col overflow-y-auto">
                   {summary ? (
-                    <DashboardNavPanel
-                      summary={summary}
-                      onNavigate={() => setMobileOpen(false)}
-                    />
+                    <DashboardNavPanel summary={summary} onNavigate={() => setMobileOpen(false)} />
                   ) : null}
                 </div>
               </DialogPrimitive.Content>

@@ -10,6 +10,7 @@ import {
   type RequestSecurityContext,
 } from "@/application/auth/security";
 import { REQUEST_HEADERS } from "@/config/constants";
+import { logger } from "@/infrastructure/logging/logger";
 
 import { csrfCookieNames, resolveCsrfCookie } from "./csrf-cookie";
 
@@ -211,6 +212,15 @@ function collectAllowedOrigins(request: NextRequest): Set<string> {
 
 function normalizeError(error: unknown): AppError {
   if (isAppError(error)) return error;
+
+  logger.error(
+    {
+      event: "api.unexpected_error",
+      cause: error instanceof Error ? error.message : String(error),
+      err: error,
+    },
+    "Unhandled API error",
+  );
 
   return new AppError({
     code: "INTERNAL_ERROR",

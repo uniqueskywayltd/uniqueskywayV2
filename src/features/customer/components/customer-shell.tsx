@@ -11,16 +11,14 @@ import { Badge, Button, Skeleton } from "@/components/ui";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { brandAssets } from "@/features/brand";
-import {
-  CUSTOMER_MOBILE_BOTTOM_NAV,
-  CUSTOMER_PRIMARY_NAV,
-} from "@/features/customer/navigation";
+import { CUSTOMER_MOBILE_BOTTOM_NAV, CUSTOMER_PRIMARY_NAV } from "@/features/customer/navigation";
 import { LanguageSelector } from "@/features/i18n/language-selector";
 import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 import { getCustomerJson } from "../api-client";
 import type { CustomerSummary } from "../types";
+import { getPersonFullName, getPersonInitials } from "@/lib/utils/person-display";
 
 export interface CustomerShellProps {
   children: ReactNode;
@@ -54,14 +52,8 @@ export function CustomerShell({ children }: CustomerShellProps) {
   }, [pathname, router]);
 
   const initials = useMemo(() => {
-    const name =
-      summary?.profile?.displayName ?? summary?.profile?.legalName ?? summary?.user.email ?? "US";
-    return name
-      .split(/[\s@.]+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join("");
+    if (!summary) return "US";
+    return getPersonInitials(getPersonFullName(summary)) || "US";
   }, [summary]);
 
   const moneyNav = CUSTOMER_PRIMARY_NAV.filter((item) => item.group === "money");
@@ -139,10 +131,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
                   className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
                 >
                   <Avatar className="size-8">
-                    <AvatarImage
-                      src={summary.profile?.avatarUrl ?? brandAssets.icon}
-                      alt=""
-                    />
+                    <AvatarImage src={summary.profile?.avatarUrl ?? brandAssets.icon} alt="" />
                     <AvatarFallback>{initials || "US"}</AvatarFallback>
                   </Avatar>
                   <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
@@ -243,22 +232,19 @@ function NavGroup({
       </p>
       <div className="space-y-1">
         {items.map((item) => {
-            const badgeProps = notificationBadgeProps(
-              item.href,
-              summary?.unreadNotificationCount,
-            );
-            return (
-              <CustomerNavLink
-                key={item.href}
-                href={item.href}
-                label={t(item.labelKey)}
-                active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
-                icon={item.icon}
-                {...(onNavigate ? { onNavigate } : {})}
-                {...badgeProps}
-              />
-            );
-          })}
+          const badgeProps = notificationBadgeProps(item.href, summary?.unreadNotificationCount);
+          return (
+            <CustomerNavLink
+              key={item.href}
+              href={item.href}
+              label={t(item.labelKey)}
+              active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+              icon={item.icon}
+              {...(onNavigate ? { onNavigate } : {})}
+              {...badgeProps}
+            />
+          );
+        })}
       </div>
     </div>
   );
@@ -318,9 +304,7 @@ function CustomerIdentityBlock({
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium">
-          {summary.profile?.displayName ?? summary.profile?.legalName ?? "Unique Sky Way"}
-        </p>
+        <p className="truncate text-sm font-medium">{getPersonFullName(summary)}</p>
         <p className="truncate text-xs text-muted-foreground">{summary.user.email}</p>
       </div>
     </div>
