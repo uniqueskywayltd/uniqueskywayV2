@@ -57,6 +57,19 @@ export async function PATCH(request: NextRequest, routeContext: RouteContext) {
       throw new AppError({ code: "NOT_FOUND", message: "Funding wallet was not found." });
     }
     const input = await parseJson(request, upsertFundingWalletInputSchema);
+    if (input.status === "active") {
+      const duplicate = await deps.paymentRepository.findActiveFundingWalletByAssetNetwork(
+        input.asset,
+        input.network,
+        walletId,
+      );
+      if (duplicate) {
+        throw new AppError({
+          code: "VALIDATION_ERROR",
+          message: `An active ${input.asset} wallet on ${input.network} already exists.`,
+        });
+      }
+    }
     const wallet = await deps.paymentRepository.updateFundingWallet(walletId, {
       asset: input.asset,
       network: input.network,

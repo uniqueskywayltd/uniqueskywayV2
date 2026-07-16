@@ -9,6 +9,7 @@ import {
   requireSameOrigin,
 } from "@/app/api/_shared/http";
 import { requireAdminActor } from "@/application/admin/require-admin";
+import { AppError } from "@/application/errors";
 import { upsertFundingWalletInputSchema } from "@/application/payments";
 import {
   CoreRepository,
@@ -65,6 +66,25 @@ function serializeWallet(row: {
   };
 }
 
+async function assertNoDuplicateActiveWallet(
+  paymentRepository: PaymentRepository,
+  input: { asset: string; network: string; status: string },
+  excludeId?: string,
+) {
+  if (input.status !== "active") return;
+  const existing = await paymentRepository.findActiveFundingWalletByAssetNetwork(
+    input.asset,
+    input.network,
+    excludeId,
+  );
+  if (existing) {
+    throw new AppError({
+      code: "VALIDATION_ERROR",
+      message: `An active ${input.asset} wallet on ${input.network} already exists.`,
+    });
+  }
+}
+
 export async function GET(request: NextRequest) {
   const context = createRequestContext(request);
   try {
@@ -85,6 +105,7 @@ export async function POST(request: NextRequest) {
     const deps = await createDeps();
     const admin = await requireAdminActor(deps, "system.manage");
     const input = await parseJson(request, upsertFundingWalletInputSchema);
+    await assertNoDuplicateActiveWallet(deps.paymentRepository, input);
     const wallet = await deps.paymentRepository.createFundingWallet({
       asset: input.asset,
       network: input.network,

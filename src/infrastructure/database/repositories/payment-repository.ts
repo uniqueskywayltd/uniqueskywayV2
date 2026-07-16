@@ -9,6 +9,7 @@ import {
   isNull,
   lt,
   lte,
+  ne,
   or,
   sql,
 } from "drizzle-orm";
@@ -929,6 +930,27 @@ export class PaymentRepository extends BaseDrizzleRepository {
       .select()
       .from(platformFundingWallets)
       .where(eq(platformFundingWallets.id, id))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
+  async findActiveFundingWalletByAssetNetwork(
+    asset: string,
+    network: string,
+    excludeId?: string,
+  ): Promise<PlatformFundingWalletRecord | null> {
+    const conditions = [
+      eq(platformFundingWallets.asset, asset),
+      eq(platformFundingWallets.network, network),
+      eq(platformFundingWallets.status, "active"),
+    ];
+    if (excludeId) {
+      conditions.push(ne(platformFundingWallets.id, excludeId));
+    }
+    const rows = await this.db
+      .select()
+      .from(platformFundingWallets)
+      .where(and(...conditions))
       .limit(1);
     return rows[0] ?? null;
   }
