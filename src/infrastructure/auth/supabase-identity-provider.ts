@@ -310,14 +310,24 @@ export class SupabaseIdentityProvider implements IdentityProvider {
   }
 
   async adminDeleteUser(authUserId: string): Promise<void> {
-    const { error } = await this.adminClient.auth.admin.deleteUser(authUserId);
-    if (error) {
-      throw new AppError({
-        code: "PROVIDER_ERROR",
-        message: error.message,
-        details: { provider: "supabase", operation: "adminDeleteUser" },
-      });
+    const { error } = await this.adminClient.auth.admin.deleteUser(authUserId, false);
+    if (!error) return;
+
+    const message = error.message.toLowerCase();
+    // Idempotent: SQL purge may have already removed the Auth row.
+    if (
+      message.includes("not found") ||
+      message.includes("user not found") ||
+      message.includes("unable to find")
+    ) {
+      return;
     }
+
+    throw new AppError({
+      code: "PROVIDER_ERROR",
+      message: error.message,
+      details: { provider: "supabase", operation: "adminDeleteUser" },
+    });
   }
 
   async adminUpdatePassword(authUserId: string, password: string): Promise<void> {

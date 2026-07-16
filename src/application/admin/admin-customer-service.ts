@@ -453,17 +453,23 @@ export class AdminCustomerService {
     }
 
     if (!this.deps.identityProvider?.adminDeleteUser) {
-      throw new AppError({
-        code: "PROVIDER_ERROR",
-        message:
-          "Customer application data was deleted, but auth provider cleanup is unavailable. Remove the auth user manually so the email can register again.",
-        details: { email, authUserId },
-      });
+      // Auth row is removed inside purge_customer_user; provider cleanup is optional.
+      return { deleted: true, email };
     }
 
     try {
       await this.deps.identityProvider.adminDeleteUser(authUserId);
     } catch (error) {
+      const cause = error instanceof Error ? error.message : "Unknown auth delete error";
+      const lower = cause.toLowerCase();
+      // SQL purge already deletes auth.users; treat not-found as success.
+      if (
+        lower.includes("not found") ||
+        lower.includes("user not found") ||
+        lower.includes("unable to find")
+      ) {
+        return { deleted: true, email };
+      }
       throw new AppError({
         code: "PROVIDER_ERROR",
         message:
@@ -471,7 +477,7 @@ export class AdminCustomerService {
         details: {
           email,
           authUserId,
-          cause: error instanceof Error ? error.message : "Unknown auth delete error",
+          cause,
         },
       });
     }

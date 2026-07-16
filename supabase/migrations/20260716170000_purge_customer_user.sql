@@ -254,6 +254,10 @@ begin
 
   delete from public.users where id = p_user_id;
 
+  if v_auth_user_id is not null then
+    delete from auth.users where id = v_auth_user_id;
+  end if;
+
   auth_user_id := v_auth_user_id;
   email := v_email;
   return next;

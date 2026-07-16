@@ -1,5 +1,5 @@
--- Fix customer purge: ON DELETE SET NULL on audit.audit_logs.actor_user_id fails because
--- audit_logs is immutable. Clear actor pointers (and other SET NULL FKs) before deleting users.
+-- Purge must also delete auth.users so the email can register again.
+-- Admin Auth API cleanup alone was leaving orphaned auth identities.
 
 create or replace function app_private.purge_customer_user(p_user_id uuid)
 returns table(auth_user_id uuid, email text)
@@ -246,6 +246,7 @@ begin
 
   delete from public.users where id = p_user_id;
 
+  -- Remove Auth identity so the email can register again (Admin API alone was unreliable).
   if v_auth_user_id is not null then
     delete from auth.users where id = v_auth_user_id;
   end if;
@@ -260,3 +261,12 @@ revoke all on function app_private.purge_customer_user(uuid) from public;
 revoke execute on function app_private.purge_customer_user(uuid) from anon, authenticated;
 grant execute on function app_private.purge_customer_user(uuid) to postgres;
 grant execute on function app_private.purge_customer_user(uuid) to service_role;
+
+comment on function app_private.purge_customer_user(uuid) is
+  'Hard-deletes a non-staff customer, application data, and auth.users row so the email can register again.';
+
+-- Reclaim emails left behind by earlier app-data-only purges.
+delete from auth.users au
+where not exists (
+  select 1 from public.users u where u.auth_user_id = au.id
+);
