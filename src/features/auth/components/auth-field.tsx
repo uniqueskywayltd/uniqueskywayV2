@@ -6,6 +6,7 @@ export function AuthField({
   label,
   htmlFor,
   hint,
+  error,
   action,
   children,
   className,
@@ -13,6 +14,7 @@ export function AuthField({
   label: string;
   htmlFor: string;
   hint?: string;
+  error?: string | null;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -26,7 +28,8 @@ export function AuthField({
         {action}
       </div>
       {children}
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      {!error && hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }

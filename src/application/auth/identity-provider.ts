@@ -46,10 +46,18 @@ export interface ResetPasswordWithOtpInput {
 
 export interface IdentityProvider {
   generateSignupEmail(input: GenerateSignupEmailInput): Promise<GeneratedAuthEmail>;
+  generateEmailVerificationLink(input: {
+    email: string;
+    redirectTo: string;
+  }): Promise<GeneratedAuthEmail>;
   generatePasswordResetEmail(
     input: GeneratePasswordResetEmailInput,
   ): Promise<GeneratedAuthEmail | null>;
   verifySignupOtp(email: string, token: string): Promise<AuthenticatedIdentity>;
+  verifyEmailTokenHash(
+    tokenHash: string,
+    type: "signup" | "email" | "magiclink",
+  ): Promise<AuthenticatedIdentity>;
   signInWithPassword(email: string, password: string): Promise<AuthenticatedIdentity>;
   resetPasswordWithOtp(input: ResetPasswordWithOtpInput): Promise<AuthenticatedIdentity>;
   changePassword(newPassword: string): Promise<void>;

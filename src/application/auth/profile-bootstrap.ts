@@ -19,6 +19,7 @@ const WALLET_ACCOUNT_CATEGORIES = [
 export interface BootstrapCustomerIdentityInput {
   userId: string;
   displayName?: string | null;
+  legalName?: string | null;
   currency?: string;
 }
 
@@ -34,6 +35,7 @@ export class CustomerIdentityBootstrapService {
     await this.core.ensureCustomerProfile(context, {
       userId: input.userId,
       displayName: input.displayName ?? null,
+      legalName: input.legalName ?? null,
       onboardingStatus: "not_started",
       kycStatus: "not_started",
       riskStatus: "not_reviewed",

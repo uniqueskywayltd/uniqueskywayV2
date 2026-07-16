@@ -12,10 +12,37 @@ const otpSchema = z
   .trim()
   .regex(/^[0-9]{6}$/, "Enter the 6-digit code.");
 
+const usernameSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^[a-zA-Z0-9_]{3,24}$/,
+    "Username must be 3–24 characters (letters, numbers, underscore).",
+  );
+
 export const registerInputSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
+  username: usernameSchema.optional(),
   displayName: z.string().trim().max(120).optional(),
+  legalName: z.string().trim().max(200).optional(),
+  rememberMe: z.boolean().default(true),
+});
+
+export const availabilityQuerySchema = z.object({
+  email: emailSchema.optional(),
+  username: usernameSchema.optional(),
+});
+
+export const resendVerificationInputSchema = z.object({
+  email: emailSchema,
+});
+
+export const verifyEmailLinkInputSchema = z.object({
+  email: emailSchema.optional(),
+  token: otpSchema.optional(),
+  tokenHash: z.string().trim().min(16).max(512).optional(),
+  type: z.enum(["signup", "email", "magiclink"]).default("signup"),
   rememberMe: z.boolean().default(true),
 });
 
@@ -57,6 +84,9 @@ export const revokeSessionInputSchema = z.object({
 export type RegisterInput = z.infer<typeof registerInputSchema>;
 export type LoginInput = z.infer<typeof loginInputSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailInputSchema>;
+export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
+export type ResendVerificationInput = z.infer<typeof resendVerificationInputSchema>;
+export type VerifyEmailLinkInput = z.infer<typeof verifyEmailLinkInputSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordInputSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordInputSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordInputSchema>;

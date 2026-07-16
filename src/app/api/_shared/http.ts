@@ -88,12 +88,18 @@ export async function parseJson<TSchema extends z.ZodType>(
 export function createRequestContext(request: NextRequest): RequestSecurityContext {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const ipAddress = forwardedFor?.split(",")[0]?.trim() || request.headers.get("x-real-ip");
+  const approximateLocation =
+    request.headers.get("x-vercel-ip-country") ||
+    request.headers.get("cf-ipcountry") ||
+    request.headers.get("x-country-code");
 
   return {
     requestId: request.headers.get(REQUEST_HEADERS.requestId) ?? createRequestId(),
     ipAddress: ipAddress ?? null,
     userAgent: request.headers.get("user-agent"),
     origin: request.headers.get("origin"),
+    approximateLocation:
+      approximateLocation && approximateLocation !== "XX" ? approximateLocation : null,
   };
 }
 

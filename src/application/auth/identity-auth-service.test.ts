@@ -32,8 +32,10 @@ const serverEnv = {
 const requestContext = {
   requestId: "request_1",
   ipAddress: "203.0.113.10",
-  userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+  userAgent:
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
   origin: "http://localhost:3000",
+  approximateLocation: "US",
 };
 
 describe("IdentityAuthService", () => {
@@ -67,7 +69,7 @@ describe("IdentityAuthService", () => {
       expect.anything(),
       expect.objectContaining({
         userId: "app_user_1",
-        label: "Mac browser",
+        label: "Safari on macOS",
       }),
     );
     expect(fakes.notificationRepository.enqueueEmail).toHaveBeenCalledWith(
@@ -321,7 +323,7 @@ function createTrustedDevice(overrides: Record<string, unknown> = {}) {
     id: "trusted_device_1",
     userId: "app_user_1",
     deviceTokenHash: "trusted_device_hash_1",
-    label: "Mac browser",
+    label: "Safari on macOS",
     lastUsedAt: now,
     expiresAt: new Date("2027-01-08T12:00:00.000Z"),
     revokedAt: null,

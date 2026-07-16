@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 
 import { createRequestContext, jsonError, jsonOk } from "@/app/api/_shared/http";
 import { AppError } from "@/application/errors";
-import { IdentityEmailDispatcher } from "@/application/auth/identity-email-dispatcher";
+import { TransactionalEmailDispatcher } from "@/application/notifications/transactional-email-dispatcher";
 import { getServerEnv } from "@/config/server-env";
 import {
   DrizzleTransactionManager,
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { db } = getDatabaseConnection();
-    const dispatcher = new IdentityEmailDispatcher(
+    const dispatcher = new TransactionalEmailDispatcher(
       new NotificationRepository(db),
       new DrizzleTransactionManager(db),
       ResendEmailSender.fromApiKey(getServerEnv().RESEND_API_KEY),

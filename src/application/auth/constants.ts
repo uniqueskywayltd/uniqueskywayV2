@@ -22,7 +22,11 @@ export const AUTH_EMAIL_TEMPLATES = {
 export const AUTH_COOKIE_NAMES = {
   csrf: "__Host-usw-csrf",
   trustedDevice: "__Host-usw-device",
+  /** Short-lived marker that registration started in this browser (email hash). */
+  pendingVerify: "__Host-usw-pending-verify",
 } as const;
+
+export const PENDING_VERIFY_TTL_SECONDS = 60 * 60;
 
 export const TRUSTED_DEVICE_TTL_DAYS = 180;
 export const AUTH_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;

@@ -8,10 +8,13 @@ export {
   forgotPasswordInputSchema,
   loginInputSchema,
   registerInputSchema,
+  resendVerificationInputSchema,
   resetPasswordInputSchema,
   revokeSessionInputSchema,
   revokeTrustedDeviceInputSchema,
+  availabilityQuerySchema,
   verifyEmailInputSchema,
+  verifyEmailLinkInputSchema,
 } from "./schemas";
 export type {
   AuthenticatedIdentity,
@@ -21,10 +24,13 @@ export type {
   IdentityProvider,
 } from "./identity-provider";
 export type {
+  AvailabilityQuery,
   ChangePasswordInput,
   ForgotPasswordInput,
   LoginInput,
   RegisterInput,
+  ResendVerificationInput,
   ResetPasswordInput,
   VerifyEmailInput,
+  VerifyEmailLinkInput,
 } from "./schemas";

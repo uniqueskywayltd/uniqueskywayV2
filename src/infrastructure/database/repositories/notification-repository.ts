@@ -166,6 +166,15 @@ export class NotificationRepository extends BaseDrizzleRepository {
       .limit(limit);
   }
 
+  async listQueuedEmails(limit = 25): Promise<EmailMessageRecord[]> {
+    return this.db
+      .select()
+      .from(emailMessages)
+      .where(inArray(emailMessages.status, ["queued", "failed"]))
+      .orderBy(asc(emailMessages.createdAt))
+      .limit(limit);
+  }
+
   async markEmailSending(
     context: DrizzleTransactionContext,
     emailMessageId: string,

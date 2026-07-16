@@ -9,6 +9,14 @@ export interface RequestSecurityContext {
   ipAddress: string | null;
   userAgent: string | null;
   origin: string | null;
+  /** Coarse geo hint from CDN headers (e.g. country code), when available. */
+  approximateLocation: string | null;
+}
+
+export interface DeviceFingerprint {
+  label: string;
+  browser: string;
+  os: string;
 }
 
 export function createRequestId(): string {
@@ -43,19 +51,56 @@ export function hashUserAgent(userAgent: string | null): string | null {
   return userAgent === null ? null : sha256(`ua:${userAgent}`);
 }
 
-export function createDeviceLabel(userAgent: string | null): string {
+export function parseDeviceFingerprint(userAgent: string | null): DeviceFingerprint {
   if (!userAgent) {
-    return "Unknown device";
+    return { label: "Unknown device", browser: "Unknown browser", os: "Unknown OS" };
   }
 
-  if (userAgent.includes("iPhone")) return "iPhone browser";
-  if (userAgent.includes("iPad")) return "iPad browser";
-  if (userAgent.includes("Android")) return "Android browser";
-  if (userAgent.includes("Macintosh")) return "Mac browser";
-  if (userAgent.includes("Windows")) return "Windows browser";
-  if (userAgent.includes("Linux")) return "Linux browser";
+  const os = detectOs(userAgent);
+  const browser = detectBrowser(userAgent);
+  return {
+    browser,
+    os,
+    label: `${browser} on ${os}`,
+  };
+}
 
-  return "Browser session";
+export function createDeviceLabel(userAgent: string | null): string {
+  return parseDeviceFingerprint(userAgent).label;
+}
+
+export function maskIpAddress(ipAddress: string | null): string | null {
+  if (!ipAddress) return null;
+
+  if (ipAddress.includes(":")) {
+    const parts = ipAddress.split(":");
+    if (parts.length < 2) return "***";
+    return `${parts.slice(0, 2).join(":")}:****`;
+  }
+
+  const octets = ipAddress.split(".");
+  if (octets.length !== 4) return "***";
+  return `${octets[0]}.${octets[1]}.***.***`;
+}
+
+function detectOs(userAgent: string): string {
+  if (userAgent.includes("iPhone")) return "iOS";
+  if (userAgent.includes("iPad")) return "iPadOS";
+  if (/Android/i.test(userAgent)) return "Android";
+  if (/Mac OS X|Macintosh/i.test(userAgent)) return "macOS";
+  if (/Windows NT/i.test(userAgent)) return "Windows";
+  if (/CrOS/i.test(userAgent)) return "Chrome OS";
+  if (/Linux/i.test(userAgent)) return "Linux";
+  return "Unknown OS";
+}
+
+function detectBrowser(userAgent: string): string {
+  if (/Edg\//i.test(userAgent)) return "Edge";
+  if (/OPR\//i.test(userAgent) || /Opera/i.test(userAgent)) return "Opera";
+  if (/Firefox\//i.test(userAgent)) return "Firefox";
+  if (/Chrome\//i.test(userAgent) && !/Edg\//i.test(userAgent)) return "Chrome";
+  if (/Safari\//i.test(userAgent) && !/Chrome\//i.test(userAgent)) return "Safari";
+  return "Browser";
 }
 
 export function trustedDeviceExpiresAt(now = new Date()): Date {

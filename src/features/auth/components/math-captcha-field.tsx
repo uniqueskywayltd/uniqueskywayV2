@@ -10,6 +10,8 @@ type MathCaptchaFieldProps = {
   onChange: (value: string) => void;
   disabled?: boolean;
   className?: string;
+  status?: "idle" | "correct" | "incorrect";
+  statusMessage?: string | null;
 };
 
 const digitClass = "text-sm font-medium tabular-nums text-foreground";
@@ -22,7 +24,9 @@ export function randomMathDigit(): number {
 }
 
 export function isMathCaptchaCorrect(a: number, b: number, answer: string | number): boolean {
-  const n = typeof answer === "string" ? Number.parseInt(answer, 10) : answer;
+  const trimmed = typeof answer === "string" ? answer.trim() : String(answer);
+  if (!trimmed) return false;
+  const n = Number.parseInt(trimmed, 10);
   return (
     Number.isInteger(a) &&
     Number.isInteger(b) &&
@@ -30,6 +34,7 @@ export function isMathCaptchaCorrect(a: number, b: number, answer: string | numb
     a <= 9 &&
     b >= 1 &&
     b <= 9 &&
+    Number.isInteger(n) &&
     !Number.isNaN(n) &&
     n === a + b
   );
@@ -43,30 +48,49 @@ export function MathCaptchaField({
   onChange,
   disabled,
   className,
+  status = "idle",
+  statusMessage,
 }: MathCaptchaFieldProps) {
   return (
-    <div
-      className={cn("flex flex-wrap items-center gap-2", className)}
-      role="group"
-      aria-label={`${a} plus ${b}`}
-    >
-      <span className={digitClass}>{a}</span>
-      <span className={operatorClass}>+</span>
-      <span className={digitClass}>{b}</span>
-      <span className={operatorClass}>=</span>
-      <Input
-        type="number"
-        inputMode="numeric"
-        min={2}
-        max={18}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        disabled={disabled}
-        className={answerInputClass}
-        autoComplete="off"
-        required
-        aria-label="Answer"
-      />
+    <div className={cn("space-y-1.5", className)}>
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label={`${a} plus ${b}`}>
+        <span className={digitClass}>{a}</span>
+        <span className={operatorClass}>+</span>
+        <span className={digitClass}>{b}</span>
+        <span className={operatorClass}>=</span>
+        <Input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={value}
+          onChange={(event) => onChange(event.target.value.replace(/[^\d]/g, ""))}
+          disabled={disabled}
+          className={cn(
+            answerInputClass,
+            status === "correct" &&
+              "border-emerald-500 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20",
+            status === "incorrect" &&
+              "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20",
+          )}
+          autoComplete="off"
+          aria-invalid={status === "incorrect"}
+          aria-describedby={statusMessage ? "math-captcha-status" : undefined}
+          aria-label="Answer"
+        />
+      </div>
+      {statusMessage ? (
+        <p
+          id="math-captcha-status"
+          className={cn(
+            "text-xs",
+            status === "correct" && "text-emerald-600",
+            status === "incorrect" && "text-destructive",
+            status === "idle" && "text-muted-foreground",
+          )}
+        >
+          {statusMessage}
+        </p>
+      ) : null}
     </div>
   );
 }

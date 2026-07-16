@@ -9,6 +9,7 @@ import {
   hashSessionToken,
   hashTrustedDeviceToken,
   hashUserAgent,
+  maskIpAddress,
   safeCompare,
   trustedDeviceExpiresAt,
 } from "./security";
@@ -45,8 +46,17 @@ describe("authentication security helpers", () => {
   it("creates readable device labels from user agents", () => {
     expect(createDeviceLabel(null)).toBe("Unknown device");
     expect(createDeviceLabel("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)")).toBe(
-      "Mac browser",
+      "Browser on macOS",
     );
-    expect(createDeviceLabel("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")).toBe("Windows browser");
+    expect(
+      createDeviceLabel(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      ),
+    ).toBe("Chrome on Windows");
+  });
+
+  it("masks IP addresses for security emails", () => {
+    expect(maskIpAddress("203.0.113.10")).toBe("203.0.***.***");
+    expect(maskIpAddress(null)).toBeNull();
   });
 });

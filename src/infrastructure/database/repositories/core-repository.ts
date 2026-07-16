@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, lt, or } from "drizzle-orm";
+import { and, desc, eq, ilike, lt, or, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import {
@@ -82,6 +82,20 @@ export class CoreRepository extends BaseDrizzleRepository {
       .select()
       .from(customerProfiles)
       .where(eq(customerProfiles.userId, userId))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
+  async findCustomerProfileByDisplayName(
+    displayName: string,
+  ): Promise<CustomerProfileRecord | null> {
+    const normalized = displayName.trim().toLowerCase();
+    if (!normalized) return null;
+
+    const rows = await this.db
+      .select()
+      .from(customerProfiles)
+      .where(sql`lower(${customerProfiles.displayName}) = ${normalized}`)
       .limit(1);
     return rows[0] ?? null;
   }
@@ -262,7 +276,11 @@ export class CoreRepository extends BaseDrizzleRepository {
   }
 
   async findInvestmentPlanById(id: string): Promise<InvestmentPlanRecord | null> {
-    const rows = await this.db.select().from(investmentPlans).where(eq(investmentPlans.id, id)).limit(1);
+    const rows = await this.db
+      .select()
+      .from(investmentPlans)
+      .where(eq(investmentPlans.id, id))
+      .limit(1);
     return rows[0] ?? null;
   }
 

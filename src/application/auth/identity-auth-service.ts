@@ -12,7 +12,12 @@ import type {
   OperationsRepository,
 } from "@/infrastructure/database";
 
-import { AUTH_COOKIE_NAMES, AUTH_EMAIL_TEMPLATES, AUTH_ROUTES } from "./constants";
+import {
+  AUTH_COOKIE_NAMES,
+  AUTH_EMAIL_TEMPLATES,
+  AUTH_ROUTES,
+  PENDING_VERIFY_TTL_SECONDS,
+} from "./constants";
 import { IdentityEmailQueue } from "./identity-email-queue";
 import type {
   AuthenticatedSession,
@@ -22,12 +27,14 @@ import type {
 import { CustomerIdentityBootstrapService } from "./profile-bootstrap";
 import type { AuthenticationRateLimiter } from "./rate-limiter";
 import {
-  createDeviceLabel,
   createTrustedDeviceToken,
   hashIpAddress,
   hashSessionToken,
   hashTrustedDeviceToken,
   hashUserAgent,
+  maskIpAddress,
+  parseDeviceFingerprint,
+  sha256,
   trustedDeviceExpiresAt,
   type RequestSecurityContext,
 } from "./security";
@@ -36,8 +43,10 @@ import type {
   ForgotPasswordInput,
   LoginInput,
   RegisterInput,
+  ResendVerificationInput,
   ResetPasswordInput,
   VerifyEmailInput,
+  VerifyEmailLinkInput,
 } from "./schemas";
 
 export interface AuthCookieAdapter {
@@ -80,12 +89,35 @@ export class IdentityAuthService {
   }
 
   async register(input: RegisterInput, context: RequestSecurityContext) {
+    const username = input.username?.trim();
+    const displayName = username || input.displayName?.trim() || undefined;
+    const legalName = input.legalName?.trim() || input.displayName?.trim() || undefined;
+
+    if (username) {
+      const existingUsername =
+        await this.deps.coreRepository.findCustomerProfileByDisplayName(username);
+      if (existingUsername) {
+        throw new AppError({
+          code: "VALIDATION_ERROR",
+          message: "Username already taken.",
+        });
+      }
+    }
+
+    const existingEmail = await this.deps.identityRepository.findUserByEmail(input.email);
+    if (existingEmail) {
+      throw new AppError({
+        code: "VALIDATION_ERROR",
+        message: "Email already registered.",
+      });
+    }
+
     const appUrl = getServerEnv().NEXT_PUBLIC_APP_URL;
     const generatedEmail = await this.deps.identityProvider.generateSignupEmail({
       email: input.email,
       password: input.password,
       redirectTo: `${appUrl}${AUTH_ROUTES.verifyEmail}`,
-      ...(input.displayName ? { displayName: input.displayName } : {}),
+      ...(displayName ? { displayName } : {}),
     });
 
     await this.deps.transactionManager.runInTransaction(async (tx) => {
@@ -96,11 +128,17 @@ export class IdentityAuthService {
         status: "active",
       });
 
+      await this.bootstrapper.bootstrap(tx, {
+        userId: appUser.id,
+        displayName: displayName ?? null,
+        legalName: legalName ?? null,
+      });
+
       await this.emailQueue.enqueue(tx, {
         recipientUserId: appUser.id,
         toEmail: appUser.email,
         templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
-        idempotencyKey: `auth.verify_email:${appUser.id}`,
+        idempotencyKey: `auth.verify_email:${appUser.id}:${generatedEmail.hashedToken}`,
         metadata: {
           otp: generatedEmail.emailOtp,
           actionLink: generatedEmail.actionLink,
@@ -111,10 +149,84 @@ export class IdentityAuthService {
       await this.appendAudit(tx, appUser.id, "auth.registered", "user", appUser.id, context);
     });
 
+    this.setPendingVerifyCookie(generatedEmail.email);
+
     return {
       email: generatedEmail.email,
       verificationRequired: true,
     };
+  }
+
+  async checkAvailability(input: { email?: string; username?: string }) {
+    const result: { emailAvailable?: boolean; usernameAvailable?: boolean } = {};
+
+    if (input.email) {
+      const existing = await this.deps.identityRepository.findUserByEmail(input.email);
+      result.emailAvailable = !existing;
+    }
+
+    if (input.username) {
+      const existing = await this.deps.coreRepository.findCustomerProfileByDisplayName(
+        input.username,
+      );
+      result.usernameAvailable = !existing;
+    }
+
+    return result;
+  }
+
+  async resendVerification(input: ResendVerificationInput, context: RequestSecurityContext) {
+    const rateLimit = this.deps.rateLimiter.checkOtp(input.email, context.ipAddress);
+    if (!rateLimit.allowed) {
+      throw new AppError({
+        code: "RATE_LIMITED",
+        message: "Too many verification emails. Try again later.",
+        details: { retryAfterSeconds: rateLimit.retryAfterSeconds },
+      });
+    }
+
+    const appUser = await this.deps.identityRepository.findUserByEmail(input.email);
+    if (!appUser) {
+      return { accepted: true };
+    }
+
+    if (appUser.emailVerifiedAt) {
+      throw new AppError({
+        code: "VALIDATION_ERROR",
+        message: "Email is already verified. Please sign in.",
+      });
+    }
+
+    const appUrl = getServerEnv().NEXT_PUBLIC_APP_URL;
+    const generatedEmail = await this.deps.identityProvider.generateEmailVerificationLink({
+      email: input.email,
+      redirectTo: `${appUrl}${AUTH_ROUTES.verifyEmail}`,
+    });
+
+    await this.deps.transactionManager.runInTransaction(async (tx) => {
+      await this.emailQueue.enqueue(tx, {
+        recipientUserId: appUser.id,
+        toEmail: appUser.email,
+        templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
+        idempotencyKey: `auth.verify_email_resend:${appUser.id}:${generatedEmail.hashedToken}`,
+        metadata: {
+          otp: generatedEmail.emailOtp,
+          actionLink: generatedEmail.actionLink,
+          hashedToken: generatedEmail.hashedToken,
+        },
+      });
+      await this.appendAudit(
+        tx,
+        appUser.id,
+        "auth.verification_resent",
+        "user",
+        appUser.id,
+        context,
+      );
+    });
+
+    this.setPendingVerifyCookie(appUser.email);
+    return { accepted: true, email: appUser.email };
   }
 
   async verifyEmail(input: VerifyEmailInput, context: RequestSecurityContext) {
@@ -122,6 +234,37 @@ export class IdentityAuthService {
       input.email,
       input.token,
     );
+    return this.completeEmailVerification(authenticated, context, { createSession: true });
+  }
+
+  async verifyEmailLink(input: VerifyEmailLinkInput, context: RequestSecurityContext) {
+    let authenticated;
+    if (input.tokenHash) {
+      authenticated = await this.deps.identityProvider.verifyEmailTokenHash(
+        input.tokenHash,
+        input.type,
+      );
+    } else if (input.email && input.token) {
+      authenticated = await this.deps.identityProvider.verifySignupOtp(input.email, input.token);
+    } else {
+      throw new AppError({
+        code: "VALIDATION_ERROR",
+        message: "A verification code or email link token is required.",
+      });
+    }
+
+    const email = authenticated.user.email?.toLowerCase() ?? input.email?.toLowerCase() ?? "";
+    const sameBrowser = this.hasPendingVerifyCookie(email);
+    return this.completeEmailVerification(authenticated, context, {
+      createSession: sameBrowser,
+    });
+  }
+
+  private async completeEmailVerification(
+    authenticated: { user: AuthenticatedUser; session: AuthenticatedSession },
+    context: RequestSecurityContext,
+    options: { createSession: boolean },
+  ) {
     const appUser = await this.ensureVerifiedAppUser(authenticated.user, context);
 
     await this.deps.transactionManager.runInTransaction(async (tx) => {
@@ -141,9 +284,26 @@ export class IdentityAuthService {
       });
     });
 
-    await this.recordSessionAndDevice(appUser.id, appUser.email, authenticated.session, context);
+    this.clearPendingVerifyCookie();
 
-    return { userId: appUser.id, email: appUser.email };
+    if (!options.createSession) {
+      await this.deps.identityProvider.signOutCurrentSession();
+      return {
+        userId: appUser.id,
+        email: appUser.email,
+        sessionCreated: false as const,
+        message: "Email verified successfully. Please sign in to continue.",
+      };
+    }
+
+    await this.recordSessionAndDevice(appUser.id, appUser.email, authenticated.session, context);
+    const redirectTo = await this.resolvePostLoginRedirect(appUser.id);
+    return {
+      userId: appUser.id,
+      email: appUser.email,
+      sessionCreated: true as const,
+      redirectTo,
+    };
   }
 
   async login(input: LoginInput, context: RequestSecurityContext) {
@@ -467,13 +627,22 @@ export class IdentityAuthService {
   ) {
     const now = new Date();
     const sessionTokenHash = hashSessionToken(session.refreshToken);
+    const fingerprint = parseDeviceFingerprint(context.userAgent);
     const existingDeviceToken = this.deps.cookies.get(AUTH_COOKIE_NAMES.trustedDevice);
-    const deviceToken = existingDeviceToken ?? createTrustedDeviceToken();
-    const deviceTokenHash = hashTrustedDeviceToken(deviceToken);
-    const knownDevice = await this.deps.identityRepository.findTrustedDeviceByTokenHash(
+    let deviceToken = existingDeviceToken ?? createTrustedDeviceToken();
+    let deviceTokenHash = hashTrustedDeviceToken(deviceToken);
+    let knownDevice = await this.deps.identityRepository.findTrustedDeviceByTokenHash(
       appUserId,
       deviceTokenHash,
     );
+
+    // Cookie alone is not enough — browser/OS changes are treated as a new device.
+    if (knownDevice && knownDevice.label && knownDevice.label !== fingerprint.label) {
+      knownDevice = null;
+      deviceToken = createTrustedDeviceToken();
+      deviceTokenHash = hashTrustedDeviceToken(deviceToken);
+    }
+
     const deviceExpiresAt = trustedDeviceExpiresAt(now);
 
     await this.deps.transactionManager.runInTransaction(async (tx) => {
@@ -485,7 +654,7 @@ export class IdentityAuthService {
         const device = await this.deps.identityRepository.createTrustedDevice(tx, {
           userId: appUserId,
           deviceTokenHash,
-          label: createDeviceLabel(context.userAgent),
+          label: fingerprint.label,
           lastUsedAt: now,
           expiresAt: deviceExpiresAt,
         });
@@ -497,7 +666,12 @@ export class IdentityAuthService {
           templateKey: AUTH_EMAIL_TEMPLATES.newDeviceSignIn,
           idempotencyKey: `auth.new_device:${appUserId}:${deviceTokenHash}`,
           metadata: {
-            deviceLabel: device.label,
+            deviceLabel: fingerprint.label,
+            browser: fingerprint.browser,
+            os: fingerprint.os,
+            signedInAt: now.toISOString(),
+            ipAddressMasked: maskIpAddress(context.ipAddress),
+            approximateLocation: context.approximateLocation,
             ipAddressSeen: Boolean(context.ipAddress),
           },
         });
@@ -524,6 +698,31 @@ export class IdentityAuthService {
       path: "/",
       expires: deviceExpiresAt,
     });
+  }
+
+  private setPendingVerifyCookie(email: string) {
+    this.deps.cookies.set(
+      AUTH_COOKIE_NAMES.pendingVerify,
+      sha256(`pending-verify:${email.toLowerCase()}`),
+      {
+        httpOnly: true,
+        secure: getServerEnv().NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: PENDING_VERIFY_TTL_SECONDS,
+      },
+    );
+  }
+
+  private hasPendingVerifyCookie(email: string): boolean {
+    if (!email) return false;
+    const expected = sha256(`pending-verify:${email.toLowerCase()}`);
+    const actual = this.deps.cookies.get(AUTH_COOKIE_NAMES.pendingVerify);
+    return Boolean(actual && actual === expected);
+  }
+
+  private clearPendingVerifyCookie() {
+    this.deps.cookies.delete(AUTH_COOKIE_NAMES.pendingVerify);
   }
 
   private async queueAccountLockedEmail(

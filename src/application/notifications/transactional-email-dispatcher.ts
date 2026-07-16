@@ -1,25 +1,27 @@
 import "server-only";
 
 import type { EmailSender } from "@/application/ports";
-import { renderTransactionalEmail } from "@/application/notifications/transactional-email-templates";
 import { getServerEnv } from "@/config/server-env";
 import type { DrizzleTransactionManager, NotificationRepository } from "@/infrastructure/database";
 
-export interface IdentityEmailDispatchResult {
+import { renderTransactionalEmail } from "./transactional-email-templates";
+
+export interface TransactionalEmailDispatchResult {
   processed: number;
   sent: number;
   failed: number;
 }
 
-export class IdentityEmailDispatcher {
+/** Dispatches queued identity + transactional emails without duplicate sends (idempotency keys). */
+export class TransactionalEmailDispatcher {
   constructor(
     private readonly notifications: NotificationRepository,
     private readonly transactionManager: DrizzleTransactionManager,
     private readonly emailSender: EmailSender,
   ) {}
 
-  async dispatchQueued(limit = 10): Promise<IdentityEmailDispatchResult> {
-    const messages = await this.notifications.listQueuedIdentityEmails(limit);
+  async dispatchQueued(limit = 25): Promise<TransactionalEmailDispatchResult> {
+    const messages = await this.notifications.listQueuedEmails(limit);
     let sent = 0;
     let failed = 0;
 
@@ -41,7 +43,7 @@ export class IdentityEmailDispatcher {
           text: rendered.text,
           idempotencyKey: message.idempotencyKey,
           tags: [
-            { name: "category", value: "identity" },
+            { name: "category", value: message.templateKey.split(".")[0] ?? "transactional" },
             { name: "template", value: message.templateKey },
           ],
         });

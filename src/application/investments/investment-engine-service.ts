@@ -24,10 +24,12 @@ import type {
   CoreRepository,
   DrizzleTransactionContext,
   DrizzleTransactionManager,
+  IdentityRepository,
   InvestmentRecord,
   InvestmentRepository,
   LedgerAccountRecord,
   LedgerRepository,
+  NotificationRepository,
   SettlementRepository,
 } from "@/infrastructure/database";
 
@@ -38,6 +40,9 @@ export interface InvestmentEngineServiceDependencies {
   investmentRepository: InvestmentRepository;
   ledgerRepository: LedgerRepository;
   settlementRepository: SettlementRepository;
+  /** Optional — when present, customer transaction emails are queued (idempotent). */
+  notificationRepository?: NotificationRepository;
+  identityRepository?: IdentityRepository;
 }
 
 export interface ActivateInvestmentInput {
@@ -181,6 +186,11 @@ export class InvestmentEngineService {
           fundingLedgerTransactionId: fundingLedger.transaction.id,
         },
       );
+
+      await this.enqueueInvestmentEmail(tx, input.userId, "investment.activated", {
+        investmentId: investment.id,
+        principalMinor: String(input.principalMinor),
+      });
 
       return { investment: activatedInvestment, idempotent: false };
     });
@@ -464,12 +474,20 @@ export class InvestmentEngineService {
 
       if (isFinalEarningDate && investment.principalReturnPolicy === "return_at_maturity") {
         await this.releasePrincipalAtMaturity(tx, investment, lockedAccount, availableAccount);
+        await this.enqueueInvestmentEmail(tx, investment.userId, "investment.completed", {
+          investmentId: investment.id,
+          settlementDate,
+        });
       } else if (isFinalEarningDate) {
         await this.deps.investmentRepository.markInvestmentMaturing(
           tx,
           investment.id,
           roi.nextResidualMicroMinor,
         );
+        await this.enqueueInvestmentEmail(tx, investment.userId, "investment.completed", {
+          investmentId: investment.id,
+          settlementDate,
+        });
       } else {
         await this.deps.investmentRepository.updateInvestmentResidual(
           tx,
@@ -478,7 +496,43 @@ export class InvestmentEngineService {
         );
       }
 
+      if (roi.postedRoiMinor > 0n) {
+        await this.enqueueInvestmentEmail(tx, investment.userId, "investment.roi_credited", {
+          investmentId: investment.id,
+          settlementDate,
+          postedRoiMinor: String(roi.postedRoiMinor),
+        });
+      }
+
       return { investmentId: investment.id, status: "posted" };
+    });
+  }
+
+  private async enqueueInvestmentEmail(
+    tx: DrizzleTransactionContext,
+    userId: string,
+    templateKey: "investment.activated" | "investment.roi_credited" | "investment.completed",
+    metadata: Record<string, unknown>,
+  ) {
+    const notifications = this.deps.notificationRepository;
+    const identity = this.deps.identityRepository;
+    if (!notifications || !identity) return;
+
+    const user = await identity.findUserById(userId);
+    if (!user) return;
+
+    const investmentId =
+      typeof metadata.investmentId === "string" ? metadata.investmentId : "unknown";
+    const settlementDate =
+      typeof metadata.settlementDate === "string" ? metadata.settlementDate : "na";
+
+    await notifications.enqueueEmail(tx, {
+      recipientUserId: userId,
+      toEmail: user.email,
+      templateKey,
+      templateVersion: "v1",
+      idempotencyKey: `${templateKey}:${investmentId}:${settlementDate}`,
+      metadata,
     });
   }
 

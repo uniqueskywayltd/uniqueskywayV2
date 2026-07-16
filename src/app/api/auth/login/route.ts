@@ -10,6 +10,7 @@ import {
 } from "@/app/api/_shared/http";
 import { loginInputSchema } from "@/application/auth";
 
+import { dispatchQueuedEmails } from "../_shared/dispatch-emails";
 import { createAuthService } from "../_shared/service";
 
 export async function POST(request: NextRequest) {
@@ -21,6 +22,7 @@ export async function POST(request: NextRequest) {
     const input = await parseJson(request, loginInputSchema);
     const service = await createAuthService({ rememberSession: input.rememberMe });
     const result = await service.login(input, context);
+    await dispatchQueuedEmails(5);
     return jsonOk(result, context.requestId);
   } catch (error) {
     return jsonError(error, context.requestId);

@@ -52,12 +52,29 @@ export function renderIdentityEmail(input: RenderIdentityEmailInput): RenderedId
         title: "Password changed",
         body: "Your Unique Sky Way password was changed. Contact support if this was not you.",
       });
-    case AUTH_EMAIL_TEMPLATES.newDeviceSignIn:
+    case AUTH_EMAIL_TEMPLATES.newDeviceSignIn: {
+      const browser = readString(input.metadata.browser) ?? "Unknown browser";
+      const os = readString(input.metadata.os) ?? "Unknown OS";
+      const signedInAt = readString(input.metadata.signedInAt) ?? new Date().toISOString();
+      const ipMasked = readString(input.metadata.ipAddressMasked) ?? "unavailable";
+      const location = readString(input.metadata.approximateLocation);
+      const locationLine = location
+        ? `Approximate location: ${location}`
+        : "Approximate location: unavailable";
       return renderTemplate({
-        subject: "New device sign-in",
-        title: "New device sign-in",
-        body: `A sign-in was recorded from ${readString(input.metadata.deviceLabel) ?? "a new device"}.`,
+        subject: "New sign in detected",
+        title: "New sign in detected",
+        body: [
+          `A new sign-in was recorded for your Unique Sky Way account.`,
+          `Time: ${signedInAt}`,
+          `Browser: ${browser}`,
+          `OS: ${os}`,
+          `IP: ${ipMasked}`,
+          locationLine,
+          `If this was not you, change your password and revoke trusted devices immediately.`,
+        ].join(" "),
       });
+    }
     case AUTH_EMAIL_TEMPLATES.accountLocked:
       return renderTemplate({
         subject: "Account temporarily locked",

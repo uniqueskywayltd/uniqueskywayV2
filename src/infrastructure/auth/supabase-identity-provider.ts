@@ -44,6 +44,29 @@ export class SupabaseIdentityProvider implements IdentityProvider {
     return toGeneratedAuthEmail(data.user, data.properties, input.email);
   }
 
+  async generateEmailVerificationLink(input: {
+    email: string;
+    redirectTo: string;
+  }): Promise<GeneratedAuthEmail> {
+    const { data, error } = await this.adminClient.auth.admin.generateLink({
+      type: "magiclink",
+      email: input.email,
+      options: {
+        redirectTo: input.redirectTo,
+      },
+    });
+
+    if (error) {
+      throw new AppError({
+        code: "PROVIDER_ERROR",
+        message: error.message,
+        details: { provider: "supabase", operation: "generateEmailVerificationLink" },
+      });
+    }
+
+    return toGeneratedAuthEmail(data.user, data.properties, input.email);
+  }
+
   async generatePasswordResetEmail(
     input: GeneratePasswordResetEmailInput,
   ): Promise<GeneratedAuthEmail | null> {
@@ -71,10 +94,36 @@ export class SupabaseIdentityProvider implements IdentityProvider {
   }
 
   async verifySignupOtp(email: string, token: string): Promise<AuthenticatedIdentity> {
+    const types = ["signup", "email", "magiclink"] as const;
+    let lastError: string | null = null;
+
+    for (const type of types) {
+      const { data, error } = await this.routeClient.auth.verifyOtp({
+        email,
+        token,
+        type,
+      });
+
+      if (!error && data.user && data.session) {
+        return toAuthenticatedIdentity(data.user, data.session);
+      }
+
+      lastError = error?.message ?? lastError;
+    }
+
+    throw new AppError({
+      code: "AUTHENTICATION_ERROR",
+      message: lastError ?? "Email verification failed.",
+    });
+  }
+
+  async verifyEmailTokenHash(
+    tokenHash: string,
+    type: "signup" | "email" | "magiclink",
+  ): Promise<AuthenticatedIdentity> {
     const { data, error } = await this.routeClient.auth.verifyOtp({
-      email,
-      token,
-      type: "signup",
+      token_hash: tokenHash,
+      type,
     });
 
     if (error || !data.user || !data.session) {
