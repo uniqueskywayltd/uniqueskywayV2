@@ -1,6 +1,4 @@
--- Complete customer purge for admin delete.
--- Removes customer-owned financial and profile data (including immutable ledger rows
--- for that customer) so the email can be registered again and admin lists stay clean.
+-- Fix customer purge: notification_deliveries lives in app_private, not public.
 
 create or replace function app_private.purge_customer_user(p_user_id uuid)
 returns table(auth_user_id uuid, email text)
@@ -31,7 +29,6 @@ begin
       using errcode = 'P0002';
   end if;
 
-  -- Notes authored by this user (on any target) block user delete via RESTRICT.
   delete from public.customer_notes
   where user_id = p_user_id
      or author_user_id = p_user_id;
@@ -47,7 +44,6 @@ begin
        and target_id in (select id from public.withdrawal_requests where user_id = p_user_id)
      );
 
-  -- Referral graph (rewards → referrals → codes).
   delete from public.referral_rewards rr
   using public.referrals r
   where rr.referral_id = r.id
@@ -65,7 +61,6 @@ begin
   delete from public.referral_codes
   where user_id = p_user_id;
 
-  -- Settlement / ROI artifacts for this customer's investments (immutable tables).
   alter table public.roi_ledger_entries disable trigger roi_ledger_entries_immutable_trg;
   alter table public.settlement_items disable trigger settlement_items_immutable_trg;
 
@@ -87,7 +82,6 @@ begin
   where rsi.investment_id = i.id
     and i.user_id = p_user_id;
 
-  -- Clear ledger FKs on money movement rows before removing ledger transactions.
   update public.investments
   set
     funding_ledger_transaction_id = null,
@@ -113,7 +107,6 @@ begin
   delete from public.deposit_intents where user_id = p_user_id;
   delete from public.withdrawal_requests where user_id = p_user_id;
 
-  -- Ledger purge for accounts owned by this user (and full transactions touching them).
   alter table public.ledger_transactions disable trigger ledger_transactions_immutable_trg;
   alter table public.ledger_entries disable trigger ledger_entries_immutable_trg;
   alter table public.ledger_entries disable trigger ledger_entries_balance_ctr;
@@ -139,8 +132,6 @@ begin
   where wal.wallet_id = w.id
     and w.user_id = p_user_id;
 
-  -- Delete every entry belonging to transactions that touch this user's accounts,
-  -- then delete those transactions (counterpart platform/provider legs included).
   with touched_tx as (
     select distinct le.ledger_transaction_id as id
     from public.ledger_entries le
@@ -179,7 +170,6 @@ begin
 
   delete from public.wallets where user_id = p_user_id;
 
-  -- Notifications / email / identity session state.
   delete from app_private.notification_deliveries nd
   using public.notifications n
   where nd.notification_id = n.id
@@ -201,56 +191,14 @@ begin
   delete from public.customer_profiles where user_id = p_user_id;
   delete from public.customer_accounts where user_id = p_user_id;
 
-  -- Optional: clear staff invite acceptance pointer if this user accepted an invite.
   update public.staff_invites
   set accepted_user_id = null
   where accepted_user_id = p_user_id;
 
-  delete from public.staff_invites where invited_by = p_user_id;
-
+  -- Null funding-wallet updater pointer if this user configured wallets.
   update public.platform_funding_wallets
   set updated_by = null
   where updated_by = p_user_id;
-
-  update public.email_template_catalog
-  set updated_by = null
-  where updated_by = p_user_id;
-
-  update public.notification_template_catalog
-  set updated_by = null
-  where updated_by = p_user_id;
-
-  update public.investment_plan_versions
-  set created_by = null
-  where created_by = p_user_id;
-
-  update public.role_permissions
-  set granted_by = null
-  where granted_by = p_user_id;
-
-  update public.user_roles
-  set granted_by = null
-  where granted_by = p_user_id;
-
-  update app_private.system_settings
-  set updated_by = null
-  where updated_by = p_user_id;
-
-  update audit.security_events
-  set user_id = null
-  where user_id = p_user_id;
-
-  alter table audit.audit_logs disable trigger audit_logs_immutable_trg;
-  update audit.audit_logs
-  set actor_user_id = null
-  where actor_user_id = p_user_id;
-  alter table audit.audit_logs enable trigger audit_logs_immutable_trg;
-
-  alter table public.ledger_transactions disable trigger ledger_transactions_immutable_trg;
-  update public.ledger_transactions
-  set created_by = null
-  where created_by = p_user_id;
-  alter table public.ledger_transactions enable trigger ledger_transactions_immutable_trg;
 
   delete from public.users where id = p_user_id;
 
@@ -264,6 +212,3 @@ revoke all on function app_private.purge_customer_user(uuid) from public;
 revoke execute on function app_private.purge_customer_user(uuid) from anon, authenticated;
 grant execute on function app_private.purge_customer_user(uuid) to postgres;
 grant execute on function app_private.purge_customer_user(uuid) to service_role;
-
-comment on function app_private.purge_customer_user(uuid) is
-  'Hard-deletes a non-staff customer and all owned application data so the email can register again.';

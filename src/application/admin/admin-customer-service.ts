@@ -394,7 +394,7 @@ export class AdminCustomerService {
     if (confirmation.trim().toUpperCase() !== "DELETE") {
       throw new AppError({
         code: "VALIDATION_ERROR",
-        message: "Type DELETE to confirm permanent customer purge.",
+        message: "Type DELETE to confirm permanent customer deletion.",
       });
     }
 
@@ -430,12 +430,12 @@ export class AdminCustomerService {
           userId,
           context,
           { email, authUserId },
-          "Permanently purged by administrator",
+          "Permanently deleted by administrator",
         );
         await this.deps.identityRepository.purgeCustomerUser(tx, userId);
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Customer purge failed.";
+      const message = error instanceof Error ? error.message : "Customer delete failed.";
       if (message.includes("Staff accounts cannot be purged")) {
         throw new AppError({
           code: "AUTHORIZATION_ERROR",
@@ -447,7 +447,7 @@ export class AdminCustomerService {
       }
       throw new AppError({
         code: "INTERNAL_ERROR",
-        message: "Failed to permanently purge customer data.",
+        message: "Failed to permanently delete customer data.",
         details: { cause: message },
       });
     }
@@ -456,7 +456,7 @@ export class AdminCustomerService {
       throw new AppError({
         code: "PROVIDER_ERROR",
         message:
-          "Customer application data was purged, but auth provider cleanup is unavailable. Remove the auth user manually so the email can register again.",
+          "Customer application data was deleted, but auth provider cleanup is unavailable. Remove the auth user manually so the email can register again.",
         details: { email, authUserId },
       });
     }
@@ -467,7 +467,7 @@ export class AdminCustomerService {
       throw new AppError({
         code: "PROVIDER_ERROR",
         message:
-          "Customer application data was purged, but auth identity cleanup failed. Remove the auth user in Supabase so the email can register again.",
+          "Customer application data was deleted, but auth identity cleanup failed. Remove the auth user in Supabase so the email can register again.",
         details: {
           email,
           authUserId,

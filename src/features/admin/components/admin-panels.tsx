@@ -327,10 +327,18 @@ export function CustomersPanel() {
       return;
     }
     const succeeded = result.data?.succeeded.length ?? 0;
-    const failed = result.data?.failed.length ?? 0;
+    const failedRows = result.data?.failed ?? [];
+    const failed = failedRows.length;
+    const failureDetail =
+      failedRows.length > 0
+        ? ` ${failedRows
+            .slice(0, 3)
+            .map((row) => row.message)
+            .join(" · ")}${failedRows.length > 3 ? "…" : ""}`
+        : "";
     setBulkFeedback(
       failed > 0
-        ? `${action} applied to ${succeeded} customer(s); ${failed} failed.`
+        ? `${action} applied to ${succeeded} customer(s); ${failed} failed.${failureDetail}`
         : `${action} applied to ${succeeded} customer(s).`,
     );
     setSelected(new Set());
@@ -358,11 +366,19 @@ export function CustomersPanel() {
       return;
     }
     const succeeded = result.data?.succeeded.length ?? 0;
-    const failed = result.data?.failed.length ?? 0;
+    const failedRows = result.data?.failed ?? [];
+    const failed = failedRows.length;
+    const failureDetail =
+      failedRows.length > 0
+        ? ` ${failedRows
+            .slice(0, 3)
+            .map((row) => row.message)
+            .join(" · ")}${failedRows.length > 3 ? "…" : ""}`
+        : "";
     setBulkFeedback(
       failed > 0
-        ? `Permanently purged ${succeeded} customer(s); ${failed} failed.`
-        : `Permanently purged ${succeeded} customer(s). Their emails can register again.`,
+        ? `Deleted ${succeeded} customer(s); ${failed} failed.${failureDetail}`
+        : `Deleted ${succeeded} customer(s). Their emails can register again.`,
     );
     setSelected(new Set());
     setBulkDeleteConfirmation("");
@@ -373,7 +389,7 @@ export function CustomersPanel() {
     <div>
       <AdminPageHeader
         title="Customers"
-        description="Search, filter, and open customer administration records. Select rows to suspend, reactivate, lock, unlock, or permanently purge."
+        description="Search, filter, and open customer administration records. Select rows to suspend, reactivate, lock, unlock, or delete."
         action={
           <Button asChild type="button">
             <Link href="/admin/customers/new">Create customer</Link>
@@ -385,99 +401,9 @@ export function CustomersPanel() {
           {bulkFeedback}
         </p>
       ) : null}
-      <AdminToolbar
-        searchLabel="Search customers"
-        searchValue={q}
-        onSearchChange={setQ}
-        statusLabel="Account status"
-        statusValue={status}
-        statusOptions={[
-          { value: "active", label: "Active" },
-          { value: "suspended", label: "Suspended" },
-          { value: "closed", label: "Closed" },
-        ]}
-        onStatusChange={setStatus}
-        trailing={
-          <>
-            {selected.size > 0 ? (
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2 py-1.5">
-                <span className="px-1 text-sm font-semibold text-foreground">
-                  {selected.size} selected
-                </span>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={bulkBusy}
-                  onClick={() => void runBulkAction("suspend")}
-                >
-                  Suspend
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={bulkBusy}
-                  onClick={() => void runBulkAction("reactivate")}
-                >
-                  Reactivate
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={bulkBusy}
-                  onClick={() => void runBulkAction("lock")}
-                >
-                  Lock
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={bulkBusy}
-                  onClick={() => void runBulkAction("unlock")}
-                >
-                  Unlock
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  disabled={bulkBusy}
-                  onClick={() => void runBulkAction("delete")}
-                >
-                  Purge
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  disabled={bulkBusy}
-                  onClick={() => setSelected(new Set())}
-                >
-                  Clear
-                </Button>
-              </div>
-            ) : null}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setState("loading");
-                void load();
-              }}
-            >
-              Refresh
-            </Button>
-          </>
-        }
-      />
       {selected.size > 0 ? (
-        <div className="sticky top-2 z-30 mb-4 flex flex-wrap items-center gap-2 rounded-xl border-2 border-amber-500/50 bg-background/95 px-3 py-3 shadow-lg backdrop-blur">
-          <span className="text-sm font-semibold text-foreground">
-            Bulk actions · {selected.size} customer{selected.size === 1 ? "" : "s"}
-          </span>
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-3">
+          <span className="text-sm font-semibold text-foreground">{selected.size} selected</span>
           <Button
             type="button"
             size="sm"
@@ -521,7 +447,7 @@ export function CustomersPanel() {
             disabled={bulkBusy}
             onClick={() => void runBulkAction("delete")}
           >
-            Purge
+            Delete
           </Button>
           <Button
             type="button"
@@ -533,12 +459,32 @@ export function CustomersPanel() {
             Clear selection
           </Button>
         </div>
-      ) : (
-        <p className="mb-3 text-sm text-muted-foreground">
-          Tip: use the checkboxes in the table to select customers, then Suspend / Reactivate / Lock
-          / Unlock / Purge appear here.
-        </p>
-      )}
+      ) : null}
+      <AdminToolbar
+        searchLabel="Search customers"
+        searchValue={q}
+        onSearchChange={setQ}
+        statusLabel="Account status"
+        statusValue={status}
+        statusOptions={[
+          { value: "active", label: "Active" },
+          { value: "restricted", label: "Restricted" },
+          { value: "closed", label: "Closed" },
+        ]}
+        onStatusChange={setStatus}
+        trailing={
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setState("loading");
+              void load();
+            }}
+          >
+            Refresh
+          </Button>
+        }
+      />
       {state === "loading" ? <AdminLoadingBlock /> : null}
       {state === "error" && error ? (
         <AdminErrorBlock
@@ -613,9 +559,9 @@ export function CustomersPanel() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Permanently purge {selected.size} customer(s)?</DialogTitle>
+            <DialogTitle>Delete {selected.size} customer(s)?</DialogTitle>
             <DialogDescription>
-              This permanently purges the selected customers and all of their application data
+              This permanently deletes the selected customers and all of their application data
               (profile, wallet, deposits, withdrawals, investments, notifications). Their email can
               register again. Type DELETE to confirm. Staff accounts and your own admin account
               cannot be deleted here.
@@ -637,7 +583,7 @@ export function CustomersPanel() {
               disabled={bulkBusy || bulkDeleteConfirmation !== "DELETE" || !pendingBulkAction}
               onClick={() => void confirmBulkDelete()}
             >
-              {bulkBusy ? "Purging…" : "Purge selected"}
+              {bulkBusy ? "Deleting…" : "Delete selected"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -913,7 +859,7 @@ export function CustomerDetailPanel() {
           disabled={busy}
           onClick={() => setDeleteOpen(true)}
         >
-          Purge
+          Delete
         </Button>
       </div>
       <Card className="mb-6 space-y-3 p-4">
@@ -997,9 +943,9 @@ export function CustomerDetailPanel() {
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Permanently delete customer</DialogTitle>
+            <DialogTitle>Delete customer</DialogTitle>
             <DialogDescription>
-              This permanently purges the customer and all of their application data (profile,
+              This permanently deletes the customer and all of their application data (profile,
               wallet, deposits, withdrawals, investments, notifications). Their email can register
               again afterward. Type DELETE to confirm. You cannot delete your own administrator
               account.
@@ -1026,11 +972,11 @@ export function CustomerDetailPanel() {
                   {
                     confirmation: deleteConfirmation,
                   },
-                  "Customer permanently purged. Their email can register again.",
+                  "Customer deleted. Their email can register again.",
                 )
               }
             >
-              {busy ? "Purging…" : "Purge customer"}
+              {busy ? "Deleting…" : "Delete customer"}
             </Button>
           </DialogFooter>
         </DialogContent>
