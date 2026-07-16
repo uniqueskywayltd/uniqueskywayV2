@@ -6,6 +6,7 @@ import type {
   CoreRepository,
   DrizzleTransactionContext,
   LedgerRepository,
+  NotificationRepository,
 } from "@/infrastructure/database";
 
 const WALLET_ACCOUNT_CATEGORIES = [
@@ -15,6 +16,8 @@ const WALLET_ACCOUNT_CATEGORIES = [
   { category: "reserved", accountType: "customer_reserved_withdrawal" },
   { category: "withdrawn", accountType: "customer_withdrawn_cash" },
 ] as const;
+
+const DEFAULT_NOTIFICATION_TOPICS = ["account", "security", "product"] as const;
 
 export interface BootstrapCustomerIdentityInput {
   userId: string;
@@ -27,6 +30,7 @@ export class CustomerIdentityBootstrapService {
   constructor(
     private readonly core: CoreRepository,
     private readonly ledger: LedgerRepository,
+    private readonly notifications?: NotificationRepository,
   ) {}
 
   async bootstrap(context: DrizzleTransactionContext, input: BootstrapCustomerIdentityInput) {
@@ -46,6 +50,39 @@ export class CustomerIdentityBootstrapService {
       accountNumber: createCustomerAccountNumber(),
       status: "active",
     });
+
+    await this.core.ensureCustomerPreferences(context, {
+      userId: input.userId,
+    });
+
+    if (this.notifications) {
+      for (const topic of DEFAULT_NOTIFICATION_TOPICS) {
+        await this.notifications.upsertNotificationPreference(context, {
+          userId: input.userId,
+          channel: "in_app",
+          topic,
+          enabled: true,
+        });
+      }
+      await this.notifications.upsertNotificationPreference(context, {
+        userId: input.userId,
+        channel: "email",
+        topic: "security",
+        enabled: true,
+      });
+      await this.notifications.upsertNotificationPreference(context, {
+        userId: input.userId,
+        channel: "email",
+        topic: "product",
+        enabled: true,
+      });
+      await this.notifications.upsertNotificationPreference(context, {
+        userId: input.userId,
+        channel: "email",
+        topic: "marketing",
+        enabled: false,
+      });
+    }
 
     const wallet = await this.ledger.ensureWallet(context, {
       userId: input.userId,

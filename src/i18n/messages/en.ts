@@ -125,8 +125,8 @@ export const enMessages = {
   "auth.username_rules": "Username must be 3–24 characters (letters, numbers, underscore).",
   "auth.verify_queued":
     "Enter the verification code we deliver to {email}. Choose your investment package after you verify.",
-  "auth.username_taken": "Username already taken.",
-  "auth.email_taken": "Email already registered.",
+  "auth.username_taken": "This username is already taken.",
+  "auth.email_taken": "This email address is already registered.",
   "auth.security_correct": "Security check passed.",
   "auth.verify_modal_title": "Verify your email",
   "auth.verify_modal_body": "A verification code was sent to:",

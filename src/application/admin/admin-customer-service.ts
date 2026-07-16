@@ -76,6 +76,7 @@ export class AdminCustomerService {
     this.bootstrapper = new CustomerIdentityBootstrapService(
       deps.coreRepository,
       deps.ledgerRepository,
+      deps.notificationRepository,
     );
   }
 
@@ -113,7 +114,7 @@ export class AdminCustomerService {
     if (existing) {
       throw new AppError({
         code: "VALIDATION_ERROR",
-        message: "Email already registered.",
+        message: "This email address is already registered.",
       });
     }
 
@@ -124,7 +125,7 @@ export class AdminCustomerService {
       if (existingUsername) {
         throw new AppError({
           code: "VALIDATION_ERROR",
-          message: "Username already taken.",
+          message: "This username is already taken.",
         });
       }
     }

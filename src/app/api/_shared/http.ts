@@ -42,7 +42,7 @@ export function jsonOk<TData>(data: TData, requestId: string, init?: ResponseIni
 }
 
 export function jsonError(error: unknown, requestId: string, init?: ResponseInit) {
-  const appError = normalizeError(error);
+  const appError = normalizeError(error, requestId);
   const status = statusForError(appError);
 
   return NextResponse.json<ApiFailure>(
@@ -210,13 +210,32 @@ function collectAllowedOrigins(request: NextRequest): Set<string> {
   return allowed;
 }
 
-function normalizeError(error: unknown): AppError {
+function normalizeError(error: unknown, requestId?: string): AppError {
   if (isAppError(error)) return error;
+
+  const mapped = mapKnownDatabaseError(error);
+  if (mapped) {
+    logger.error(
+      {
+        event: "api.mapped_database_error",
+        requestId,
+        code: mapped.code,
+        message: mapped.message,
+        cause: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        err: error,
+      },
+      "Mapped database error to API response",
+    );
+    return mapped;
+  }
 
   logger.error(
     {
       event: "api.unexpected_error",
+      requestId,
       cause: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
       err: error,
     },
     "Unhandled API error",
@@ -225,6 +244,49 @@ function normalizeError(error: unknown): AppError {
   return new AppError({
     code: "INTERNAL_ERROR",
     message: "Unexpected server error.",
+    cause: error,
+  });
+}
+
+function mapKnownDatabaseError(error: unknown): AppError | null {
+  const message = error instanceof Error ? error.message : String(error);
+  const lower = message.toLowerCase();
+  const code =
+    typeof error === "object" && error && "code" in error
+      ? String((error as { code: unknown }).code)
+      : "";
+
+  const isUniqueViolation =
+    code === "23505" ||
+    lower.includes("duplicate key") ||
+    lower.includes("unique constraint") ||
+    lower.includes("unique_violation");
+
+  if (!isUniqueViolation) return null;
+
+  if (lower.includes("email") || lower.includes("users_email")) {
+    return new AppError({
+      code: "VALIDATION_ERROR",
+      message: "This email address is already registered.",
+      cause: error,
+    });
+  }
+
+  if (
+    lower.includes("display_name") ||
+    lower.includes("username") ||
+    lower.includes("customer_profiles")
+  ) {
+    return new AppError({
+      code: "VALIDATION_ERROR",
+      message: "This username is already taken.",
+      cause: error,
+    });
+  }
+
+  return new AppError({
+    code: "CONFLICT",
+    message: "A conflicting record already exists. Please try again.",
     cause: error,
   });
 }

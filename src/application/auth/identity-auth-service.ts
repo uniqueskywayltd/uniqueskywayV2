@@ -1,6 +1,6 @@
 import "server-only";
 
-import { AppError } from "@/application/errors";
+import { AppError, isAppError } from "@/application/errors";
 import { resolvePublicAppUrl } from "@/config/public-app-url";
 import { getServerEnv } from "@/config/server-env";
 import type {
@@ -90,6 +90,7 @@ export class IdentityAuthService {
     this.bootstrapper = new CustomerIdentityBootstrapService(
       deps.coreRepository,
       deps.ledgerRepository,
+      deps.notificationRepository,
     );
   }
 
@@ -104,7 +105,7 @@ export class IdentityAuthService {
       if (existingUsername) {
         throw new AppError({
           code: "VALIDATION_ERROR",
-          message: "Username already taken.",
+          message: "This username is already taken.",
         });
       }
     }
@@ -113,128 +114,159 @@ export class IdentityAuthService {
     if (existingEmail) {
       throw new AppError({
         code: "VALIDATION_ERROR",
-        message: "Email already registered.",
+        message: "This email address is already registered.",
       });
     }
 
     const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
     const redirectTo = `${appUrl}${AUTH_ROUTES.verifyEmail}`;
-    const generatedEmail = await this.deps.identityProvider.generateSignupEmail({
-      email: input.email,
-      password: input.password,
-      redirectTo,
-      ...(displayName ? { displayName } : {}),
-    });
-    logger.info(
-      {
-        event: "auth.registration.token_generated",
-        requestId: context.requestId,
-        toEmail: generatedEmail.email,
-        authUserId: generatedEmail.authUserId,
-        otpGenerated: generatedEmail.emailOtp.length > 0,
-        otpLength: generatedEmail.emailOtp.length,
-        tokenHashGenerated: generatedEmail.hashedToken.length > 0,
-        tokenHashLength: generatedEmail.hashedToken.length,
-        actionLinkGenerated: generatedEmail.actionLink.length > 0,
-      },
-      "Signup OTP and verification token generated",
-    );
+    let authUserId: string | null = null;
 
-    const authEmail = buildAuthEmailAction({
-      properties: {
-        actionLink: generatedEmail.actionLink,
-        hashedToken: generatedEmail.hashedToken,
-        emailOtp: generatedEmail.emailOtp,
-      },
-      flow: "signup",
-      email: generatedEmail.email,
-      appUrl,
-    });
-    if (!authEmail.otp) {
-      throw new AppError({
-        code: "PROVIDER_ERROR",
-        message: "Verification code could not be generated. Please try again.",
+    try {
+      const generatedEmail = await this.deps.identityProvider.generateSignupEmail({
+        email: input.email,
+        password: input.password,
+        redirectTo,
+        ...(displayName ? { displayName } : {}),
       });
-    }
-    logger.info(
-      {
-        event: "auth.registration.email_payload_created",
-        requestId: context.requestId,
-        toEmail: generatedEmail.email,
-        templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
-        otpPresent: true,
-        actionLinkPresent: authEmail.actionLink.length > 0,
-      },
-      "Verification email payload created",
-    );
-
-    await this.deps.transactionManager.runInTransaction(async (tx) => {
-      const appUser = await this.deps.identityRepository.ensureUser(tx, {
-        authUserId: generatedEmail.authUserId,
-        email: generatedEmail.email.toLowerCase(),
-        emailVerifiedAt: null,
-        status: "active",
-      });
-
-      await this.bootstrapper.bootstrap(tx, {
-        userId: appUser.id,
-        displayName: displayName ?? null,
-        legalName: legalName ?? null,
-      });
-
-      const name = legalName ?? displayName ?? appUser.email.split("@")[0] ?? "Investor";
-
-      const verificationMessage = await this.emailQueue.enqueue(tx, {
-        recipientUserId: appUser.id,
-        toEmail: appUser.email,
-        templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
-        idempotencyKey: `auth.verify_email:${appUser.id}:${authEmail.hashedToken}`,
-        metadata: {
-          otp: authEmail.otp,
-          actionLink: authEmail.actionLink,
-          hashedToken: authEmail.hashedToken,
-          name,
-          displayName: displayName ?? null,
-          trigger: "auth.register",
-          requestId: context.requestId,
-        },
-      });
+      authUserId = generatedEmail.authUserId;
       logger.info(
         {
-          event: "auth.registration.email_queued",
+          event: "auth.registration.token_generated",
           requestId: context.requestId,
-          emailMessageId: verificationMessage.id,
-          toEmail: appUser.email,
-          templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
+          toEmail: generatedEmail.email,
+          authUserId: generatedEmail.authUserId,
+          otpGenerated: generatedEmail.emailOtp.length > 0,
+          otpLength: generatedEmail.emailOtp.length,
+          tokenHashGenerated: generatedEmail.hashedToken.length > 0,
+          tokenHashLength: generatedEmail.hashedToken.length,
+          actionLinkGenerated: generatedEmail.actionLink.length > 0,
         },
-        "Verification email queued",
+        "Signup OTP and verification token generated",
       );
 
-      await this.emailQueue.enqueue(tx, {
-        recipientUserId: appUser.id,
-        toEmail: appUser.email,
-        templateKey: AUTH_EMAIL_TEMPLATES.welcome,
-        idempotencyKey: `auth.welcome:${appUser.id}`,
-        availableAt: new Date(Date.now() + SIGNUP_WELCOME_DELAY_MS),
-        metadata: {
-          name,
-          displayName: displayName ?? null,
-          actionLink: authEmail.actionLink,
-          signupWelcome: true,
-          trigger: "auth.register.welcome_delayed",
-          requestId: context.requestId,
+      const authEmail = buildAuthEmailAction({
+        properties: {
+          actionLink: generatedEmail.actionLink,
+          hashedToken: generatedEmail.hashedToken,
+          emailOtp: generatedEmail.emailOtp,
         },
+        flow: "signup",
+        email: generatedEmail.email,
+        appUrl,
+      });
+      if (!authEmail.otp) {
+        throw new AppError({
+          code: "PROVIDER_ERROR",
+          message: "Verification code could not be generated. Please try again.",
+        });
+      }
+      logger.info(
+        {
+          event: "auth.registration.email_payload_created",
+          requestId: context.requestId,
+          toEmail: generatedEmail.email,
+          templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
+          otpPresent: true,
+          actionLinkPresent: authEmail.actionLink.length > 0,
+        },
+        "Verification email payload created",
+      );
+
+      await this.deps.transactionManager.runInTransaction(async (tx) => {
+        const appUser = await this.deps.identityRepository.ensureUser(tx, {
+          authUserId: generatedEmail.authUserId,
+          email: generatedEmail.email.toLowerCase(),
+          emailVerifiedAt: null,
+          status: "active",
+        });
+
+        await this.bootstrapper.bootstrap(tx, {
+          userId: appUser.id,
+          displayName: displayName ?? null,
+          legalName: legalName ?? null,
+        });
+
+        const name = legalName ?? displayName ?? appUser.email.split("@")[0] ?? "Investor";
+
+        const verificationMessage = await this.emailQueue.enqueue(tx, {
+          recipientUserId: appUser.id,
+          toEmail: appUser.email,
+          templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
+          idempotencyKey: `auth.verify_email:${appUser.id}:${authEmail.hashedToken}`,
+          metadata: {
+            otp: authEmail.otp,
+            actionLink: authEmail.actionLink,
+            hashedToken: authEmail.hashedToken,
+            name,
+            displayName: displayName ?? null,
+            trigger: "auth.register",
+            requestId: context.requestId,
+          },
+        });
+        logger.info(
+          {
+            event: "auth.registration.email_queued",
+            requestId: context.requestId,
+            emailMessageId: verificationMessage.id,
+            toEmail: appUser.email,
+            templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
+          },
+          "Verification email queued",
+        );
+
+        await this.emailQueue.enqueue(tx, {
+          recipientUserId: appUser.id,
+          toEmail: appUser.email,
+          templateKey: AUTH_EMAIL_TEMPLATES.welcome,
+          idempotencyKey: `auth.welcome:${appUser.id}`,
+          availableAt: new Date(Date.now() + SIGNUP_WELCOME_DELAY_MS),
+          metadata: {
+            name,
+            displayName: displayName ?? null,
+            actionLink: authEmail.actionLink,
+            signupWelcome: true,
+            trigger: "auth.register.welcome_delayed",
+            requestId: context.requestId,
+          },
+        });
+
+        await this.appendAudit(tx, appUser.id, "auth.registered", "user", appUser.id, context);
       });
 
-      await this.appendAudit(tx, appUser.id, "auth.registered", "user", appUser.id, context);
-    });
+      this.setPendingVerifyCookie(generatedEmail.email);
 
-    this.setPendingVerifyCookie(generatedEmail.email);
-
-    return {
-      email: generatedEmail.email,
-      verificationRequired: true,
-    };
+      return {
+        email: generatedEmail.email,
+        verificationRequired: true,
+      };
+    } catch (error) {
+      if (authUserId && this.deps.identityProvider.adminDeleteUser) {
+        try {
+          await this.deps.identityProvider.adminDeleteUser(authUserId);
+          logger.warn(
+            {
+              event: "auth.registration.auth_user_rolled_back",
+              requestId: context.requestId,
+              authUserId,
+            },
+            "Deleted Auth user after registration transaction failure",
+          );
+        } catch (cleanupError) {
+          logger.error(
+            {
+              event: "auth.registration.auth_user_rollback_failed",
+              requestId: context.requestId,
+              authUserId,
+              cause: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+              err: cleanupError,
+            },
+            "Failed to roll back Auth user after registration failure",
+          );
+        }
+      }
+      throw mapRegistrationProviderError(error);
+    }
   }
 
   async checkAvailability(input: { email?: string; username?: string }) {
@@ -827,13 +859,29 @@ export class IdentityAuthService {
     const now = new Date();
     const sessionTokenHash = hashSessionToken(session.refreshToken);
     const fingerprint = parseDeviceFingerprint(context.userAgent);
-    const existingDeviceToken = this.deps.cookies.get(AUTH_COOKIE_NAMES.trustedDevice);
-    let deviceToken = existingDeviceToken ?? createTrustedDeviceToken();
+
+    // Trusted device token hashes are globally unique. Never reuse a cookie token
+    // that does not already belong to this user — that causes unique_violation and
+    // aborts login/verify after the account is already verified.
+    let deviceToken = createTrustedDeviceToken();
     let deviceTokenHash = hashTrustedDeviceToken(deviceToken);
-    let knownDevice = await this.deps.identityRepository.findTrustedDeviceByTokenHash(
-      appUserId,
-      deviceTokenHash,
-    );
+    let knownDevice = null as Awaited<
+      ReturnType<IdentityRepository["findTrustedDeviceByTokenHash"]>
+    >;
+
+    const existingDeviceToken = this.deps.cookies.get(AUTH_COOKIE_NAMES.trustedDevice);
+    if (existingDeviceToken) {
+      const existingHash = hashTrustedDeviceToken(existingDeviceToken);
+      const ownedDevice = await this.deps.identityRepository.findTrustedDeviceByTokenHash(
+        appUserId,
+        existingHash,
+      );
+      if (ownedDevice) {
+        deviceToken = existingDeviceToken;
+        deviceTokenHash = existingHash;
+        knownDevice = ownedDevice;
+      }
+    }
 
     // Cookie alone is not enough — browser/OS changes are treated as a new device.
     if (knownDevice && knownDevice.label && knownDevice.label !== fingerprint.label) {
@@ -991,4 +1039,46 @@ export class IdentityAuthService {
       userAgentHash: hashUserAgent(context.userAgent),
     });
   }
+}
+
+function mapRegistrationProviderError(error: unknown): unknown {
+  if (isAppError(error)) {
+    const message = error.message.toLowerCase();
+    if (
+      message.includes("already registered") ||
+      message.includes("already been registered") ||
+      message.includes("user already exists") ||
+      message.includes("email address has already been registered")
+    ) {
+      return new AppError({
+        code: "VALIDATION_ERROR",
+        message: "This email address is already registered.",
+        cause: error,
+      });
+    }
+    if (message.includes("username") && message.includes("taken")) {
+      return new AppError({
+        code: "VALIDATION_ERROR",
+        message: "This username is already taken.",
+        cause: error,
+      });
+    }
+    return error;
+  }
+
+  const message =
+    error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  if (
+    message.includes("already registered") ||
+    message.includes("user already exists") ||
+    (message.includes("duplicate key") && message.includes("email"))
+  ) {
+    return new AppError({
+      code: "VALIDATION_ERROR",
+      message: "This email address is already registered.",
+      cause: error,
+    });
+  }
+
+  return error;
 }

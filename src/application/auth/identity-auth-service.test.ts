@@ -183,6 +183,34 @@ describe("IdentityAuthService", () => {
     );
   });
 
+  it("mints a new trusted device when cookie belongs to another user", async () => {
+    const { service, fakes } = createService({
+      trustedDeviceCookie: "foreign-device-token",
+      // findTrustedDeviceByTokenHash is scoped to this user — foreign cookie returns null
+      trustedDevice: null,
+    });
+
+    await service.login(
+      {
+        email: "investor@example.com",
+        password: "StrongerPassword123!",
+        rememberMe: true,
+      },
+      requestContext,
+    );
+
+    expect(fakes.identityRepository.createTrustedDevice).toHaveBeenCalled();
+    const createArgs = fakes.identityRepository.createTrustedDevice.mock.calls[0]?.[1] as {
+      deviceTokenHash: string;
+    };
+    expect(createArgs.deviceTokenHash).toBeTruthy();
+    expect(fakes.cookies.set).toHaveBeenCalledWith(
+      AUTH_COOKIE_NAMES.trustedDevice,
+      expect.any(String),
+      expect.objectContaining({ httpOnly: true }),
+    );
+  });
+
   it("revokes other sessions through Supabase while retaining current-session metadata", async () => {
     const { service, fakes } = createService();
 
@@ -248,6 +276,7 @@ function createService(
     coreRepository: {
       ensureCustomerProfile: vi.fn(async () => ({ id: "profile_1" })),
       ensureCustomerAccount: vi.fn(async () => ({ id: "account_1" })),
+      ensureCustomerPreferences: vi.fn(async () => ({ id: "prefs_1" })),
     },
     ledgerRepository: {
       ensureWallet: vi.fn(async () => ({ id: "wallet_1" })),
@@ -258,6 +287,7 @@ function createService(
       enqueueEmail: vi.fn(async () => ({ id: "email_1" })),
       enqueueOutboxEvent: vi.fn(async () => ({ id: "outbox_1" })),
       suppressQueuedEmailByIdempotencyKey: vi.fn(async () => null),
+      upsertNotificationPreference: vi.fn(async () => ({ id: "notif_pref_1" })),
     },
     operationsRepository: {
       appendAuditLog: vi.fn(async () => ({ id: "audit_1" })),
