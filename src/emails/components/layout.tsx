@@ -27,6 +27,7 @@ type EmailLayoutProps = {
   heading: string;
   children: ReactNode;
   cta?: { label: string; href: string } | undefined;
+  secondaryCta?: { label: string; href: string } | undefined;
   badge?: { label: string; tone?: EmailBadgeTone } | undefined;
 };
 
@@ -53,7 +54,14 @@ const badgeColors: Record<EmailBadgeTone, { bg: string; text: string; border: st
   },
 };
 
-export function EmailLayout({ preview, heading, children, cta, badge }: EmailLayoutProps) {
+export function EmailLayout({
+  preview,
+  heading,
+  children,
+  cta,
+  secondaryCta,
+  badge,
+}: EmailLayoutProps) {
   const brand = getBrand();
   const year = new Date().getFullYear();
   const badgeStyle = badge ? badgeColors[badge.tone ?? "neutral"] : null;
@@ -91,11 +99,21 @@ export function EmailLayout({ preview, heading, children, cta, badge }: EmailLay
             ) : null}
             <Heading style={headingStyle}>{heading}</Heading>
             {children}
-            {cta ? (
+            {cta || secondaryCta ? (
               <Section style={buttonSection}>
-                <Button style={button} href={cta.href}>
-                  {cta.label}
-                </Button>
+                {cta ? (
+                  <Button style={button} href={cta.href}>
+                    {cta.label}
+                  </Button>
+                ) : null}
+                {secondaryCta ? (
+                  <Button
+                    style={{ ...buttonSecondary, marginLeft: cta ? "10px" : "0" }}
+                    href={secondaryCta.href}
+                  >
+                    {secondaryCta.label}
+                  </Button>
+                ) : null}
               </Section>
             ) : null}
           </Section>
@@ -229,6 +247,18 @@ const button = {
   fontWeight: "700",
   textDecoration: "none",
   padding: "14px 32px",
+  display: "inline-block",
+};
+
+const buttonSecondary = {
+  backgroundColor: "transparent",
+  borderRadius: "10px",
+  color: emailColors.heading,
+  border: `1px solid ${emailColors.cardBorder}`,
+  fontSize: "14px",
+  fontWeight: "700",
+  textDecoration: "none",
+  padding: "13px 28px",
   display: "inline-block",
 };
 

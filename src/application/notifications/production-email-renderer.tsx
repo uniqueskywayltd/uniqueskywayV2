@@ -359,17 +359,37 @@ function buildEmail(
         text: financialPlainText.withdrawalCancelled(withOptional(base, { status: "Cancelled" })),
         element: WithdrawalCancelledEmail(withOptional(base, { status: "Cancelled" })),
       };
-    case "investment.activated":
+    case "investment.activated": {
+      const planName = readString(metadata.planName) ?? "Investment plan";
+      const schedule = readSchedule(metadata.schedule);
+      const activatedProps = {
+        ...withOptional(base, {
+          planName,
+          principal: readString(metadata.principal) ?? amount ?? undefined,
+          dailyRate: readString(metadata.dailyRate) ?? undefined,
+          dailyEarnings: readString(metadata.dailyEarnings) ?? undefined,
+          duration: readString(metadata.duration) ?? undefined,
+          startDateTime: readString(metadata.startDateTime) ?? undefined,
+          maturityDateTime: readString(metadata.maturityDateTime) ?? undefined,
+          expectedProfit: readString(metadata.expectedProfit) ?? undefined,
+          maturityValue: readString(metadata.maturityValue) ?? undefined,
+          nextSettlement: readString(metadata.nextSettlement) ?? undefined,
+          investmentUrl:
+            readString(metadata.investmentUrl) ??
+            (referenceId ? `${brand.url}/portfolio/${referenceId}` : dashboardUrl),
+          currentYear: readString(metadata.currentYear) ?? String(new Date().getFullYear()),
+          referenceId: referenceId ?? undefined,
+          dashboardUrl,
+        }),
+        ...(schedule ? { schedule } : {}),
+      };
       return {
         previewId: "investment-activated",
-        subject: "Investment activated",
-        text: financialPlainText.investmentActivated(
-          withOptional(base, { planName: readString(metadata.planName) }),
-        ),
-        element: InvestmentActivatedEmail(
-          withOptional(base, { planName: readString(metadata.planName) }),
-        ),
+        subject: `🎉 Your Investment is Now Active — ${planName}`,
+        text: financialPlainText.investmentActivated(activatedProps),
+        element: InvestmentActivatedEmail(activatedProps),
       };
+    }
     case "investment.roi_credited": {
       const roiAmount =
         formatAmount({
@@ -501,6 +521,19 @@ function referenceFrom(metadata: Record<string, unknown>): string | null {
 
 function readString(value: unknown): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function readSchedule(value: unknown): Array<{ label: string; amount: string }> | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const rows: Array<{ label: string; amount: string }> = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const label = readString((item as { label?: unknown }).label);
+    const amount = readString((item as { amount?: unknown }).amount) ?? "";
+    if (!label) continue;
+    rows.push({ label, amount });
+  }
+  return rows.length > 0 ? rows : undefined;
 }
 
 type EmailBaseProps = {

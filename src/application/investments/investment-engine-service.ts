@@ -199,11 +199,53 @@ export class InvestmentEngineService {
         },
       );
 
+      const plan = await this.deps.coreRepository.findInvestmentPlanById(planVersion.planId);
+      const preferences = await this.deps.coreRepository.findCustomerPreferencesByUserId(
+        input.userId,
+      );
+      const profile = await this.deps.coreRepository.findCustomerProfileByUserId(input.userId);
+      const { getBrand } = await import("@/emails/brand");
+      const { buildInvestmentActivatedEmailFields } =
+        await import("@/emails/investment-activated-fields");
+      const brand = getBrand();
+      const emailFields = buildInvestmentActivatedEmailFields({
+        planName: plan?.name ?? "Investment plan",
+        investmentId: activatedInvestment.id,
+        principalMinor: input.principalMinor,
+        currency: planVersion.currency,
+        dailyRoiBps: planVersion.dailyRoiBps,
+        termDays: planVersion.termDays,
+        promisedRoiMinor,
+        activatedAt,
+        firstSettlementDate: firstEligibleDate,
+        maturityDate: finalEarningDate,
+        appBaseUrl: brand.url,
+        timeZone: preferences?.timeZone ?? "America/New_York",
+      });
+
       await this.enqueueInvestmentEmail(tx, input.userId, "investment.activated", {
-        investmentId: investment.id,
+        investmentId: activatedInvestment.id,
         principalMinor: String(input.principalMinor),
         currency: planVersion.currency,
         trigger: "investment.activated",
+        ...(profile?.legalName ? { name: profile.legalName, legalName: profile.legalName } : {}),
+        ...(profile?.displayName ? { displayName: profile.displayName } : {}),
+        planName: emailFields.planName,
+        principal: emailFields.principal,
+        dailyRate: emailFields.dailyRate,
+        dailyEarnings: emailFields.dailyEarnings,
+        duration: emailFields.duration,
+        startDateTime: emailFields.startDateTime,
+        maturityDateTime: emailFields.maturityDateTime,
+        expectedProfit: emailFields.expectedProfit,
+        maturityValue: emailFields.maturityValue,
+        nextSettlement: emailFields.nextSettlement,
+        referenceId: emailFields.reference,
+        investmentUrl: emailFields.investmentUrl,
+        dashboardUrl: emailFields.dashboardUrl,
+        schedule: emailFields.schedule,
+        currentYear: emailFields.currentYear,
+        amountMinor: String(input.principalMinor),
       });
 
       await this.enqueueReferralCommissionEmail(tx, {

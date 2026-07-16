@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Column, Row, Section, Text } from "@react-email/components";
 import { getBrand } from "@/emails/brand";
 import { EMAIL_REPLY_SUPPORT } from "@/emails/support-copy";
@@ -27,6 +28,9 @@ type TransactionalEmailProps = {
   /** Premium brand line under the support blurb (e.g. Invest Smart. Grow Daily.). */
   closingTagline?: string | undefined;
   cta?: { label: string; href: string } | undefined;
+  secondaryCta?: { label: string; href: string } | undefined;
+  /** Extra sections rendered after the primary details table. */
+  extraSections?: ReactNode | undefined;
   badge?: { label: string; tone?: "success" | "warning" | "danger" | "neutral" } | undefined;
   /** Defaults to a reply prompt — mail is already from support, so we do not restate the address. */
   supportLead?: string | undefined;
@@ -95,6 +99,8 @@ export function TransactionalEmail({
   bodyNote,
   closingTagline,
   cta,
+  secondaryCta,
+  extraSections,
   badge,
   supportLead,
   includeSupportEmail = false,
@@ -102,13 +108,20 @@ export function TransactionalEmail({
   const brand = getBrand();
   const supportText = supportLead ?? DEFAULT_SUPPORT_LEAD;
   return (
-    <EmailLayout preview={preview} heading={heading} cta={cta} badge={badge}>
+    <EmailLayout
+      preview={preview}
+      heading={heading}
+      cta={cta}
+      secondaryCta={secondaryCta}
+      badge={badge}
+    >
       <Text style={text.primary}>
         Hello <span style={text.strong}>{name}</span>,
       </Text>
       <Text style={text.primary}>{intro}</Text>
       {introSecondary ? <Text style={text.primary}>{introSecondary}</Text> : null}
       <EmailDetailTable details={details} title={detailsTitle} />
+      {extraSections}
       {processingEstimate ? (
         <Section style={processingBox}>
           <Text style={processingLabel}>Estimated processing</Text>

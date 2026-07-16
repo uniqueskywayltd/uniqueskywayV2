@@ -1,5 +1,7 @@
+import { Section, Text } from "@react-email/components";
 import { getBrand } from "@/emails/brand";
 import {
+  EmailDetailTable,
   TransactionalEmail,
   plainTransactionalEmail,
   type DetailLine,
@@ -223,23 +225,163 @@ WithdrawalRejectedEmail.PreviewProps = {
   reason: "Withdrawal details did not match the account on file.",
 };
 
-export function InvestmentActivatedEmail(props: BaseProps & { planName?: string }) {
+export function InvestmentActivatedEmail(
+  props: BaseProps & {
+    planName?: string;
+    principal?: string;
+    dailyRate?: string;
+    dailyEarnings?: string;
+    duration?: string;
+    startDateTime?: string;
+    maturityDateTime?: string;
+    expectedProfit?: string;
+    maturityValue?: string;
+    nextSettlement?: string;
+    investmentUrl?: string;
+    schedule?: Array<{ label: string; amount: string }>;
+    currentYear?: string;
+  },
+) {
+  const brand = getBrand();
+  const investmentUrl = props.investmentUrl ?? props.dashboardUrl ?? defaultDashboard();
+  const dashboardUrl = props.dashboardUrl ?? defaultDashboard();
+  const summary: DetailLine[] = [
+    ...(props.planName ? [{ label: "Investment Plan", value: props.planName }] : []),
+    ...(props.principal
+      ? [{ label: "Investment Amount", value: props.principal, highlight: true }]
+      : props.amount
+        ? [{ label: "Investment Amount", value: props.amount, highlight: true }]
+        : []),
+    ...(props.dailyRate ? [{ label: "Daily ROI", value: `${props.dailyRate}%` }] : []),
+    ...(props.dailyEarnings
+      ? [{ label: "Daily Earnings", value: props.dailyEarnings, highlight: true }]
+      : []),
+    ...(props.duration ? [{ label: "Investment Duration", value: `${props.duration} days` }] : []),
+    ...(props.startDateTime ? [{ label: "Investment Start", value: props.startDateTime }] : []),
+    ...(props.maturityDateTime
+      ? [{ label: "Investment Maturity", value: props.maturityDateTime }]
+      : []),
+    ...(props.expectedProfit
+      ? [{ label: "Expected Total ROI", value: props.expectedProfit, highlight: true }]
+      : []),
+    ...(props.maturityValue
+      ? [{ label: "Expected Maturity Value", value: props.maturityValue, highlight: true }]
+      : []),
+    { label: "Current Status", value: "🟢 Active" },
+    ...(props.referenceId ? [{ label: "Reference", value: props.referenceId }] : []),
+  ];
+
+  const importantDates: DetailLine[] = [
+    ...(props.startDateTime ? [{ label: "Investment Started", value: props.startDateTime }] : []),
+    ...(props.nextSettlement ? [{ label: "Next Daily Credit", value: props.nextSettlement }] : []),
+    ...(props.maturityDateTime
+      ? [{ label: "Investment Matures", value: props.maturityDateTime }]
+      : []),
+  ];
+
+  const schedule = props.schedule ?? [];
+
   return (
     <TransactionalEmail
-      preview="Your investment is now active"
-      heading="Investment activated"
+      preview={`Your ${props.planName ?? "investment"} is now active and earning returns`}
+      heading="Your investment is now active"
       badge={{ label: "Active", tone: "success" }}
       name={props.name}
-      intro="Your investment has been activated and is now earning returns according to your plan terms."
-      details={details(props, props.planName ? [{ label: "Plan", value: props.planName }] : [])}
-      cta={{ label: "View investment", href: props.dashboardUrl ?? defaultDashboard() }}
+      intro="Congratulations! Your investment has been successfully activated and has started earning returns."
+      detailsTitle="Investment Summary"
+      details={summary}
+      supportLead="Need assistance? Email:"
+      includeSupportEmail
+      cta={{ label: "View Investment", href: investmentUrl }}
+      secondaryCta={{ label: "Open Dashboard", href: dashboardUrl }}
+      extraSections={
+        <>
+          <Section style={nextStepsWrap}>
+            <Text style={nextStepsTitle}>What happens next?</Text>
+            <Text style={nextStepsItem}>• Your investment begins earning immediately.</Text>
+            <Text style={nextStepsItem}>
+              • Live earnings are displayed on your dashboard and update continuously.
+            </Text>
+            <Text style={nextStepsItem}>
+              • Your earnings are credited according to your investment schedule.
+            </Text>
+            <Text style={nextStepsItem}>
+              • You can monitor your investment progress, earnings, maturity date, and portfolio
+              anytime from your dashboard.
+            </Text>
+          </Section>
+          {schedule.length > 0 ? (
+            <EmailDetailTable
+              title="Projected Earnings"
+              details={schedule.map((day) => ({
+                label: day.label,
+                value: day.amount || "—",
+                highlight: day.label === "Final Day",
+              }))}
+            />
+          ) : null}
+          {importantDates.length > 0 ? (
+            <EmailDetailTable title="Important Dates" details={importantDates} />
+          ) : null}
+          <Text style={thankYouText}>
+            Thank you for investing with {brand.name}. We appreciate your trust and remain committed
+            to helping you grow your wealth securely.
+          </Text>
+        </>
+      }
     />
   );
 }
 
+const nextStepsWrap = {
+  margin: "4px 0 20px",
+};
+
+const nextStepsTitle = {
+  color: "#0f172a",
+  fontSize: "14px",
+  fontWeight: "700" as const,
+  margin: "0 0 10px",
+  lineHeight: "20px",
+};
+
+const nextStepsItem = {
+  color: "#334155",
+  fontSize: "14px",
+  lineHeight: "22px",
+  margin: "0 0 6px",
+};
+
+const thankYouText = {
+  color: "#334155",
+  fontSize: "14px",
+  lineHeight: "22px",
+  margin: "8px 0 0",
+};
+
 InvestmentActivatedEmail.PreviewProps = {
-  ...sampleBase,
-  planName: "Growth Portfolio — 12 months",
+  name: "Alex Morgan",
+  planName: "Gold Plan",
+  principal: "$30,000.00",
+  dailyRate: "5.5",
+  dailyEarnings: "$1,650.00",
+  duration: "7",
+  startDateTime: "07/16/2026, 2:00 PM EDT",
+  maturityDateTime: "07/24/2026, 12:00 AM EDT",
+  expectedProfit: "$11,550.00",
+  maturityValue: "$41,550.00",
+  nextSettlement: "07/17/2026, 12:00 AM EDT",
+  referenceId: "inv_gold_preview_001",
+  investmentUrl: "https://uniqueskyway-v2.vercel.app/portfolio/inv_gold_preview_001",
+  dashboardUrl: "https://uniqueskyway-v2.vercel.app/dashboard",
+  schedule: [
+    { label: "Day 1", amount: "$1,650.00" },
+    { label: "Day 2", amount: "$1,650.00" },
+    { label: "Day 3", amount: "$1,650.00" },
+    { label: "…", amount: "" },
+    { label: "Final Day", amount: "$1,650.00" },
+  ],
+  currentYear: "2026",
 };
 
 export function DailyRoiEmail(props: BaseProps & { roiAmount?: string }) {
@@ -532,13 +674,76 @@ export const financialPlainText = {
       intro: "We were unable to approve your withdrawal request.",
       details: details(p, p.reason ? [{ label: "Reason", value: p.reason }] : []),
     }),
-  investmentActivated: (p: BaseProps & { planName?: string }) =>
-    plainTransactionalEmail({
-      heading: "Investment activated",
-      name: p.name,
-      intro: "Your investment has been activated.",
-      details: details(p, p.planName ? [{ label: "Plan", value: p.planName }] : []),
-    }),
+  investmentActivated: (
+    p: BaseProps & {
+      planName?: string;
+      principal?: string;
+      dailyRate?: string;
+      dailyEarnings?: string;
+      duration?: string;
+      startDateTime?: string;
+      maturityDateTime?: string;
+      expectedProfit?: string;
+      maturityValue?: string;
+      nextSettlement?: string;
+      investmentUrl?: string;
+      schedule?: Array<{ label: string; amount: string }>;
+    },
+  ) => {
+    const lines: string[] = [
+      "Your investment is now active",
+      "",
+      `Hello ${p.name},`,
+      "",
+      "Congratulations! Your investment has been successfully activated and has started earning returns.",
+      "",
+      "— Investment Summary —",
+    ];
+    if (p.planName) lines.push(`Investment Plan: ${p.planName}`);
+    if (p.principal || p.amount) lines.push(`Investment Amount: ${p.principal ?? p.amount}`);
+    if (p.dailyRate) lines.push(`Daily ROI: ${p.dailyRate}%`);
+    if (p.dailyEarnings) lines.push(`Daily Earnings: ${p.dailyEarnings}`);
+    if (p.duration) lines.push(`Investment Duration: ${p.duration} days`);
+    if (p.startDateTime) lines.push(`Investment Start: ${p.startDateTime}`);
+    if (p.maturityDateTime) lines.push(`Investment Maturity: ${p.maturityDateTime}`);
+    if (p.expectedProfit) lines.push(`Expected Total ROI: ${p.expectedProfit}`);
+    if (p.maturityValue) lines.push(`Expected Maturity Value: ${p.maturityValue}`);
+    lines.push("Current Status: Active");
+    if (p.referenceId) lines.push(`Reference: ${p.referenceId}`);
+    lines.push(
+      "",
+      "What happens next?",
+      "• Your investment begins earning immediately.",
+      "• Live earnings are displayed on your dashboard and update continuously.",
+      "• Your earnings are credited according to your investment schedule.",
+      "• You can monitor progress, earnings, maturity, and portfolio anytime from your dashboard.",
+      "",
+    );
+    if (p.schedule?.length) {
+      lines.push("— Projected Earnings —");
+      for (const day of p.schedule) {
+        lines.push(day.amount ? `${day.label}: ${day.amount}` : day.label);
+      }
+      lines.push("");
+    }
+    if (p.startDateTime || p.nextSettlement || p.maturityDateTime) {
+      lines.push("— Important Dates —");
+      if (p.startDateTime) lines.push(`Investment Started: ${p.startDateTime}`);
+      if (p.nextSettlement) lines.push(`Next Daily Credit: ${p.nextSettlement}`);
+      if (p.maturityDateTime) lines.push(`Investment Matures: ${p.maturityDateTime}`);
+      lines.push("");
+    }
+    lines.push(
+      `View Investment: ${p.investmentUrl ?? p.dashboardUrl ?? defaultDashboard()}`,
+      `Open Dashboard: ${p.dashboardUrl ?? defaultDashboard()}`,
+      "",
+      `Need assistance? Email: ${getBrand().email}`,
+      "",
+      `Thank you for investing with ${getBrand().name}.`,
+      `© ${new Date().getFullYear()} ${getBrand().name}. All Rights Reserved.`,
+    );
+    return lines.join("\n");
+  },
   dailyRoi: (p: BaseProps & { roiAmount?: string }) => {
     const credited = p.roiAmount || p.amount || "+$0.00";
     return plainTransactionalEmail({
