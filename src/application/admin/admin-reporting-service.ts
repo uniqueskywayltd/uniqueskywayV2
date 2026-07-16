@@ -71,7 +71,7 @@ export class AdminReportingService {
     ] = await Promise.all([
       repo.countCustomerAccounts(),
       repo.countCustomerProfilesByKyc("approved"),
-      repo.countCustomerAccounts("suspended"),
+      repo.countCustomerAccounts("restricted"),
       repo.countInvestmentsByStatus("active"),
       repo.countInvestmentsByStatus("matured"),
       repo.countDepositsByStatuses([...PENDING_DEPOSIT_STATUSES]),
@@ -470,7 +470,8 @@ function rowsToCsv(rows: ExportRow[]): string {
 async function rowsToXlsx(rows: ExportRow[], sheetName: string): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet(sheetName.slice(0, 31) || "report");
-  const headers = rows.length > 0 ? [...new Set(rows.flatMap((row) => Object.keys(row)))] : ["empty"];
+  const headers =
+    rows.length > 0 ? [...new Set(rows.flatMap((row) => Object.keys(row)))] : ["empty"];
   sheet.addRow(headers);
   for (const row of rows) {
     sheet.addRow(headers.map((header) => row[header] ?? null));

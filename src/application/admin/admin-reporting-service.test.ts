@@ -177,7 +177,7 @@ function createFixture(options: FixtureOptions = {}) {
   const reportingRepository = {
     probeDatabase: vi.fn(async () => "ok" as const),
     countCustomerAccounts: vi.fn(async (status?: string) => {
-      if (status === "suspended") return 5;
+      if (status === "restricted") return 5;
       if (status === "active") return 90;
       return 100;
     }),
