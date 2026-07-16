@@ -46,7 +46,7 @@ export function humanizeStatus(status: string | null | undefined): string {
     reversed: "Reversed",
     under_review: "Under Review",
     approved: "Approved",
-    paid: "Paid",
+    paid: "Completed",
     rejected: "Rejected",
     active: "Active",
     pending_activation: "Pending Activation",

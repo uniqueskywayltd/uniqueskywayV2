@@ -20,7 +20,7 @@ describe("withdrawal-destination", () => {
     if (parsed.kind !== "crypto") return;
     expect(parsed.methodLabel).toBe("Bitcoin (BTC)");
     expect(parsed.networkLabel).toBe("Bitcoin Network");
-    expect(shortenWalletAddress(parsed.address)).toBe("e43tgb...gtfred");
+    expect(shortenWalletAddress(parsed.address)).toBe("e43tgb...45gtfred");
     expect(withdrawalDestinationSummary(parsed)).toContain("Bitcoin (BTC)");
     expect(withdrawalDestinationSummary(parsed)).not.toContain("{");
   });

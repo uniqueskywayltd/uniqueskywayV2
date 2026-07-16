@@ -58,7 +58,7 @@ export function networkDisplayLabel(network: string): string {
   return NETWORK_LABELS[trimmed] ?? NETWORK_LABELS[trimmed.toUpperCase()] ?? trimmed;
 }
 
-export function shortenWalletAddress(address: string, head = 6, tail = 6): string {
+export function shortenWalletAddress(address: string, head = 6, tail = 8): string {
   const value = address.trim();
   if (value.length <= head + tail + 3) return value;
   return `${value.slice(0, head)}...${value.slice(-tail)}`;

@@ -47,10 +47,10 @@ const WITHDRAWAL_STATUS: Record<
   { label: string; tone: StatusTone; explanation: string; nextExpectedStep: string }
 > = {
   requested: {
-    label: "Requested",
+    label: "Awaiting Review",
     tone: "pending",
-    explanation: "We received your withdrawal request.",
-    nextExpectedStep: "Funds reservation / review begins.",
+    explanation: "Your withdrawal request was received and is waiting for review.",
+    nextExpectedStep: "Finance will review your request.",
   },
   reserved: {
     label: "Funds reserved",
@@ -59,7 +59,7 @@ const WITHDRAWAL_STATUS: Record<
     nextExpectedStep: "Review or approval.",
   },
   under_review: {
-    label: "Under review",
+    label: "Pending Review",
     tone: "pending",
     explanation: "A reviewer is checking this request.",
     nextExpectedStep: "Wait for approve or reject.",
@@ -77,7 +77,7 @@ const WITHDRAWAL_STATUS: Record<
     nextExpectedStep: "Wait for paid or failure update.",
   },
   paid: {
-    label: "Paid",
+    label: "Completed",
     tone: "matured",
     explanation: "The withdrawal completed successfully.",
     nextExpectedStep: "Confirm receipt in your destination.",

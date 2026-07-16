@@ -94,6 +94,8 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
   );
   const [outcome, setOutcome] = useState<"approve" | "reject" | null>(null);
   const [proofOpen, setProofOpen] = useState(false);
+  const [showFullWallet, setShowFullWallet] = useState(false);
+  const [walletCopied, setWalletCopied] = useState(false);
 
   const base = kind === "deposit" ? `/api/admin/deposits/${id}` : `/api/admin/withdrawals/${id}`;
 
@@ -242,10 +244,39 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
                   <AdminInfoRow label="Network" value={destination.networkLabel} />
                   <AdminInfoRow
                     label="Wallet Address"
-                    value={shortenWalletAddress(destination.address)}
-                    mono
+                    value={
+                      <div className="space-y-2">
+                        <p className="break-all font-mono text-xs">
+                          {showFullWallet
+                            ? destination.address
+                            : shortenWalletAddress(destination.address)}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              void navigator.clipboard.writeText(destination.address).then(() => {
+                                setWalletCopied(true);
+                                window.setTimeout(() => setWalletCopied(false), 2000);
+                              });
+                            }}
+                          >
+                            {walletCopied ? "Copied" : "Copy Address"}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowFullWallet((value) => !value)}
+                          >
+                            {showFullWallet ? "Hide Full Address" : "Show Full Address"}
+                          </Button>
+                        </div>
+                      </div>
+                    }
                   />
-                  <AdminInfoRow label="Full Wallet Address" value={destination.address} mono />
                 </>
               );
             }
@@ -267,7 +298,7 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
             <AdminInfoRow label="Reason" value={withdrawal.reviewReason} />
           ) : null}
           {withdrawal?.paidAt ? (
-            <AdminInfoRow label="Paid" value={formatAdminDateTime(withdrawal.paidAt)} />
+            <AdminInfoRow label="Completed" value={formatAdminDateTime(withdrawal.paidAt)} />
           ) : null}
         </AdminInfoSection>
       )}
@@ -310,14 +341,20 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
             Decision
           </h2>
           <label className="grid gap-1.5 text-sm">
-            <span className="font-medium">Review Notes</span>
+            <span className="font-medium">
+              {kind === "withdrawal" ? "Admin Notes" : "Review Notes"}
+            </span>
             <span className="text-xs text-muted-foreground">Reason (Required)</span>
             <Textarea
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               rows={4}
-              placeholder="Explain why you approved or rejected this deposit."
-              aria-label="Review notes"
+              placeholder={
+                kind === "withdrawal"
+                  ? "Explain why you approved or rejected this withdrawal."
+                  : "Explain why you approved or rejected this deposit."
+              }
+              aria-label={kind === "withdrawal" ? "Admin notes" : "Review notes"}
             />
           </label>
           <div className="flex flex-wrap gap-2">
@@ -347,7 +384,7 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
                 disabled={busy || !reason.trim()}
                 onClick={() => setConfirmAction("complete")}
               >
-                Mark as Paid
+                Mark as Completed
               </Button>
             ) : null}
             <Button asChild type="button" variant="ghost">
