@@ -2,13 +2,13 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 
 import { extractFirstName, formatLocation } from "@/application/public/social-proof-privacy";
 import { formatMoneyMinorUnits } from "@/i18n/format";
 import { getDatabaseConnection, schema } from "@/infrastructure/database";
 
-const { customerProfiles, investments, users, withdrawalRequests } = schema;
+const { adminProfiles, customerProfiles, investments, users, withdrawalRequests } = schema;
 
 export { extractFirstName, formatLocation } from "@/application/public/social-proof-privacy";
 
@@ -55,7 +55,8 @@ async function loadSocialProofEventsFromDatabase(): Promise<SocialProofEvent[]> 
       })
       .from(users)
       .innerJoin(customerProfiles, eq(customerProfiles.userId, users.id))
-      .where(eq(users.status, "active"))
+      .leftJoin(adminProfiles, eq(adminProfiles.userId, users.id))
+      .where(and(eq(users.status, "active"), isNull(adminProfiles.id)))
       .orderBy(desc(users.createdAt))
       .limit(FETCH_LIMIT),
     db
@@ -67,7 +68,13 @@ async function loadSocialProofEventsFromDatabase(): Promise<SocialProofEvent[]> 
         userId: investments.userId,
       })
       .from(investments)
-      .where(inArray(investments.status, ["active", "maturing", "matured"]))
+      .leftJoin(adminProfiles, eq(adminProfiles.userId, investments.userId))
+      .where(
+        and(
+          inArray(investments.status, ["active", "maturing", "matured"]),
+          isNull(adminProfiles.id),
+        ),
+      )
       .orderBy(desc(investments.activatedAt))
       .limit(FETCH_LIMIT),
     db
@@ -79,7 +86,8 @@ async function loadSocialProofEventsFromDatabase(): Promise<SocialProofEvent[]> 
         userId: withdrawalRequests.userId,
       })
       .from(withdrawalRequests)
-      .where(eq(withdrawalRequests.status, "paid"))
+      .leftJoin(adminProfiles, eq(adminProfiles.userId, withdrawalRequests.userId))
+      .where(and(eq(withdrawalRequests.status, "paid"), isNull(adminProfiles.id)))
       .orderBy(desc(withdrawalRequests.paidAt))
       .limit(FETCH_LIMIT),
   ]);

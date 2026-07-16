@@ -23,6 +23,8 @@ export interface BootstrapCustomerIdentityInput {
   userId: string;
   displayName?: string | null;
   legalName?: string | null;
+  country?: string | null;
+  stateRegion?: string | null;
   currency?: string;
 }
 
@@ -40,6 +42,8 @@ export class CustomerIdentityBootstrapService {
       userId: input.userId,
       displayName: input.displayName ?? null,
       legalName: input.legalName ?? null,
+      country: normalizeIsoCountry(input.country),
+      stateRegion: normalizeRegionLabel(input.stateRegion),
       onboardingStatus: "not_started",
       kycStatus: "not_started",
       riskStatus: "not_reviewed",
@@ -112,4 +116,16 @@ export class CustomerIdentityBootstrapService {
 
 export function createCustomerAccountNumber(): string {
   return `USW-${randomBytes(6).toString("hex").toUpperCase()}`;
+}
+
+export function normalizeIsoCountry(value: string | null | undefined): string | null {
+  const code = value?.trim().toUpperCase() ?? "";
+  if (!/^[A-Z]{2}$/.test(code) || code === "XX") return null;
+  return code;
+}
+
+export function normalizeRegionLabel(value: string | null | undefined): string | null {
+  const label = value?.trim() ?? "";
+  if (label.length < 2) return null;
+  return label.slice(0, 80);
 }

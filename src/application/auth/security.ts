@@ -9,8 +9,12 @@ export interface RequestSecurityContext {
   ipAddress: string | null;
   userAgent: string | null;
   origin: string | null;
-  /** Coarse geo hint from CDN headers (e.g. country code), when available. */
+  /** Coarse geo hint from CDN headers (ISO 3166-1 alpha-2 country code), when available. */
   approximateLocation: string | null;
+  /** Coarse city hint from CDN headers (e.g. x-vercel-ip-city), when available. */
+  approximateCity: string | null;
+  /** Coarse region hint from CDN headers (e.g. x-vercel-ip-country-region), when available. */
+  approximateRegion: string | null;
 }
 
 export interface DeviceFingerprint {

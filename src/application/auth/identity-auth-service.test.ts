@@ -36,6 +36,8 @@ const requestContext = {
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
   origin: "http://localhost:3000",
   approximateLocation: "US",
+  approximateCity: "Austin",
+  approximateRegion: "TX",
 };
 
 describe("IdentityAuthService", () => {
@@ -273,6 +275,17 @@ function createService(
       ensureCustomerProfile: vi.fn(async () => ({ id: "profile_1" })),
       ensureCustomerAccount: vi.fn(async () => ({ id: "account_1" })),
       ensureCustomerPreferences: vi.fn(async () => ({ id: "prefs_1" })),
+      findCustomerProfileByUserId: vi.fn(async () => ({
+        id: "profile_1",
+        userId: "app_user_1",
+        legalName: "Avery Investor",
+        displayName: "Avery Investor",
+        phone: null,
+        country: null,
+        stateRegion: null,
+        dateOfBirth: null,
+      })),
+      updateCustomerProfile: vi.fn(async () => ({ id: "profile_1" })),
     },
     ledgerRepository: {
       ensureWallet: vi.fn(async () => ({ id: "wallet_1" })),

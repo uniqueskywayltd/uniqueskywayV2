@@ -40,6 +40,8 @@ describe("CustomerIdentityBootstrapService", () => {
     await service.bootstrap(context, {
       userId: "user_1",
       displayName: "Avery Investor",
+      country: "NG",
+      stateRegion: "Lagos",
     });
 
     expect(core.ensureCustomerProfile).toHaveBeenCalledWith(
@@ -47,6 +49,8 @@ describe("CustomerIdentityBootstrapService", () => {
       expect.objectContaining({
         userId: "user_1",
         displayName: "Avery Investor",
+        country: "NG",
+        stateRegion: "Lagos",
         onboardingStatus: "not_started",
         kycStatus: "not_started",
       }),

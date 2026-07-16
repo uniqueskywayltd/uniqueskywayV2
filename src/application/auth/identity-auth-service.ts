@@ -28,7 +28,11 @@ import type {
   AuthenticatedUser,
   IdentityProvider,
 } from "./identity-provider";
-import { CustomerIdentityBootstrapService } from "./profile-bootstrap";
+import {
+  CustomerIdentityBootstrapService,
+  normalizeIsoCountry,
+  normalizeRegionLabel,
+} from "./profile-bootstrap";
 import type { AuthenticationRateLimiter } from "./rate-limiter";
 import {
   createTrustedDeviceToken,
@@ -185,6 +189,8 @@ export class IdentityAuthService {
           userId: appUser.id,
           displayName: displayName ?? null,
           legalName: legalName ?? null,
+          country: context.approximateLocation,
+          stateRegion: context.approximateCity ?? context.approximateRegion,
         });
 
         const name = legalName ?? displayName ?? appUser.email.split("@")[0] ?? "Investor";
@@ -462,6 +468,7 @@ export class IdentityAuthService {
       this.deps.rateLimiter.recordLoginSuccess(input.email, context.ipAddress);
       const appUser = await this.ensureVerifiedAppUser(authenticated.user, context);
       await this.recordSessionAndDevice(appUser.id, appUser.email, authenticated.session, context);
+      await this.backfillProfileLocationFromRequest(appUser.id, context);
       if (authenticated.user.mustChangePassword) {
         return {
           userId: appUser.id,
@@ -807,6 +814,33 @@ export class IdentityAuthService {
     };
   }
 
+  /**
+   * Persist coarse CDN location onto the customer profile when missing.
+   * Enables privacy-safe social proof without fabricating geography.
+   */
+  private async backfillProfileLocationFromRequest(
+    userId: string,
+    context: RequestSecurityContext,
+  ) {
+    const country = normalizeIsoCountry(context.approximateLocation);
+    const stateRegion = normalizeRegionLabel(context.approximateCity ?? context.approximateRegion);
+    if (!country && !stateRegion) return;
+
+    const profile = await this.deps.coreRepository.findCustomerProfileByUserId(userId);
+    if (!profile) return;
+
+    const nextCountry = profile.country ?? country;
+    const nextStateRegion = profile.stateRegion ?? stateRegion;
+    if (nextCountry === profile.country && nextStateRegion === profile.stateRegion) return;
+
+    await this.deps.transactionManager.runInTransaction(async (tx) => {
+      await this.deps.coreRepository.updateCustomerProfile(tx, userId, {
+        ...(nextCountry !== profile.country ? { country: nextCountry } : {}),
+        ...(nextStateRegion !== profile.stateRegion ? { stateRegion: nextStateRegion } : {}),
+      });
+    });
+  }
+
   private async ensureVerifiedAppUser(user: AuthenticatedUser, context: RequestSecurityContext) {
     const verifiedAt = user.emailVerifiedAt;
 
@@ -840,6 +874,8 @@ export class IdentityAuthService {
       await this.bootstrapper.bootstrap(tx, {
         userId: appUser.id,
         displayName: user.displayName,
+        country: context.approximateLocation,
+        stateRegion: context.approximateCity ?? context.approximateRegion,
       });
 
       if (!existingAppUser?.emailVerifiedAt) {

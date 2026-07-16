@@ -16,6 +16,11 @@ describe("extractFirstName", () => {
     expect(extractFirstName("A", null)).toBeNull();
     expect(extractFirstName(null, null)).toBeNull();
   });
+
+  it("rejects tokens that contain digits", () => {
+    expect(extractFirstName("RC1 Closeout", null)).toBeNull();
+    expect(extractFirstName(null, "User42")).toBeNull();
+  });
 });
 
 describe("formatLocation", () => {

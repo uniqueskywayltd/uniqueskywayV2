@@ -4,7 +4,9 @@ export function extractFirstName(
 ): string | null {
   const source = (legalName ?? displayName ?? "").trim();
   if (!source) return null;
-  const token = source.split(/\s+/)[0]?.replace(/[^A-Za-zÀ-ÿ'-]/g, "") ?? "";
+  const rawToken = source.split(/\s+/)[0] ?? "";
+  if (/\d/.test(rawToken)) return null;
+  const token = rawToken.replace(/[^A-Za-zÀ-ÿ'-]/g, "");
   if (token.length < 2) return null;
   return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
 }

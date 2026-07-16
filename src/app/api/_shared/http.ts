@@ -92,19 +92,36 @@ export async function parseJson<TSchema extends z.ZodType>(
 export function createRequestContext(request: NextRequest): RequestSecurityContext {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const ipAddress = forwardedFor?.split(",")[0]?.trim() || request.headers.get("x-real-ip");
-  const approximateLocation =
+  const countryRaw =
     request.headers.get("x-vercel-ip-country") ||
     request.headers.get("cf-ipcountry") ||
     request.headers.get("x-country-code");
+  const country = countryRaw?.trim().toUpperCase() ?? "";
+  const city = decodeHeaderValue(request.headers.get("x-vercel-ip-city"));
+  const region = decodeHeaderValue(
+    request.headers.get("x-vercel-ip-country-region") || request.headers.get("x-vercel-ip-region"),
+  );
 
   return {
     requestId: request.headers.get(REQUEST_HEADERS.requestId) ?? createRequestId(),
     ipAddress: ipAddress ?? null,
     userAgent: request.headers.get("user-agent"),
     origin: request.headers.get("origin"),
-    approximateLocation:
-      approximateLocation && approximateLocation !== "XX" ? approximateLocation : null,
+    approximateLocation: country && country !== "XX" && country.length === 2 ? country : null,
+    approximateCity: city,
+    approximateRegion: region,
   };
+}
+
+function decodeHeaderValue(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const decoded = decodeURIComponent(value).trim();
+    return decoded.length > 0 ? decoded.slice(0, 80) : null;
+  } catch {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed.slice(0, 80) : null;
+  }
 }
 
 export async function createCsrfResponse(requestId: string) {
