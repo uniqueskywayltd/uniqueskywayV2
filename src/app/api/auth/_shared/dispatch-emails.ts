@@ -9,7 +9,7 @@ import { ResendEmailSender } from "@/infrastructure/email";
 import { logger } from "@/infrastructure/logging/logger";
 
 /** Best-effort flush of queued emails after auth actions (does not throw to callers). */
-export async function dispatchQueuedEmails(limit = 10): Promise<void> {
+export async function dispatchQueuedEmails(limit = 25): Promise<void> {
   try {
     const { db } = getDatabaseConnection();
     const dispatcher = new TransactionalEmailDispatcher(

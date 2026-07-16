@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const input = await parseJson(request, resendVerificationInputSchema);
     const service = await createAuthService({ rememberSession: true });
     const result = await service.resendVerification(input, context);
-    await dispatchQueuedEmails(5);
+    await dispatchQueuedEmails(25);
     return jsonOk(result, context.requestId);
   } catch (error) {
     return jsonError(error, context.requestId);

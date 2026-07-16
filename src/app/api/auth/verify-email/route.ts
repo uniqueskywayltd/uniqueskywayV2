@@ -33,14 +33,14 @@ export async function POST(request: NextRequest) {
       });
       const service = await createAuthService({ rememberSession: input.rememberMe });
       const result = await service.verifyEmailLink(input, context);
-      await dispatchQueuedEmails(5);
+      await dispatchQueuedEmails(25);
       return jsonOk(result, context.requestId);
     }
 
     const input = verifyEmailInputSchema.parse(body);
     const service = await createAuthService({ rememberSession: input.rememberMe });
     const result = await service.verifyEmail(input, context);
-    await dispatchQueuedEmails(5);
+    await dispatchQueuedEmails(25);
     return jsonOk(result, context.requestId);
   } catch (error) {
     return jsonError(error, context.requestId);

@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const input = await parseJson(request, adminCreateCustomerInputSchema);
     const service = await createAdminCustomerService();
     const details = await service.createCustomer(input, createAdminRouteAuditContext(context));
-    await dispatchQueuedEmails(5);
+    await dispatchQueuedEmails(25);
 
     return jsonOk(
       {

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const input = await parseJson(request, registerInputSchema);
     const service = await createAuthService({ rememberSession: input.rememberMe });
     const result = await service.register(input, context);
-    await dispatchQueuedEmails(5);
+    await dispatchQueuedEmails(25);
     return jsonOk(result, context.requestId, { status: 202 });
   } catch (error) {
     return jsonError(error, context.requestId);

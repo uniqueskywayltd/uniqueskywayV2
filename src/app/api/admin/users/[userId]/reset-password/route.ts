@@ -31,7 +31,7 @@ export async function POST(request: NextRequest, routeContext: RouteContext) {
       userId,
       createAdminRouteAuditContext(context),
     );
-    await dispatchQueuedEmails(5);
+    await dispatchQueuedEmails(25);
     return jsonOk(result, context.requestId);
   } catch (error) {
     return jsonError(error, context.requestId);
