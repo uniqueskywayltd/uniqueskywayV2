@@ -11,6 +11,8 @@ import type {
   InvestmentRecord,
   InvestmentRepository,
   LedgerRepository,
+  NotificationRepository,
+  ReferralRepository,
   RoiScheduleItemRecord,
   SettlementRepository,
 } from "@/infrastructure/database";
@@ -40,6 +42,8 @@ export interface CustomerPortfolioServiceDependencies {
   ledgerRepository: LedgerRepository;
   transactionManager: DrizzleTransactionManager;
   clock: Clock;
+  notificationRepository: NotificationRepository;
+  referralRepository: ReferralRepository;
 }
 
 const BUCKET_STATUSES: Record<Exclude<PortfolioBucket, "all">, InvestmentRecord["status"][]> = {
@@ -81,6 +85,9 @@ export class CustomerPortfolioService {
       investmentRepository: this.deps.investmentRepository,
       ledgerRepository: this.deps.ledgerRepository,
       settlementRepository: this.deps.settlementRepository,
+      notificationRepository: this.deps.notificationRepository,
+      identityRepository: this.deps.identityRepository,
+      referralRepository: this.deps.referralRepository,
     });
 
     const result = await engine.activateInvestment({

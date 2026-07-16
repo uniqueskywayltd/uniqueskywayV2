@@ -654,6 +654,25 @@ export class IdentityAuthService {
 
       if (knownDevice) {
         await this.deps.identityRepository.touchTrustedDevice(tx, knownDevice.id, now);
+        const dayKey = now.toISOString().slice(0, 10);
+        await this.emailQueue.enqueue(tx, {
+          recipientUserId: appUserId,
+          toEmail: email,
+          templateKey: AUTH_EMAIL_TEMPLATES.newDeviceSignIn,
+          idempotencyKey: `auth.trusted_login:${appUserId}:${knownDevice.id}:${dayKey}`,
+          metadata: {
+            trustedDevice: true,
+            deviceLabel: fingerprint.label,
+            browser: fingerprint.browser,
+            os: fingerprint.os,
+            signedInAt: now.toISOString(),
+            ipAddressMasked: maskIpAddress(context.ipAddress),
+            approximateLocation: context.approximateLocation,
+            ipAddressSeen: Boolean(context.ipAddress),
+            trigger: "trusted_device_login",
+            requestId: context.requestId,
+          },
+        });
       } else {
         const device = await this.deps.identityRepository.createTrustedDevice(tx, {
           userId: appUserId,
@@ -677,6 +696,8 @@ export class IdentityAuthService {
             ipAddressMasked: maskIpAddress(context.ipAddress),
             approximateLocation: context.approximateLocation,
             ipAddressSeen: Boolean(context.ipAddress),
+            trigger: "new_device_login",
+            requestId: context.requestId,
           },
         });
       }

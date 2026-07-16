@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { createRequestContext, jsonError, jsonOk } from "@/app/api/_shared/http";
+import { dispatchQueuedEmails } from "@/app/api/auth/_shared/dispatch-emails";
 import {
   createDepositEngineService,
   createPaymentRouteAuditContext,
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
         signature,
         context: auditContext,
       });
+      await dispatchQueuedEmails(25);
       return jsonOk(result, context.requestId);
     }
 
@@ -40,6 +42,7 @@ export async function POST(request: NextRequest) {
       context: auditContext,
     });
 
+    await dispatchQueuedEmails(25);
     return jsonOk(result, context.requestId);
   } catch (error) {
     return jsonError(error, context.requestId);

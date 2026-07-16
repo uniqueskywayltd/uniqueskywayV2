@@ -88,7 +88,16 @@ export class IdentityEmailDispatcher {
             previewId: rendered.previewId,
             toEmail: message.toEmail,
             subject: rendered.subject,
+            trigger:
+              typeof message.metadata.trigger === "string"
+                ? message.metadata.trigger
+                : message.templateKey,
+            requestId:
+              typeof message.metadata.requestId === "string" ? message.metadata.requestId : null,
             providerMessageId: result.providerMessageId,
+            resendResponse: { id: result.providerMessageId },
+            success: true,
+            retryCount: message.attemptCount,
             attemptCount: message.attemptCount,
             durationMs,
             from,
@@ -105,9 +114,18 @@ export class IdentityEmailDispatcher {
             emailMessageId: message.id,
             templateKey: message.templateKey,
             toEmail: message.toEmail,
+            trigger:
+              typeof message.metadata.trigger === "string"
+                ? message.metadata.trigger
+                : message.templateKey,
+            requestId:
+              typeof message.metadata.requestId === "string" ? message.metadata.requestId : null,
+            retryCount: message.attemptCount + 1,
             attemptCount: message.attemptCount + 1,
             durationMs,
+            success: false,
             cause,
+            failureReason: cause,
             from,
           },
           "Identity email delivery failed",

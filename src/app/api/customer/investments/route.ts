@@ -10,6 +10,7 @@ import {
   requireSameOrigin,
 } from "@/app/api/_shared/http";
 import { createCustomerPortfolioService } from "@/app/api/customer/_shared/portfolio-service";
+import { dispatchQueuedEmails } from "@/app/api/auth/_shared/dispatch-emails";
 
 export const runtime = "nodejs";
 
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
     const input = await parseJson(request, activateInputSchema);
     const service = await createCustomerPortfolioService();
     const result = await service.activateInvestment(input);
+    await dispatchQueuedEmails(25);
     return jsonOk(result, context.requestId, { status: 201 });
   } catch (error) {
     return jsonError(error, context.requestId);

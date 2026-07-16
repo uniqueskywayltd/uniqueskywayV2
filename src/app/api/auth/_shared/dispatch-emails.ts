@@ -1,4 +1,5 @@
 import { TransactionalEmailDispatcher } from "@/application/notifications/transactional-email-dispatcher";
+import type { TransactionalEmailDispatchResult } from "@/application/notifications/transactional-email-dispatcher";
 import { getServerEnv } from "@/config/server-env";
 import {
   DrizzleTransactionManager,
@@ -8,8 +9,10 @@ import {
 import { ResendEmailSender } from "@/infrastructure/email";
 import { logger } from "@/infrastructure/logging/logger";
 
-/** Best-effort flush of queued emails after auth actions (does not throw to callers). */
-export async function dispatchQueuedEmails(limit = 25): Promise<void> {
+/** Flush queued emails after actions that enqueue mail. Returns null if flush itself errors. */
+export async function dispatchQueuedEmails(
+  limit = 25,
+): Promise<TransactionalEmailDispatchResult | null> {
   try {
     const { db } = getDatabaseConnection();
     const dispatcher = new TransactionalEmailDispatcher(
@@ -25,12 +28,14 @@ export async function dispatchQueuedEmails(limit = 25): Promise<void> {
           processed: result.processed,
           sent: result.sent,
           failed: result.failed,
+          skipped: result.skipped,
         },
         "Email flush completed with delivery failures",
       );
     }
+    return result;
   } catch (error) {
-    // Queue remains for the internal job route; registration/login must not fail on send.
+    // Queue remains for the internal job route; callers must not claim delivery success.
     logger.error(
       {
         event: "email.dispatch.flush_error",
@@ -38,5 +43,6 @@ export async function dispatchQueuedEmails(limit = 25): Promise<void> {
       },
       "Email flush failed before provider delivery",
     );
+    return null;
   }
 }

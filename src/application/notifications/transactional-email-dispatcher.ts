@@ -93,7 +93,16 @@ export class TransactionalEmailDispatcher {
             previewId: rendered.previewId,
             toEmail: message.toEmail,
             subject: rendered.subject,
+            trigger:
+              typeof message.metadata.trigger === "string"
+                ? message.metadata.trigger
+                : message.templateKey,
+            requestId:
+              typeof message.metadata.requestId === "string" ? message.metadata.requestId : null,
             providerMessageId: result.providerMessageId,
+            resendResponse: { id: result.providerMessageId },
+            success: true,
+            retryCount: message.attemptCount,
             attemptCount: message.attemptCount,
             durationMs,
             from,
@@ -114,10 +123,19 @@ export class TransactionalEmailDispatcher {
             emailMessageId: message.id,
             templateKey: message.templateKey,
             toEmail: message.toEmail,
-            subject: typeof message.metadata.subject === "string" ? message.metadata.subject : null,
+            subject: renderedSubjectOrNull(message.metadata),
+            trigger:
+              typeof message.metadata.trigger === "string"
+                ? message.metadata.trigger
+                : message.templateKey,
+            requestId:
+              typeof message.metadata.requestId === "string" ? message.metadata.requestId : null,
+            retryCount: message.attemptCount + 1,
             attemptCount: message.attemptCount + 1,
             durationMs,
+            success: false,
             cause,
+            failureReason: cause,
             providerError: details,
             from,
           },
@@ -137,4 +155,8 @@ export class TransactionalEmailDispatcher {
       skipped,
     };
   }
+}
+
+function renderedSubjectOrNull(metadata: Record<string, unknown>): string | null {
+  return typeof metadata.subject === "string" ? metadata.subject : null;
 }

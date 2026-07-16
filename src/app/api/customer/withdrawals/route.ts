@@ -8,6 +8,7 @@ import {
   requireCsrf,
   requireSameOrigin,
 } from "@/app/api/_shared/http";
+import { dispatchQueuedEmails } from "@/app/api/auth/_shared/dispatch-emails";
 import {
   createPaymentRouteAuditContext,
   createWithdrawalEngineService,
@@ -25,10 +26,7 @@ export async function GET(request: NextRequest) {
   try {
     const service = await createWithdrawalEngineService({ withIdentity: true });
     const withdrawals = await service.listWithdrawals();
-    return jsonOk(
-      { withdrawals: withdrawals.map(serializeWithdrawalRequest) },
-      context.requestId,
-    );
+    return jsonOk({ withdrawals: withdrawals.map(serializeWithdrawalRequest) }, context.requestId);
   } catch (error) {
     return jsonError(error, context.requestId);
   }
@@ -58,6 +56,8 @@ export async function POST(request: NextRequest) {
       },
       createPaymentRouteAuditContext(context),
     );
+
+    await dispatchQueuedEmails(25);
 
     return jsonOk(
       {

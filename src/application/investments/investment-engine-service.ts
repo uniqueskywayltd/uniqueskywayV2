@@ -30,6 +30,7 @@ import type {
   LedgerAccountRecord,
   LedgerRepository,
   NotificationRepository,
+  ReferralRepository,
   SettlementRepository,
 } from "@/infrastructure/database";
 
@@ -43,6 +44,7 @@ export interface InvestmentEngineServiceDependencies {
   /** Optional — when present, customer transaction emails are queued (idempotent). */
   notificationRepository?: NotificationRepository;
   identityRepository?: IdentityRepository;
+  referralRepository?: ReferralRepository;
 }
 
 export interface ActivateInvestmentInput {
@@ -190,6 +192,15 @@ export class InvestmentEngineService {
       await this.enqueueInvestmentEmail(tx, input.userId, "investment.activated", {
         investmentId: investment.id,
         principalMinor: String(input.principalMinor),
+        currency: planVersion.currency,
+        trigger: "investment.activated",
+      });
+
+      await this.enqueueReferralCommissionEmail(tx, {
+        referredUserId: input.userId,
+        investmentId: investment.id,
+        principalMinor: input.principalMinor,
+        currency: planVersion.currency,
       });
 
       return { investment: activatedInvestment, idempotent: false };
@@ -532,7 +543,54 @@ export class InvestmentEngineService {
       templateKey,
       templateVersion: "v1",
       idempotencyKey: `${templateKey}:${investmentId}:${settlementDate}`,
-      metadata,
+      metadata: {
+        ...metadata,
+        trigger: templateKey,
+      },
+    });
+  }
+
+  private async enqueueReferralCommissionEmail(
+    tx: DrizzleTransactionContext,
+    input: {
+      referredUserId: string;
+      investmentId: string;
+      principalMinor: bigint;
+      currency: string;
+    },
+  ) {
+    const referrals = this.deps.referralRepository;
+    const notifications = this.deps.notificationRepository;
+    const identity = this.deps.identityRepository;
+    if (!referrals || !notifications || !identity) return;
+
+    const referral = await referrals.findReferralByReferredUserId(input.referredUserId);
+    if (!referral) return;
+
+    const referrer = await identity.findUserById(referral.referrerUserId);
+    if (!referrer) return;
+
+    // 10% of principal — matches published plan marketing default until policy table drives this.
+    const commissionMinor = (input.principalMinor * 10n) / 100n;
+    if (commissionMinor <= 0n) return;
+
+    const referred = await identity.findUserById(input.referredUserId);
+
+    await notifications.enqueueEmail(tx, {
+      recipientUserId: referrer.id,
+      toEmail: referrer.email,
+      templateKey: "referral.reward",
+      templateVersion: "v1",
+      idempotencyKey: `referral.reward:${referral.id}:${input.investmentId}`,
+      metadata: {
+        trigger: "referral.reward",
+        referralId: referral.id,
+        investmentId: input.investmentId,
+        amountMinor: String(commissionMinor),
+        currency: input.currency,
+        referralName: referred?.email?.split("@")[0] ?? "Investor",
+        referenceId: referral.id,
+      },
     });
   }
 

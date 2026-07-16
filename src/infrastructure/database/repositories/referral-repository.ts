@@ -81,4 +81,13 @@ export class ReferralRepository extends BaseDrizzleRepository {
 
     return rows.map((row) => row.reward);
   }
+
+  async findReferralByReferredUserId(referredUserId: string): Promise<ReferralRecord | null> {
+    const rows = await this.db
+      .select()
+      .from(referrals)
+      .where(eq(referrals.referredUserId, referredUserId))
+      .limit(1);
+    return rows[0] ?? null;
+  }
 }

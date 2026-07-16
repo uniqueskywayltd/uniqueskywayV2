@@ -8,6 +8,7 @@ import {
   requireCsrf,
   requireSameOrigin,
 } from "@/app/api/_shared/http";
+import { dispatchQueuedEmails } from "@/app/api/auth/_shared/dispatch-emails";
 import {
   createDepositEngineService,
   createPaymentRouteAuditContext,
@@ -59,6 +60,8 @@ export async function POST(request: NextRequest) {
       },
       createPaymentRouteAuditContext(context),
     );
+
+    await dispatchQueuedEmails(25);
 
     return jsonOk(
       {

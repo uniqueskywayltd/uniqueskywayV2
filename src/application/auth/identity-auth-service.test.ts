@@ -145,7 +145,7 @@ describe("IdentityAuthService", () => {
     expect(fakes.identityRepository.ensureSession).toHaveBeenCalled();
   });
 
-  it("reuses known trusted devices without sending repeated new-device emails", async () => {
+  it("sends a trusted-device login alert without creating a new device", async () => {
     const trustedDevice = createTrustedDevice();
     const { service, fakes } = createService({
       trustedDeviceCookie: "trusted-device-token",
@@ -167,7 +167,13 @@ describe("IdentityAuthService", () => {
       expect.any(Date),
     );
     expect(fakes.identityRepository.createTrustedDevice).not.toHaveBeenCalled();
-    expect(fakes.notificationRepository.enqueueEmail).not.toHaveBeenCalled();
+    expect(fakes.notificationRepository.enqueueEmail).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        templateKey: AUTH_EMAIL_TEMPLATES.newDeviceSignIn,
+        metadata: expect.objectContaining({ trustedDevice: true }),
+      }),
+    );
     expect(fakes.identityRepository.ensureSession).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ trustedDeviceId: "trusted_device_1" }),

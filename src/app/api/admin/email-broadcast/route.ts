@@ -9,6 +9,7 @@ import {
   requireCsrf,
   requireSameOrigin,
 } from "@/app/api/_shared/http";
+import { dispatchQueuedEmails } from "@/app/api/auth/_shared/dispatch-emails";
 
 import { createAdminSystemAuditContext, createAdminSystemService } from "../_shared/system-service";
 
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
       },
       createAdminSystemAuditContext(context),
     );
+    await dispatchQueuedEmails(25);
     return jsonOk(result, context.requestId);
   } catch (error) {
     return jsonError(error, context.requestId);

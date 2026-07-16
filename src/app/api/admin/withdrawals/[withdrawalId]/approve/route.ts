@@ -8,6 +8,7 @@ import {
   requireCsrf,
   requireSameOrigin,
 } from "@/app/api/_shared/http";
+import { dispatchQueuedEmails } from "@/app/api/auth/_shared/dispatch-emails";
 import { serializeWithdrawalRequest } from "@/app/api/payments/_shared/service";
 import { adminWithdrawalReviewInputSchema } from "@/application/payments";
 
@@ -37,6 +38,8 @@ export async function POST(request: NextRequest, routeContext: RouteContext) {
       input.reason,
       createAdminFinancialOpsAuditContext(context),
     );
+
+    await dispatchQueuedEmails(25);
 
     return jsonOk(
       {
