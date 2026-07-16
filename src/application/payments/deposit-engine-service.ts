@@ -756,12 +756,15 @@ export class DepositEngineService {
     context: RequestAuditContext,
     metadata: Record<string, unknown> = {},
   ) {
+    const reasonCandidate = metadata.reason ?? metadata.reviewReason;
+    const reason = typeof reasonCandidate === "string" ? reasonCandidate : undefined;
     await this.deps.operationsRepository.appendAuditLog(tx, {
       actorUserId,
       actorType: "admin",
       action,
       targetType: "deposit_intent",
       targetId,
+      ...(reason ? { reason } : {}),
       metadata,
       requestId: context.requestId,
       ipAddressHash: context.ipAddressHash,
