@@ -14,7 +14,11 @@ import type {
 
 import { AUTH_COOKIE_NAMES, AUTH_EMAIL_TEMPLATES, AUTH_ROUTES } from "./constants";
 import { IdentityEmailQueue } from "./identity-email-queue";
-import type { AuthenticatedSession, AuthenticatedUser, IdentityProvider } from "./identity-provider";
+import type {
+  AuthenticatedSession,
+  AuthenticatedUser,
+  IdentityProvider,
+} from "./identity-provider";
 import { CustomerIdentityBootstrapService } from "./profile-bootstrap";
 import type { AuthenticationRateLimiter } from "./rate-limiter";
 import {
@@ -160,7 +164,8 @@ export class IdentityAuthService {
       this.deps.rateLimiter.recordLoginSuccess(input.email, context.ipAddress);
       const appUser = await this.ensureVerifiedAppUser(authenticated.user, context);
       await this.recordSessionAndDevice(appUser.id, appUser.email, authenticated.session, context);
-      return { userId: appUser.id, email: appUser.email };
+      const redirectTo = await this.resolvePostLoginRedirect(appUser.id);
+      return { userId: appUser.id, email: appUser.email, redirectTo };
     } catch (error) {
       const failed = this.deps.rateLimiter.recordLoginFailure(input.email, context.ipAddress);
 
@@ -170,6 +175,16 @@ export class IdentityAuthService {
 
       throw error;
     }
+  }
+
+  private async resolvePostLoginRedirect(userId: string): Promise<"/admin" | "/dashboard"> {
+    const adminProfile = await this.deps.identityRepository.findAdminProfileByUserId(userId);
+    if (!adminProfile || adminProfile.status !== "active") {
+      return "/dashboard";
+    }
+
+    const roleKeys = await this.deps.identityRepository.listActiveRoleKeysForUser(userId);
+    return roleKeys.length > 0 ? "/admin" : "/dashboard";
   }
 
   async forgotPassword(input: ForgotPasswordInput, context: RequestSecurityContext) {

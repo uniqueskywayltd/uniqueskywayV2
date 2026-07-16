@@ -142,24 +142,65 @@ export async function requireCsrf(request: NextRequest) {
   }
 }
 
+/**
+ * Reject cross-site browser requests.
+ *
+ * Allows:
+ * - NEXT_PUBLIC_APP_URL (canonical production origin)
+ * - VERCEL_URL / VERCEL_PROJECT_PRODUCTION_URL (platform aliases)
+ * - The Host/X-Forwarded-Host serving this request (true same-origin on Vercel aliases)
+ * - ALLOWED_ORIGINS (comma-separated absolute URLs)
+ */
 export function requireSameOrigin(request: NextRequest) {
   const origin = request.headers.get("origin");
   if (!origin) return;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (!appUrl) return;
+  const allowed = collectAllowedOrigins(request);
+  if (allowed.size === 0) return;
 
-  try {
-    const appOrigin = new URL(appUrl).origin;
-    if (origin !== appOrigin) {
-      throw new AppError({
-        code: "AUTHORIZATION_ERROR",
-        message: "Invalid request origin.",
-      });
-    }
-  } catch (error) {
-    if (error instanceof AppError) throw error;
+  if (!allowed.has(origin)) {
+    throw new AppError({
+      code: "AUTHORIZATION_ERROR",
+      message: "Invalid request origin.",
+    });
   }
+}
+
+function collectAllowedOrigins(request: NextRequest): Set<string> {
+  const allowed = new Set<string>();
+
+  const add = (value?: string | null) => {
+    if (!value) return;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    try {
+      allowed.add(new URL(trimmed).origin);
+      return;
+    } catch {
+      // Host-only values (e.g. VERCEL_URL) need a scheme.
+    }
+    try {
+      allowed.add(new URL(`https://${trimmed}`).origin);
+    } catch {
+      // Ignore malformed entries.
+    }
+  };
+
+  add(process.env.NEXT_PUBLIC_APP_URL);
+  add(process.env.VERCEL_URL);
+  add(process.env.VERCEL_PROJECT_PRODUCTION_URL);
+
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const host = forwardedHost || request.headers.get("host");
+  if (host) {
+    add(`https://${host}`);
+  }
+
+  for (const extra of (process.env.ALLOWED_ORIGINS ?? "").split(",")) {
+    add(extra);
+  }
+
+  return allowed;
 }
 
 function normalizeError(error: unknown): AppError {

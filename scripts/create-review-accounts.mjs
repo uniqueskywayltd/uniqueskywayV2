@@ -9,6 +9,13 @@
  *   NEXT_PUBLIC_SUPABASE_URL
  *   SUPABASE_SERVICE_ROLE_KEY
  *   DATABASE_URL
+ *
+ * Optional overrides:
+ *   BOOTSTRAP_ADMIN_EMAIL
+ *   BOOTSTRAP_ADMIN_PASSWORD
+ *   BOOTSTRAP_ADMIN_DISPLAY_NAME
+ *   BOOTSTRAP_ADMIN_ONLY=1          (skip customer review account)
+ *   BOOTSTRAP_MUST_CHANGE_PASSWORD=1
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -21,11 +28,14 @@ const CUSTOMER = {
 };
 
 const ADMIN = {
-  email: "admin.review@uniqueskyway.com",
-  password: "ReviewAdmin2026!",
-  displayName: "Review Admin",
+  email: process.env.BOOTSTRAP_ADMIN_EMAIL || "admin.review@uniqueskyway.com",
+  password: process.env.BOOTSTRAP_ADMIN_PASSWORD || "ReviewAdmin2026!",
+  displayName: process.env.BOOTSTRAP_ADMIN_DISPLAY_NAME || "Review Admin",
   roleKey: "platform_admin",
+  mustChangePassword: process.env.BOOTSTRAP_MUST_CHANGE_PASSWORD === "1",
 };
+
+const ADMIN_ONLY = process.env.BOOTSTRAP_ADMIN_ONLY === "1";
 
 function requireEnv(name) {
   const value = process.env[name];
@@ -107,13 +117,13 @@ async function ensureCustomerSide(sql, userId, displayName) {
   `;
 }
 
-async function ensureAdminSide(sql, userId, roleKey) {
+async function ensureAdminSide(sql, userId, roleKey, mustChangePassword) {
   await sql`
     insert into public.admin_profiles (user_id, status, must_change_password)
-    values (${userId}, 'active', false)
+    values (${userId}, 'active', ${mustChangePassword})
     on conflict (user_id) do update
       set status = 'active',
-          must_change_password = false,
+          must_change_password = ${mustChangePassword},
           disabled_at = null,
           disabled_reason = null,
           updated_at = now()
@@ -139,6 +149,11 @@ async function main() {
   const serviceKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
   const databaseUrl = requireEnv("DATABASE_URL");
 
+  // Refuse V1 project accidentally.
+  if (url.includes("cdgvfhqyctnbvnykodek") || databaseUrl.includes("cdgvfhqyctnbvnykodek")) {
+    throw new Error("Refusing to bootstrap against V1 Supabase project.");
+  }
+
   const admin = createClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
@@ -146,25 +161,32 @@ async function main() {
 
   try {
     await sql.begin(async (tx) => {
-      const customerAuth = await ensureAuthUser(admin, CUSTOMER);
-      const customerUserId = await ensureAppUser(tx, customerAuth, CUSTOMER.email);
-      await ensureCustomerSide(tx, customerUserId, CUSTOMER.displayName);
+      if (!ADMIN_ONLY) {
+        const customerAuth = await ensureAuthUser(admin, CUSTOMER);
+        const customerUserId = await ensureAppUser(tx, customerAuth, CUSTOMER.email);
+        await ensureCustomerSide(tx, customerUserId, CUSTOMER.displayName);
+      }
 
       const adminAuth = await ensureAuthUser(admin, ADMIN);
       const adminUserId = await ensureAppUser(tx, adminAuth, ADMIN.email);
       await ensureCustomerSide(tx, adminUserId, ADMIN.displayName);
-      await ensureAdminSide(tx, adminUserId, ADMIN.roleKey);
+      await ensureAdminSide(tx, adminUserId, ADMIN.roleKey, ADMIN.mustChangePassword);
     });
 
-    console.log("Review accounts ready.\n");
-    console.log("Customer (dashboard)");
-    console.log(`  Email:    ${CUSTOMER.email}`);
-    console.log(`  Password: ${CUSTOMER.password}`);
-    console.log(`  Login:    /auth/login → /dashboard\n`);
+    console.log("Bootstrap accounts ready.\n");
+    if (!ADMIN_ONLY) {
+      console.log("Customer (dashboard)");
+      console.log(`  Email:    ${CUSTOMER.email}`);
+      console.log(`  Password: ${CUSTOMER.password}`);
+      console.log(`  Login:    /auth/login → /dashboard\n`);
+    }
     console.log("Admin (console)");
     console.log(`  Email:    ${ADMIN.email}`);
     console.log(`  Password: ${ADMIN.password}`);
     console.log(`  Login:    /auth/login → /admin`);
+    if (ADMIN.mustChangePassword) {
+      console.log("  Note:      must_change_password is enabled");
+    }
   } finally {
     await sql.end({ timeout: 5 });
   }

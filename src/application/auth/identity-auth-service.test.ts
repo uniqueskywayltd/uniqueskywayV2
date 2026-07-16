@@ -231,6 +231,8 @@ function createService(
       findSessionByTokenHash: vi.fn(async () => createSessionRecord()),
       revokeSession: vi.fn(async () => createSessionRecord({ status: "revoked" })),
       revokeOtherSessions: vi.fn(async () => [createSessionRecord({ status: "revoked" })]),
+      findAdminProfileByUserId: vi.fn(async () => null),
+      listActiveRoleKeysForUser: vi.fn(async () => []),
     },
     coreRepository: {
       ensureCustomerProfile: vi.fn(async () => ({ id: "profile_1" })),
