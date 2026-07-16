@@ -104,7 +104,7 @@ function buildEmail(
           "",
           "This verification code and link expire in 24 hours.",
           "",
-          `Support: ${brand.email}`,
+          `Reply to this email if you need help or have questions.`,
         ].join("\n"),
         element: VerifyEmail({ name, verifyUrl, otp }),
       };
@@ -132,7 +132,7 @@ function buildEmail(
             temporaryPassword ? `Temporary password: ${temporaryPassword}` : null,
             `Sign in: ${loginUrl}`,
             "",
-            `Support: ${brand.email}`,
+            `Reply to this email if you need help or have questions.`,
           ]
             .filter(Boolean)
             .join("\n"),
@@ -160,7 +160,7 @@ function buildEmail(
           "",
           "If you didn't create this account, you can safely ignore this email.",
           "",
-          `Support: ${brand.email}`,
+          `Reply to this email if you need help or have questions.`,
         ].join("\n"),
         element: WelcomeEmail({ name }),
       };
@@ -169,7 +169,7 @@ function buildEmail(
       return {
         previewId: "welcome",
         subject: "Your email is verified",
-        text: `Hi ${name},\n\nYour email is verified. You can sign in at ${brand.url}/auth/login\n\nSupport: ${brand.email}`,
+        text: `Hi ${name},\n\nYour email is verified. You can sign in at ${brand.url}/auth/login\n\nReply to this email if you need help or have questions.`,
         element: RegistrationWelcomeEmail({
           firstName: name.split(" ")[0] ?? name,
           username: readString(metadata.username) ?? "investor",
@@ -193,7 +193,7 @@ function buildEmail(
           "",
           "If you didn't request this, ignore this email. Your password will remain unchanged.",
           "",
-          `Support: ${brand.email}`,
+          `Reply to this email if you need help or have questions.`,
         ]
           .filter(Boolean)
           .join("\n"),
@@ -279,7 +279,7 @@ function buildEmail(
       return {
         previewId: "welcome",
         subject: "Account unlocked",
-        text: `Hi ${name},\n\nYour account lockout has ended. You can sign in again.\n\nSupport: ${brand.email}`,
+        text: `Hi ${name},\n\nYour account lockout has ended. You can sign in again.\n\nReply to this email if you need help or have questions.`,
         element: AccountReactivatedEmail({
           name,
           dashboardUrl: `${brand.url}/auth/login`,
@@ -456,7 +456,7 @@ function buildEmail(
       return {
         previewId: "broadcast",
         subject: title,
-        text: `${title}\n\nHi ${name},\n\n${body}\n\nSupport: ${brand.email}`,
+        text: `${title}\n\nHi ${name},\n\n${body}\n\nReply to this email if you need help or have questions.`,
         element: BroadcastAnnouncementEmail({ name, title, body }),
       };
     }

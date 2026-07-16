@@ -1,5 +1,6 @@
 import { Column, Row, Section, Text } from "@react-email/components";
 import { getBrand } from "@/emails/brand";
+import { EMAIL_REPLY_SUPPORT } from "@/emails/support-copy";
 import { EmailLayout, text, linkStyle } from "./layout";
 import { emailColors, emailMono } from "./tokens";
 
@@ -33,7 +34,7 @@ type TransactionalEmailProps = {
   includeSupportEmail?: boolean | undefined;
 };
 
-const DEFAULT_SUPPORT_LEAD = "Reply to this email if you need help or have questions.";
+const DEFAULT_SUPPORT_LEAD = EMAIL_REPLY_SUPPORT;
 
 export function EmailDetailTable({
   details,

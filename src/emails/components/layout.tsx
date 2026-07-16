@@ -115,10 +115,6 @@ export function EmailLayout({ preview, heading, children, cta, badge }: EmailLay
                     Dashboard
                   </Link>
                   {" · "}
-                  <Link href={`mailto:${brand.email}`} style={footerLink}>
-                    Support
-                  </Link>
-                  {" · "}
                   <Link href={`${brand.marketingUrl ?? brand.url}/security`} style={footerLink}>
                     Security
                   </Link>

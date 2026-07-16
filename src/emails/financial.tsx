@@ -94,8 +94,8 @@ export function DepositRejectedEmail(props: BaseProps & { reason?: string }) {
       name={props.name}
       intro="Unfortunately we were unable to approve your deposit at this time."
       details={details(props, props.reason ? [{ label: "Reason", value: props.reason }] : [])}
-      footerNote="If you believe this is an error, please contact support with your reference ID."
-      cta={{ label: "Contact support", href: `mailto:info@uniqueskyway.com` }}
+      footerNote="If you believe this is an error, reply to this email with your reference ID."
+      cta={{ label: "Open dashboard", href: props.dashboardUrl ?? defaultDashboard() }}
     />
   );
 }
@@ -140,7 +140,7 @@ export function WithdrawalSubmittedEmail(
       details={summary}
       detailsTitle="Withdrawal Summary"
       processingEstimate={props.processingEstimate ?? "Up to 24 hours."}
-      securityWarning="If you did not request this withdrawal, please contact support immediately."
+      securityWarning="If you did not request this withdrawal, reply to this email immediately."
       cta={{ label: "View Dashboard", href: props.dashboardUrl ?? defaultDashboard() }}
     />
   );
@@ -210,8 +210,8 @@ export function WithdrawalRejectedEmail(props: BaseProps & { reason?: string }) 
       name={props.name}
       intro="We were unable to approve your withdrawal request."
       details={details(props, props.reason ? [{ label: "Reason", value: props.reason }] : [])}
-      footerNote="Your available balance has not been affected. Contact support if you need assistance."
-      cta={{ label: "Contact support", href: `mailto:info@uniqueskyway.com` }}
+      footerNote="Your available balance has not been affected. Reply to this email if you need assistance."
+      cta={{ label: "Open dashboard", href: props.dashboardUrl ?? defaultDashboard() }}
     />
   );
 }
@@ -407,7 +407,7 @@ export function AccountSuspendedEmail(props: BaseProps & { reason?: string }) {
       name={props.name}
       intro="Your investor account has been suspended by an administrator. You will not be able to sign in until the account is reactivated."
       details={details(props, props.reason ? [{ label: "Reason", value: props.reason }] : [])}
-      cta={{ label: "Contact support", href: "mailto:info@uniqueskyway.com" }}
+      cta={{ label: "Open dashboard", href: props.dashboardUrl ?? defaultDashboard() }}
     />
   );
 }
@@ -507,7 +507,7 @@ export const financialPlainText = {
       name: greetingName,
       intro: "Your withdrawal request has been received successfully.",
       details: summary,
-      footerNote: "If you did not request this withdrawal, please contact support immediately.",
+      footerNote: "If you did not request this withdrawal, reply to this email immediately.",
       cta: { label: "View Dashboard", href: p.dashboardUrl ?? defaultDashboard() },
     });
   },
