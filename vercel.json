@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/internal/jobs/process-outbox",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/internal/jobs/run-settlement",
+      "schedule": "15 9 * * *"
+    }
+  ]
+}

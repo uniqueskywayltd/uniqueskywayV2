@@ -5,6 +5,10 @@ export { LedgerRepository } from "./ledger-repository";
 export { NotificationRepository } from "./notification-repository";
 export { OperationsRepository } from "./operations-repository";
 export { PaymentRepository } from "./payment-repository";
+export {
+  PROVIDER_EVENT_PROCESSING_LEASE_MS,
+  isProviderEventProcessingLeaseActive,
+} from "./payment-repository";
 export { ReferralRepository } from "./referral-repository";
 export { ReportingRepository } from "./reporting-repository";
 export { SettlementRepository } from "./settlement-repository";

@@ -24,6 +24,7 @@ import type {
   PaymentRepository,
   WithdrawalRequestRecord,
 } from "@/infrastructure/database";
+import { isProviderEventProcessingLeaseActive } from "@/infrastructure/database";
 
 import { createPaymentAuditContext, type RequestAuditContext } from "./deposit-engine-service";
 import type { PaymentProvider, PaymentProviderName } from "./payment-provider";
@@ -40,7 +41,13 @@ import {
 
 const WITHDRAWAL_PROVIDER: PaymentProviderName = "paystack";
 const WITHDRAWAL_REFERENCE_PREFIX = "USWWTH";
-const FINANCE_ADMIN_ROLES = new Set(["finance_admin", "platform_admin"]);
+const FINANCE_ADMIN_ROLES = new Set([
+  "finance_admin",
+  "finance_manager",
+  "finance_officer",
+  "platform_admin",
+  "super_admin",
+]);
 const WITHDRAWAL_EMAIL_TEMPLATES = {
   requested: "withdrawal.requested",
   approved: "withdrawal.approved",
@@ -132,10 +139,20 @@ export class WithdrawalEngineService {
       return this.deps.paymentRepository.listWithdrawalsByStatus(status);
     }
     return Promise.all(
-      (["under_review", "approved", "processing", "paid", "rejected", "failed", "cancelled"] as const).map(
-        (candidate) => this.deps.paymentRepository.listWithdrawalsByStatus(candidate, 50),
-      ),
-    ).then((groups) => groups.flat().sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime()));
+      (
+        [
+          "under_review",
+          "approved",
+          "processing",
+          "paid",
+          "rejected",
+          "failed",
+          "cancelled",
+        ] as const
+      ).map((candidate) => this.deps.paymentRepository.listWithdrawalsByStatus(candidate, 50)),
+    ).then((groups) =>
+      groups.flat().sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime()),
+    );
   }
 
   async createWithdrawalRequest(
@@ -208,14 +225,16 @@ export class WithdrawalEngineService {
         });
       }
 
-      const availableAccount = await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(
-        tx,
-        { walletId: balance.walletId, category: "available" },
-      );
-      const reservedAccount = await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(
-        tx,
-        { walletId: balance.walletId, category: "reserved" },
-      );
+      const availableAccount =
+        await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+          walletId: balance.walletId,
+          category: "available",
+        });
+      const reservedAccount =
+        await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+          walletId: balance.walletId,
+          category: "reserved",
+        });
       if (!availableAccount || !reservedAccount) {
         throw new AppError({
           code: "INVALID_STATE",
@@ -259,7 +278,10 @@ export class WithdrawalEngineService {
       });
 
       assertWithdrawalTransition(reserved.status, "under_review");
-      const underReview = await this.deps.paymentRepository.markWithdrawalUnderReview(tx, reserved.id);
+      const underReview = await this.deps.paymentRepository.markWithdrawalUnderReview(
+        tx,
+        reserved.id,
+      );
 
       await this.enqueueWithdrawalRequestedSideEffects(tx, underReview, appUser.email, context);
       return underReview;
@@ -436,7 +458,11 @@ export class WithdrawalEngineService {
       }
 
       assertWithdrawalTransition(current.status, "paid");
-      await this.deps.ledgerRepository.lockWalletByUserCurrency(tx, current.userId, current.currency);
+      await this.deps.ledgerRepository.lockWalletByUserCurrency(
+        tx,
+        current.userId,
+        current.currency,
+      );
       const balance = await this.deps.ledgerRepository.findWalletBalanceByUserCurrencyInTransaction(
         tx,
         current.userId,
@@ -446,14 +472,16 @@ export class WithdrawalEngineService {
         throw new AppError({ code: "INVALID_STATE", message: "Customer wallet was not found." });
       }
 
-      const reservedAccount = await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(
-        tx,
-        { walletId: balance.walletId, category: "reserved" },
-      );
-      const withdrawnAccount = await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(
-        tx,
-        { walletId: balance.walletId, category: "withdrawn" },
-      );
+      const reservedAccount =
+        await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+          walletId: balance.walletId,
+          category: "reserved",
+        });
+      const withdrawnAccount =
+        await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+          walletId: balance.walletId,
+          category: "withdrawn",
+        });
       if (!reservedAccount || !withdrawnAccount) {
         throw new AppError({
           code: "INVALID_STATE",
@@ -499,7 +527,9 @@ export class WithdrawalEngineService {
     });
   }
 
-  async markWithdrawalFailed(input: MarkWithdrawalFailedInput): Promise<AdminWithdrawalActionResult> {
+  async markWithdrawalFailed(
+    input: MarkWithdrawalFailedInput,
+  ): Promise<AdminWithdrawalActionResult> {
     return this.deps.transactionManager.runInTransaction(async (tx) => {
       const current = await this.deps.paymentRepository.lockWithdrawalById(tx, input.withdrawalId);
       if (!current) {
@@ -605,17 +635,23 @@ export class WithdrawalEngineService {
         });
       }
 
-      await this.appendProviderEventAudit(tx, "payment.webhook_received", record.id, input.context, {
-        providerEventId,
-        eventType: event.event,
-      });
+      await this.appendProviderEventAudit(
+        tx,
+        "payment.webhook_received",
+        record.id,
+        input.context,
+        {
+          providerEventId,
+          eventType: event.event,
+        },
+      );
       return record;
     });
 
     if (
       storedEvent.status === "processed" ||
       storedEvent.status === "ignored" ||
-      storedEvent.status === "processing"
+      isProviderEventProcessingLeaseActive(storedEvent, this.deps.clock.now())
     ) {
       return {
         status: "duplicate",
@@ -653,7 +689,12 @@ export class WithdrawalEngineService {
       this.deps.paymentRepository.claimProviderEventForProcessing(tx, storedEvent.id),
     );
     if (!claimed) {
-      throw new AppError({ code: "NOT_FOUND", message: "Provider event was not found." });
+      return {
+        status: "duplicate",
+        eventType: event.event,
+        providerEventId,
+        withdrawalId: null,
+      };
     }
 
     if (event.event === "transfer.reversed") {
@@ -671,6 +712,59 @@ export class WithdrawalEngineService {
     }
   }
 
+  async recoverProviderEvents(limit = 50): Promise<{
+    attempted: number;
+    processed: number;
+    failed: number;
+    deadLettered: number;
+  }> {
+    const events = await this.deps.paymentRepository.listRetryableProviderEvents(limit);
+    const counts = {
+      attempted: 0,
+      processed: 0,
+      failed: 0,
+      deadLettered: 0,
+    };
+
+    const supported = new Set(["transfer.success", "transfer.failed", "transfer.reversed"]);
+
+    for (const providerEvent of events) {
+      if (providerEvent.provider !== WITHDRAWAL_PROVIDER) continue;
+      if (!supported.has(providerEvent.eventType)) continue;
+
+      counts.attempted += 1;
+      const context = createSystemRecoveryAuditContext();
+
+      const claimed = await this.deps.transactionManager.runInTransaction(async (tx) =>
+        this.deps.paymentRepository.claimProviderEventForProcessing(tx, providerEvent.id),
+      );
+      if (!claimed) continue;
+
+      const payload = claimed.payload as unknown as PaystackWebhookEvent;
+      const wasFinalAttempt = claimed.attemptCount >= MAX_PROVIDER_EVENT_ATTEMPTS;
+
+      try {
+        if (claimed.eventType === "transfer.reversed") {
+          await this.processTransferReversed(payload, claimed, context);
+        } else if (claimed.eventType === "transfer.success") {
+          await this.processSuccessfulTransfer(payload, claimed, context);
+        } else {
+          await this.processFailedTransfer(payload, claimed, context);
+        }
+        counts.processed += 1;
+      } catch (error) {
+        await this.markProviderEventFailedWithBackoff(claimed, error, context);
+        if (wasFinalAttempt) {
+          counts.deadLettered += 1;
+        } else {
+          counts.failed += 1;
+        }
+      }
+    }
+
+    return counts;
+  }
+
   private async processSuccessfulTransfer(
     event: PaystackWebhookEvent,
     claimedEvent: PaymentProviderEventRecord,
@@ -686,13 +780,17 @@ export class WithdrawalEngineService {
       });
     }
 
-    const withdrawal = await this.deps.paymentRepository.findWithdrawalByProviderPayoutReference(
-      reference,
-    );
+    const withdrawal =
+      await this.deps.paymentRepository.findWithdrawalByProviderPayoutReference(reference);
     if (!withdrawal) {
-      await this.ignoreProviderEvent(claimedEvent.id, context, "withdrawal.transfer_webhook_orphaned", {
-        reference,
-      });
+      await this.ignoreProviderEvent(
+        claimedEvent.id,
+        context,
+        "withdrawal.transfer_webhook_orphaned",
+        {
+          reference,
+        },
+      );
       return {
         status: "ignored",
         eventType: event.event,
@@ -727,13 +825,17 @@ export class WithdrawalEngineService {
     context: RequestAuditContext,
   ): Promise<ProcessPaystackTransferWebhookResult> {
     const reference = requireProviderReference(event);
-    const withdrawal = await this.deps.paymentRepository.findWithdrawalByProviderPayoutReference(
-      reference,
-    );
+    const withdrawal =
+      await this.deps.paymentRepository.findWithdrawalByProviderPayoutReference(reference);
     if (!withdrawal) {
-      await this.ignoreProviderEvent(claimedEvent.id, context, "withdrawal.transfer_webhook_orphaned", {
-        reference,
-      });
+      await this.ignoreProviderEvent(
+        claimedEvent.id,
+        context,
+        "withdrawal.transfer_webhook_orphaned",
+        {
+          reference,
+        },
+      );
       return {
         status: "ignored",
         eventType: event.event,
@@ -898,14 +1000,16 @@ export class WithdrawalEngineService {
       throw new AppError({ code: "INVALID_STATE", message: "Customer wallet was not found." });
     }
 
-    const reservedAccount = await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(
-      tx,
-      { walletId: balance.walletId, category: "reserved" },
-    );
-    const availableAccount = await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(
-      tx,
-      { walletId: balance.walletId, category: "available" },
-    );
+    const reservedAccount =
+      await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+        walletId: balance.walletId,
+        category: "reserved",
+      });
+    const availableAccount =
+      await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+        walletId: balance.walletId,
+        category: "available",
+      });
     if (!reservedAccount || !availableAccount) {
       throw new AppError({
         code: "INVALID_STATE",
@@ -943,11 +1047,18 @@ export class WithdrawalEngineService {
 
     const updated = { ...withdrawal, releaseLedgerTransactionId: ledger.transaction.id };
     if (audit.actorType === "admin" && audit.actorUserId) {
-      await this.appendAdminAudit(tx, audit.actorUserId, "withdrawal.released", withdrawal.id, context, {
-        releaseReason,
-        releaseLedgerTransactionId: ledger.transaction.id,
-        reviewReason: audit.reviewReason,
-      });
+      await this.appendAdminAudit(
+        tx,
+        audit.actorUserId,
+        "withdrawal.released",
+        withdrawal.id,
+        context,
+        {
+          releaseReason,
+          releaseLedgerTransactionId: ledger.transaction.id,
+          reviewReason: audit.reviewReason,
+        },
+      );
     } else if (audit.actorType === "customer" && audit.actorUserId) {
       await this.appendCustomerAudit(
         tx,
@@ -1083,9 +1194,16 @@ export class WithdrawalEngineService {
       idempotencyKey: `withdrawal.requested:${withdrawal.id}`,
       metadata: withdrawalEventPayload(withdrawal),
     });
-    await this.appendCustomerAudit(tx, withdrawal.userId, "withdrawal.reserved", withdrawal.id, context, {
-      reservationLedgerTransactionId: withdrawal.reservationLedgerTransactionId,
-    });
+    await this.appendCustomerAudit(
+      tx,
+      withdrawal.userId,
+      "withdrawal.reserved",
+      withdrawal.id,
+      context,
+      {
+        reservationLedgerTransactionId: withdrawal.reservationLedgerTransactionId,
+      },
+    );
   }
 
   private async enqueueWithdrawalApprovedSideEffects(
@@ -1118,7 +1236,13 @@ export class WithdrawalEngineService {
         metadata: withdrawalEventPayload(withdrawal),
       });
     }
-    await this.appendCustomerAudit(tx, withdrawal.userId, "withdrawal.approved", withdrawal.id, context);
+    await this.appendCustomerAudit(
+      tx,
+      withdrawal.userId,
+      "withdrawal.approved",
+      withdrawal.id,
+      context,
+    );
   }
 
   private async enqueueWithdrawalRejectedSideEffects(
@@ -1151,9 +1275,16 @@ export class WithdrawalEngineService {
         metadata: withdrawalEventPayload(withdrawal),
       });
     }
-    await this.appendCustomerAudit(tx, withdrawal.userId, "withdrawal.rejected", withdrawal.id, context, {
-      releaseLedgerTransactionId: withdrawal.releaseLedgerTransactionId,
-    });
+    await this.appendCustomerAudit(
+      tx,
+      withdrawal.userId,
+      "withdrawal.rejected",
+      withdrawal.id,
+      context,
+      {
+        releaseLedgerTransactionId: withdrawal.releaseLedgerTransactionId,
+      },
+    );
   }
 
   private async enqueueWithdrawalPaidSideEffects(
@@ -1186,10 +1317,17 @@ export class WithdrawalEngineService {
         metadata: withdrawalEventPayload(withdrawal),
       });
     }
-    await this.appendCustomerAudit(tx, withdrawal.userId, "withdrawal.paid", withdrawal.id, context, {
-      paymentLedgerTransactionId: withdrawal.paymentLedgerTransactionId,
-      providerPayoutReference: withdrawal.providerPayoutReference,
-    });
+    await this.appendCustomerAudit(
+      tx,
+      withdrawal.userId,
+      "withdrawal.paid",
+      withdrawal.id,
+      context,
+      {
+        paymentLedgerTransactionId: withdrawal.paymentLedgerTransactionId,
+        providerPayoutReference: withdrawal.providerPayoutReference,
+      },
+    );
   }
 
   private async enqueueWithdrawalFailedSideEffects(
@@ -1222,10 +1360,17 @@ export class WithdrawalEngineService {
         metadata: withdrawalEventPayload(withdrawal),
       });
     }
-    await this.appendCustomerAudit(tx, withdrawal.userId, "withdrawal.failed", withdrawal.id, context, {
-      releaseLedgerTransactionId: withdrawal.releaseLedgerTransactionId,
-      failureReason: withdrawal.failureReason,
-    });
+    await this.appendCustomerAudit(
+      tx,
+      withdrawal.userId,
+      "withdrawal.failed",
+      withdrawal.id,
+      context,
+      {
+        releaseLedgerTransactionId: withdrawal.releaseLedgerTransactionId,
+        failureReason: withdrawal.failureReason,
+      },
+    );
   }
 
   private async enqueueWithdrawalCancelledSideEffects(
@@ -1258,7 +1403,13 @@ export class WithdrawalEngineService {
         metadata: withdrawalEventPayload(withdrawal),
       });
     }
-    await this.appendCustomerAudit(tx, withdrawal.userId, "withdrawal.cancelled", withdrawal.id, context);
+    await this.appendCustomerAudit(
+      tx,
+      withdrawal.userId,
+      "withdrawal.cancelled",
+      withdrawal.id,
+      context,
+    );
   }
 
   private async appendCustomerAudit(
@@ -1345,6 +1496,14 @@ export class WithdrawalEngineService {
 }
 
 export { createPaymentAuditContext };
+
+function createSystemRecoveryAuditContext(): RequestAuditContext {
+  return {
+    requestId: `recovery_${randomUUID()}`,
+    ipAddressHash: null,
+    userAgentHash: null,
+  };
+}
 
 function createWithdrawalPayoutReference(withdrawalId: string) {
   const suffix = randomUUID().replaceAll("-", "").slice(0, 24).toUpperCase();

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, inArray, isNull, like, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNull, like, lt, lte, or, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import {
@@ -194,7 +194,7 @@ export class NotificationRepository extends BaseDrizzleRepository {
         lastError: "Reclaimed after stuck sending state",
         updatedAt: new Date(),
       })
-      .where(and(eq(emailMessages.status, "sending"), sql`${emailMessages.updatedAt} < ${cutoff}`))
+      .where(and(eq(emailMessages.status, "sending"), lt(emailMessages.updatedAt, cutoff)))
       .returning({ id: emailMessages.id });
     return rows.length;
   }
@@ -282,5 +282,31 @@ export class NotificationRepository extends BaseDrizzleRepository {
   ): Promise<OutboxEventRecord> {
     const rows = await context.db.insert(outboxEvents).values(values).returning();
     return singleRow(rows, "enqueueOutboxEvent");
+  }
+
+  async listPendingOutboxEvents(limit = 100): Promise<OutboxEventRecord[]> {
+    const now = new Date();
+    return this.db
+      .select()
+      .from(outboxEvents)
+      .where(and(eq(outboxEvents.status, "pending"), lte(outboxEvents.availableAt, now)))
+      .orderBy(asc(outboxEvents.availableAt), asc(outboxEvents.createdAt))
+      .limit(limit);
+  }
+
+  async markOutboxEventProcessed(
+    context: DrizzleTransactionContext,
+    id: string,
+  ): Promise<OutboxEventRecord> {
+    const rows = await context.db
+      .update(outboxEvents)
+      .set({
+        status: "processed",
+        processedAt: new Date(),
+        lastError: null,
+      })
+      .where(eq(outboxEvents.id, id))
+      .returning();
+    return singleRow(rows, "markOutboxEventProcessed");
   }
 }

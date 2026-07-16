@@ -63,7 +63,7 @@ describe("IdentityEmailDispatcher", () => {
       expect.objectContaining({
         from: "Unique Sky Way <info@uniqueskyway.com>",
         to: "investor@example.com",
-        subject: "Verify your Unique Sky Way email",
+        subject: "Your Unique Sky Way verification code",
         idempotencyKey: "auth.verify_email:user_1",
         headers: { "Reply-To": "info@uniqueskyway.com" },
         tags: [

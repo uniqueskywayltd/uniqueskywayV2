@@ -63,6 +63,7 @@ export async function dispatchQueuedEmails(
       {
         event: "email.dispatch.flush_error",
         cause: error instanceof Error ? error.message : "Unknown error",
+        err: error,
       },
       "Email flush failed before provider delivery",
     );

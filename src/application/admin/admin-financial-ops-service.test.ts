@@ -92,21 +92,26 @@ describe("AdminFinancialOpsService", () => {
     expect(result.withdrawal.id).toBe("withdrawal_1");
   });
 
-  it("returns read-only investment details without exposing mutation methods", async () => {
-    const fixture = createFixture({ roleKeys: ["support_agent"] });
-
-    const details = await fixture.service.getInvestmentDetails("investment_1");
+  it("allows investment reads for support and gates mutations by permission", async () => {
+    const readOnly = createFixture({ roleKeys: ["support_agent"] });
+    const details = await readOnly.service.getInvestmentDetails("investment_1");
 
     expect(details.investment.id).toBe("investment_1");
-    expect(details.roiScheduleItems).toEqual(fixture.state.roiScheduleItems);
-    expect(details.settlementItems).toEqual(fixture.state.settlementItems);
+    expect(details.roiScheduleItems).toEqual(readOnly.state.roiScheduleItems);
+    expect(details.settlementItems).toEqual(readOnly.state.settlementItems);
     expect(details.postedRoiMinor).toBe(5_000n);
-    expect(
-      (fixture.service as unknown as { getInvestmentDetails: unknown }).getInvestmentDetails,
-    ).toBeTypeOf("function");
-    expect(
-      (fixture.service as unknown as Record<string, unknown>).updateInvestment,
-    ).toBeUndefined();
+
+    await expect(
+      readOnly.service.updateInvestment(
+        "investment_1",
+        { status: "cancelled", reason: "Customer request" },
+        auditContext,
+      ),
+    ).rejects.toMatchObject({ code: "AUTHORIZATION_ERROR" });
+
+    expect(typeof createFixture({ roleKeys: ["platform_admin"] }).service.updateInvestment).toBe(
+      "function",
+    );
   });
 
   it("computes overview metrics from repository counts and recent activity", async () => {

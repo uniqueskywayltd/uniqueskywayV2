@@ -241,7 +241,6 @@ export function CustomersPanel() {
     }>
   >([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [createFeedback, setCreateFeedback] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkFeedback, setBulkFeedback] = useState<string | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
@@ -381,11 +380,6 @@ export function CustomersPanel() {
           </Button>
         }
       />
-      {createFeedback ? (
-        <p className="mb-4 rounded-md border bg-card px-3 py-2 text-sm" role="status">
-          {createFeedback}
-        </p>
-      ) : null}
       {bulkFeedback ? (
         <p className="mb-4 rounded-md border bg-card px-3 py-2 text-sm" role="status">
           {bulkFeedback}

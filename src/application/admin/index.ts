@@ -1,7 +1,12 @@
 export {
   ADMIN_PERMISSIONS,
+  ABSOLUTE_ADMIN_ROLES,
+  effectiveAdminPermissionKeys,
+  hasAbsoluteAdminControl,
+  isAbsoluteAdminRole,
   isAdminPermission,
   permissionKeysInclude,
+  type AbsoluteAdminRole,
   type AdminCapability,
   type AdminPermission,
 } from "./capabilities";

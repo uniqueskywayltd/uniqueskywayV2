@@ -23,6 +23,7 @@ export const enMessages = {
   "chrome.sign_out": "Sign out",
   "chrome.signing_out": "Signing out…",
   "chrome.admin_console": "Admin Console",
+  "chrome.absolute_controller": "Absolute controller",
   "chrome.toggle_nav": "Toggle navigation",
 
   // Public nav

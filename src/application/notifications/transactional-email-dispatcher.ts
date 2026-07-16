@@ -58,12 +58,47 @@ export class TransactionalEmailDispatcher {
       );
 
       try {
+        logger.info(
+          {
+            event: "email.template.render_started",
+            emailMessageId: message.id,
+            templateKey: message.templateKey,
+            toEmail: message.toEmail,
+            attemptCount: message.attemptCount + 1,
+          },
+          "Email template render started",
+        );
         const rendered = await renderTransactionalEmail({
           templateKey: message.templateKey,
           metadata: message.metadata,
         });
+        logger.info(
+          {
+            event: "email.template.rendered",
+            emailMessageId: message.id,
+            templateKey: message.templateKey,
+            previewId: rendered.previewId,
+            toEmail: message.toEmail,
+            subject: rendered.subject,
+            htmlBytes: Buffer.byteLength(rendered.html, "utf8"),
+            textBytes: Buffer.byteLength(rendered.text, "utf8"),
+          },
+          "Email template rendered",
+        );
         const category = sanitizeResendTagValue(
           message.templateKey.split(".")[0] ?? "transactional",
+        );
+        logger.info(
+          {
+            event: "email.provider.call_started",
+            provider: "resend",
+            emailMessageId: message.id,
+            templateKey: message.templateKey,
+            toEmail: message.toEmail,
+            from,
+            subject: rendered.subject,
+          },
+          "Calling Resend email provider",
         );
         const result = await this.emailSender.send({
           from,

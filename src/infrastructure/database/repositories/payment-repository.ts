@@ -1,14 +1,46 @@
-import { and, desc, eq, gte, ilike, inArray, isNotNull, isNull, lt, lte, or, sql } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import { depositIntents, paymentProviderEvents, withdrawalRequests } from "../schema";
 import type { DrizzleTransactionContext } from "../transactions";
 import type { AppDatabaseExecutor } from "../types";
-import { BaseDrizzleRepository, decodeKeysetCursor, encodeKeysetCursor, singleRow } from "./base-repository";
+import {
+  BaseDrizzleRepository,
+  decodeKeysetCursor,
+  encodeKeysetCursor,
+  singleRow,
+} from "./base-repository";
 
 export type DepositIntentRecord = InferSelectModel<typeof depositIntents>;
 export type WithdrawalRequestRecord = InferSelectModel<typeof withdrawalRequests>;
 export type PaymentProviderEventRecord = InferSelectModel<typeof paymentProviderEvents>;
+
+/** Lease window while a worker holds status=processing; expired leases are reclaimable. */
+export const PROVIDER_EVENT_PROCESSING_LEASE_MS = 2 * 60 * 1000;
+
+export function isProviderEventProcessingLeaseActive(
+  event: Pick<PaymentProviderEventRecord, "status" | "nextRetryAt">,
+  now: Date = new Date(),
+): boolean {
+  return (
+    event.status === "processing" &&
+    event.nextRetryAt != null &&
+    event.nextRetryAt.getTime() > now.getTime()
+  );
+}
 
 export interface SearchDepositIntentsQuery {
   q?: string;
@@ -376,10 +408,7 @@ export class PaymentRepository extends BaseDrizzleRepository {
   async markWithdrawalReserved(
     context: DrizzleTransactionContext,
     id: string,
-    values: Pick<
-      InferInsertModel<typeof withdrawalRequests>,
-      "reservationLedgerTransactionId"
-    >,
+    values: Pick<InferInsertModel<typeof withdrawalRequests>, "reservationLedgerTransactionId">,
   ): Promise<WithdrawalRequestRecord> {
     const rows = await context.db
       .update(withdrawalRequests)
@@ -411,10 +440,7 @@ export class PaymentRepository extends BaseDrizzleRepository {
   async markWithdrawalApproved(
     context: DrizzleTransactionContext,
     id: string,
-    values: Pick<
-      InferInsertModel<typeof withdrawalRequests>,
-      "reviewedBy" | "reviewReason"
-    >,
+    values: Pick<InferInsertModel<typeof withdrawalRequests>, "reviewedBy" | "reviewReason">,
   ): Promise<WithdrawalRequestRecord> {
     const rows = await context.db
       .update(withdrawalRequests)
@@ -590,9 +616,13 @@ export class PaymentRepository extends BaseDrizzleRepository {
       deadLetteredAt?: Date | null;
     },
   ): Promise<PaymentProviderEventRecord> {
+    const terminal = values.status === "processed" || values.status === "ignored";
     const rows = await context.db
       .update(paymentProviderEvents)
-      .set(values)
+      .set({
+        ...values,
+        ...(terminal && values.nextRetryAt === undefined ? { nextRetryAt: null } : {}),
+      })
       .where(eq(paymentProviderEvents.id, id))
       .returning();
     return singleRow(rows, "updateProviderEventStatus");
@@ -619,12 +649,25 @@ export class PaymentRepository extends BaseDrizzleRepository {
   ): Promise<PaymentProviderEventRecord | null> {
     const current = await this.lockProviderEventById(context, id);
     if (!current) return null;
+    if (current.status === "processed" || current.status === "ignored") return null;
 
+    const now = new Date();
+    // Active processing lease: another worker still owns this event.
+    if (
+      current.status === "processing" &&
+      current.nextRetryAt != null &&
+      current.nextRetryAt.getTime() > now.getTime()
+    ) {
+      return null;
+    }
+
+    const leaseUntil = new Date(now.getTime() + PROVIDER_EVENT_PROCESSING_LEASE_MS);
     const rows = await context.db
       .update(paymentProviderEvents)
       .set({
         status: "processing",
         attemptCount: current.attemptCount + 1,
+        nextRetryAt: leaseUntil,
       })
       .where(eq(paymentProviderEvents.id, id))
       .returning();
@@ -638,11 +681,22 @@ export class PaymentRepository extends BaseDrizzleRepository {
       .from(paymentProviderEvents)
       .where(
         and(
-          eq(paymentProviderEvents.status, "failed"),
           isNull(paymentProviderEvents.deadLetteredAt),
           or(
-            isNull(paymentProviderEvents.nextRetryAt),
-            lte(paymentProviderEvents.nextRetryAt, now),
+            and(
+              eq(paymentProviderEvents.status, "failed"),
+              or(
+                isNull(paymentProviderEvents.nextRetryAt),
+                lte(paymentProviderEvents.nextRetryAt, now),
+              ),
+            ),
+            and(
+              eq(paymentProviderEvents.status, "processing"),
+              or(
+                isNull(paymentProviderEvents.nextRetryAt),
+                lte(paymentProviderEvents.nextRetryAt, now),
+              ),
+            ),
           ),
         ),
       )
@@ -667,7 +721,9 @@ export class PaymentRepository extends BaseDrizzleRepository {
     return singleRow(rows, "markProviderEventDeadLettered");
   }
 
-  async searchDepositIntents(query: SearchDepositIntentsQuery): Promise<SearchDepositIntentsResult> {
+  async searchDepositIntents(
+    query: SearchDepositIntentsQuery,
+  ): Promise<SearchDepositIntentsResult> {
     const conditions = [];
 
     const trimmedQuery = query.q?.trim();
@@ -733,7 +789,10 @@ export class PaymentRepository extends BaseDrizzleRepository {
       conditions.push(
         or(
           lt(withdrawalRequests.createdAt, cursor.createdAt),
-          and(eq(withdrawalRequests.createdAt, cursor.createdAt), lt(withdrawalRequests.id, cursor.id)),
+          and(
+            eq(withdrawalRequests.createdAt, cursor.createdAt),
+            lt(withdrawalRequests.id, cursor.id),
+          ),
         ),
       );
     }

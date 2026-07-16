@@ -420,7 +420,7 @@ export class AdminFinancialOpsService {
     },
     context: RequestAuditContext,
   ) {
-    const admin = await requireAdminActor(this.deps, "customers.update");
+    const admin = await requireAdminActor(this.deps, "investments.update");
     const principalMinor = BigInt(input.principalMinor);
     if (principalMinor <= 0n) {
       throw new AppError({
@@ -514,7 +514,7 @@ export class AdminFinancialOpsService {
     input: { status?: "cancelled"; reason?: string },
     context: RequestAuditContext,
   ) {
-    const admin = await requireAdminActor(this.deps, "customers.update");
+    const admin = await requireAdminActor(this.deps, "investments.update");
     const investment = await this.deps.investmentRepository.findInvestmentById(investmentId);
     if (!investment) {
       throw new AppError({ code: "NOT_FOUND", message: "Investment was not found." });

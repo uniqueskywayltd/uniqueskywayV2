@@ -4,7 +4,12 @@ import type { IdentityProvider } from "@/application/auth";
 import { AppError } from "@/application/errors";
 import type { AdminProfileRecord, IdentityRepository, UserRecord } from "@/infrastructure/database";
 
-import { permissionKeysInclude, type AdminPermission } from "./capabilities";
+import {
+  effectiveAdminPermissionKeys,
+  hasAbsoluteAdminControl,
+  permissionKeysInclude,
+  type AdminPermission,
+} from "./capabilities";
 
 export interface RequireAdminActorDependencies {
   identityProvider?: IdentityProvider;
@@ -17,6 +22,8 @@ export interface AdminActor {
   roleKeys: string[];
   permissionKeys: string[];
   permissionUsed: AdminPermission;
+  /** True when the actor holds unrestricted console authority. */
+  isAbsoluteController: boolean;
 }
 
 export async function requireAdminActor(
@@ -49,9 +56,13 @@ export async function requireAdminActor(
   }
 
   const roleKeys = await deps.identityRepository.listActiveRoleKeysForUser(appUser.id);
-  const permissionKeys = await deps.identityRepository.listActivePermissionKeysForUser(appUser.id);
+  const storedPermissionKeys = await deps.identityRepository.listActivePermissionKeysForUser(
+    appUser.id,
+  );
+  const isAbsoluteController = hasAbsoluteAdminControl(roleKeys);
+  const permissionKeys = effectiveAdminPermissionKeys(roleKeys, storedPermissionKeys);
 
-  if (!permissionKeysInclude(permissionKeys, permission)) {
+  if (!permissionKeysInclude(storedPermissionKeys, permission, roleKeys)) {
     throw new AppError({
       code: "AUTHORIZATION_ERROR",
       message: "You are not authorized to perform this administrative action.",
@@ -65,5 +76,6 @@ export async function requireAdminActor(
     roleKeys,
     permissionKeys,
     permissionUsed: permission,
+    isAbsoluteController,
   };
 }

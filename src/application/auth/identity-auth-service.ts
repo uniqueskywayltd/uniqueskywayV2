@@ -12,6 +12,7 @@ import type {
   NotificationRepository,
   OperationsRepository,
 } from "@/infrastructure/database";
+import { logger } from "@/infrastructure/logging/logger";
 
 import { buildAuthEmailAction } from "./auth-email-links";
 import {
@@ -124,6 +125,20 @@ export class IdentityAuthService {
       redirectTo,
       ...(displayName ? { displayName } : {}),
     });
+    logger.info(
+      {
+        event: "auth.registration.token_generated",
+        requestId: context.requestId,
+        toEmail: generatedEmail.email,
+        authUserId: generatedEmail.authUserId,
+        otpGenerated: generatedEmail.emailOtp.length > 0,
+        otpLength: generatedEmail.emailOtp.length,
+        tokenHashGenerated: generatedEmail.hashedToken.length > 0,
+        tokenHashLength: generatedEmail.hashedToken.length,
+        actionLinkGenerated: generatedEmail.actionLink.length > 0,
+      },
+      "Signup OTP and verification token generated",
+    );
 
     const authEmail = buildAuthEmailAction({
       properties: {
@@ -141,6 +156,17 @@ export class IdentityAuthService {
         message: "Verification code could not be generated. Please try again.",
       });
     }
+    logger.info(
+      {
+        event: "auth.registration.email_payload_created",
+        requestId: context.requestId,
+        toEmail: generatedEmail.email,
+        templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
+        otpPresent: true,
+        actionLinkPresent: authEmail.actionLink.length > 0,
+      },
+      "Verification email payload created",
+    );
 
     await this.deps.transactionManager.runInTransaction(async (tx) => {
       const appUser = await this.deps.identityRepository.ensureUser(tx, {
@@ -158,7 +184,7 @@ export class IdentityAuthService {
 
       const name = displayName ?? legalName ?? appUser.email.split("@")[0] ?? "Investor";
 
-      await this.emailQueue.enqueue(tx, {
+      const verificationMessage = await this.emailQueue.enqueue(tx, {
         recipientUserId: appUser.id,
         toEmail: appUser.email,
         templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
@@ -173,6 +199,16 @@ export class IdentityAuthService {
           requestId: context.requestId,
         },
       });
+      logger.info(
+        {
+          event: "auth.registration.email_queued",
+          requestId: context.requestId,
+          emailMessageId: verificationMessage.id,
+          toEmail: appUser.email,
+          templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
+        },
+        "Verification email queued",
+      );
 
       await this.emailQueue.enqueue(tx, {
         recipientUserId: appUser.id,

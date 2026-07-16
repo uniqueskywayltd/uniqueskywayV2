@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 
+import { dispatchQueuedEmails } from "@/app/api/auth/_shared/dispatch-emails";
 import {
   createRequestContext,
   jsonError,
@@ -26,10 +27,8 @@ export async function POST(request: NextRequest, routeContext: RouteContext) {
     await requireCsrf(request);
     const { userId } = await routeContext.params;
     const service = await createAdminSystemService();
-    const result = await service.resetStaffPassword(
-      userId,
-      createAdminSystemAuditContext(context),
-    );
+    const result = await service.resetStaffPassword(userId, createAdminSystemAuditContext(context));
+    await dispatchQueuedEmails(25);
     return jsonOk(result, context.requestId);
   } catch (error) {
     return jsonError(error, context.requestId);

@@ -28,6 +28,7 @@ import type {
   PaymentProviderEventRecord,
   PaymentRepository,
 } from "@/infrastructure/database";
+import { isProviderEventProcessingLeaseActive } from "@/infrastructure/database";
 
 import type {
   PaymentProvider,
@@ -47,7 +48,13 @@ import {
 
 const DEPOSIT_PROVIDER: PaymentProviderName = "paystack";
 const DEPOSIT_REFERENCE_PREFIX = "USWDEP";
-const FINANCE_ADMIN_ROLES = new Set(["finance_admin", "platform_admin"]);
+const FINANCE_ADMIN_ROLES = new Set([
+  "finance_admin",
+  "finance_manager",
+  "finance_officer",
+  "platform_admin",
+  "super_admin",
+]);
 const DEPOSIT_EMAIL_TEMPLATES = {
   initiated: "deposit.initiated",
   confirmed: "deposit.confirmed",
@@ -343,10 +350,11 @@ export class DepositEngineService {
         });
       }
 
-      const availableAccount = await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(
-        tx,
-        { walletId: balance.walletId, category: "available" },
-      );
+      const availableAccount =
+        await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+          walletId: balance.walletId,
+          category: "available",
+        });
       if (!availableAccount) {
         throw new AppError({
           code: "INVALID_STATE",
@@ -447,10 +455,11 @@ export class DepositEngineService {
         throw new AppError({ code: "INVALID_STATE", message: "Customer wallet was not found." });
       }
 
-      const availableAccount = await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(
-        tx,
-        { walletId: balance.walletId, category: "available" },
-      );
+      const availableAccount =
+        await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+          walletId: balance.walletId,
+          category: "available",
+        });
       if (!availableAccount) {
         throw new AppError({
           code: "INVALID_STATE",
@@ -610,7 +619,7 @@ export class DepositEngineService {
     if (
       storedEvent.status === "processed" ||
       storedEvent.status === "ignored" ||
-      storedEvent.status === "processing"
+      isProviderEventProcessingLeaseActive(storedEvent, this.deps.clock.now())
     ) {
       return {
         status: "duplicate",
@@ -626,16 +635,10 @@ export class DepositEngineService {
           status: "ignored",
           processedAt: this.deps.clock.now(),
         });
-        await this.appendSystemAudit(
-          tx,
-          "payment.webhook_ignored",
-          storedEvent.id,
-          input.context,
-          {
-            eventType: event.event,
-            providerEventId,
-          },
-        );
+        await this.appendSystemAudit(tx, "payment.webhook_ignored", storedEvent.id, input.context, {
+          eventType: event.event,
+          providerEventId,
+        });
       });
 
       return {
@@ -650,7 +653,12 @@ export class DepositEngineService {
       this.deps.paymentRepository.claimProviderEventForProcessing(tx, storedEvent.id),
     );
     if (!claimed) {
-      throw new AppError({ code: "NOT_FOUND", message: "Provider event was not found." });
+      return {
+        status: "duplicate",
+        eventType: event.event,
+        providerEventId,
+        depositIntentId: null,
+      };
     }
 
     try {
@@ -675,7 +683,10 @@ export class DepositEngineService {
 
     for (const providerEvent of events) {
       if (providerEvent.provider !== DEPOSIT_PROVIDER) continue;
-      if (providerEvent.eventType !== "charge.success" && providerEvent.eventType !== "charge.failed") {
+      if (
+        providerEvent.eventType !== "charge.success" &&
+        providerEvent.eventType !== "charge.failed"
+      ) {
         continue;
       }
 
@@ -778,10 +789,11 @@ export class DepositEngineService {
         throw new AppError({ code: "INVALID_STATE", message: "Customer wallet was not found." });
       }
 
-      const availableAccount = await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(
-        tx,
-        { walletId: balance.walletId, category: "available" },
-      );
+      const availableAccount =
+        await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+          walletId: balance.walletId,
+          category: "available",
+        });
       if (!availableAccount) {
         throw new AppError({
           code: "INVALID_STATE",

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -10,6 +10,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { Button } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { getAdminJson } from "@/features/admin/api-client";
 import { postAuthJson } from "@/features/auth/api-client";
 import { useI18n } from "@/features/i18n/i18n-provider";
 import { LanguageSelector } from "@/features/i18n/language-selector";
@@ -22,6 +23,18 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [isAbsoluteController, setIsAbsoluteController] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getAdminJson<{ isAbsoluteController?: boolean }>("/api/admin/session").then((result) => {
+      if (cancelled || !result.data?.isAbsoluteController) return;
+      setIsAbsoluteController(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   let activeLabel = t("chrome.admin_console");
   for (const section of ADMIN_NAV_SECTIONS) {
@@ -49,6 +62,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <div className="border-b border-border px-4 py-5">
           <BrandMark surface="theme" width={132} className="[&_img]:max-h-8" />
           <p className="mt-2 text-xs text-muted-foreground">{t("chrome.admin_console")}</p>
+          {isAbsoluteController ? (
+            <p className="mt-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-primary">
+              {t("chrome.absolute_controller")}
+            </p>
+          ) : null}
         </div>
         <AdminNavLinks pathname={pathname} />
       </aside>
@@ -71,6 +89,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <p className="min-w-0 truncate text-sm text-muted-foreground">
               <span className="font-medium text-foreground">{activeLabel}</span>
               <span className="ml-2 text-muted-foreground/80">Admin</span>
+              {isAbsoluteController ? (
+                <span className="ml-2 hidden text-[10px] font-medium uppercase tracking-[0.12em] text-primary sm:inline">
+                  {t("chrome.absolute_controller")}
+                </span>
+              ) : null}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
@@ -109,11 +132,29 @@ export function AdminShell({ children }: { children: ReactNode }) {
               <div className="flex items-center justify-between border-b border-border px-4 py-4">
                 <div>
                   <DialogPrimitive.Title className="sr-only">Unique Sky Way</DialogPrimitive.Title>
-                  <BrandMark surface="theme" width={120} priority={false} className="[&_img]:max-h-8" />
-                  <p className="mt-1.5 text-xs text-muted-foreground">{t("chrome.admin_console")}</p>
+                  <BrandMark
+                    surface="theme"
+                    width={120}
+                    priority={false}
+                    className="[&_img]:max-h-8"
+                  />
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    {t("chrome.admin_console")}
+                  </p>
+                  {isAbsoluteController ? (
+                    <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-primary">
+                      {t("chrome.absolute_controller")}
+                    </p>
+                  ) : null}
                 </div>
                 <DialogPrimitive.Close asChild>
-                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9" aria-label={t("admin.close")}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9"
+                    aria-label={t("admin.close")}
+                  >
                     <X className="h-4 w-4" aria-hidden />
                   </Button>
                 </DialogPrimitive.Close>
@@ -152,10 +193,7 @@ function AdminNavLinks({
 }) {
   const { t } = useI18n();
   return (
-    <nav
-      className={cn("flex-1 space-y-6 overflow-y-auto p-3", className)}
-      aria-label={ariaLabel}
-    >
+    <nav className={cn("flex-1 space-y-6 overflow-y-auto p-3", className)} aria-label={ariaLabel}>
       {ADMIN_NAV_SECTIONS.map((section) => (
         <div key={section.labelKey}>
           <p className="mb-2 px-2.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">

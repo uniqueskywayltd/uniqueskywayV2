@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { createRequestContext, jsonError, jsonOk } from "@/app/api/_shared/http";
-import { AppError } from "@/application/errors";
+import { authorizeInternalJob } from "@/app/api/internal/_shared/authorize-internal-job";
 import { TransactionalEmailDispatcher } from "@/application/notifications/transactional-email-dispatcher";
 import { getServerEnv } from "@/config/server-env";
 import {
@@ -15,16 +15,7 @@ export async function POST(request: NextRequest) {
   const context = createRequestContext(request);
 
   try {
-    const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-    if (token !== getServerEnv().INTERNAL_JOB_TOKEN) {
-      return jsonError(
-        new AppError({
-          code: "AUTHORIZATION_ERROR",
-          message: "Unauthorized internal job request.",
-        }),
-        context.requestId,
-      );
-    }
+    authorizeInternalJob(request);
 
     const { db } = getDatabaseConnection();
     const dispatcher = new TransactionalEmailDispatcher(

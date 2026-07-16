@@ -13,6 +13,11 @@ export {
   ReportingRepository,
   SettlementRepository,
 } from "./repositories";
+export {
+  PROVIDER_EVENT_PROCESSING_LEASE_MS,
+  isProviderEventProcessingLeaseActive,
+  pickPrimaryWalletLedgerEvents,
+} from "./repositories";
 export { DrizzleTransactionManager } from "./transactions";
 export * as schema from "./schema";
 export type { DrizzleTransactionContext } from "./transactions";
@@ -62,4 +67,3 @@ export type {
   WalletRecord,
   WithdrawalRequestRecord,
 } from "./repositories";
-export { pickPrimaryWalletLedgerEvents } from "./repositories";
