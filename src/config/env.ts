@@ -8,14 +8,22 @@ export const clientEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 });
 
-const resendFromEmailSchema = z
-  .string()
-  .min(3)
-  .refine((value) => {
-    const angled = value.trim().match(/^(.+?)\s*<([^>]+)>$/);
-    const email = (angled?.[2] ?? value).trim();
-    return z.string().email().safeParse(email).success;
-  }, "RESEND_FROM_EMAIL must be an email or Name <email>");
+const resendFromEmailSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string" || value.trim() === "") {
+      return "Unique Sky Way <info@uniqueskyway.com>";
+    }
+    return value.trim();
+  },
+  z
+    .string()
+    .min(3)
+    .refine((value) => {
+      const angled = value.trim().match(/^(.+?)\s*<([^>]+)>$/);
+      const email = (angled?.[2] ?? value).trim();
+      return z.string().email().safeParse(email).success;
+    }, "RESEND_FROM_EMAIL must be an email or Name <email>"),
+);
 
 export const serverEnvSchema = clientEnvSchema.extend({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
