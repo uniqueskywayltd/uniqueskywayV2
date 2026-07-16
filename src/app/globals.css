@@ -6,7 +6,8 @@
 
 @theme inline {
   --font-heading: var(--font-instrument-serif), "Instrument Serif", ui-serif, Georgia, serif;
-  --font-sans: var(--font-geist-sans), "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    var(--font-geist-sans), "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
   --shadow-elevation-1: var(--elevation-1);
   --shadow-elevation-2: var(--elevation-2);
@@ -220,7 +221,7 @@
 }
 
 .animate-market-ticker {
-  animation: market-ticker-scroll 80s linear infinite;
+  animation: market-ticker-scroll 45s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -253,4 +254,3 @@
     animation: none;
   }
 }
-

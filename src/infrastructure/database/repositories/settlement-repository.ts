@@ -1,10 +1,15 @@
-import { and, desc, eq, gte, lt, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, lte, or, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import { roiLedgerEntries, settlementItems, settlementRuns } from "../schema";
 import type { DrizzleTransactionContext } from "../transactions";
 import type { AppDatabaseExecutor } from "../types";
-import { BaseDrizzleRepository, decodeKeysetCursor, encodeKeysetCursor, singleRow } from "./base-repository";
+import {
+  BaseDrizzleRepository,
+  decodeKeysetCursor,
+  encodeKeysetCursor,
+  singleRow,
+} from "./base-repository";
 
 export type SettlementRunRecord = InferSelectModel<typeof settlementRuns>;
 export type SettlementItemRecord = InferSelectModel<typeof settlementItems>;
@@ -167,6 +172,32 @@ export class SettlementRepository extends BaseDrizzleRepository {
     return rows[0]?.total ?? 0n;
   }
 
+  /** Batch posted ROI totals — avoids N+1 on portfolio list. */
+  async sumPostedRoiMinorByInvestmentIds(investmentIds: string[]): Promise<Map<string, bigint>> {
+    const totals = new Map<string, bigint>();
+    for (const id of investmentIds) totals.set(id, 0n);
+    if (investmentIds.length === 0) return totals;
+
+    const rows = await this.db
+      .select({
+        investmentId: settlementItems.investmentId,
+        total: sql<bigint>`coalesce(sum(${settlementItems.postedRoiMinor}), 0)::bigint`,
+      })
+      .from(settlementItems)
+      .where(
+        and(
+          inArray(settlementItems.investmentId, investmentIds),
+          eq(settlementItems.status, "posted"),
+        ),
+      )
+      .groupBy(settlementItems.investmentId);
+
+    for (const row of rows) {
+      totals.set(row.investmentId, row.total ?? 0n);
+    }
+    return totals;
+  }
+
   async sumPostedRoiMinorByInvestmentInTransaction(
     context: DrizzleTransactionContext,
     investmentId: string,
@@ -231,7 +262,11 @@ export class SettlementRepository extends BaseDrizzleRepository {
   }
 
   async findSettlementRunById(id: string): Promise<SettlementRunRecord | null> {
-    const rows = await this.db.select().from(settlementRuns).where(eq(settlementRuns.id, id)).limit(1);
+    const rows = await this.db
+      .select()
+      .from(settlementRuns)
+      .where(eq(settlementRuns.id, id))
+      .limit(1);
     return rows[0] ?? null;
   }
 

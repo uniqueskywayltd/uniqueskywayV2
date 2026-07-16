@@ -51,7 +51,10 @@ export function jsonError(error: unknown, requestId: string, init?: ResponseInit
         code: appError.code,
         message: appError.message,
         requestId,
-        details: appError.details,
+        details: {
+          ...appError.details,
+          ...(requestId ? { reference: requestId } : {}),
+        },
       },
     },
     {
@@ -242,14 +245,11 @@ function normalizeError(error: unknown, requestId?: string): AppError {
     "Unhandled API error",
   );
 
-  const message =
-    error instanceof Error && error.message.trim().length > 0
-      ? error.message
-      : "Unexpected server error.";
-
+  // Safe client message — never leak stack/SQL; include request reference for support.
+  const reference = requestId ? ` Reference: ${requestId}.` : "";
   return new AppError({
     code: "INTERNAL_ERROR",
-    message,
+    message: `Unable to complete this request.${reference} Please try again or contact support if it continues.`,
     cause: error,
   });
 }

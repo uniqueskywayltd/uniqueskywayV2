@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { getCustomerJson } from "../api-client";
 import type { CustomerSummary } from "../types";
 import { getPersonFullName, getPersonInitials } from "@/lib/utils/person-display";
+import { SessionInactivityGuard } from "@/features/auth/components/session-inactivity-guard";
 
 export interface CustomerShellProps {
   children: ReactNode;
@@ -49,7 +50,9 @@ export function CustomerShell({ children }: CustomerShellProps) {
     return () => {
       active = false;
     };
-  }, [pathname, router]);
+    // Load once per shell mount — avoid refetch waterfall on every route change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only fetch
+  }, [router]);
 
   const initials = useMemo(() => {
     if (!summary) return "US";
@@ -62,6 +65,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SessionInactivityGuard loginPath="/auth/login" />{" "}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-sidebar lg:flex lg:flex-col">
         <div className="border-b p-5">
           <BrandMark surface="theme" />
@@ -89,7 +93,6 @@ export function CustomerShell({ children }: CustomerShellProps) {
           )}
         </div>
       </aside>
-
       <div className="lg:pl-72">
         <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
           <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
@@ -176,7 +179,6 @@ export function CustomerShell({ children }: CustomerShellProps) {
           {children}
         </main>
       </div>
-
       <nav
         className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur lg:hidden"
         aria-label="Primary mobile destinations"

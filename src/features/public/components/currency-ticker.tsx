@@ -15,8 +15,35 @@ type TickerResponse = {
   lastUpdated?: string;
 };
 
+function QuoteItems({ quotes, keyPrefix }: { quotes: MarketTickerQuote[]; keyPrefix: string }) {
+  return quotes.map((row) => {
+    const positive = row.changePercent >= 0;
+    return (
+      <span
+        key={`${keyPrefix}-${row.pair}`}
+        className="inline-flex shrink-0 items-center gap-3 border-r border-border/40 px-4 py-2.5 last:border-r-0"
+      >
+        <span className="text-[11px] font-semibold tracking-wider text-foreground/80 uppercase">
+          {row.pair}
+        </span>
+        <span className="text-sm font-medium tabular-nums text-foreground">
+          {formatTickerRate(row.pair, row.rate)}
+        </span>
+        <span
+          className={cn(
+            "text-xs font-medium tabular-nums",
+            positive ? "text-emerald-600" : "text-red-600",
+          )}
+        >
+          {positive ? "▲" : "▼"} {formatTickerChange(row.changePercent)}
+        </span>
+      </span>
+    );
+  });
+}
+
 /**
- * Market overview strip — one quote row (no duplicated marquee track).
+ * Market overview strip — continuous horizontal slide (marquee).
  * Homepage only via PublicShell `showMarketTicker`.
  */
 export function CurrencyTicker({ className }: { className?: string }) {
@@ -63,38 +90,18 @@ export function CurrencyTicker({ className }: { className?: string }) {
       aria-label="Market overview"
       role="region"
     >
-      <div className="mx-auto flex h-11 w-full max-w-full items-center overflow-x-auto sm:h-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex min-w-full justify-start sm:justify-center">
-          {quotes.map((row) => {
-            const positive = row.changePercent >= 0;
-            return (
-              <span
-                key={row.pair}
-                className="inline-flex shrink-0 items-center gap-3 border-r border-border/40 px-4 py-2.5 last:border-r-0"
-              >
-                <span className="text-[11px] font-semibold tracking-wider text-foreground/80 uppercase">
-                  {row.pair}
-                </span>
-                <span className="text-sm font-medium tabular-nums text-foreground">
-                  {formatTickerRate(row.pair, row.rate)}
-                </span>
-                <span
-                  className={cn(
-                    "text-xs font-medium tabular-nums",
-                    positive ? "text-emerald-600" : "text-red-600",
-                  )}
-                >
-                  {positive ? "▲" : "▼"} {formatTickerChange(row.changePercent)}
-                </span>
-              </span>
-            );
-          })}
+      <div className="mx-auto flex h-11 w-full items-center overflow-hidden sm:h-12">
+        <div className="animate-market-ticker flex w-max items-center">
+          <div className="flex items-center" aria-hidden={false}>
+            <QuoteItems quotes={quotes} keyPrefix="a" />
+          </div>
+          <div className="flex items-center" aria-hidden="true">
+            <QuoteItems quotes={quotes} keyPrefix="b" />
+          </div>
         </div>
       </div>
       {lastUpdated ? (
-        <p className="sr-only">
-          Market data last updated {new Date(lastUpdated).toLocaleString()}
-        </p>
+        <p className="sr-only">Market data last updated {new Date(lastUpdated).toLocaleString()}</p>
       ) : null}
     </div>
   );

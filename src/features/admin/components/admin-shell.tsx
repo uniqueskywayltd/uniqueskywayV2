@@ -12,6 +12,7 @@ import { Button } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { getAdminJson } from "@/features/admin/api-client";
 import { postAuthJson } from "@/features/auth/api-client";
+import { SessionInactivityGuard } from "@/features/auth/components/session-inactivity-guard";
 import { useI18n } from "@/features/i18n/i18n-provider";
 import { LanguageSelector } from "@/features/i18n/language-selector";
 import { ADMIN_NAV_SECTIONS } from "@/features/admin/navigation";
@@ -51,6 +52,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-background text-foreground lg:flex">
+      <SessionInactivityGuard loginPath="/auth/login" />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-md focus:ring-2 focus:ring-ring"

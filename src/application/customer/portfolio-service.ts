@@ -204,8 +204,19 @@ export class CustomerPortfolioService {
 
     rows = sortInvestments(rows, sort).slice(0, limit);
 
-    const cards = await Promise.all(rows.map((row) => this.toPortfolioCard(row)));
-    const summary = await this.buildEnrichedSummary(appUser.id, result.rows);
+    const planMetaCache = new Map<
+      string,
+      { name: string; earlyExitPolicy: string; earlyExitPenaltyBps: number }
+    >();
+    const postedByInvestment =
+      await this.deps.settlementRepository.sumPostedRoiMinorByInvestmentIds(
+        result.rows.map((r) => r.id),
+      );
+
+    const cards = await Promise.all(
+      rows.map((row) => this.toPortfolioCard(row, { planMetaCache, postedByInvestment })),
+    );
+    const summary = await this.buildEnrichedSummary(appUser.id, result.rows, postedByInvestment);
 
     return {
       summary,
@@ -251,11 +262,20 @@ export class CustomerPortfolioService {
     });
   }
 
-  private async toPortfolioCard(investment: InvestmentRecord) {
-    const [planMeta, postedRoiMinor] = await Promise.all([
-      this.resolvePlanMeta(investment.planVersionId),
-      this.deps.settlementRepository.sumPostedRoiMinorByInvestment(investment.id),
-    ]);
+  private async toPortfolioCard(
+    investment: InvestmentRecord,
+    options?: {
+      planMetaCache?: Map<
+        string,
+        { name: string; earlyExitPolicy: string; earlyExitPenaltyBps: number }
+      >;
+      postedByInvestment?: Map<string, bigint>;
+    },
+  ) {
+    const planMeta = await this.resolvePlanMeta(investment.planVersionId, options?.planMetaCache);
+    const postedRoiMinor =
+      options?.postedByInvestment?.get(investment.id) ??
+      (await this.deps.settlementRepository.sumPostedRoiMinorByInvestment(investment.id));
 
     const promisedRoiMinor =
       investment.promisedRoiMinor ??
@@ -321,24 +341,42 @@ export class CustomerPortfolioService {
     };
   }
 
-  private async resolvePlanMeta(planVersionId: string): Promise<{
+  private async resolvePlanMeta(
+    planVersionId: string,
+    cache?: Map<string, { name: string; earlyExitPolicy: string; earlyExitPenaltyBps: number }>,
+  ): Promise<{
     name: string;
     earlyExitPolicy: string;
     earlyExitPenaltyBps: number;
   }> {
+    const cached = cache?.get(planVersionId);
+    if (cached) return cached;
+
     const version = await this.deps.coreRepository.findInvestmentPlanVersionById(planVersionId);
     if (!version) {
-      return { name: "Investment plan", earlyExitPolicy: "not_allowed", earlyExitPenaltyBps: 0 };
+      const fallback = {
+        name: "Investment plan",
+        earlyExitPolicy: "not_allowed",
+        earlyExitPenaltyBps: 0,
+      };
+      cache?.set(planVersionId, fallback);
+      return fallback;
     }
     const plan = await this.deps.coreRepository.findInvestmentPlanById(version.planId);
-    return {
+    const meta = {
       name: plan?.name ?? "Investment plan",
       earlyExitPolicy: version.earlyExitPolicy,
       earlyExitPenaltyBps: readPenaltyBps(version.metadata),
     };
+    cache?.set(planVersionId, meta);
+    return meta;
   }
 
-  private async buildEnrichedSummary(userId: string, rows: InvestmentRecord[]) {
+  private async buildEnrichedSummary(
+    userId: string,
+    rows: InvestmentRecord[],
+    postedByInvestment?: Map<string, bigint>,
+  ) {
     const base = buildPortfolioSummary(rows);
     const currency = "USD";
     const balance = await this.deps.ledgerRepository.findWalletBalanceByUserCurrency(
@@ -346,15 +384,21 @@ export class CustomerPortfolioService {
       currency,
     );
 
+    const activeRows = rows.filter((row) => row.status === "active" || row.status === "maturing");
+    const postedMap =
+      postedByInvestment ??
+      (await this.deps.settlementRepository.sumPostedRoiMinorByInvestmentIds(
+        activeRows.map((r) => r.id),
+      ));
+
     let totalPostedRoiMinor = 0n;
     let totalLiveEarningsMinor = 0n;
     let todayEarningsMinor = 0n;
     let currentInvestmentValueMinor = 0n;
     const now = this.deps.clock.now();
 
-    for (const row of rows) {
-      if (row.status !== "active" && row.status !== "maturing") continue;
-      const posted = await this.deps.settlementRepository.sumPostedRoiMinorByInvestment(row.id);
+    for (const row of activeRows) {
+      const posted = postedMap.get(row.id) ?? 0n;
       totalPostedRoiMinor += posted;
       if (row.activatedAt) {
         const live = calculateContinuousLiveAccrual({
