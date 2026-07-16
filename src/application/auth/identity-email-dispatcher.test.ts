@@ -57,11 +57,11 @@ describe("IdentityEmailDispatcher", () => {
 
     const result = await dispatcher.dispatchQueued(5);
 
-    expect(result).toEqual({ processed: 1, sent: 1, failed: 0 });
+    expect(result).toEqual({ processed: 1, sent: 1, failed: 0, skipped: 0 });
     expect(notifications.markEmailSending).toHaveBeenCalledWith(expect.anything(), "email_1");
     expect(emailSender.send).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: "Unique Sky Way <security@uniqueskyway.example>",
+        from: "Unique Sky Way <info@uniqueskyway.com>",
         to: "investor@example.com",
         subject: "Verify your Unique Sky Way email",
         idempotencyKey: "auth.verify_email:user_1",
@@ -104,7 +104,7 @@ describe("IdentityEmailDispatcher", () => {
 
     const result = await dispatcher.dispatchQueued(5);
 
-    expect(result).toEqual({ processed: 1, sent: 0, failed: 1 });
+    expect(result).toEqual({ processed: 1, sent: 0, failed: 1, skipped: 0 });
     expect(notifications.markEmailSent).not.toHaveBeenCalled();
     expect(notifications.markEmailFailed).toHaveBeenCalledWith(
       expect.anything(),

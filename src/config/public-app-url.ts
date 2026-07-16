@@ -89,7 +89,8 @@ export function getEmailBrand() {
     tagline: "Secure Investor Platform",
     supportEmail: PLATFORM_SUPPORT_EMAIL,
     appUrl,
-    logoUrl: `${appUrl}/brand/light-logo.webp`,
+    /** Production CDN logo — matches email-previews and works in all email clients. */
+    logoUrl: "https://uniqueskyway.com/brand/dark-logo.webp",
     loginUrl: `${appUrl}/auth/login`,
   };
 }

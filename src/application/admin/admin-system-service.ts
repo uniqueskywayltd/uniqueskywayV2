@@ -601,6 +601,12 @@ export class AdminSystemService {
       email: user.email,
       redirectTo: `${resolvePublicAppUrl(process.env.NEXT_PUBLIC_APP_URL)}/auth/reset-password`,
     });
+    if (!reset) {
+      throw new AppError({
+        code: "PROVIDER_ERROR",
+        message: "Password reset link could not be generated.",
+      });
+    }
 
     return this.deps.transactionManager.runInTransaction(async (tx) => {
       await this.deps.identityRepository.updateAdminProfile(tx, userId, {
@@ -612,12 +618,52 @@ export class AdminSystemService {
         templateKey: "auth.password_reset",
         templateVersion: "v1",
         idempotencyKey: `staff.password_reset:${user.id}:${randomUUID()}`,
-        metadata: { resetRequestedBy: admin.appUser.id },
+        metadata: {
+          resetRequestedBy: admin.appUser.id,
+          otp: reset.emailOtp,
+          actionLink: reset.actionLink,
+          name: user.email.split("@")[0] ?? "Investor",
+        },
       });
       await this.appendAdminAudit(tx, admin.appUser.id, "staff.password_reset", userId, context, {
         permissionUsed: admin.permissionUsed,
       });
       return { userId, resetIssued: Boolean(reset) };
+    });
+  }
+
+  /** Queue a platform broadcast email to one recipient (admin targeted / test send). */
+  async queueBroadcastEmail(
+    input: { toEmail: string; title: string; body: string; recipientUserId?: string | null },
+    context: RequestAuditContext,
+  ) {
+    const admin = await requireAdminActor(this.deps, "emails.manage");
+    return this.deps.transactionManager.runInTransaction(async (tx) => {
+      await this.deps.notificationRepository.enqueueEmail(tx, {
+        recipientUserId: input.recipientUserId ?? null,
+        toEmail: input.toEmail,
+        templateKey: "admin.broadcast",
+        templateVersion: "v1",
+        idempotencyKey: `admin.broadcast:${admin.appUser.id}:${randomUUID()}`,
+        metadata: {
+          title: input.title,
+          body: input.body,
+          name: "Investor",
+          broadcastBy: admin.appUser.id,
+        },
+      });
+      await this.appendAdminAudit(
+        tx,
+        admin.appUser.id,
+        "email.broadcast_queued",
+        input.toEmail,
+        context,
+        {
+          permissionUsed: admin.permissionUsed,
+          after: { title: input.title },
+        },
+      );
+      return { queued: true, templateKey: "admin.broadcast", toEmail: input.toEmail };
     });
   }
 

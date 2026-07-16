@@ -305,14 +305,16 @@ export class AdminCustomerService {
       await this.deps.notificationRepository.enqueueEmail(tx, {
         recipientUserId: user.id,
         toEmail: user.email,
-        templateKey: AUTH_EMAIL_TEMPLATES.passwordReset,
+        templateKey: AUTH_EMAIL_TEMPLATES.welcome,
         templateVersion: "v1",
         idempotencyKey: `admin.customer.password_reset:${user.id}:${randomUUID()}`,
         metadata: {
-          otp: temporaryPassword,
-          actionLink: `${appUrl}${AUTH_ROUTES.login}`,
+          adminCreated: true,
           adminReset: true,
           temporaryPassword,
+          mustChangePassword: true,
+          loginUrl: `${appUrl}${AUTH_ROUTES.login}`,
+          name: user.email.split("@")[0] ?? "Investor",
         },
       });
       await this.appendAdminAudit(

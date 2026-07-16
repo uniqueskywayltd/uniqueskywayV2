@@ -3,11 +3,10 @@ import "server-only";
 import type { EmailSender } from "@/application/ports";
 import { renderTransactionalEmail } from "@/application/notifications/transactional-email-templates";
 import {
+  PLATFORM_FROM_ADDRESS,
   PLATFORM_SUPPORT_EMAIL,
-  resolveResendFromAddress,
   sanitizeResendTagValue,
 } from "@/config/email-identity";
-import { getServerEnv } from "@/config/server-env";
 import type { DrizzleTransactionManager, NotificationRepository } from "@/infrastructure/database";
 import { logger } from "@/infrastructure/logging/logger";
 
@@ -15,7 +14,10 @@ export interface IdentityEmailDispatchResult {
   processed: number;
   sent: number;
   failed: number;
+  skipped: number;
 }
+
+const MAX_EMAIL_ATTEMPTS = 5;
 
 export class IdentityEmailDispatcher {
   constructor(
@@ -28,15 +30,33 @@ export class IdentityEmailDispatcher {
     const messages = await this.notifications.listQueuedIdentityEmails(limit);
     let sent = 0;
     let failed = 0;
-    const from = resolveResendFromAddress(getServerEnv().RESEND_FROM_EMAIL);
+    let skipped = 0;
+    const from = PLATFORM_FROM_ADDRESS;
 
     for (const message of messages) {
+      if (message.attemptCount >= MAX_EMAIL_ATTEMPTS) {
+        logger.error(
+          {
+            event: "email.dispatch.max_attempts",
+            emailMessageId: message.id,
+            templateKey: message.templateKey,
+            toEmail: message.toEmail,
+            attemptCount: message.attemptCount,
+            lastError: message.lastError,
+          },
+          "Identity email abandoned after max delivery attempts",
+        );
+        skipped += 1;
+        continue;
+      }
+
+      const startedAt = Date.now();
       await this.transactionManager.runInTransaction((tx) =>
         this.notifications.markEmailSending(tx, message.id),
       );
 
       try {
-        const rendered = renderTransactionalEmail({
+        const rendered = await renderTransactionalEmail({
           templateKey: message.templateKey,
           metadata: message.metadata,
         });
@@ -56,19 +76,39 @@ export class IdentityEmailDispatcher {
           ],
         });
 
+        const durationMs = Date.now() - startedAt;
         await this.transactionManager.runInTransaction((tx) =>
           this.notifications.markEmailSent(tx, message.id, result.providerMessageId),
+        );
+        logger.info(
+          {
+            event: "email.dispatch.sent",
+            emailMessageId: message.id,
+            templateKey: message.templateKey,
+            previewId: rendered.previewId,
+            toEmail: message.toEmail,
+            subject: rendered.subject,
+            providerMessageId: result.providerMessageId,
+            attemptCount: message.attemptCount,
+            durationMs,
+            from,
+          },
+          "Identity email delivered",
         );
         sent += 1;
       } catch (error) {
         const cause = error instanceof Error ? error.message : "Unknown error";
+        const durationMs = Date.now() - startedAt;
         logger.error(
           {
             event: "email.dispatch.failed",
             emailMessageId: message.id,
             templateKey: message.templateKey,
             toEmail: message.toEmail,
+            attemptCount: message.attemptCount + 1,
+            durationMs,
             cause,
+            from,
           },
           "Identity email delivery failed",
         );
@@ -83,6 +123,7 @@ export class IdentityEmailDispatcher {
       processed: messages.length,
       sent,
       failed,
+      skipped,
     };
   }
 }
