@@ -206,6 +206,7 @@ describe("InvestmentEngineService", () => {
 function createService(options: CreateServiceOptions = {}) {
   const planVersion = {
     id: "plan_version_1",
+    planId: "plan_1",
     status: "active",
     currency: "USD",
     minPrincipalMinor: 1_000n,
@@ -229,6 +230,9 @@ function createService(options: CreateServiceOptions = {}) {
     },
     coreRepository: {
       findInvestmentPlanVersionById: vi.fn(async () => planVersion),
+      findInvestmentPlanById: vi.fn(async () => ({ id: "plan_1", name: "Silver" })),
+      findCustomerPreferencesByUserId: vi.fn(async () => null),
+      findCustomerProfileByUserId: vi.fn(async () => null),
     },
     investmentRepository: {
       findInvestmentByIdempotencyKey: vi.fn(async () => options.existingInvestment ?? null),

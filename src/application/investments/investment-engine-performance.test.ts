@@ -115,6 +115,7 @@ function createPerformanceHarness() {
   const coreRepository = {
     findInvestmentPlanVersionById: async () => ({
       id: "plan_version_1",
+      planId: "plan_1",
       status: "active",
       currency: "USD",
       minPrincipalMinor: 1_000n,
@@ -126,6 +127,9 @@ function createPerformanceHarness() {
       effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
       effectiveTo: null,
     }),
+    findInvestmentPlanById: async () => ({ id: "plan_1", name: "Silver" }),
+    findCustomerPreferencesByUserId: async () => null,
+    findCustomerProfileByUserId: async () => null,
   } as unknown as CoreRepository;
 
   const investmentRepository = {
