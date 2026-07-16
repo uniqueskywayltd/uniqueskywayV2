@@ -13,6 +13,7 @@ export interface AuthenticatedUser {
   email: string | null;
   emailVerifiedAt: Date | null;
   displayName: string | null;
+  mustChangePassword: boolean;
 }
 
 export interface AuthenticatedSession {
@@ -42,6 +43,11 @@ export interface ResetPasswordWithOtpInput {
   email: string;
   token: string;
   password: string;
+}
+
+export interface VerifyRecoveryOtpInput {
+  email: string;
+  token: string;
 }
 
 export interface AdminCreateUserInput {
@@ -76,6 +82,8 @@ export interface IdentityProvider {
     type: "signup" | "email" | "magiclink",
   ): Promise<AuthenticatedIdentity>;
   signInWithPassword(email: string, password: string): Promise<AuthenticatedIdentity>;
+  verifyRecoveryOtp(input: VerifyRecoveryOtpInput): Promise<AuthenticatedIdentity>;
+  verifyRecoveryTokenHash(tokenHash: string): Promise<AuthenticatedIdentity>;
   resetPasswordWithOtp(input: ResetPasswordWithOtpInput): Promise<AuthenticatedIdentity>;
   changePassword(newPassword: string): Promise<void>;
   getCurrentUser(): Promise<AuthenticatedUser | null>;

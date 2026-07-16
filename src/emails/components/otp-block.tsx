@@ -3,14 +3,18 @@ import { emailColors, emailMono } from "./tokens";
 
 type EmailOtpBlockProps = {
   otp: string;
+  hint?: string;
 };
 
-export function EmailOtpBlock({ otp }: EmailOtpBlockProps) {
+export function EmailOtpBlock({
+  otp,
+  hint = "Enter this code in the verification window, or use the button below.",
+}: EmailOtpBlockProps) {
   return (
     <Section style={wrap}>
       <Text style={label}>Your verification code</Text>
       <Text style={code}>{otp}</Text>
-      <Text style={hint}>Or enter this code when prompted.</Text>
+      <Text style={hintStyle}>{hint}</Text>
     </Section>
   );
 }
@@ -42,7 +46,7 @@ const code = {
   fontFamily: emailMono,
 };
 
-const hint = {
+const hintStyle = {
   margin: "12px 0 0",
   fontSize: "13px",
   lineHeight: "20px",

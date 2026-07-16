@@ -134,6 +134,7 @@ function createFixture(options: FixtureOptions = {}) {
     email: "reporter@example.com",
     emailVerifiedAt: now,
     displayName: "Reporter",
+    mustChangePassword: false,
   };
 
   const adminAppUser = {

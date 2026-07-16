@@ -35,6 +35,7 @@ import type {
   AddCustomerNoteInput,
   AdminCreateCustomerInput,
   AdminWalletAdjustmentInput,
+  BulkCustomerActionInput,
   SearchCustomersInput,
   UpdateCustomerKycInput,
   UpdateCustomerProfileInput,
@@ -116,7 +117,7 @@ export class AdminCustomerService {
       });
     }
 
-    if (input.username?.trim()) {
+    if (input.username.trim()) {
       const existingUsername = await this.deps.coreRepository.findCustomerProfileByDisplayName(
         input.username.trim(),
       );
@@ -128,14 +129,15 @@ export class AdminCustomerService {
       }
     }
 
-    const temporaryPassword = input.password?.trim() || generateTemporaryPassword();
-    const displayName = input.displayName?.trim() || input.username?.trim() || null;
-    const legalName = input.legalName?.trim() || displayName;
+    const temporaryPassword = input.password.trim();
+    const displayName = input.displayName?.trim() || input.username.trim();
+    const legalName = input.legalName.trim();
+    const username = input.username.trim();
 
     const created = await this.deps.identityProvider.adminCreateUser({
       email,
       password: temporaryPassword,
-      ...(displayName ? { displayName } : {}),
+      displayName,
       emailConfirmed: true,
       mustChangePassword: true,
     });
@@ -151,7 +153,7 @@ export class AdminCustomerService {
 
         await this.bootstrapper.bootstrap(tx, {
           userId: appUser.id,
-          displayName,
+          displayName: username,
           legalName,
         });
 
@@ -169,6 +171,11 @@ export class AdminCustomerService {
             temporaryPassword,
             mustChangePassword: true,
             loginUrl,
+            email: appUser.email,
+            username,
+            firstName: legalName.split(" ")[0] ?? displayName,
+            name: legalName,
+            displayName: username,
           },
         });
 
@@ -432,6 +439,73 @@ export class AdminCustomerService {
     await this.deps.identityProvider?.adminDeleteUser?.(user.authUserId).catch(() => undefined);
 
     return { deleted: true };
+  }
+
+  /**
+   * Applies suspend / reactivate / lock / unlock / delete to many customers in one request.
+   * Each user is updated immediately; failures are collected per id without aborting the batch.
+   */
+  async bulkCustomerAction(
+    input: BulkCustomerActionInput,
+    context: RequestAuditContext,
+  ): Promise<{
+    action: BulkCustomerActionInput["action"];
+    succeeded: string[];
+    failed: Array<{ userId: string; message: string }>;
+  }> {
+    await requireAdminActor(this.deps, "customers.suspend");
+
+    const uniqueIds = [...new Set(input.userIds)];
+    const succeeded: string[] = [];
+    const failed: Array<{ userId: string; message: string }> = [];
+
+    const defaultReason =
+      input.reason?.trim() ||
+      (input.action === "lock"
+        ? "Administrative lock"
+        : input.action === "suspend"
+          ? "Administrative suspension"
+          : input.action === "reactivate" || input.action === "unlock"
+            ? "Administrative reactivation"
+            : "Deleted by administrator");
+
+    for (const userId of uniqueIds) {
+      try {
+        switch (input.action) {
+          case "suspend":
+            await this.updateCustomerStatus(
+              userId,
+              { status: "restricted", reason: defaultReason },
+              context,
+            );
+            break;
+          case "reactivate":
+          case "unlock":
+            await this.updateCustomerStatus(
+              userId,
+              { status: "active", reason: defaultReason },
+              context,
+            );
+            break;
+          case "lock":
+            await this.lockCustomer(userId, defaultReason, context);
+            break;
+          case "delete":
+            await this.deleteCustomer(userId, input.confirmation ?? "DELETE", context);
+            break;
+          default:
+            break;
+        }
+        succeeded.push(userId);
+      } catch (error) {
+        failed.push({
+          userId,
+          message: error instanceof AppError ? error.message : "Action failed.",
+        });
+      }
+    }
+
+    return { action: input.action, succeeded, failed };
   }
 
   async updateCustomerVerification(

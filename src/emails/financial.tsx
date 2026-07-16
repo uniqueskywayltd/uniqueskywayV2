@@ -260,7 +260,6 @@ export function DailyRoiEmail(props: BaseProps & { roiAmount?: string }) {
         { label: "📈 Investment Status", value: "Active & Earning" },
       ]}
       bodyNote="Your updated balance and transaction history are now available in your dashboard. Thank you for investing with Unique Sky Way. We're committed to helping your investments grow securely, consistently, and transparently."
-      supportLead="If you have any questions, our Investor Success Team is always available at"
       closingTagline="Invest Smart. Grow Daily. Build Wealth."
       cta={{ label: "View Portfolio", href: props.dashboardUrl ?? defaultDashboard() }}
     />
@@ -557,7 +556,6 @@ export const financialPlainText = {
       ],
       footerNote:
         "Your updated balance and transaction history are now available in your dashboard. Thank you for investing with Unique Sky Way. We're committed to helping your investments grow securely, consistently, and transparently.",
-      supportLead: "If you have any questions, our Investor Success Team is always available at",
       closingTagline: "Invest Smart. Grow Daily. Build Wealth.",
       cta: { label: "View Portfolio", href: p.dashboardUrl ?? defaultDashboard() },
     });

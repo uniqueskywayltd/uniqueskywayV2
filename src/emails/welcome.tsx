@@ -1,30 +1,39 @@
 import { Text } from "@react-email/components";
+import { getBrand } from "@/emails/brand";
 import { EmailLayout, text } from "./components/layout";
-import { EmailOtpBlock } from "./components/otp-block";
 
 type WelcomeEmailProps = {
   name: string;
-  verifyUrl: string;
-  otp?: string | null;
 };
 
-export default function WelcomeEmail({ name, verifyUrl, otp }: WelcomeEmailProps) {
+/**
+ * Delayed signup welcome (≈35 minutes after registration).
+ * Nudges email verification — distinct from the immediate OTP verify email.
+ */
+export default function WelcomeEmail({ name }: WelcomeEmailProps) {
+  const brand = getBrand();
+
   return (
     <EmailLayout
-      preview="Verify your email — Unique Sky Way"
-      heading={`Hi ${name}`}
-      cta={{ label: "Verify email", href: verifyUrl }}
+      preview={`Welcome to ${brand.name}`}
+      heading={`Welcome, ${name}`}
+      badge={{ label: "New account", tone: "success" }}
     >
-      <Text style={text.primary}>Verify your email to finish setting up your account.</Text>
-      {otp ? <EmailOtpBlock otp={otp} /> : null}
-      <Text style={text.muted}>If you didn&apos;t sign up, you can ignore this email.</Text>
+      <Text style={text.primary}>
+        Thank you for opening an investor account with {brand.name}. We&apos;re glad to have you on
+        board.
+      </Text>
+      <Text style={text.primary}>
+        Please verify your email address to activate your account and access your secure investor
+        dashboard — portfolio overview, deposits, withdrawals, and full transaction history.
+      </Text>
+      <Text style={text.muted}>
+        If you didn&apos;t create this account, you can safely ignore this email.
+      </Text>
     </EmailLayout>
   );
 }
 
 WelcomeEmail.PreviewProps = {
   name: "Alex Morgan",
-  verifyUrl:
-    "https://uniqueskyway.com/auth/verify?token=example&type=signup&email=alex%40example.com",
-  otp: "482913",
 } satisfies WelcomeEmailProps;

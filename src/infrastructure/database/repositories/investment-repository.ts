@@ -4,7 +4,12 @@ import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { investments, roiScheduleItems } from "../schema";
 import type { DrizzleTransactionContext } from "../transactions";
 import type { AppDatabaseExecutor } from "../types";
-import { BaseDrizzleRepository, decodeKeysetCursor, encodeKeysetCursor, singleRow } from "./base-repository";
+import {
+  BaseDrizzleRepository,
+  decodeKeysetCursor,
+  encodeKeysetCursor,
+  singleRow,
+} from "./base-repository";
 
 export type InvestmentRecord = InferSelectModel<typeof investments>;
 export type RoiScheduleItemRecord = InferSelectModel<typeof roiScheduleItems>;
@@ -142,6 +147,23 @@ export class InvestmentRepository extends BaseDrizzleRepository {
       .returning();
 
     return singleRow(rows, "markInvestmentMatured");
+  }
+
+  async markInvestmentCancelled(
+    context: DrizzleTransactionContext,
+    investmentId: string,
+    cancelledAt: Date,
+  ): Promise<InvestmentRecord> {
+    const rows = await context.db
+      .update(investments)
+      .set({
+        status: "cancelled",
+        cancelledAt,
+      })
+      .where(eq(investments.id, investmentId))
+      .returning();
+
+    return singleRow(rows, "markInvestmentCancelled");
   }
 
   async markInvestmentMaturing(

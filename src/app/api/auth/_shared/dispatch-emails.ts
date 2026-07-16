@@ -20,7 +20,21 @@ export async function dispatchQueuedEmails(
       new DrizzleTransactionManager(db),
       ResendEmailSender.fromApiKey(getServerEnv().RESEND_API_KEY),
     );
-    const result = await dispatcher.dispatchQueued(limit);
+
+    let result = await dispatcher.dispatchQueued(limit);
+
+    // One immediate retry when the first pass sent nothing but failures occurred,
+    // or when reclaimable work may remain after a partial flush error.
+    if (result.failed > 0 || (result.processed > 0 && result.sent === 0 && result.skipped === 0)) {
+      const retry = await dispatcher.dispatchQueued(limit);
+      result = {
+        processed: result.processed + retry.processed,
+        sent: result.sent + retry.sent,
+        failed: retry.failed,
+        skipped: result.skipped + retry.skipped,
+      };
+    }
+
     if (result.failed > 0) {
       logger.error(
         {
@@ -31,6 +45,15 @@ export async function dispatchQueuedEmails(
           skipped: result.skipped,
         },
         "Email flush completed with delivery failures",
+      );
+    } else if (result.sent > 0) {
+      logger.info(
+        {
+          event: "email.dispatch.flush_ok",
+          processed: result.processed,
+          sent: result.sent,
+        },
+        "Email flush delivered queued messages",
       );
     }
     return result;

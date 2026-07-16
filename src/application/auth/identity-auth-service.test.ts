@@ -138,14 +138,18 @@ describe("IdentityAuthService", () => {
     expect(queuedTemplates).toEqual(
       expect.arrayContaining([
         AUTH_EMAIL_TEMPLATES.emailVerified,
-        AUTH_EMAIL_TEMPLATES.welcome,
         AUTH_EMAIL_TEMPLATES.newDeviceSignIn,
       ]),
+    );
+    expect(queuedTemplates).not.toContain(AUTH_EMAIL_TEMPLATES.welcome);
+    expect(fakes.notificationRepository.suppressQueuedEmailByIdempotencyKey).toHaveBeenCalledWith(
+      expect.anything(),
+      "auth.welcome:app_user_1",
     );
     expect(fakes.identityRepository.ensureSession).toHaveBeenCalled();
   });
 
-  it("sends a trusted-device login alert without creating a new device", async () => {
+  it("does not email on trusted-device login; only touches the device", async () => {
     const trustedDevice = createTrustedDevice();
     const { service, fakes } = createService({
       trustedDeviceCookie: "trusted-device-token",
@@ -167,11 +171,10 @@ describe("IdentityAuthService", () => {
       expect.any(Date),
     );
     expect(fakes.identityRepository.createTrustedDevice).not.toHaveBeenCalled();
-    expect(fakes.notificationRepository.enqueueEmail).toHaveBeenCalledWith(
+    expect(fakes.notificationRepository.enqueueEmail).not.toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         templateKey: AUTH_EMAIL_TEMPLATES.newDeviceSignIn,
-        metadata: expect.objectContaining({ trustedDevice: true }),
       }),
     );
     expect(fakes.identityRepository.ensureSession).toHaveBeenCalledWith(
@@ -254,6 +257,7 @@ function createService(
     notificationRepository: {
       enqueueEmail: vi.fn(async () => ({ id: "email_1" })),
       enqueueOutboxEvent: vi.fn(async () => ({ id: "outbox_1" })),
+      suppressQueuedEmailByIdempotencyKey: vi.fn(async () => null),
     },
     operationsRepository: {
       appendAuditLog: vi.fn(async () => ({ id: "audit_1" })),
@@ -296,6 +300,7 @@ function createAuthenticatedUser() {
     email: "investor@example.com",
     emailVerifiedAt: new Date("2026-07-12T12:00:00.000Z"),
     displayName: "Avery Investor",
+    mustChangePassword: false,
   };
 }
 

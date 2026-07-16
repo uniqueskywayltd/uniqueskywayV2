@@ -27,8 +27,13 @@ type TransactionalEmailProps = {
   closingTagline?: string | undefined;
   cta?: { label: string; href: string } | undefined;
   badge?: { label: string; tone?: "success" | "warning" | "danger" | "neutral" } | undefined;
+  /** Defaults to a reply prompt — mail is already from support, so we do not restate the address. */
   supportLead?: string | undefined;
+  /** When true, appends a mailto link for brand.email after supportLead. */
+  includeSupportEmail?: boolean | undefined;
 };
+
+const DEFAULT_SUPPORT_LEAD = "Reply to this email if you need help or have questions.";
 
 export function EmailDetailTable({
   details,
@@ -91,8 +96,10 @@ export function TransactionalEmail({
   cta,
   badge,
   supportLead,
+  includeSupportEmail = false,
 }: TransactionalEmailProps) {
   const brand = getBrand();
+  const supportText = supportLead ?? DEFAULT_SUPPORT_LEAD;
   return (
     <EmailLayout preview={preview} heading={heading} cta={cta} badge={badge}>
       <Text style={text.primary}>
@@ -121,11 +128,17 @@ export function TransactionalEmail({
         </Section>
       ) : null}
       <Text style={text.muted}>
-        {supportLead ?? "Questions? Contact our investor support team at"}{" "}
-        <a href={`mailto:${brand.email}`} style={linkStyle}>
-          {brand.email}
-        </a>
-        .
+        {includeSupportEmail ? (
+          <>
+            {supportText}{" "}
+            <a href={`mailto:${brand.email}`} style={linkStyle}>
+              {brand.email}
+            </a>
+            .
+          </>
+        ) : (
+          supportText
+        )}
       </Text>
       {closingTagline ? (
         <Section style={closingWrap}>
@@ -148,6 +161,7 @@ export function plainTransactionalEmail(params: {
   closingTagline?: string;
   cta?: { label: string; href: string };
   supportLead?: string;
+  includeSupportEmail?: boolean;
 }): string {
   const brand = getBrand();
   const lines = [params.heading, "", `Hello ${params.name},`, "", params.intro, ""];
@@ -172,9 +186,8 @@ export function plainTransactionalEmail(params: {
     lines.push(`${params.cta.label}: ${params.cta.href}`, "");
   }
 
-  lines.push(
-    `${params.supportLead ?? "Questions? Contact our investor support team at"} ${brand.email}`,
-  );
+  const supportText = params.supportLead ?? DEFAULT_SUPPORT_LEAD;
+  lines.push(params.includeSupportEmail ? `${supportText} ${brand.email}` : supportText);
   if (params.closingTagline) {
     lines.push("", brand.name, params.closingTagline);
   }

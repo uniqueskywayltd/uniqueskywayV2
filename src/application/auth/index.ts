@@ -23,6 +23,7 @@ export {
   availabilityQuerySchema,
   verifyEmailInputSchema,
   verifyEmailLinkInputSchema,
+  verifyRecoveryOtpInputSchema,
 } from "./schemas";
 export type {
   AuthenticatedIdentity,
@@ -39,6 +40,9 @@ export type {
   RegisterInput,
   ResendVerificationInput,
   ResetPasswordInput,
+  RevokeSessionInput,
+  RevokeTrustedDeviceInput,
   VerifyEmailInput,
   VerifyEmailLinkInput,
+  VerifyRecoveryOtpInput,
 } from "./schemas";

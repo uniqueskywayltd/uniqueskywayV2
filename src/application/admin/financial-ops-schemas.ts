@@ -100,6 +100,23 @@ export const searchInvestmentsInputSchema = z.object({
 
 export type SearchInvestmentsInput = z.infer<typeof searchInvestmentsInputSchema>;
 
+export const adminCreateInvestmentInputSchema = z.object({
+  userId: z.string().uuid(),
+  planVersionId: z.string().uuid(),
+  principalMinor: z.string().regex(/^\d+$/, "Principal must be a positive integer string."),
+  fundShortfall: z.boolean().default(true),
+  idempotencyKey: z.string().trim().min(8).max(180).optional(),
+});
+
+export type AdminCreateInvestmentInput = z.infer<typeof adminCreateInvestmentInputSchema>;
+
+export const adminUpdateInvestmentInputSchema = z.object({
+  status: z.enum(["cancelled"]).optional(),
+  reason: z.string().trim().min(1).max(500).optional(),
+});
+
+export type AdminUpdateInvestmentInput = z.infer<typeof adminUpdateInvestmentInputSchema>;
+
 export const listSettlementRunsInputSchema = z.object({
   status: settlementRunStatusSchema.optional(),
   from: dateOnlyInputSchema.optional(),

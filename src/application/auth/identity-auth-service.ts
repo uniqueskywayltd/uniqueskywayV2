@@ -1,7 +1,7 @@
 import "server-only";
 
 import { AppError } from "@/application/errors";
-import { resolvePublicAppUrl, sanitizeAuthActionLink } from "@/config/public-app-url";
+import { resolvePublicAppUrl } from "@/config/public-app-url";
 import { getServerEnv } from "@/config/server-env";
 import type {
   CoreRepository,
@@ -13,11 +13,13 @@ import type {
   OperationsRepository,
 } from "@/infrastructure/database";
 
+import { buildAuthEmailAction } from "./auth-email-links";
 import {
   AUTH_COOKIE_NAMES,
   AUTH_EMAIL_TEMPLATES,
   AUTH_ROUTES,
   PENDING_VERIFY_TTL_SECONDS,
+  SIGNUP_WELCOME_DELAY_MS,
 } from "./constants";
 import { IdentityEmailQueue } from "./identity-email-queue";
 import type {
@@ -48,6 +50,7 @@ import type {
   ResetPasswordInput,
   VerifyEmailInput,
   VerifyEmailLinkInput,
+  VerifyRecoveryOtpInput,
 } from "./schemas";
 
 export interface AuthCookieAdapter {
@@ -122,6 +125,23 @@ export class IdentityAuthService {
       ...(displayName ? { displayName } : {}),
     });
 
+    const authEmail = buildAuthEmailAction({
+      properties: {
+        actionLink: generatedEmail.actionLink,
+        hashedToken: generatedEmail.hashedToken,
+        emailOtp: generatedEmail.emailOtp,
+      },
+      flow: "signup",
+      email: generatedEmail.email,
+      appUrl,
+    });
+    if (!authEmail.otp) {
+      throw new AppError({
+        code: "PROVIDER_ERROR",
+        message: "Verification code could not be generated. Please try again.",
+      });
+    }
+
     await this.deps.transactionManager.runInTransaction(async (tx) => {
       const appUser = await this.deps.identityRepository.ensureUser(tx, {
         authUserId: generatedEmail.authUserId,
@@ -136,15 +156,37 @@ export class IdentityAuthService {
         legalName: legalName ?? null,
       });
 
+      const name = displayName ?? legalName ?? appUser.email.split("@")[0] ?? "Investor";
+
       await this.emailQueue.enqueue(tx, {
         recipientUserId: appUser.id,
         toEmail: appUser.email,
         templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
-        idempotencyKey: `auth.verify_email:${appUser.id}:${generatedEmail.hashedToken}`,
+        idempotencyKey: `auth.verify_email:${appUser.id}:${authEmail.hashedToken}`,
         metadata: {
-          otp: generatedEmail.emailOtp,
-          actionLink: sanitizeAuthActionLink(generatedEmail.actionLink, redirectTo),
-          hashedToken: generatedEmail.hashedToken,
+          otp: authEmail.otp,
+          actionLink: authEmail.actionLink,
+          hashedToken: authEmail.hashedToken,
+          name,
+          displayName: displayName ?? null,
+          trigger: "auth.register",
+          requestId: context.requestId,
+        },
+      });
+
+      await this.emailQueue.enqueue(tx, {
+        recipientUserId: appUser.id,
+        toEmail: appUser.email,
+        templateKey: AUTH_EMAIL_TEMPLATES.welcome,
+        idempotencyKey: `auth.welcome:${appUser.id}`,
+        availableAt: new Date(Date.now() + SIGNUP_WELCOME_DELAY_MS),
+        metadata: {
+          name,
+          displayName: displayName ?? null,
+          actionLink: authEmail.actionLink,
+          signupWelcome: true,
+          trigger: "auth.register.welcome_delayed",
+          requestId: context.requestId,
         },
       });
 
@@ -199,23 +241,47 @@ export class IdentityAuthService {
       });
     }
 
+    const profile = await this.deps.coreRepository.findCustomerProfileByUserId(appUser.id);
+    const name =
+      profile?.displayName ?? profile?.legalName ?? appUser.email.split("@")[0] ?? "Investor";
+
     const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
     const redirectTo = `${appUrl}${AUTH_ROUTES.verifyEmail}`;
     const generatedEmail = await this.deps.identityProvider.generateEmailVerificationLink({
       email: input.email,
       redirectTo,
     });
+    const authEmail = buildAuthEmailAction({
+      properties: {
+        actionLink: generatedEmail.actionLink,
+        hashedToken: generatedEmail.hashedToken,
+        emailOtp: generatedEmail.emailOtp,
+      },
+      flow: "email",
+      email: generatedEmail.email,
+      appUrl,
+    });
+    if (!authEmail.otp) {
+      throw new AppError({
+        code: "PROVIDER_ERROR",
+        message: "Verification code could not be generated. Please try again.",
+      });
+    }
 
     await this.deps.transactionManager.runInTransaction(async (tx) => {
       await this.emailQueue.enqueue(tx, {
         recipientUserId: appUser.id,
         toEmail: appUser.email,
         templateKey: AUTH_EMAIL_TEMPLATES.verifyEmail,
-        idempotencyKey: `auth.verify_email_resend:${appUser.id}:${generatedEmail.hashedToken}`,
+        idempotencyKey: `auth.verify_email_resend:${appUser.id}:${authEmail.hashedToken}`,
         metadata: {
-          otp: generatedEmail.emailOtp,
-          actionLink: sanitizeAuthActionLink(generatedEmail.actionLink, redirectTo),
-          hashedToken: generatedEmail.hashedToken,
+          otp: authEmail.otp,
+          actionLink: authEmail.actionLink,
+          hashedToken: authEmail.hashedToken,
+          name,
+          displayName: profile?.displayName ?? null,
+          trigger: "auth.resend_verification",
+          requestId: context.requestId,
         },
       });
       await this.appendAudit(
@@ -271,19 +337,20 @@ export class IdentityAuthService {
     const appUser = await this.ensureVerifiedAppUser(authenticated.user, context);
 
     await this.deps.transactionManager.runInTransaction(async (tx) => {
+      await this.deps.notificationRepository.suppressQueuedEmailByIdempotencyKey(
+        tx,
+        `auth.welcome:${appUser.id}`,
+      );
       await this.emailQueue.enqueue(tx, {
         recipientUserId: appUser.id,
         toEmail: appUser.email,
         templateKey: AUTH_EMAIL_TEMPLATES.emailVerified,
         idempotencyKey: `auth.email_verified:${appUser.id}:${authenticated.user.emailVerifiedAt?.toISOString() ?? "verified"}`,
-        metadata: {},
-      });
-      await this.emailQueue.enqueue(tx, {
-        recipientUserId: appUser.id,
-        toEmail: appUser.email,
-        templateKey: AUTH_EMAIL_TEMPLATES.welcome,
-        idempotencyKey: `auth.welcome:${appUser.id}`,
-        metadata: {},
+        metadata: {
+          name: appUser.email.split("@")[0] ?? "Investor",
+          trigger: "auth.email_verified",
+          requestId: context.requestId,
+        },
       });
     });
 
@@ -327,8 +394,16 @@ export class IdentityAuthService {
       this.deps.rateLimiter.recordLoginSuccess(input.email, context.ipAddress);
       const appUser = await this.ensureVerifiedAppUser(authenticated.user, context);
       await this.recordSessionAndDevice(appUser.id, appUser.email, authenticated.session, context);
+      if (authenticated.user.mustChangePassword) {
+        return {
+          userId: appUser.id,
+          email: appUser.email,
+          redirectTo: "/auth/change-password" as const,
+          mustChangePassword: true,
+        };
+      }
       const redirectTo = await this.resolvePostLoginRedirect(appUser.id);
-      return { userId: appUser.id, email: appUser.email, redirectTo };
+      return { userId: appUser.id, email: appUser.email, redirectTo, mustChangePassword: false };
     } catch (error) {
       const failed = this.deps.rateLimiter.recordLoginFailure(input.email, context.ipAddress);
 
@@ -340,7 +415,9 @@ export class IdentityAuthService {
     }
   }
 
-  private async resolvePostLoginRedirect(userId: string): Promise<"/admin" | "/dashboard"> {
+  private async resolvePostLoginRedirect(
+    userId: string,
+  ): Promise<"/admin" | "/dashboard" | "/auth/change-password"> {
     const adminProfile = await this.deps.identityRepository.findAdminProfileByUserId(userId);
     if (!adminProfile || adminProfile.status !== "active") {
       return "/dashboard";
@@ -371,17 +448,45 @@ export class IdentityAuthService {
       const appUser = await this.deps.identityRepository.findUserByAuthUserId(
         generatedEmail.authUserId,
       );
+      const profile = appUser
+        ? await this.deps.coreRepository.findCustomerProfileByUserId(appUser.id)
+        : null;
+      const name =
+        profile?.displayName ??
+        profile?.legalName ??
+        generatedEmail.email.split("@")[0] ??
+        "Investor";
+      const authEmail = buildAuthEmailAction({
+        properties: {
+          actionLink: generatedEmail.actionLink,
+          hashedToken: generatedEmail.hashedToken,
+          emailOtp: generatedEmail.emailOtp,
+        },
+        flow: "recovery",
+        email: generatedEmail.email,
+        appUrl,
+      });
+      if (!authEmail.otp) {
+        throw new AppError({
+          code: "PROVIDER_ERROR",
+          message: "Password reset code could not be generated. Please try again.",
+        });
+      }
 
       await this.deps.transactionManager.runInTransaction(async (tx) => {
         await this.emailQueue.enqueue(tx, {
           recipientUserId: appUser?.id ?? null,
           toEmail: generatedEmail.email,
           templateKey: AUTH_EMAIL_TEMPLATES.passwordReset,
-          idempotencyKey: `auth.password_reset:${generatedEmail.authUserId}:${generatedEmail.hashedToken}`,
+          idempotencyKey: `auth.password_reset:${generatedEmail.authUserId}:${authEmail.hashedToken}`,
           metadata: {
-            otp: generatedEmail.emailOtp,
-            actionLink: sanitizeAuthActionLink(generatedEmail.actionLink, redirectTo),
-            hashedToken: generatedEmail.hashedToken,
+            otp: authEmail.otp,
+            actionLink: authEmail.actionLink,
+            hashedToken: authEmail.hashedToken,
+            name,
+            displayName: profile?.displayName ?? null,
+            trigger: "auth.forgot_password",
+            requestId: context.requestId,
           },
         });
 
@@ -401,8 +506,56 @@ export class IdentityAuthService {
     return { accepted: true };
   }
 
+  async verifyRecoveryOtp(input: VerifyRecoveryOtpInput, context: RequestSecurityContext) {
+    const authenticated = input.tokenHash
+      ? await this.deps.identityProvider.verifyRecoveryTokenHash(input.tokenHash)
+      : await this.deps.identityProvider.verifyRecoveryOtp({
+          email: input.email!,
+          token: input.token!,
+        });
+    const email = authenticated.user.email?.toLowerCase() ?? input.email?.toLowerCase() ?? "";
+
+    await this.deps.transactionManager.runInTransaction(async (tx) => {
+      const appUser = await this.deps.identityRepository.findUserByAuthUserId(
+        authenticated.user.authUserId,
+      );
+      if (appUser) {
+        await this.appendAudit(
+          tx,
+          appUser.id,
+          "auth.password_reset_otp_verified",
+          "user",
+          appUser.id,
+          context,
+        );
+      }
+    });
+
+    return { verified: true as const, email };
+  }
+
   async resetPassword(input: ResetPasswordInput, context: RequestSecurityContext) {
-    const authenticated = await this.deps.identityProvider.resetPasswordWithOtp(input);
+    let authenticated: { user: AuthenticatedUser; session: AuthenticatedSession };
+
+    if (input.email && input.token) {
+      authenticated = await this.deps.identityProvider.resetPasswordWithOtp({
+        email: input.email,
+        token: input.token,
+        password: input.password,
+      });
+    } else {
+      const user = await this.deps.identityProvider.getCurrentUser();
+      const session = await this.deps.identityProvider.getCurrentSession();
+      if (!user || !session) {
+        throw new AppError({
+          code: "AUTHENTICATION_ERROR",
+          message: "Verify your reset code before choosing a new password.",
+        });
+      }
+      await this.deps.identityProvider.changePassword(input.password);
+      authenticated = { user, session };
+    }
+
     const appUser = await this.ensureVerifiedAppUser(authenticated.user, context);
 
     await this.deps.transactionManager.runInTransaction(async (tx) => {
@@ -411,14 +564,18 @@ export class IdentityAuthService {
         toEmail: appUser.email,
         templateKey: AUTH_EMAIL_TEMPLATES.passwordChanged,
         idempotencyKey: `auth.password_changed:${appUser.id}:${Date.now()}`,
-        metadata: {},
+        metadata: {
+          trigger: "auth.password_reset",
+          requestId: context.requestId,
+        },
       });
       await this.appendAudit(tx, appUser.id, "auth.password_changed", "user", appUser.id, context);
     });
 
     await this.recordSessionAndDevice(appUser.id, appUser.email, authenticated.session, context);
+    const redirectTo = await this.resolvePostLoginRedirect(appUser.id);
 
-    return { userId: appUser.id };
+    return { userId: appUser.id, redirectTo };
   }
 
   async changePassword(input: ChangePasswordInput, context: RequestSecurityContext) {
@@ -433,6 +590,7 @@ export class IdentityAuthService {
 
     await this.deps.identityProvider.signInWithPassword(appUser.email, input.currentPassword);
     await this.deps.identityProvider.changePassword(input.newPassword);
+    await this.deps.identityProvider.adminSetMustChangePassword?.(appUser.authUserId, false);
 
     await this.deps.transactionManager.runInTransaction(async (tx) => {
       await this.emailQueue.enqueue(tx, {
@@ -445,7 +603,8 @@ export class IdentityAuthService {
       await this.appendAudit(tx, appUser.id, "auth.password_changed", "user", appUser.id, context);
     });
 
-    return { changed: true };
+    const redirectTo = await this.resolvePostLoginRedirect(appUser.id);
+    return { changed: true, redirectTo };
   }
 
   async logout(context: RequestSecurityContext) {
@@ -654,25 +813,6 @@ export class IdentityAuthService {
 
       if (knownDevice) {
         await this.deps.identityRepository.touchTrustedDevice(tx, knownDevice.id, now);
-        const dayKey = now.toISOString().slice(0, 10);
-        await this.emailQueue.enqueue(tx, {
-          recipientUserId: appUserId,
-          toEmail: email,
-          templateKey: AUTH_EMAIL_TEMPLATES.newDeviceSignIn,
-          idempotencyKey: `auth.trusted_login:${appUserId}:${knownDevice.id}:${dayKey}`,
-          metadata: {
-            trustedDevice: true,
-            deviceLabel: fingerprint.label,
-            browser: fingerprint.browser,
-            os: fingerprint.os,
-            signedInAt: now.toISOString(),
-            ipAddressMasked: maskIpAddress(context.ipAddress),
-            approximateLocation: context.approximateLocation,
-            ipAddressSeen: Boolean(context.ipAddress),
-            trigger: "trusted_device_login",
-            requestId: context.requestId,
-          },
-        });
       } else {
         const device = await this.deps.identityRepository.createTrustedDevice(tx, {
           userId: appUserId,

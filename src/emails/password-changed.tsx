@@ -31,8 +31,8 @@ export default function PasswordChangedEmail({
         active sessions on other devices may require you to sign in again.
       </Text>
       <Text style={text.muted}>
-        If you did not make this change, contact us immediately at {brand.email} and review your
-        active sessions from the security settings in your dashboard.
+        If you did not make this change, reply to this email immediately and review your active
+        sessions from the security settings in your dashboard.
       </Text>
     </EmailLayout>
   );
@@ -40,5 +40,5 @@ export default function PasswordChangedEmail({
 
 PasswordChangedEmail.PreviewProps = {
   name: "Alex Morgan",
-  changedAt: "July 6, 2026 at 3:42 PM UTC",
+  changedAt: "07/06/2026, 3:42 PM UTC",
 } satisfies PasswordChangedEmailProps;

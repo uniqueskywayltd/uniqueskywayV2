@@ -121,7 +121,9 @@ describe("DepositEngineService", () => {
     });
     fixture.state.deposits.push(deposit);
 
-    await expect(fixture.service.cancelDepositIntent("deposit_1", auditContext)).rejects.toMatchObject({
+    await expect(
+      fixture.service.cancelDepositIntent("deposit_1", auditContext),
+    ).rejects.toMatchObject({
       code: "INVALID_STATE",
     });
   });
@@ -173,7 +175,11 @@ describe("DepositEngineService", () => {
 
   it("retries a failed provider event with backoff and dead-letters it after exhausting attempts", async () => {
     const fixture = createFixture();
-    const deposit = createDeposit({ id: "deposit_1", providerIntentId: "USWDEP-1", status: "pending" });
+    const deposit = createDeposit({
+      id: "deposit_1",
+      providerIntentId: "USWDEP-1",
+      status: "pending",
+    });
     fixture.state.deposits.push(deposit);
 
     const rawBody = JSON.stringify({
@@ -203,7 +209,11 @@ describe("DepositEngineService", () => {
     });
 
     await expect(
-      fixture.service.processPaystackWebhook({ rawBody, signature: "valid", context: auditContext }),
+      fixture.service.processPaystackWebhook({
+        rawBody,
+        signature: "valid",
+        context: auditContext,
+      }),
     ).rejects.toMatchObject({ code: "PROVIDER_ERROR" });
 
     const event = fixture.state.providerEvents.find((candidate) => candidate.id === "event_1");
@@ -218,7 +228,11 @@ describe("DepositEngineService", () => {
 
   it("schedules a retry with next_retry_at backoff when attempts remain", async () => {
     const fixture = createFixture();
-    const deposit = createDeposit({ id: "deposit_1", providerIntentId: "USWDEP-1", status: "pending" });
+    const deposit = createDeposit({
+      id: "deposit_1",
+      providerIntentId: "USWDEP-1",
+      status: "pending",
+    });
     fixture.state.deposits.push(deposit);
 
     const rawBody = JSON.stringify({
@@ -235,7 +249,11 @@ describe("DepositEngineService", () => {
     });
 
     await expect(
-      fixture.service.processPaystackWebhook({ rawBody, signature: "valid", context: auditContext }),
+      fixture.service.processPaystackWebhook({
+        rawBody,
+        signature: "valid",
+        context: auditContext,
+      }),
     ).rejects.toMatchObject({ code: "PROVIDER_ERROR" });
 
     const event = fixture.state.providerEvents.find(
@@ -249,7 +267,11 @@ describe("DepositEngineService", () => {
 
   it("recovers a previously failed provider event and confirms the deposit on retry", async () => {
     const fixture = createFixture();
-    const deposit = createDeposit({ id: "deposit_1", providerIntentId: "USWDEP-1", status: "pending" });
+    const deposit = createDeposit({
+      id: "deposit_1",
+      providerIntentId: "USWDEP-1",
+      status: "pending",
+    });
     fixture.state.deposits.push(deposit);
     fixture.state.providerEvents.push(
       createProviderEvent({
@@ -283,9 +305,7 @@ const auditContext = {
   userAgentHash: null,
 };
 
-function createFixture(
-  options: { withAdmin?: boolean; availableBalanceMinor?: bigint } = {},
-) {
+function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: bigint } = {}) {
   const state = {
     deposits: [] as DepositIntentRecord[],
     providerEvents: [] as PaymentProviderEventRecord[],
@@ -295,6 +315,7 @@ function createFixture(
     email: "customer@example.com",
     emailVerifiedAt: new Date("2026-07-13T12:00:00.000Z"),
     displayName: "Customer",
+    mustChangePassword: false,
   };
   const appUser = {
     id: "user_1",
@@ -375,13 +396,11 @@ function createFixture(
       Object.assign(deposit, { status: "failed", failureReason });
       return deposit;
     }),
-    markDepositIntentCancelled: vi.fn(
-      async (_tx: unknown, id: string, failureReason: string) => {
-        const deposit = requireDeposit(state, id);
-        Object.assign(deposit, { status: "cancelled", failureReason });
-        return deposit;
-      },
-    ),
+    markDepositIntentCancelled: vi.fn(async (_tx: unknown, id: string, failureReason: string) => {
+      const deposit = requireDeposit(state, id);
+      Object.assign(deposit, { status: "cancelled", failureReason });
+      return deposit;
+    }),
     markDepositIntentReversed: vi.fn(
       async (_tx: unknown, id: string, values: Partial<DepositIntentRecord>) => {
         const deposit = requireDeposit(state, id);
@@ -440,14 +459,16 @@ function createFixture(
         .filter((event) => event.status === "failed" && !event.deadLetteredAt)
         .slice(0, limit),
     ),
-    markProviderEventDeadLettered: vi.fn(
-      async (_tx: unknown, id: string, errorMessage: string) => {
-        const event = state.providerEvents.find((candidate) => candidate.id === id);
-        if (!event) throw new Error("Missing provider event.");
-        Object.assign(event, { status: "failed", deadLetteredAt: new Date("2026-07-13T12:00:00.000Z"), errorMessage });
-        return event;
-      },
-    ),
+    markProviderEventDeadLettered: vi.fn(async (_tx: unknown, id: string, errorMessage: string) => {
+      const event = state.providerEvents.find((candidate) => candidate.id === id);
+      if (!event) throw new Error("Missing provider event.");
+      Object.assign(event, {
+        status: "failed",
+        deadLetteredAt: new Date("2026-07-13T12:00:00.000Z"),
+        errorMessage,
+      });
+      return event;
+    }),
     listDepositIntentsByUserId: vi.fn(async () => state.deposits),
     listDepositIntents: vi.fn(async () => state.deposits),
   };

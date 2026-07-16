@@ -8,10 +8,9 @@ import {
   requireCsrf,
   requireSameOrigin,
 } from "@/app/api/_shared/http";
-import { resendVerificationInputSchema } from "@/application/auth/schemas";
+import { verifyRecoveryOtpInputSchema } from "@/application/auth";
 
-import { dispatchQueuedEmails } from "../_shared/dispatch-emails";
-import { createAuthService } from "../_shared/service";
+import { createAuthService } from "../../_shared/service";
 
 export async function POST(request: NextRequest) {
   const context = createRequestContext(request);
@@ -19,13 +18,9 @@ export async function POST(request: NextRequest) {
   try {
     requireSameOrigin(request);
     await requireCsrf(request);
-    const input = await parseJson(request, resendVerificationInputSchema);
+    const input = await parseJson(request, verifyRecoveryOtpInputSchema);
     const service = await createAuthService({ rememberSession: true });
-    const result = await service.resendVerification(input, context);
-    const flush = await dispatchQueuedEmails(25);
-    if (!flush || flush.failed > 0) {
-      await dispatchQueuedEmails(25);
-    }
+    const result = await service.verifyRecoveryOtp(input, context);
     return jsonOk(result, context.requestId);
   } catch (error) {
     return jsonError(error, context.requestId);

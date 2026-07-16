@@ -8,7 +8,16 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
-import { Badge, Button, Card, Input, StatusChip, Textarea } from "@/components/ui";
+import {
+  Alert,
+  AlertDescription,
+  Badge,
+  Button,
+  Card,
+  Input,
+  StatusChip,
+  Textarea,
+} from "@/components/ui";
 import { DashboardPanelCard } from "@/components/ui/dashboard-panel-card";
 import {
   Dialog,
@@ -224,6 +233,7 @@ export function CustomersPanel() {
   const [rows, setRows] = useState<
     Array<{
       id: string;
+      name: string;
       email: string;
       status: string;
       kycStatus: string;
@@ -231,12 +241,14 @@ export function CustomersPanel() {
     }>
   >([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createEmail, setCreateEmail] = useState("");
-  const [createName, setCreateName] = useState("");
-  const [createBusy, setCreateBusy] = useState(false);
   const [createFeedback, setCreateFeedback] = useState<string | null>(null);
-  const router = useRouter();
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkFeedback, setBulkFeedback] = useState<string | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleteConfirmation, setBulkDeleteConfirmation] = useState("");
+  const [pendingBulkAction, setPendingBulkAction] = useState<
+    "suspend" | "reactivate" | "lock" | "unlock" | "delete" | null
+  >(null);
 
   const load = useCallback(async () => {
     const params = new URLSearchParams();
@@ -247,6 +259,8 @@ export function CustomersPanel() {
       customers: Array<{
         userId: string;
         email: string;
+        displayName?: string | null;
+        legalName?: string | null;
         accountStatus?: string | null;
         userStatus?: string;
         kycStatus?: string | null;
@@ -259,13 +273,21 @@ export function CustomersPanel() {
       return;
     }
     setRows(
-      (result.data?.customers ?? []).map((row) => ({
-        id: row.userId,
-        email: row.email,
-        status: row.accountStatus ?? row.userStatus ?? "unknown",
-        kycStatus: row.kycStatus ?? "unknown",
-        createdAt: row.userCreatedAt,
-      })),
+      (result.data?.customers ?? []).map((row) => {
+        const name =
+          row.displayName?.trim() ||
+          row.legalName?.trim() ||
+          row.email.split("@")[0] ||
+          "Unknown customer";
+        return {
+          id: row.userId,
+          name,
+          email: row.email,
+          status: row.accountStatus ?? row.userStatus ?? "unknown",
+          kycStatus: row.kycStatus ?? "unknown",
+          createdAt: row.userCreatedAt,
+        };
+      }),
     );
     setState("ready");
   }, [q, status]);
@@ -274,36 +296,77 @@ export function CustomersPanel() {
     void load();
   }, [load]);
 
-  async function createCustomer() {
-    if (!createEmail.trim()) return;
-    setCreateBusy(true);
-    setCreateFeedback(null);
+  async function runBulkAction(action: "suspend" | "reactivate" | "lock" | "unlock" | "delete") {
+    const userIds = [...selected];
+    if (userIds.length === 0) return;
+
+    if (action === "delete") {
+      setPendingBulkAction("delete");
+      setBulkDeleteConfirmation("");
+      setBulkDeleteOpen(true);
+      return;
+    }
+
+    setBulkBusy(true);
+    setBulkFeedback(null);
     const result = await mutateAdminJson<{
-      user?: { id?: string };
-      temporaryPassword?: string;
-    }>("POST", "/api/admin/users", {
-      email: createEmail.trim(),
-      displayName: createName.trim() || undefined,
+      succeeded: string[];
+      failed: Array<{ userId: string; message: string }>;
+    }>("POST", "/api/admin/users/bulk", {
+      action,
+      userIds,
+      reason:
+        action === "suspend"
+          ? "Administrative suspension"
+          : action === "lock"
+            ? "Administrative lock"
+            : "Administrative reactivation",
     });
-    setCreateBusy(false);
+    setBulkBusy(false);
     if (result.error) {
-      setCreateFeedback(result.error);
+      setBulkFeedback(result.error);
       return;
     }
-    setCreateOpen(false);
-    setCreateEmail("");
-    setCreateName("");
-    const temp = result.data?.temporaryPassword;
-    setCreateFeedback(
-      temp
-        ? `Customer created. Temporary password: ${temp}`
-        : "Customer created and welcome email queued.",
+    const succeeded = result.data?.succeeded.length ?? 0;
+    const failed = result.data?.failed.length ?? 0;
+    setBulkFeedback(
+      failed > 0
+        ? `${action} applied to ${succeeded} customer(s); ${failed} failed.`
+        : `${action} applied to ${succeeded} customer(s).`,
     );
-    const id = result.data?.user?.id;
-    if (id) {
-      router.push(`/admin/customers/${id}`);
+    setSelected(new Set());
+    await load();
+  }
+
+  async function confirmBulkDelete() {
+    const userIds = [...selected];
+    if (userIds.length === 0) return;
+    setBulkBusy(true);
+    setBulkFeedback(null);
+    const result = await mutateAdminJson<{
+      succeeded: string[];
+      failed: Array<{ userId: string; message: string }>;
+    }>("POST", "/api/admin/users/bulk", {
+      action: "delete",
+      userIds,
+      confirmation: bulkDeleteConfirmation,
+    });
+    setBulkBusy(false);
+    setBulkDeleteOpen(false);
+    setPendingBulkAction(null);
+    if (result.error) {
+      setBulkFeedback(result.error);
       return;
     }
+    const succeeded = result.data?.succeeded.length ?? 0;
+    const failed = result.data?.failed.length ?? 0;
+    setBulkFeedback(
+      failed > 0
+        ? `Deleted ${succeeded} customer(s); ${failed} failed.`
+        : `Deleted ${succeeded} customer(s).`,
+    );
+    setSelected(new Set());
+    setBulkDeleteConfirmation("");
     await load();
   }
 
@@ -311,16 +374,21 @@ export function CustomersPanel() {
     <div>
       <AdminPageHeader
         title="Customers"
-        description="Search, filter, and open customer administration records."
+        description="Search, filter, and open customer administration records. Select rows to suspend, reactivate, lock, unlock, or delete."
         action={
-          <Button type="button" onClick={() => setCreateOpen(true)}>
-            Create customer
+          <Button asChild type="button">
+            <Link href="/admin/customers/new">Create customer</Link>
           </Button>
         }
       />
       {createFeedback ? (
         <p className="mb-4 rounded-md border bg-card px-3 py-2 text-sm" role="status">
           {createFeedback}
+        </p>
+      ) : null}
+      {bulkFeedback ? (
+        <p className="mb-4 rounded-md border bg-card px-3 py-2 text-sm" role="status">
+          {bulkFeedback}
         </p>
       ) : null}
       <AdminToolbar
@@ -336,18 +404,147 @@ export function CustomersPanel() {
         ]}
         onStatusChange={setStatus}
         trailing={
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setState("loading");
-              void load();
-            }}
-          >
-            Refresh
-          </Button>
+          <>
+            {selected.size > 0 ? (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2 py-1.5">
+                <span className="px-1 text-sm font-semibold text-foreground">
+                  {selected.size} selected
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={bulkBusy}
+                  onClick={() => void runBulkAction("suspend")}
+                >
+                  Suspend
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={bulkBusy}
+                  onClick={() => void runBulkAction("reactivate")}
+                >
+                  Reactivate
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={bulkBusy}
+                  onClick={() => void runBulkAction("lock")}
+                >
+                  Lock
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={bulkBusy}
+                  onClick={() => void runBulkAction("unlock")}
+                >
+                  Unlock
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  disabled={bulkBusy}
+                  onClick={() => void runBulkAction("delete")}
+                >
+                  Delete
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={bulkBusy}
+                  onClick={() => setSelected(new Set())}
+                >
+                  Clear
+                </Button>
+              </div>
+            ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setState("loading");
+                void load();
+              }}
+            >
+              Refresh
+            </Button>
+          </>
         }
       />
+      {selected.size > 0 ? (
+        <div className="sticky top-2 z-30 mb-4 flex flex-wrap items-center gap-2 rounded-xl border-2 border-amber-500/50 bg-background/95 px-3 py-3 shadow-lg backdrop-blur">
+          <span className="text-sm font-semibold text-foreground">
+            Bulk actions · {selected.size} customer{selected.size === 1 ? "" : "s"}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={bulkBusy}
+            onClick={() => void runBulkAction("suspend")}
+          >
+            Suspend
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={bulkBusy}
+            onClick={() => void runBulkAction("reactivate")}
+          >
+            Reactivate
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={bulkBusy}
+            onClick={() => void runBulkAction("lock")}
+          >
+            Lock
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={bulkBusy}
+            onClick={() => void runBulkAction("unlock")}
+          >
+            Unlock
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="destructive"
+            disabled={bulkBusy}
+            onClick={() => void runBulkAction("delete")}
+          >
+            Delete
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={bulkBusy}
+            onClick={() => setSelected(new Set())}
+          >
+            Clear selection
+          </Button>
+        </div>
+      ) : (
+        <p className="mb-3 text-sm text-muted-foreground">
+          Tip: use the checkboxes in the table to select customers, then Suspend / Reactivate / Lock
+          / Unlock / Delete appear here.
+        </p>
+      )}
       {state === "loading" ? <AdminLoadingBlock /> : null}
       {state === "error" && error ? (
         <AdminErrorBlock
@@ -379,7 +576,16 @@ export function CustomersPanel() {
             });
           }}
           columns={[
-            { key: "email", header: "Email", cell: (row) => row.email },
+            {
+              key: "name",
+              header: "Customer",
+              cell: (row) => (
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-foreground">{row.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">{row.email}</p>
+                </div>
+              ),
+            },
             {
               key: "status",
               header: "Status",
@@ -401,37 +607,41 @@ export function CustomersPanel() {
         />
       ) : null}
 
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog
+        open={bulkDeleteOpen}
+        onOpenChange={(open) => {
+          setBulkDeleteOpen(open);
+          if (!open) {
+            setPendingBulkAction(null);
+            setBulkDeleteConfirmation("");
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create customer</DialogTitle>
+            <DialogTitle>Delete {selected.size} customer(s)?</DialogTitle>
             <DialogDescription>
-              Creates an active, email-verified account with wallet bootstrap and sends a welcome
-              email with a temporary password. OTP verification is not required.
+              This closes the selected accounts immediately. Type DELETE to confirm. Staff accounts
+              and your own admin account cannot be deleted here.
             </DialogDescription>
           </DialogHeader>
           <Input
-            value={createEmail}
-            onChange={(event) => setCreateEmail(event.target.value)}
-            aria-label="Customer email"
-            placeholder="customer@example.com"
-          />
-          <Input
-            value={createName}
-            onChange={(event) => setCreateName(event.target.value)}
-            aria-label="Display name"
-            placeholder="Display name (optional)"
+            value={bulkDeleteConfirmation}
+            onChange={(event) => setBulkDeleteConfirmation(event.target.value)}
+            aria-label="Type DELETE to confirm"
+            placeholder="DELETE"
           />
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setBulkDeleteOpen(false)}>
               Cancel
             </Button>
             <Button
               type="button"
-              disabled={createBusy || !createEmail.trim()}
-              onClick={() => void createCustomer()}
+              variant="destructive"
+              disabled={bulkBusy || bulkDeleteConfirmation !== "DELETE" || !pendingBulkAction}
+              onClick={() => void confirmBulkDelete()}
             >
-              {createBusy ? "Creating…" : "Create"}
+              {bulkBusy ? "Deleting…" : "Delete selected"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -984,6 +1194,7 @@ export function InvestmentsPanel() {
       reference: String(row.id),
       status: String(row.status),
       amountMinor: String(row.principalMinor ?? "0"),
+      userId: String(row.userId ?? ""),
       createdAt: String(row.createdAt ?? ""),
     }),
     [],
@@ -993,43 +1204,196 @@ export function InvestmentsPanel() {
     "investments",
     mapRow,
   );
+  const [createOpen, setCreateOpen] = useState(false);
+  const [plans, setPlans] = useState<
+    Array<{
+      planVersionId: string;
+      planName: string;
+      currency: string;
+      minPrincipalMinor: string;
+      maxPrincipalMinor: string;
+      termDays: number;
+    }>
+  >([]);
+  const [userId, setUserId] = useState("");
+  const [planVersionId, setPlanVersionId] = useState("");
+  const [amountUsd, setAmountUsd] = useState("");
+  const [fundShortfall, setFundShortfall] = useState(true);
+  const [createBusy, setCreateBusy] = useState(false);
+  const [createFeedback, setCreateFeedback] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function openCreate() {
+    setCreateFeedback(null);
+    setCreateOpen(true);
+    const result = await getAdminJson<{
+      plans: Array<{
+        planVersionId: string;
+        planName: string;
+        currency: string;
+        minPrincipalMinor: string;
+        maxPrincipalMinor: string;
+        termDays: number;
+      }>;
+    }>("/api/admin/investments?plans=1");
+    if (result.error) {
+      setCreateFeedback(result.error);
+      return;
+    }
+    const nextPlans = result.data?.plans ?? [];
+    setPlans(nextPlans);
+    if (!planVersionId && nextPlans[0]) {
+      setPlanVersionId(nextPlans[0].planVersionId);
+    }
+  }
+
+  async function createInvestment() {
+    const dollars = Number(amountUsd);
+    if (!userId.trim() || !planVersionId || !Number.isFinite(dollars) || dollars <= 0) {
+      setCreateFeedback("Enter a valid customer user ID, plan, and USD amount.");
+      return;
+    }
+    const principalMinor = String(Math.round(dollars * 100));
+    setCreateBusy(true);
+    setCreateFeedback(null);
+    const result = await mutateAdminJson<{ investment?: { id?: string } }>(
+      "POST",
+      "/api/admin/investments",
+      {
+        userId: userId.trim(),
+        planVersionId,
+        principalMinor,
+        fundShortfall,
+      },
+    );
+    setCreateBusy(false);
+    if (result.error) {
+      setCreateFeedback(result.error);
+      return;
+    }
+    setCreateOpen(false);
+    setAmountUsd("");
+    const id = result.data?.investment?.id;
+    if (id) {
+      router.push(`/admin/investments/${id}`);
+      return;
+    }
+    setState("loading");
+    await load();
+  }
 
   return (
-    <ResourceListPage
-      title="Investments"
-      description="Read-only investment viewer over the certified investment engine."
-      searchLabel="Search investments"
-      q={q}
-      setQ={setQ}
-      status={status}
-      setStatus={setStatus}
-      statusOptions={[
-        { value: "active", label: "Active" },
-        { value: "matured", label: "Matured" },
-        { value: "pending", label: "Pending" },
-      ]}
-      state={state}
-      error={error}
-      load={load}
-      setState={setState}
-      emptyTitle="No investments found"
-      rows={rows}
-      detailHref={(id) => `/admin/investments/${id}`}
-      columns={[
-        { key: "id", header: "Investment", cell: (row) => row.id },
-        {
-          key: "status",
-          header: "Status",
-          cell: (row) => <Badge variant="secondary">{row.status}</Badge>,
-        },
-        { key: "principal", header: "Principal (minor)", cell: (row) => row.amountMinor },
-        {
-          key: "created",
-          header: "Created",
-          cell: (row) => (row.createdAt ? new Date(row.createdAt).toLocaleString() : "—"),
-        },
-      ]}
-    />
+    <div>
+      <ResourceListPage
+        title="Investments"
+        description="Create and manage certified investments. New investments fund from available balance (or auto-credit shortfall when enabled)."
+        searchLabel="Search investments"
+        q={q}
+        setQ={setQ}
+        status={status}
+        setStatus={setStatus}
+        statusOptions={[
+          { value: "active", label: "Active" },
+          { value: "matured", label: "Matured" },
+          { value: "pending", label: "Pending" },
+          { value: "cancelled", label: "Cancelled" },
+        ]}
+        state={state}
+        error={error}
+        load={load}
+        setState={setState}
+        emptyTitle="No investments found"
+        rows={rows}
+        detailHref={(id) => `/admin/investments/${id}`}
+        headerAction={
+          <Button type="button" onClick={() => void openCreate()}>
+            Add investment
+          </Button>
+        }
+        columns={[
+          { key: "id", header: "Investment", cell: (row) => row.id },
+          {
+            key: "status",
+            header: "Status",
+            cell: (row) => <Badge variant="secondary">{row.status}</Badge>,
+          },
+          {
+            key: "principal",
+            header: "Principal",
+            cell: (row) => `$${(Number(row.amountMinor) / 100).toFixed(2)}`,
+          },
+          {
+            key: "created",
+            header: "Created",
+            cell: (row) => (row.createdAt ? new Date(row.createdAt).toLocaleString() : "—"),
+          },
+        ]}
+      />
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add investment</DialogTitle>
+            <DialogDescription>
+              Activates a certified plan for a customer. When funding shortfall is enabled,
+              available balance is topped up automatically before activation.
+            </DialogDescription>
+          </DialogHeader>
+          <label className="grid gap-1.5 text-sm">
+            <span className="font-medium">Customer user ID</span>
+            <Input
+              value={userId}
+              onChange={(event) => setUserId(event.target.value.trim())}
+              placeholder="UUID from customer detail page"
+            />
+          </label>
+          <label className="grid gap-1.5 text-sm">
+            <span className="font-medium">Plan</span>
+            <select
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              value={planVersionId}
+              onChange={(event) => setPlanVersionId(event.target.value)}
+            >
+              {plans.map((plan) => (
+                <option key={plan.planVersionId} value={plan.planVersionId}>
+                  {plan.planName} · {plan.termDays}d · {plan.currency}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1.5 text-sm">
+            <span className="font-medium">Principal (USD)</span>
+            <Input
+              value={amountUsd}
+              onChange={(event) => setAmountUsd(event.target.value)}
+              inputMode="decimal"
+              placeholder="1000"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={fundShortfall}
+              onChange={(event) => setFundShortfall(event.target.checked)}
+            />
+            Auto-credit wallet if balance is insufficient
+          </label>
+          {createFeedback ? (
+            <Alert variant="destructive">
+              <AlertDescription>{createFeedback}</AlertDescription>
+            </Alert>
+          ) : null}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" disabled={createBusy} onClick={() => void createInvestment()}>
+              {createBusy ? "Creating…" : "Create investment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 
@@ -1058,6 +1422,7 @@ function ResourceListPage<
   rows,
   columns,
   detailHref,
+  headerAction,
 }: {
   title: string;
   description: string;
@@ -1075,10 +1440,11 @@ function ResourceListPage<
   rows: TRow[];
   columns: Array<{ key: string; header: string; cell: (row: TRow) => React.ReactNode }>;
   detailHref: (id: string) => string;
+  headerAction?: React.ReactNode;
 }) {
   return (
     <div>
-      <AdminPageHeader title={title} description={description} />
+      <AdminPageHeader title={title} description={description} action={headerAction} />
       <AdminToolbar
         searchLabel={searchLabel}
         searchValue={q}
@@ -1137,13 +1503,17 @@ export function WithdrawalDetailPanel() {
 
 export function InvestmentDetailPanel() {
   const params = useParams<{ investmentId: string }>();
+  const investmentId = params.investmentId;
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState<{ message: string; status?: number } | null>(null);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
 
   const load = useCallback(async () => {
     const result = await getAdminJson<Record<string, unknown>>(
-      `/api/admin/investments/${params.investmentId}`,
+      `/api/admin/investments/${investmentId}`,
     );
     if (result.error) {
       setError({ message: result.error, ...(result.status ? { status: result.status } : {}) });
@@ -1152,11 +1522,33 @@ export function InvestmentDetailPanel() {
     }
     setDetail(result.data ?? null);
     setState("ready");
-  }, [params.investmentId]);
+  }, [investmentId]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function cancelInvestment() {
+    setBusy(true);
+    setFeedback(null);
+    const result = await mutateAdminJson<{ investment?: { status?: string } }>(
+      "PATCH",
+      `/api/admin/investments/${investmentId}`,
+      {
+        status: "cancelled",
+        reason: cancelReason.trim() || "Administrative cancellation",
+      },
+    );
+    setBusy(false);
+    if (result.error) {
+      setFeedback(result.error);
+      return;
+    }
+    setFeedback(
+      "Investment cancelled and principal released to available balance when applicable.",
+    );
+    await load();
+  }
 
   if (state === "loading") return <AdminLoadingBlock />;
   if (state === "error" && error) {
@@ -1172,9 +1564,68 @@ export function InvestmentDetailPanel() {
     );
   }
 
+  const investment = (detail?.investment ?? {}) as Record<string, unknown>;
+  const status = String(investment.status ?? "");
+  const canCancel = status === "active" || status === "pending" || status === "maturing";
+
   return (
-    <div>
-      <AdminPageHeader title="Investment detail" description="Read-only investment viewer." />
+    <div className="space-y-4">
+      <AdminPageHeader
+        title="Investment detail"
+        description="Review schedule and cancel active investments when needed."
+        action={
+          <Button asChild type="button" variant="outline">
+            <Link href="/admin/investments">Back</Link>
+          </Button>
+        }
+      />
+      {feedback ? (
+        <Alert>
+          <AlertDescription>{feedback}</AlertDescription>
+        </Alert>
+      ) : null}
+      <Card className="space-y-3 p-4">
+        <div className="grid gap-2 sm:grid-cols-2">
+          <p className="text-sm">
+            <span className="text-muted-foreground">ID:</span> {String(investment.id ?? "")}
+          </p>
+          <p className="text-sm">
+            <span className="text-muted-foreground">Status:</span> {status}
+          </p>
+          <p className="text-sm">
+            <span className="text-muted-foreground">Customer:</span>{" "}
+            {String(investment.userId ?? "")}
+          </p>
+          <p className="text-sm">
+            <span className="text-muted-foreground">Principal:</span> $
+            {(Number(investment.principalMinor ?? 0) / 100).toFixed(2)}
+          </p>
+          <p className="text-sm">
+            <span className="text-muted-foreground">Posted ROI:</span> $
+            {(Number(detail?.postedRoiMinor ?? 0) / 100).toFixed(2)}
+          </p>
+        </div>
+        {canCancel ? (
+          <div className="space-y-2 border-t pt-3">
+            <label className="grid gap-1.5 text-sm">
+              <span className="font-medium">Cancel reason</span>
+              <Input
+                value={cancelReason}
+                onChange={(event) => setCancelReason(event.target.value)}
+                placeholder="Optional reason"
+              />
+            </label>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={busy}
+              onClick={() => void cancelInvestment()}
+            >
+              {busy ? "Cancelling…" : "Cancel investment"}
+            </Button>
+          </div>
+        ) : null}
+      </Card>
       <Card className="p-4">
         <pre className="overflow-x-auto text-xs">{JSON.stringify(detail, null, 2)}</pre>
       </Card>

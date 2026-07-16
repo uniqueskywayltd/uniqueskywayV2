@@ -6,6 +6,7 @@ import { EmailLayout, text } from "./components/layout";
 type RegistrationWelcomeEmailProps = {
   firstName: string;
   username: string;
+  email?: string;
   emailVerified?: boolean;
   temporaryPassword?: string | null;
   mustChangePassword?: boolean;
@@ -15,6 +16,7 @@ type RegistrationWelcomeEmailProps = {
 export default function RegistrationWelcomeEmail({
   firstName,
   username,
+  email,
   emailVerified = false,
   temporaryPassword,
   mustChangePassword = false,
@@ -23,17 +25,18 @@ export default function RegistrationWelcomeEmail({
   const brand = getBrand();
   const verificationStatus = emailVerified ? "Verified" : "Pending verification";
   const nextStep = temporaryPassword
-    ? "Sign in with your temporary password, then change it immediately."
+    ? "Sign in with the login password below, then set a new password when prompted."
     : emailVerified
       ? "Sign in and complete your first deposit."
       : "Verify your email, then sign in to fund your investment.";
   const details = [
     { label: "Username", value: username.startsWith("@") ? username : `@${username}` },
+    ...(email ? [{ label: "Email", value: email }] : []),
     { label: "Account status", value: "Active" },
     { label: "Email verification", value: verificationStatus },
   ];
   if (temporaryPassword) {
-    details.push({ label: "Temporary password", value: temporaryPassword });
+    details.push({ label: "Login password", value: temporaryPassword });
   }
   if (mustChangePassword) {
     details.push({ label: "Password change", value: "Required on first sign-in" });
@@ -53,13 +56,7 @@ export default function RegistrationWelcomeEmail({
       <Text style={text.primary}>
         <strong>Next step:</strong> {nextStep}
       </Text>
-      <Text style={text.muted}>
-        Need help? Contact our support team at{" "}
-        <a href={`mailto:${brand.email}`} style={{ color: "#1e3a5f" }}>
-          {brand.email}
-        </a>
-        .
-      </Text>
+      <Text style={text.muted}>Reply to this email if you need help or have questions.</Text>
     </EmailLayout>
   );
 }
@@ -67,5 +64,8 @@ export default function RegistrationWelcomeEmail({
 RegistrationWelcomeEmail.PreviewProps = {
   firstName: "Alex",
   username: "alexmorgan",
-  emailVerified: false,
+  email: "alex@example.com",
+  emailVerified: true,
+  temporaryPassword: "TempPass123!",
+  mustChangePassword: true,
 } satisfies RegistrationWelcomeEmailProps;

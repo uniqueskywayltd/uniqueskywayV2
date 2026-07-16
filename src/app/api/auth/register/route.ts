@@ -22,7 +22,11 @@ export async function POST(request: NextRequest) {
     const input = await parseJson(request, registerInputSchema);
     const service = await createAuthService({ rememberSession: input.rememberMe });
     const result = await service.register(input, context);
-    await dispatchQueuedEmails(25);
+    const flush = await dispatchQueuedEmails(25);
+    if (!flush || flush.failed > 0) {
+      // Best-effort second pass so signup OTP is not left stranded in the queue.
+      await dispatchQueuedEmails(25);
+    }
     return jsonOk(result, context.requestId, { status: 202 });
   } catch (error) {
     return jsonError(error, context.requestId);

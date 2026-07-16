@@ -1,8 +1,5 @@
 import type { RequestSecurityContext } from "@/application/auth/security";
-import {
-  AdminFinancialOpsService,
-  createAdminAuditContext,
-} from "@/application/admin";
+import { AdminFinancialOpsService, createAdminAuditContext } from "@/application/admin";
 import { DepositEngineService, WithdrawalEngineService } from "@/application/payments";
 import type {
   AdminEntityNoteRecord,
@@ -23,6 +20,7 @@ import {
   NotificationRepository,
   OperationsRepository,
   PaymentRepository,
+  ReferralRepository,
   SettlementRepository,
   getDatabaseConnection,
 } from "@/infrastructure/database";
@@ -49,6 +47,7 @@ export async function createAdminFinancialOpsService() {
   const operationsRepository = new OperationsRepository(db);
   const investmentRepository = new InvestmentRepository(db);
   const settlementRepository = new SettlementRepository(db);
+  const referralRepository = new ReferralRepository(db);
   const transactionManager = new DrizzleTransactionManager(db);
   const paymentProvider = createPaystackPaymentProvider();
 
@@ -92,6 +91,7 @@ export async function createAdminFinancialOpsService() {
     notificationRepository,
     depositEngine,
     withdrawalEngine,
+    referralRepository,
   });
 }
 

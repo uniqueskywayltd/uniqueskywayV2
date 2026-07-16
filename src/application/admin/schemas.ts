@@ -41,13 +41,29 @@ export const addCustomerNoteInputSchema = z.object({
 
 export type AddCustomerNoteInput = z.infer<typeof addCustomerNoteInputSchema>;
 
-export const adminCreateCustomerInputSchema = z.object({
-  email: z.string().trim().email().max(320),
-  password: z.string().min(12).max(128).optional(),
-  displayName: z.string().trim().min(1).max(120).optional(),
-  legalName: z.string().trim().min(1).max(160).optional(),
-  username: z.string().trim().min(3).max(40).optional(),
-});
+export const adminCreateCustomerInputSchema = z
+  .object({
+    email: z.string().trim().email().max(320),
+    password: z.string().min(8).max(128),
+    confirmPassword: z.string().min(8).max(128),
+    displayName: z.string().trim().min(1).max(120).optional(),
+    legalName: z.string().trim().min(1).max(160),
+    username: z
+      .string()
+      .trim()
+      .min(3)
+      .max(24)
+      .regex(/^[a-zA-Z0-9_]+$/, "Username must be letters, numbers, or underscore."),
+  })
+  .superRefine((value, ctx) => {
+    if (value.password !== value.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Passwords do not match.",
+        path: ["confirmPassword"],
+      });
+    }
+  });
 
 export type AdminCreateCustomerInput = z.infer<typeof adminCreateCustomerInputSchema>;
 
@@ -74,6 +90,25 @@ export const deleteCustomerInputSchema = z.object({
 });
 
 export type DeleteCustomerInput = z.infer<typeof deleteCustomerInputSchema>;
+
+export const bulkCustomerActionInputSchema = z
+  .object({
+    action: z.enum(["suspend", "reactivate", "lock", "unlock", "delete"]),
+    userIds: z.array(z.string().uuid()).min(1).max(100),
+    reason: z.string().trim().min(1).max(500).optional(),
+    confirmation: z.string().trim().min(1).max(20).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.action === "delete" && value.confirmation?.trim().toUpperCase() !== "DELETE") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Type DELETE to confirm bulk customer deletion.",
+        path: ["confirmation"],
+      });
+    }
+  });
+
+export type BulkCustomerActionInput = z.infer<typeof bulkCustomerActionInputSchema>;
 
 export const listCustomerNotesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),

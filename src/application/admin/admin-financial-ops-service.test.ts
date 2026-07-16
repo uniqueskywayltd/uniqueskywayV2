@@ -105,9 +105,7 @@ describe("AdminFinancialOpsService", () => {
       (fixture.service as unknown as { getInvestmentDetails: unknown }).getInvestmentDetails,
     ).toBeTypeOf("function");
     expect(
-      (
-        fixture.service as unknown as Record<string, unknown>
-      ).updateInvestment,
+      (fixture.service as unknown as Record<string, unknown>).updateInvestment,
     ).toBeUndefined();
   });
 
@@ -134,7 +132,11 @@ describe("AdminFinancialOpsService", () => {
     const readOnlyFixture = createFixture({ roleKeys: ["support_agent"] });
 
     await expect(
-      readOnlyFixture.service.addDepositNote("deposit_1", { body: "Called customer." }, auditContext),
+      readOnlyFixture.service.addDepositNote(
+        "deposit_1",
+        { body: "Called customer." },
+        auditContext,
+      ),
     ).rejects.toMatchObject({ code: "AUTHORIZATION_ERROR" });
 
     const fixture = createFixture({ roleKeys: ["finance_admin"] });
@@ -188,6 +190,7 @@ function createFixture(options: FixtureOptions = {}) {
     email: "admin@example.com",
     emailVerifiedAt: new Date("2026-07-13T12:00:00.000Z"),
     displayName: "Admin",
+    mustChangePassword: false,
   };
 
   const adminAppUser = {
@@ -270,8 +273,9 @@ function createFixture(options: FixtureOptions = {}) {
   const paymentRepository = {
     searchDepositIntents: vi.fn(async () => ({ rows: state.deposits, nextCursor: null })),
     searchWithdrawals: vi.fn(async () => ({ rows: [], nextCursor: null })),
-    findDepositIntentById: vi.fn(async (id: string) =>
-      state.deposits.find((deposit) => deposit.id === id) ?? state.deposits[0],
+    findDepositIntentById: vi.fn(
+      async (id: string) =>
+        state.deposits.find((deposit) => deposit.id === id) ?? state.deposits[0],
     ),
     findWithdrawalById: vi.fn(async (id: string) => ({
       id,
@@ -326,7 +330,10 @@ function createFixture(options: FixtureOptions = {}) {
       createdAt: new Date("2026-07-13T12:00:00.000Z"),
     })),
     createAdminEntityNote: vi.fn(
-      async (_tx: unknown, values: { targetType: string; targetId: string; authorUserId: string; body: string }) => ({
+      async (
+        _tx: unknown,
+        values: { targetType: string; targetId: string; authorUserId: string; body: string },
+      ) => ({
         id: "note_1",
         ...values,
         createdAt: new Date("2026-07-13T12:00:00.000Z"),

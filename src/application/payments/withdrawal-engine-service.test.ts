@@ -165,6 +165,7 @@ function createFixture(options: { availableBalanceMinor?: bigint; withAdmin?: bo
     email: "customer@example.com",
     emailVerifiedAt: new Date("2026-07-13T12:00:00.000Z"),
     displayName: "Customer",
+    mustChangePassword: false,
   };
   const appUser = {
     id: "user_1",
@@ -187,7 +188,9 @@ function createFixture(options: { availableBalanceMinor?: bigint; withAdmin?: bo
       work({ db: {}, transactionId: "tx_1" }),
   };
   const identityProvider = {
-    getCurrentUser: vi.fn(async () => (options.withAdmin ? { ...currentUser, authUserId: adminUser.authUserId } : currentUser)),
+    getCurrentUser: vi.fn(async () =>
+      options.withAdmin ? { ...currentUser, authUserId: adminUser.authUserId } : currentUser,
+    ),
   };
   const identityRepository = {
     findUserByAuthUserId: vi.fn(async (authUserId: string) =>
@@ -227,23 +230,27 @@ function createFixture(options: { availableBalanceMinor?: bigint; withAdmin?: bo
         ) ?? null
       );
     }),
-    createWithdrawalRequest: vi.fn(async (_tx: unknown, values: Partial<WithdrawalRequestRecord>) => {
-      const withdrawal = createWithdrawal({
-        id: `withdrawal_${state.withdrawals.length + 1}`,
-        ...values,
-      });
-      state.withdrawals.push(withdrawal);
-      return withdrawal;
-    }),
+    createWithdrawalRequest: vi.fn(
+      async (_tx: unknown, values: Partial<WithdrawalRequestRecord>) => {
+        const withdrawal = createWithdrawal({
+          id: `withdrawal_${state.withdrawals.length + 1}`,
+          ...values,
+        });
+        state.withdrawals.push(withdrawal);
+        return withdrawal;
+      },
+    ),
     lockWithdrawalById: vi.fn(
       async (_tx: unknown, id: string) =>
         state.withdrawals.find((withdrawal) => withdrawal.id === id) ?? null,
     ),
-    markWithdrawalReserved: vi.fn(async (_tx: unknown, id: string, values: Partial<WithdrawalRequestRecord>) => {
-      const withdrawal = requireWithdrawal(state, id);
-      Object.assign(withdrawal, values, { status: "reserved" });
-      return withdrawal;
-    }),
+    markWithdrawalReserved: vi.fn(
+      async (_tx: unknown, id: string, values: Partial<WithdrawalRequestRecord>) => {
+        const withdrawal = requireWithdrawal(state, id);
+        Object.assign(withdrawal, values, { status: "reserved" });
+        return withdrawal;
+      },
+    ),
     markWithdrawalUnderReview: vi.fn(async (_tx: unknown, id: string) => {
       const withdrawal = requireWithdrawal(state, id);
       Object.assign(withdrawal, { status: "under_review" });
@@ -273,11 +280,13 @@ function createFixture(options: { availableBalanceMinor?: bigint; withAdmin?: bo
         return withdrawal;
       },
     ),
-    markWithdrawalPaid: vi.fn(async (_tx: unknown, id: string, values: Partial<WithdrawalRequestRecord>) => {
-      const withdrawal = requireWithdrawal(state, id);
-      Object.assign(withdrawal, values, { status: "paid", paidAt: new Date() });
-      return withdrawal;
-    }),
+    markWithdrawalPaid: vi.fn(
+      async (_tx: unknown, id: string, values: Partial<WithdrawalRequestRecord>) => {
+        const withdrawal = requireWithdrawal(state, id);
+        Object.assign(withdrawal, values, { status: "paid", paidAt: new Date() });
+        return withdrawal;
+      },
+    ),
     findWithdrawalById: vi.fn(
       async (id: string) => state.withdrawals.find((withdrawal) => withdrawal.id === id) ?? null,
     ),
@@ -307,30 +316,32 @@ function createFixture(options: { availableBalanceMinor?: bigint; withAdmin?: bo
         createdAt: new Date("2026-07-13T12:00:00.000Z"),
       }),
     ),
-    postLedgerTransaction: vi.fn(async (_tx: unknown, input: { transaction: { transactionType: string } }) => {
-      state.ledgerPostCount += 1;
-      const id =
-        input.transaction.transactionType === "withdrawal_reservation"
-          ? "ledger_tx_reservation"
-          : input.transaction.transactionType === "withdrawal_release"
-            ? "ledger_tx_release"
-            : "ledger_tx_payment";
-      return {
-        transaction: {
-          id,
-          transactionType: input.transaction.transactionType,
-          idempotencyKey: "key",
-          referenceType: "withdrawal_request",
-          referenceId: "withdrawal_1",
-          description: "test",
-          metadata: {},
-          postedAt: new Date("2026-07-13T12:00:00.000Z"),
-          createdBy: null,
-          createdAt: new Date("2026-07-13T12:00:00.000Z"),
-        },
-        entries: [],
-      };
-    }),
+    postLedgerTransaction: vi.fn(
+      async (_tx: unknown, input: { transaction: { transactionType: string } }) => {
+        state.ledgerPostCount += 1;
+        const id =
+          input.transaction.transactionType === "withdrawal_reservation"
+            ? "ledger_tx_reservation"
+            : input.transaction.transactionType === "withdrawal_release"
+              ? "ledger_tx_release"
+              : "ledger_tx_payment";
+        return {
+          transaction: {
+            id,
+            transactionType: input.transaction.transactionType,
+            idempotencyKey: "key",
+            referenceType: "withdrawal_request",
+            referenceId: "withdrawal_1",
+            description: "test",
+            metadata: {},
+            postedAt: new Date("2026-07-13T12:00:00.000Z"),
+            createdBy: null,
+            createdAt: new Date("2026-07-13T12:00:00.000Z"),
+          },
+          entries: [],
+        };
+      },
+    ),
   };
   const notificationRepository = {
     enqueueOutboxEvent: vi.fn(async () => ({})),

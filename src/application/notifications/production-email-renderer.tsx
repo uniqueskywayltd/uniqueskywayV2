@@ -6,6 +6,7 @@ import type { ReactElement } from "react";
 import { displayOtp } from "@/application/auth/otp";
 import { AUTH_EMAIL_TEMPLATES } from "@/application/auth/constants";
 import { getBrand } from "@/emails/brand";
+import { formatEmailDateTime } from "@/emails/format-datetime";
 import {
   AccountReactivatedEmail,
   AccountSuspendedEmail,
@@ -25,12 +26,12 @@ import {
   WithdrawalSubmittedEmail,
   financialPlainText,
 } from "@/emails/financial";
-import LoginAlertEmail from "@/emails/login-alert";
 import NewDeviceLoginEmail from "@/emails/new-device-login";
 import PasswordChangedEmail from "@/emails/password-changed";
 import PasswordResetEmail from "@/emails/password-reset";
 import RegistrationWelcomeEmail from "@/emails/registration-welcome";
 import VerifyEmail from "@/emails/verify-email";
+import WelcomeEmail from "@/emails/welcome";
 import { formatMoneyMinorUnits } from "@/i18n/format";
 
 export interface RenderProductionEmailInput {
@@ -88,20 +89,23 @@ function buildEmail(
     case AUTH_EMAIL_TEMPLATES.verifyEmail: {
       const otp = displayOtp(readString(metadata.otp));
       const verifyUrl = readString(metadata.actionLink) ?? `${brand.url}/auth/verify-email`;
+      if (!otp) {
+        throw new Error("auth.verify_email requires an OTP in metadata");
+      }
       return {
         previewId: "verify-email",
-        subject: `Verify your ${brand.name} email`,
+        subject: `Your ${brand.name} verification code`,
         text: [
           `Hi ${name},`,
           "",
-          "Verify your email to finish setting up your account.",
-          otp ? `Verification code: ${otp}` : null,
+          "Enter the verification code below in the signup window, or open the link to verify your email and complete your account setup.",
+          `Verification code: ${otp}`,
           `Verify: ${verifyUrl}`,
           "",
+          "This verification code and link expire in 24 hours.",
+          "",
           `Support: ${brand.email}`,
-        ]
-          .filter(Boolean)
-          .join("\n"),
+        ].join("\n"),
         element: VerifyEmail({ name, verifyUrl, otp }),
       };
     }
@@ -115,28 +119,50 @@ function buildEmail(
       const loginUrl = readString(metadata.loginUrl) ?? `${brand.url}/auth/login`;
       const emailVerified =
         Boolean(metadata.adminCreated) || Boolean(metadata.emailVerified) || !temporaryPassword;
+      const isAdminOrProvisioned = Boolean(metadata.adminCreated) || Boolean(temporaryPassword);
+
+      if (isAdminOrProvisioned) {
+        return {
+          previewId: "welcome",
+          subject: `Welcome to ${brand.name}`,
+          text: [
+            `Hi ${firstName},`,
+            "",
+            `Welcome to ${brand.name}. Your investor account is ready.`,
+            temporaryPassword ? `Temporary password: ${temporaryPassword}` : null,
+            `Sign in: ${loginUrl}`,
+            "",
+            `Support: ${brand.email}`,
+          ]
+            .filter(Boolean)
+            .join("\n"),
+          element: RegistrationWelcomeEmail({
+            firstName,
+            username,
+            ...(readString(metadata.email) ? { email: readString(metadata.email)! } : {}),
+            emailVerified,
+            temporaryPassword,
+            mustChangePassword: Boolean(metadata.mustChangePassword),
+            loginUrl,
+          }),
+        };
+      }
+
       return {
         previewId: "welcome",
         subject: `Welcome to ${brand.name}`,
         text: [
-          `Hi ${firstName},`,
+          `Welcome, ${name}`,
           "",
-          `Welcome to ${brand.name}. Your investor account is ready.`,
-          temporaryPassword ? `Temporary password: ${temporaryPassword}` : null,
-          `Sign in: ${loginUrl}`,
+          `Thank you for opening an investor account with ${brand.name}. We're glad to have you on board.`,
+          "",
+          "Please verify your email address to activate your account and access your secure investor dashboard — portfolio overview, deposits, withdrawals, and full transaction history.",
+          "",
+          "If you didn't create this account, you can safely ignore this email.",
           "",
           `Support: ${brand.email}`,
-        ]
-          .filter(Boolean)
-          .join("\n"),
-        element: RegistrationWelcomeEmail({
-          firstName,
-          username,
-          emailVerified,
-          temporaryPassword,
-          mustChangePassword: Boolean(metadata.mustChangePassword),
-          loginUrl,
-        }),
+        ].join("\n"),
+        element: WelcomeEmail({ name }),
       };
     }
     case AUTH_EMAIL_TEMPLATES.emailVerified: {
@@ -161,9 +187,11 @@ function buildEmail(
         text: [
           `Hi ${name},`,
           "",
-          "We received a request to reset your password.",
+          "We received a request to reset your password. Enter the code in the reset window, or open the link to choose a new password.",
           otp ? `Reset code: ${otp}` : null,
-          `Reset: ${resetUrl}`,
+          `Choose new password: ${resetUrl}`,
+          "",
+          "If you didn't request this, ignore this email. Your password will remain unchanged.",
           "",
           `Support: ${brand.email}`,
         ]
@@ -173,17 +201,12 @@ function buildEmail(
       };
     }
     case AUTH_EMAIL_TEMPLATES.passwordChanged: {
-      const changedAt =
-        readString(metadata.changedAt) ??
-        new Date().toLocaleString("en-US", {
-          timeZone: "UTC",
-          dateStyle: "long",
-          timeStyle: "short",
-        }) + " UTC";
+      const changedAtRaw = readString(metadata.changedAt) ?? new Date().toISOString();
+      const changedAt = formatEmailDateTime(changedAtRaw);
       return {
         previewId: "password-changed",
         subject: "Your password was changed",
-        text: `Hi ${name},\n\nYour password was changed on ${changedAt}.\n\nSupport: ${brand.email}`,
+        text: `Hi ${name},\n\nYour password was changed on ${changedAt}.\n\nReply to this email if you need help or have questions.`,
         element: PasswordChangedEmail({
           name,
           changedAt,
@@ -198,31 +221,33 @@ function buildEmail(
         readString(metadata.device) ?? readString(metadata.deviceLabel) ?? `${browser} on ${os}`;
       const ipAddress =
         readString(metadata.ipAddress) ?? readString(metadata.ipAddressMasked) ?? "unavailable";
-      const loginTime =
+      const loginTimeRaw =
         readString(metadata.signedInAt) ??
         readString(metadata.loginTime) ??
         new Date().toISOString();
+      const loginTime = formatEmailDateTime(loginTimeRaw);
       const approximateLocation = readString(metadata.approximateLocation);
       const sessionsUrl = `${brand.url}/account/security/sessions`;
-      const isTrustedDeviceAlert = Boolean(metadata.trustedDevice);
-      if (isTrustedDeviceAlert) {
-        return {
-          previewId: "login-alert",
-          subject: "New sign-in detected",
-          text: `Hi ${name},\n\nNew sign-in on ${loginTime}.\nDevice: ${device}\nIP: ${ipAddress}\n\nSupport: ${brand.email}`,
-          element: LoginAlertEmail({
-            name,
-            device,
-            ipAddress,
-            loginTime,
-            securityUrl: `${brand.url}/account/security`,
-          }),
-        };
-      }
       return {
         previewId: "new-device-login",
         subject: "New device sign-in",
-        text: `Hi ${name},\n\nNew device sign-in.\nDevice: ${device}\nBrowser: ${browser}\nOS: ${os}\nIP: ${ipAddress}\nTime: ${loginTime}\n\nSessions: ${sessionsUrl}\nSupport: ${brand.email}`,
+        text: [
+          `Hi ${name},`,
+          "",
+          "We noticed a sign-in from a device we don't recognize.",
+          `Device: ${device}`,
+          `Browser: ${browser}`,
+          `OS: ${os}`,
+          `IP: ${ipAddress}`,
+          approximateLocation ? `Location: ${approximateLocation}` : null,
+          `Date / time: ${loginTime}`,
+          "",
+          "If this wasn't you, change your password immediately and review active sessions.",
+          `Review sessions: ${sessionsUrl}`,
+          "Reply to this email if you need help or have questions.",
+        ]
+          .filter(Boolean)
+          .join("\n"),
         element: NewDeviceLoginEmail({
           name,
           ipAddress,
@@ -230,7 +255,7 @@ function buildEmail(
           os,
           device,
           approximateLocation,
-          loginTime,
+          loginTime: loginTimeRaw,
           sessionsUrl,
         }),
       };

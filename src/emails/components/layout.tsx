@@ -103,14 +103,6 @@ export function EmailLayout({ preview, heading, children, cta, badge }: EmailLay
           <Section style={footerSection}>
             <Row style={footerRow}>
               <Column align="center">
-                <Img
-                  src={brand.logoUrl}
-                  width="120"
-                  height="40"
-                  alt={brand.name}
-                  style={footerLogo}
-                />
-                <Text style={footerBrand}>{brand.name}</Text>
                 <Text style={footerCopy}>
                   © {year} {brand.name}. All rights reserved.
                 </Text>
@@ -133,12 +125,8 @@ export function EmailLayout({ preview, heading, children, cta, badge }: EmailLay
                 </Text>
                 <Hr style={footerDivider} />
                 <Text style={footerLegal}>
-                  This is an automated transactional message from {brand.name}. Do not reply to this
-                  address. For account assistance, contact{" "}
-                  <Link href={`mailto:${brand.email}`} style={footerLink}>
-                    {brand.email}
-                  </Link>
-                  .
+                  This is a transactional message from {brand.name}. Reply to this email if you need
+                  help or have questions.
                 </Text>
                 <Text style={footerSecure}>
                   Secure investor communications · Fayetteville, Arkansas
@@ -257,20 +245,6 @@ const footerSection = {
 };
 
 const footerRow = { width: "100%" };
-
-const footerLogo = {
-  margin: "0 auto 12px",
-  display: "block",
-  opacity: "0.95",
-};
-
-const footerBrand = {
-  color: emailColors.footerBrand,
-  fontSize: "14px",
-  fontWeight: "600",
-  margin: "0 0 6px",
-  textAlign: "center" as const,
-};
 
 const footerCopy = {
   color: emailColors.footerText,

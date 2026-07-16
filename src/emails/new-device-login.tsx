@@ -1,3 +1,4 @@
+import { formatEmailDateTime } from "@/emails/format-datetime";
 import { TransactionalEmail } from "./components/transactional-email";
 
 type NewDeviceLoginEmailProps = {
@@ -11,6 +12,10 @@ type NewDeviceLoginEmailProps = {
   sessionsUrl: string;
 };
 
+/**
+ * Single security alert for unrecognized-device sign-ins.
+ * Not sent for returning trusted devices.
+ */
 export default function NewDeviceLoginEmail({
   name,
   ipAddress,
@@ -22,13 +27,14 @@ export default function NewDeviceLoginEmail({
   sessionsUrl,
 }: NewDeviceLoginEmailProps) {
   const deviceLabel = device ?? `${browser} on ${os}`;
+  const dateTime = formatEmailDateTime(loginTime);
   const details = [
     { label: "Device", value: deviceLabel },
     { label: "Browser", value: browser },
     { label: "Operating system", value: os },
     { label: "IP address", value: ipAddress },
-    ...(approximateLocation ? [{ label: "Location", value: approximateLocation }] : []),
-    { label: "Login time", value: loginTime },
+    ...(approximateLocation ? [{ label: "Approximate location", value: approximateLocation }] : []),
+    { label: "Date / time", value: dateTime },
   ];
 
   return (
@@ -37,9 +43,10 @@ export default function NewDeviceLoginEmail({
       heading="New device sign-in"
       badge={{ label: "Security alert", tone: "warning" }}
       name={name}
-      intro="We noticed a sign-in from a device we don't recognize. Review the details below."
+      intro="We noticed a sign-in from a device we don't recognize. Review the details below and secure your account if this wasn't you."
       details={details}
-      footerNote="If this wasn't you, secure your account immediately."
+      detailsTitle="Sign-in details"
+      footerNote="If this wasn't you, change your password immediately and review active sessions."
       cta={{ label: "Review active sessions", href: sessionsUrl }}
     />
   );
@@ -52,6 +59,6 @@ NewDeviceLoginEmail.PreviewProps = {
   os: "iOS",
   device: "Safari on iOS",
   approximateLocation: "Fayetteville, Arkansas, US",
-  loginTime: "July 6, 2026 at 3:42 PM UTC",
-  sessionsUrl: "https://uniqueskyway.com/dashboard/security",
+  loginTime: "2026-07-06T15:42:00.000Z",
+  sessionsUrl: "https://uniqueskyway.com/account/security/sessions",
 } satisfies NewDeviceLoginEmailProps;

@@ -17,7 +17,12 @@ function VerifyEmailFormInner() {
   const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const tokenHash = searchParams.get("token_hash") ?? searchParams.get("tokenHash");
+  const rawToken = searchParams.get("token");
+  const tokenHash =
+    searchParams.get("token_hash") ??
+    searchParams.get("tokenHash") ??
+    // Long tokens from branded email links are hashes, not 6–8 digit OTPs.
+    (rawToken && rawToken.length > 20 ? rawToken : null);
   const typeParam = searchParams.get("type");
   const linkType =
     typeParam === "email" || typeParam === "magiclink" || typeParam === "signup"
@@ -28,7 +33,9 @@ function VerifyEmailFormInner() {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(Boolean(tokenHash));
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
-  const [token, setToken] = useState(searchParams.get("token") ?? "");
+  const [token, setToken] = useState(
+    rawToken && rawToken.length <= OTP_MAX_LENGTH ? sanitizeOtpInput(rawToken) : "",
+  );
 
   useEffect(() => {
     if (!tokenHash) return;

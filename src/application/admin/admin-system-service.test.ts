@@ -191,13 +191,17 @@ describe("AdminSystemService", () => {
   it("refuses to delete system roles or roles that still have assignments", async () => {
     const fixture = createFixture({ roleKeys: ["super_admin"] });
 
-    await expect(fixture.service.deleteUnusedRole("role_system", auditContext)).rejects.toMatchObject({
+    await expect(
+      fixture.service.deleteUnusedRole("role_system", auditContext),
+    ).rejects.toMatchObject({
       code: "AUTHORIZATION_ERROR",
     });
 
-    await expect(fixture.service.deleteUnusedRole("role_used", auditContext)).rejects.toMatchObject({
-      code: "VALIDATION_ERROR",
-    });
+    await expect(fixture.service.deleteUnusedRole("role_used", auditContext)).rejects.toMatchObject(
+      {
+        code: "VALIDATION_ERROR",
+      },
+    );
   });
 });
 
@@ -210,14 +214,14 @@ interface FixtureOptions {
 function createFixture(options: FixtureOptions = {}) {
   const authenticated = options.authenticated ?? true;
   const roleKeys = options.roleKeys ?? ["super_admin"];
-  const permissionKeys =
-    options.permissionKeys ?? permissionKeysForRoles(roleKeys);
+  const permissionKeys = options.permissionKeys ?? permissionKeysForRoles(roleKeys);
 
   const currentUser: AuthenticatedUser = {
     authUserId: "00000000-0000-0000-0000-000000000099",
     email: "admin@example.com",
     emailVerifiedAt: new Date("2026-07-13T12:00:00.000Z"),
     displayName: "Admin",
+    mustChangePassword: false,
   };
 
   const adminAppUser = {
@@ -332,7 +336,13 @@ function createFixture(options: FixtureOptions = {}) {
       userId === adminAppUser.id ? permissionKeys : [],
     ),
     listPermissions: vi.fn(async () => [
-      { id: "perm_1", key: "customers.read", name: "Customers Read", description: null, createdAt: now },
+      {
+        id: "perm_1",
+        key: "customers.read",
+        name: "Customers Read",
+        description: null,
+        createdAt: now,
+      },
     ]),
     listRoles: vi.fn(async () => []),
     findRoleById: vi.fn(async (roleId: string) => {

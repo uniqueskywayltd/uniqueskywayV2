@@ -65,11 +65,55 @@ export const forgotPasswordInputSchema = z.object({
   email: emailSchema,
 });
 
-export const resetPasswordInputSchema = z.object({
-  email: emailSchema,
-  token: otpSchema,
-  password: passwordSchema,
-});
+export const verifyRecoveryOtpInputSchema = z
+  .object({
+    email: emailSchema.optional(),
+    token: otpSchema.optional(),
+    tokenHash: z.string().trim().min(16).max(512).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.tokenHash) return;
+    if (!value.email) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Email is required.",
+        path: ["email"],
+      });
+    }
+    if (!value.token) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Reset code is required.",
+        path: ["token"],
+      });
+    }
+  });
+
+export const resetPasswordInputSchema = z
+  .object({
+    email: emailSchema.optional(),
+    token: otpSchema.optional(),
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
+  })
+  .superRefine((value, ctx) => {
+    if (value.password !== value.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Passwords do not match.",
+        path: ["confirmPassword"],
+      });
+    }
+    const hasToken = Boolean(value.token);
+    const hasEmail = Boolean(value.email);
+    if (hasToken !== hasEmail) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Email and reset code are required together.",
+        path: hasToken ? ["email"] : ["token"],
+      });
+    }
+  });
 
 export const changePasswordInputSchema = z.object({
   currentPassword: z.string().min(1).max(128),
@@ -91,6 +135,7 @@ export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
 export type ResendVerificationInput = z.infer<typeof resendVerificationInputSchema>;
 export type VerifyEmailLinkInput = z.infer<typeof verifyEmailLinkInputSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordInputSchema>;
+export type VerifyRecoveryOtpInput = z.infer<typeof verifyRecoveryOtpInputSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordInputSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordInputSchema>;
 export type RevokeTrustedDeviceInput = z.infer<typeof revokeTrustedDeviceInputSchema>;

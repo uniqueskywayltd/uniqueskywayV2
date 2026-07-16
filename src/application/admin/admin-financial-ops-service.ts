@@ -70,6 +70,7 @@ export interface AdminFinancialOpsServiceDependencies {
   notificationRepository: NotificationRepository;
   depositEngine: DepositEngineService;
   withdrawalEngine: WithdrawalEngineService;
+  referralRepository?: import("@/infrastructure/database").ReferralRepository;
 }
 
 export interface SearchDepositsResultView {
@@ -404,7 +405,284 @@ export class AdminFinancialOpsService {
     return { investment, roiScheduleItems, settlementItems, postedRoiMinor };
   }
 
-  async listSettlementRuns(filters: ListSettlementRunsInput): Promise<ListSettlementRunsResultView> {
+  async listActivePlans() {
+    await requireAdminActor(this.deps, "investments.read");
+    return this.deps.coreRepository.listActivePublishedPlanVersions();
+  }
+
+  async createInvestmentForCustomer(
+    input: {
+      userId: string;
+      planVersionId: string;
+      principalMinor: string;
+      fundShortfall?: boolean;
+      idempotencyKey?: string;
+    },
+    context: RequestAuditContext,
+  ) {
+    const admin = await requireAdminActor(this.deps, "customers.update");
+    const principalMinor = BigInt(input.principalMinor);
+    if (principalMinor <= 0n) {
+      throw new AppError({
+        code: "VALIDATION_ERROR",
+        message: "Principal must be greater than zero.",
+      });
+    }
+
+    const user = await this.deps.identityRepository.findUserById(input.userId);
+    if (!user) {
+      throw new AppError({ code: "NOT_FOUND", message: "Customer was not found." });
+    }
+
+    const planVersion = await this.deps.coreRepository.findInvestmentPlanVersionById(
+      input.planVersionId,
+    );
+    if (!planVersion) {
+      throw new AppError({ code: "NOT_FOUND", message: "Investment plan version was not found." });
+    }
+
+    const currency = planVersion.currency;
+    const fundShortfall = input.fundShortfall !== false;
+    const idempotencyKey =
+      input.idempotencyKey?.trim() ||
+      `admin.investment:${input.userId}:${input.planVersionId}:${input.principalMinor}:${Date.now()}`;
+
+    if (fundShortfall) {
+      const balance = await this.deps.ledgerRepository.findWalletBalanceByUserCurrency(
+        input.userId,
+        currency,
+      );
+      const available = balance ? BigInt(String(balance.availableBalanceMinor)) : 0n;
+      if (available < principalMinor) {
+        const shortfall = principalMinor - available;
+        await this.creditCustomerAvailable(
+          input.userId,
+          shortfall,
+          currency,
+          admin.appUser.id,
+          context,
+        );
+      }
+    }
+
+    const { InvestmentEngineService } =
+      await import("@/application/investments/investment-engine-service");
+    const engine = new InvestmentEngineService({
+      clock: this.deps.clock,
+      transactionManager: this.deps.transactionManager,
+      coreRepository: this.deps.coreRepository,
+      investmentRepository: this.deps.investmentRepository,
+      ledgerRepository: this.deps.ledgerRepository,
+      settlementRepository: this.deps.settlementRepository,
+      notificationRepository: this.deps.notificationRepository,
+      identityRepository: this.deps.identityRepository,
+      ...(this.deps.referralRepository ? { referralRepository: this.deps.referralRepository } : {}),
+    });
+
+    const result = await engine.activateInvestment({
+      userId: input.userId,
+      planVersionId: input.planVersionId,
+      principalMinor,
+      idempotencyKey,
+    });
+
+    await this.deps.transactionManager.runInTransaction(async (tx) => {
+      await this.deps.operationsRepository.appendAuditLog(tx, {
+        actorUserId: admin.appUser.id,
+        actorType: "admin",
+        action: "investment.admin_created",
+        targetType: "investment",
+        targetId: result.investment.id,
+        reason: "Administrative investment creation",
+        metadata: {
+          userId: input.userId,
+          planVersionId: input.planVersionId,
+          principalMinor: input.principalMinor,
+          status: result.investment.status,
+        },
+        requestId: context.requestId,
+        ipAddressHash: context.ipAddressHash,
+        userAgentHash: context.userAgentHash,
+      });
+    });
+
+    return result;
+  }
+
+  async updateInvestment(
+    investmentId: string,
+    input: { status?: "cancelled"; reason?: string },
+    context: RequestAuditContext,
+  ) {
+    const admin = await requireAdminActor(this.deps, "customers.update");
+    const investment = await this.deps.investmentRepository.findInvestmentById(investmentId);
+    if (!investment) {
+      throw new AppError({ code: "NOT_FOUND", message: "Investment was not found." });
+    }
+
+    if (input.status !== "cancelled") {
+      throw new AppError({
+        code: "VALIDATION_ERROR",
+        message: "Only cancellation is supported for investment updates.",
+      });
+    }
+
+    if (investment.status === "cancelled" || investment.status === "matured") {
+      throw new AppError({
+        code: "INVALID_STATE",
+        message: `Investment is already ${investment.status}.`,
+      });
+    }
+
+    const updated = await this.deps.transactionManager.runInTransaction(async (tx) => {
+      await this.deps.investmentRepository.lockInvestmentById(tx, investmentId);
+
+      if (investment.status === "active" || investment.status === "maturing") {
+        const balance =
+          await this.deps.ledgerRepository.findWalletBalanceByUserCurrencyInTransaction(
+            tx,
+            investment.userId,
+            investment.currency,
+          );
+        if (!balance) {
+          throw new AppError({ code: "INVALID_STATE", message: "Customer wallet was not found." });
+        }
+        const availableAccount =
+          await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+            walletId: balance.walletId,
+            category: "available",
+          });
+        const lockedAccount =
+          await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+            walletId: balance.walletId,
+            category: "locked",
+          });
+        if (!availableAccount || !lockedAccount) {
+          throw new AppError({
+            code: "INVALID_STATE",
+            message: "Customer wallet accounts were not found.",
+          });
+        }
+
+        const { assertBalancedLedgerPosting, createMaturityPrincipalReleaseEntries } =
+          await import("@/domains/ledger");
+        const entries = createMaturityPrincipalReleaseEntries({
+          lockedAccountId: lockedAccount.id,
+          availableAccountId: availableAccount.id,
+          amountMinor: investment.principalMinor,
+          currency: investment.currency,
+        });
+        assertBalancedLedgerPosting({ entries });
+        await this.deps.ledgerRepository.postLedgerTransaction(tx, {
+          transaction: {
+            transactionType: "maturity_principal_release",
+            idempotencyKey: `investment_cancel_release:${investment.id}`,
+            referenceType: "investment",
+            referenceId: investment.id,
+            description: "Admin investment cancellation principal release",
+            metadata: {
+              reason: input.reason ?? "Administrative cancellation",
+              cancelledBy: admin.appUser.id,
+            },
+          },
+          entries,
+        });
+      }
+
+      const cancelled = await this.deps.investmentRepository.markInvestmentCancelled(
+        tx,
+        investment.id,
+        this.deps.clock.now(),
+      );
+
+      await this.deps.operationsRepository.appendAuditLog(tx, {
+        actorUserId: admin.appUser.id,
+        actorType: "admin",
+        action: "investment.admin_cancelled",
+        targetType: "investment",
+        targetId: investment.id,
+        reason: input.reason ?? "Administrative cancellation",
+        metadata: {
+          beforeStatus: investment.status,
+          afterStatus: cancelled.status,
+        },
+        requestId: context.requestId,
+        ipAddressHash: context.ipAddressHash,
+        userAgentHash: context.userAgentHash,
+      });
+
+      return cancelled;
+    });
+
+    return updated;
+  }
+
+  private async creditCustomerAvailable(
+    userId: string,
+    amountMinor: bigint,
+    currency: string,
+    adminUserId: string,
+    context: RequestAuditContext,
+  ) {
+    await this.deps.transactionManager.runInTransaction(async (tx) => {
+      await this.deps.ledgerRepository.lockWalletByUserCurrency(tx, userId, currency);
+      const balance = await this.deps.ledgerRepository.findWalletBalanceByUserCurrencyInTransaction(
+        tx,
+        userId,
+        currency,
+      );
+      if (!balance) {
+        throw new AppError({ code: "INVALID_STATE", message: "Customer wallet was not found." });
+      }
+      const availableAccount =
+        await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
+          walletId: balance.walletId,
+          category: "available",
+        });
+      if (!availableAccount) {
+        throw new AppError({
+          code: "INVALID_STATE",
+          message: "Customer available wallet account was not found.",
+        });
+      }
+      const platformCash = await this.deps.ledgerRepository.ensureLedgerAccount(tx, {
+        ownerType: "platform",
+        ownerId: "unique_sky_way",
+        accountType: "platform_cash",
+        currency,
+        status: "active",
+      });
+      await this.deps.ledgerRepository.postLedgerTransaction(tx, {
+        transaction: {
+          transactionType: "ledger_correction",
+          idempotencyKey: `admin.fund_for_investment:${userId}:${amountMinor}:${Date.now()}`,
+          referenceType: "user",
+          referenceId: userId,
+          description: "Admin funding for investment activation",
+          createdBy: adminUserId,
+          metadata: { fundedBy: adminUserId, requestId: context.requestId },
+        },
+        entries: [
+          {
+            accountId: platformCash.id,
+            direction: "debit" as const,
+            amountMinor,
+            currency,
+          },
+          {
+            accountId: availableAccount.id,
+            direction: "credit" as const,
+            amountMinor,
+            currency,
+          },
+        ],
+      });
+    });
+  }
+
+  async listSettlementRuns(
+    filters: ListSettlementRunsInput,
+  ): Promise<ListSettlementRunsResultView> {
     await requireAdminActor(this.deps, "settlements.read");
     return this.deps.settlementRepository.listSettlementRuns({
       ...(filters.status ? { status: filters.status } : {}),
@@ -461,7 +739,10 @@ export class AdminFinancialOpsService {
 
   async listFailedProviderEvents(limit = 50): Promise<PaymentProviderEventRecord[]> {
     await requireAdminActor(this.deps, "monitoring.read");
-    const result = await this.deps.paymentRepository.listProviderEvents({ status: "failed", limit });
+    const result = await this.deps.paymentRepository.listProviderEvents({
+      status: "failed",
+      limit,
+    });
     return result.rows;
   }
 

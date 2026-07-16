@@ -49,6 +49,7 @@ export {
   customerRiskStatusSchema,
   customerStatusSchema,
   deleteCustomerInputSchema,
+  bulkCustomerActionInputSchema,
   listCustomerAuditQuerySchema,
   listCustomerNotesQuerySchema,
   searchCustomersInputSchema,
@@ -60,6 +61,7 @@ export type {
   AddCustomerNoteInput,
   AdminCreateCustomerInput,
   AdminWalletAdjustmentInput,
+  BulkCustomerActionInput,
   DeleteCustomerInput,
   ListCustomerAuditQuery,
   ListCustomerNotesQuery,
@@ -85,6 +87,8 @@ export {
   searchWithdrawalsInputSchema,
   settlementRunStatusSchema,
   withdrawalSearchStatusSchema,
+  adminCreateInvestmentInputSchema,
+  adminUpdateInvestmentInputSchema,
 } from "./financial-ops-schemas";
 export type {
   AddFinancialNoteInput,
@@ -97,6 +101,8 @@ export type {
   SearchDepositsInput,
   SearchInvestmentsInput,
   SearchWithdrawalsInput,
+  AdminCreateInvestmentInput,
+  AdminUpdateInvestmentInput,
 } from "./financial-ops-schemas";
 export {
   customerReportKindSchema,

@@ -7,6 +7,7 @@ import {
   isValidOtp,
   sanitizeOtpInput,
 } from "@/application/auth/otp";
+import { buildAuthEmailAction, buildAppAuthActionUrl } from "@/application/auth/auth-email-links";
 import {
   isNonProductionRedirect,
   resolvePublicAppUrl,
@@ -52,5 +53,34 @@ describe("public app url", () => {
   it("falls back to production URL when configured value is localhost in production", () => {
     vi.stubEnv("NODE_ENV", "production");
     expect(resolvePublicAppUrl("http://localhost:3000")).toBe("https://uniqueskyway-v2.vercel.app");
+  });
+});
+
+describe("branded auth email links", () => {
+  it("builds on-domain verify URLs with token_hash and includes OTP", () => {
+    const built = buildAuthEmailAction({
+      properties: {
+        action_link:
+          "https://lngjjttkiuqlclalccah.supabase.co/auth/v1/verify?token=hashedtoken123&type=signup",
+        hashed_token: "hashedtoken123",
+        email_otp: "48291367",
+      },
+      flow: "signup",
+      email: "investor@example.com",
+      appUrl: "https://uniqueskyway-v2.vercel.app",
+    });
+
+    expect(built.otp).toBe("48291367");
+    expect(built.actionLink).toBe(
+      buildAppAuthActionUrl({
+        tokenHash: "hashedtoken123",
+        flow: "signup",
+        email: "investor@example.com",
+        appUrl: "https://uniqueskyway-v2.vercel.app",
+      }),
+    );
+    expect(built.actionLink).toContain("/auth/verify-email");
+    expect(built.actionLink).toContain("token_hash=hashedtoken123");
+    expect(built.actionLink).not.toContain("supabase.co");
   });
 });

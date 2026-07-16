@@ -20,6 +20,12 @@ export type NotificationDeliveryRecord = InferSelectModel<typeof notificationDel
 export type EmailMessageRecord = InferSelectModel<typeof emailMessages>;
 export type OutboxEventRecord = InferSelectModel<typeof outboxEvents>;
 
+/** Queued messages with metadata.availableAt in the future stay pending until that time. */
+const emailAvailableNow = sql`(
+  (${emailMessages.metadata} ->> 'availableAt') is null
+  or (${emailMessages.metadata} ->> 'availableAt')::timestamptz <= now()
+)`;
+
 export class NotificationRepository extends BaseDrizzleRepository {
   constructor(db: AppDatabaseExecutor) {
     super("notifications", db);
@@ -153,6 +159,7 @@ export class NotificationRepository extends BaseDrizzleRepository {
   }
 
   async listQueuedIdentityEmails(limit = 10): Promise<EmailMessageRecord[]> {
+    await this.reclaimStuckSendingEmails();
     return this.db
       .select()
       .from(emailMessages)
@@ -160,6 +167,7 @@ export class NotificationRepository extends BaseDrizzleRepository {
         and(
           inArray(emailMessages.status, ["queued", "failed"]),
           like(emailMessages.templateKey, "auth.%"),
+          emailAvailableNow,
         ),
       )
       .orderBy(asc(emailMessages.createdAt))
@@ -167,12 +175,50 @@ export class NotificationRepository extends BaseDrizzleRepository {
   }
 
   async listQueuedEmails(limit = 25): Promise<EmailMessageRecord[]> {
+    await this.reclaimStuckSendingEmails();
     return this.db
       .select()
       .from(emailMessages)
-      .where(inArray(emailMessages.status, ["queued", "failed"]))
+      .where(and(inArray(emailMessages.status, ["queued", "failed"]), emailAvailableNow))
       .orderBy(asc(emailMessages.createdAt))
       .limit(limit);
+  }
+
+  /** Re-queue messages left in `sending` after a crash/timeout so delivery can resume. */
+  async reclaimStuckSendingEmails(olderThanMs = 120_000): Promise<number> {
+    const cutoff = new Date(Date.now() - olderThanMs);
+    const rows = await this.db
+      .update(emailMessages)
+      .set({
+        status: "queued",
+        lastError: "Reclaimed after stuck sending state",
+        updatedAt: new Date(),
+      })
+      .where(and(eq(emailMessages.status, "sending"), sql`${emailMessages.updatedAt} < ${cutoff}`))
+      .returning({ id: emailMessages.id });
+    return rows.length;
+  }
+
+  async suppressQueuedEmailByIdempotencyKey(
+    context: DrizzleTransactionContext,
+    idempotencyKey: string,
+  ): Promise<EmailMessageRecord | null> {
+    const rows = await context.db
+      .update(emailMessages)
+      .set({
+        status: "suppressed",
+        lastError: "Suppressed — no longer applicable",
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(emailMessages.idempotencyKey, idempotencyKey),
+          inArray(emailMessages.status, ["queued", "failed"]),
+        ),
+      )
+      .returning();
+
+    return rows[0] ?? null;
   }
 
   async markEmailSending(

@@ -4,6 +4,7 @@ export const AUTH_ROUTES = {
   verifyEmail: "/auth/verify-email",
   forgotPassword: "/auth/forgot-password",
   resetPassword: "/auth/reset-password",
+  changePassword: "/auth/change-password",
   trustedDevices: "/account/security/trusted-devices",
   sessions: "/account/security/sessions",
 } as const;
@@ -27,6 +28,9 @@ export const AUTH_COOKIE_NAMES = {
 } as const;
 
 export const PENDING_VERIFY_TTL_SECONDS = 60 * 60;
+
+/** Delayed signup welcome (verify nudge) — sent after this delay if still unverified. */
+export const SIGNUP_WELCOME_DELAY_MS = 35 * 60 * 1000;
 
 export const TRUSTED_DEVICE_TTL_DAYS = 180;
 export const AUTH_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;

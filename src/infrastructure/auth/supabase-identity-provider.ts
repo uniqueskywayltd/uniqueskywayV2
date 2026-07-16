@@ -152,7 +152,7 @@ export class SupabaseIdentityProvider implements IdentityProvider {
     return toAuthenticatedIdentity(data.user, data.session);
   }
 
-  async resetPasswordWithOtp(input: ResetPasswordWithOtpInput): Promise<AuthenticatedIdentity> {
+  async verifyRecoveryOtp(input: { email: string; token: string }): Promise<AuthenticatedIdentity> {
     const { data, error } = await this.routeClient.auth.verifyOtp({
       email: input.email,
       token: input.token,
@@ -166,6 +166,31 @@ export class SupabaseIdentityProvider implements IdentityProvider {
       });
     }
 
+    return toAuthenticatedIdentity(data.user, data.session);
+  }
+
+  async verifyRecoveryTokenHash(tokenHash: string): Promise<AuthenticatedIdentity> {
+    const { data, error } = await this.routeClient.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: "recovery",
+    });
+
+    if (error || !data.user || !data.session) {
+      throw new AppError({
+        code: "AUTHENTICATION_ERROR",
+        message: error?.message ?? "Password reset verification failed.",
+      });
+    }
+
+    return toAuthenticatedIdentity(data.user, data.session);
+  }
+
+  async resetPasswordWithOtp(input: ResetPasswordWithOtpInput): Promise<AuthenticatedIdentity> {
+    const authenticated = await this.verifyRecoveryOtp({
+      email: input.email,
+      token: input.token,
+    });
+
     const updateResult = await this.routeClient.auth.updateUser({
       password: input.password,
     });
@@ -178,7 +203,7 @@ export class SupabaseIdentityProvider implements IdentityProvider {
       });
     }
 
-    return toAuthenticatedIdentity(data.user, data.session);
+    return authenticated;
   }
 
   async changePassword(newPassword: string): Promise<void> {
@@ -348,6 +373,7 @@ function toAuthenticatedUser(user: User): AuthenticatedUser {
     emailVerifiedAt: user.email_confirmed_at ? new Date(user.email_confirmed_at) : null,
     displayName:
       typeof user.user_metadata.displayName === "string" ? user.user_metadata.displayName : null,
+    mustChangePassword: user.user_metadata?.must_change_password === true,
   };
 }
 

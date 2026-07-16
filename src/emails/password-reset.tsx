@@ -20,10 +20,15 @@ export default function PasswordResetEmail({ name, resetUrl, otp }: PasswordRese
         Hi <span style={text.strong}>{name}</span>,
       </Text>
       <Text style={text.primary}>
-        We received a request to reset your password. Click the button below to choose a new
-        password for your investor account.
+        We received a request to reset your password. Enter the code below in the reset window, or
+        click the button to choose a new password for your investor account.
       </Text>
-      {otp ? <EmailOtpBlock otp={otp} /> : null}
+      {otp ? (
+        <EmailOtpBlock
+          otp={otp}
+          hint="Enter this code in the password reset window, or use the button below."
+        />
+      ) : null}
       <Text style={text.muted}>
         If you didn&apos;t request this, ignore this email. Your password will remain unchanged and
         your account stays secure.
@@ -36,5 +41,5 @@ PasswordResetEmail.PreviewProps = {
   name: "Alex Morgan",
   resetUrl:
     "https://uniqueskyway.com/auth/verify?token=example&type=recovery&email=alex%40example.com",
-  otp: "482913",
+  otp: "48291367",
 } satisfies PasswordResetEmailProps;

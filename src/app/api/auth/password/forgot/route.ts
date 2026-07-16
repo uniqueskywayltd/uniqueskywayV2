@@ -22,7 +22,10 @@ export async function POST(request: NextRequest) {
     const input = await parseJson(request, forgotPasswordInputSchema);
     const service = await createAuthService();
     const result = await service.forgotPassword(input, context);
-    await dispatchQueuedEmails(25);
+    const flush = await dispatchQueuedEmails(25);
+    if (!flush || flush.failed > 0) {
+      await dispatchQueuedEmails(25);
+    }
     return jsonOk(result, context.requestId, { status: 202 });
   } catch (error) {
     return jsonError(error, context.requestId);

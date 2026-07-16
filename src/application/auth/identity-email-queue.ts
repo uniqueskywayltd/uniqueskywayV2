@@ -14,19 +14,26 @@ export interface QueueIdentityEmailInput {
   templateKey: IdentityEmailTemplate;
   idempotencyKey: string;
   metadata?: Record<string, unknown>;
+  /** When set, the message stays queued until this time (picked up by the email job). */
+  availableAt?: Date;
 }
 
 export class IdentityEmailQueue {
   constructor(private readonly notifications: NotificationRepository) {}
 
   async enqueue(context: DrizzleTransactionContext, input: QueueIdentityEmailInput) {
+    const metadata = {
+      ...(input.metadata ?? {}),
+      ...(input.availableAt ? { availableAt: input.availableAt.toISOString() } : {}),
+    };
+
     const message = await this.notifications.enqueueEmail(context, {
       recipientUserId: input.recipientUserId ?? null,
       toEmail: input.toEmail,
       templateKey: input.templateKey,
       templateVersion: "v1",
       idempotencyKey: input.idempotencyKey,
-      metadata: input.metadata ?? {},
+      metadata,
     });
 
     await this.notifications.enqueueOutboxEvent(context, {
@@ -37,6 +44,7 @@ export class IdentityEmailQueue {
         templateKey: input.templateKey,
         recipientUserId: input.recipientUserId ?? null,
       },
+      ...(input.availableAt ? { availableAt: input.availableAt } : {}),
     });
 
     return message;
