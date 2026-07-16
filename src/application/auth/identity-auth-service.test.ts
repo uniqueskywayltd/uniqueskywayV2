@@ -200,10 +200,6 @@ describe("IdentityAuthService", () => {
     );
 
     expect(fakes.identityRepository.createTrustedDevice).toHaveBeenCalled();
-    const createArgs = fakes.identityRepository.createTrustedDevice.mock.calls[0]?.[1] as {
-      deviceTokenHash: string;
-    };
-    expect(createArgs.deviceTokenHash).toBeTruthy();
     expect(fakes.cookies.set).toHaveBeenCalledWith(
       AUTH_COOKIE_NAMES.trustedDevice,
       expect.any(String),

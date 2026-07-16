@@ -403,10 +403,11 @@ export class DepositEngineService {
         status: "active",
       });
 
+      const amountMinor = BigInt(current.amountMinor);
       const entries = createDepositConfirmationEntries({
         providerClearingAccountId: providerClearingAccount.id,
         customerAvailableAccountId: availableAccount.id,
-        amountMinor: current.amountMinor,
+        amountMinor,
         currency: current.currency,
       });
       assertBalancedLedgerPosting({ entries });
@@ -424,6 +425,7 @@ export class DepositEngineService {
             idempotencyKey,
             adminUserId: admin.id,
             reason,
+            amountMinor: amountMinor.toString(),
             invariantIds: ["FI-101", "FI-102", "FI-105", "FI-501"],
           },
         },

@@ -234,6 +234,7 @@ function normalizeError(error: unknown, requestId?: string): AppError {
     {
       event: "api.unexpected_error",
       requestId,
+      name: error instanceof Error ? error.name : undefined,
       cause: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       err: error,
@@ -241,9 +242,14 @@ function normalizeError(error: unknown, requestId?: string): AppError {
     "Unhandled API error",
   );
 
+  const message =
+    error instanceof Error && error.message.trim().length > 0
+      ? error.message
+      : "Unexpected server error.";
+
   return new AppError({
     code: "INTERNAL_ERROR",
-    message: "Unexpected server error.",
+    message,
     cause: error,
   });
 }
