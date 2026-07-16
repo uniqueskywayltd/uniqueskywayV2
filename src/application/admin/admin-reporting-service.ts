@@ -60,25 +60,29 @@ export class AdminReportingService {
       suspendedCustomers,
       activeInvestments,
       maturedInvestments,
-      pendingDeposits,
-      pendingWithdrawals,
-      totalDepositsMinor,
-      totalWithdrawalsMinor,
-      totalRoiPaidMinor,
-      failedJobs,
-      webhookStats,
-      databaseStatus,
     ] = await Promise.all([
       repo.countCustomerAccounts(),
       repo.countCustomerProfilesByKyc("approved"),
       repo.countCustomerAccounts("restricted"),
       repo.countInvestmentsByStatus("active"),
       repo.countInvestmentsByStatus("matured"),
+    ]);
+
+    const [
+      pendingDeposits,
+      pendingWithdrawals,
+      totalDepositsMinor,
+      totalWithdrawalsMinor,
+      totalRoiPaidMinor,
+    ] = await Promise.all([
       repo.countDepositsByStatuses([...PENDING_DEPOSIT_STATUSES]),
       repo.countWithdrawalsByStatuses([...PENDING_WITHDRAWAL_STATUSES]),
       repo.sumDepositAmountByStatuses(["confirmed"]),
       repo.sumWithdrawalAmountByStatuses(["paid"]),
       repo.sumPostedRoiMinor(),
+    ]);
+
+    const [failedJobs, webhookStats, databaseStatus] = await Promise.all([
       this.deps.operationsRepository.countBackgroundJobsByStatus("failed"),
       repo.webhookStats(),
       repo.probeDatabase(),
