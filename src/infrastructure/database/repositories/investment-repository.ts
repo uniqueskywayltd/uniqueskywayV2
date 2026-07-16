@@ -65,13 +65,21 @@ export class InvestmentRepository extends BaseDrizzleRepository {
   async lockInvestmentById(
     context: DrizzleTransactionContext,
     investmentId: string,
-  ): Promise<void> {
+  ): Promise<InvestmentRecord | null> {
     await context.db.execute(sql`
       select id
       from public.investments
       where id = ${investmentId}
       for update
     `);
+
+    const rows = await context.db
+      .select()
+      .from(investments)
+      .where(eq(investments.id, investmentId))
+      .limit(1);
+
+    return rows[0] ?? null;
   }
 
   async createInvestment(
@@ -198,6 +206,24 @@ export class InvestmentRepository extends BaseDrizzleRepository {
       .returning();
 
     return singleRow(rows, "markRoiScheduleItemPosted");
+  }
+
+  async skipRemainingRoiScheduleItems(
+    context: DrizzleTransactionContext,
+    investmentId: string,
+  ): Promise<number> {
+    const rows = await context.db
+      .update(roiScheduleItems)
+      .set({ status: "skipped" })
+      .where(
+        and(
+          eq(roiScheduleItems.investmentId, investmentId),
+          eq(roiScheduleItems.status, "scheduled"),
+        ),
+      )
+      .returning({ id: roiScheduleItems.id });
+
+    return rows.length;
   }
 
   async findRoiScheduleItemByInvestmentAndDate(

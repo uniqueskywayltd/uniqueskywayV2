@@ -1701,9 +1701,14 @@ export function InvestmentsPanel() {
         rows={rows}
         detailHref={(id) => `/admin/investments/${id}`}
         headerAction={
-          <Button type="button" onClick={() => void openCreate()}>
-            Add investment
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild type="button" variant="outline">
+              <Link href="/admin/plans">Packages</Link>
+            </Button>
+            <Button type="button" onClick={() => void openCreate()}>
+              Add investment
+            </Button>
+          </div>
         }
         columns={[
           { key: "id", header: "Investment", cell: (row) => row.id },
@@ -2159,6 +2164,146 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+type AdminPlanRow = {
+  planId: string;
+  planVersionId: string;
+  slug: string;
+  name: string;
+  planStatus: string;
+  versionStatus: string;
+  currency: string;
+  minPrincipalMinor: string;
+  maxPrincipalMinor: string;
+  termDays: number;
+  dailyRoiBps: number;
+  totalRoiBps: number | null;
+  earlyExitPolicy: string;
+  earlyExitPenaltyBps: number;
+};
+
+export function PlansPanel() {
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const [error, setError] = useState<string | null>(null);
+  const [plans, setPlans] = useState<AdminPlanRow[]>([]);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const result = await getAdminJson<{ plans: AdminPlanRow[] }>("/api/admin/plans");
+    if (result.error) {
+      setError(result.error);
+      setState("error");
+      return;
+    }
+    setPlans(result.data?.plans ?? []);
+    setError(null);
+    setState("ready");
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function setVersionStatus(planVersionId: string, status: "active" | "retired") {
+    setBusyId(planVersionId);
+    setFeedback(null);
+    const result = await mutateAdminJson("PATCH", `/api/admin/plans/${planVersionId}`, {
+      status,
+      planStatus: status === "retired" ? "retired" : "active",
+    });
+    setBusyId(null);
+    if (result.error) {
+      setFeedback(result.error);
+      return;
+    }
+    setFeedback(status === "retired" ? "Package disabled." : "Package enabled.");
+    await load();
+  }
+
+  if (state === "loading") {
+    return <p className="text-sm text-muted-foreground">Loading packages…</p>;
+  }
+
+  if (state === "error") {
+    return (
+      <AdminErrorBlock
+        message={error ?? "Failed to load packages"}
+        onRetry={() => {
+          setState("loading");
+          void load();
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <AdminPageHeader
+        title="Investment packages"
+        description="Create, edit terms, and disable published packages. Active investments keep snapshotted terms."
+        action={
+          <Button asChild type="button" variant="outline">
+            <Link href="/admin/investments">Back to investments</Link>
+          </Button>
+        }
+      />
+      {feedback ? (
+        <Alert>
+          <AlertDescription>{feedback}</AlertDescription>
+        </Alert>
+      ) : null}
+      <div className="space-y-3">
+        {plans.map((plan) => (
+          <Card key={plan.planVersionId} className="space-y-3 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="font-semibold text-foreground">
+                  {plan.name}{" "}
+                  <span className="text-sm font-normal text-muted-foreground">({plan.slug})</span>
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {(plan.dailyRoiBps / 100).toFixed(2)}% daily · {plan.termDays} days ·{" "}
+                  {plan.currency} · early exit {plan.earlyExitPolicy}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Badge variant="secondary">{plan.versionStatus}</Badge>
+                <Badge variant="outline">{plan.planStatus}</Badge>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Principal ${(Number(plan.minPrincipalMinor) / 100).toFixed(2)} – $
+              {(Number(plan.maxPrincipalMinor) / 100).toFixed(2)}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {plan.versionStatus !== "retired" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={busyId === plan.planVersionId}
+                  onClick={() => void setVersionStatus(plan.planVersionId, "retired")}
+                >
+                  Disable
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={busyId === plan.planVersionId}
+                  onClick={() => void setVersionStatus(plan.planVersionId, "active")}
+                >
+                  Enable
+                </Button>
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

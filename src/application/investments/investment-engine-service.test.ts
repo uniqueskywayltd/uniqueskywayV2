@@ -234,7 +234,7 @@ function createService(options: CreateServiceOptions = {}) {
       findInvestmentByIdempotencyKey: vi.fn(async () => options.existingInvestment ?? null),
       findInvestmentByIdempotencyKeyInTransaction: vi.fn(async () => null),
       findInvestmentById: vi.fn(async () => investment),
-      lockInvestmentById: vi.fn(async () => undefined),
+      lockInvestmentById: vi.fn(async () => investment),
       createInvestment: vi.fn(async (_context: DrizzleTransactionContext, values: object) => ({
         ...investment,
         ...values,

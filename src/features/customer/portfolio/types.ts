@@ -4,6 +4,10 @@ export type PortfolioInvestmentCard = {
   currency: string;
   principalMinor: string;
   postedRoiMinor: string;
+  promisedRoiMinor?: string | null;
+  dailyRoiBps?: number;
+  dailyRoiMinor?: string;
+  totalRoiBps?: number | null;
   termDays: number;
   status: string;
   startAt: string | null;
@@ -15,17 +19,57 @@ export type PortfolioInvestmentCard = {
   createdAt: string;
   progressPercent: number | null;
   nextMilestone: { label: string; date: string | null };
+  earlyExitPolicy?: string;
+  earlyExitPenaltyBps?: number;
+  canStop?: boolean;
+  nextSettlementCountdownSeconds?: number | null;
+  expectedTotalReturnMinor?: string | null;
+  live?: {
+    visualOnly: true;
+    todayEarningsMinor: string;
+    totalLiveEarningsMinor: string;
+    currentValueMinor: string;
+    unpostedAccruedMinor: string;
+    elapsedSeconds: number;
+  } | null;
 };
 
 export type PortfolioSummary = {
   totalCount: number;
   byStatus: Record<string, number>;
   activePrincipalMinor: string;
+  currency?: string;
+  availableBalanceMinor?: string;
+  lockedBalanceMinor?: string;
+  pendingBalanceMinor?: string;
+  portfolioValueMinor?: string;
+  totalPrincipalMinor?: string;
+  totalRoiMinor?: string;
+  todayEarningsMinor?: string;
+  totalEarningsMinor?: string;
+  currentInvestmentValueMinor?: string;
+  positionsCount?: number;
+  openWithdrawals?: number;
+  pendingDeposits?: number;
+  nextSettlementCountdownSeconds?: number;
 };
 
 export type PortfolioListResponse = {
   summary: PortfolioSummary;
   investments: PortfolioInvestmentCard[];
+};
+
+export type StopPreview = {
+  canStop: boolean;
+  earlyExitPolicy: string;
+  principalMinor: string;
+  accruedRoiMinor: string;
+  postedRoiMinor: string;
+  penaltyBps: number;
+  penaltyMinor: string;
+  creditRoiMinor: string;
+  finalAmountMinor: string;
+  currency: string;
 };
 
 export type PortfolioDetailResponse = {
@@ -45,4 +89,5 @@ export type PortfolioDetailResponse = {
     at: string | null;
     complete: boolean;
   }>;
+  stopPreview?: StopPreview | null;
 };

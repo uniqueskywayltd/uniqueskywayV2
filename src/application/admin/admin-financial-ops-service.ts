@@ -32,6 +32,8 @@ import type {
   WithdrawalRequestRecord,
 } from "@/infrastructure/database";
 
+import { InvestmentEngineService } from "@/application/investments/investment-engine-service";
+
 import { createAdminAuditContext, type RequestAuditContext } from "./admin-customer-service";
 import type {
   AddFinancialNoteInput,
@@ -423,6 +425,198 @@ export class AdminFinancialOpsService {
     return this.deps.coreRepository.listActivePublishedPlanVersions();
   }
 
+  async listInvestmentPlans() {
+    await requireAdminActor(this.deps, "investments.read");
+    const rows = await this.deps.coreRepository.listAllPlanVersions();
+    return {
+      plans: rows.map(({ plan, version }) => ({
+        planId: plan.id,
+        planVersionId: version.id,
+        slug: plan.slug,
+        name: plan.name,
+        description: plan.description,
+        planStatus: plan.status,
+        version: version.version,
+        versionStatus: version.status,
+        currency: version.currency,
+        minPrincipalMinor: version.minPrincipalMinor.toString(),
+        maxPrincipalMinor: version.maxPrincipalMinor.toString(),
+        termDays: version.termDays,
+        dailyRoiBps: version.dailyRoiBps,
+        totalRoiBps: version.totalRoiBps,
+        earlyExitPolicy: version.earlyExitPolicy,
+        earlyExitPenaltyBps:
+          typeof version.metadata?.earlyExitPenaltyBps === "number"
+            ? version.metadata.earlyExitPenaltyBps
+            : 0,
+        effectiveFrom: version.effectiveFrom.toISOString(),
+        effectiveTo: version.effectiveTo?.toISOString() ?? null,
+      })),
+    };
+  }
+
+  async createInvestmentPlan(
+    input: {
+      slug: string;
+      name: string;
+      description: string | null;
+      currency: string;
+      minPrincipalMinor: string;
+      maxPrincipalMinor: string;
+      termDays: number;
+      dailyRoiBps: number;
+      totalRoiBps: number | null;
+      earlyExitPolicy: "not_allowed" | "admin_review" | "allowed_with_penalty";
+      earlyExitPenaltyBps: number;
+    },
+    context: RequestAuditContext,
+  ) {
+    const admin = await requireAdminActor(this.deps, "investments.update");
+    const slug = input.slug.trim().toLowerCase();
+    if (!slug || !input.name.trim()) {
+      throw new AppError({ code: "VALIDATION_ERROR", message: "Slug and name are required." });
+    }
+    if (!Number.isInteger(input.termDays) || input.termDays <= 0) {
+      throw new AppError({ code: "VALIDATION_ERROR", message: "termDays must be positive." });
+    }
+    if (!Number.isInteger(input.dailyRoiBps) || input.dailyRoiBps < 0) {
+      throw new AppError({ code: "VALIDATION_ERROR", message: "dailyRoiBps is invalid." });
+    }
+
+    const result = await this.deps.transactionManager.runInTransaction(async (tx) => {
+      const plan = await this.deps.coreRepository.createInvestmentPlan(tx, {
+        slug,
+        name: input.name.trim(),
+        description: input.description,
+        status: "active",
+      });
+      const version = await this.deps.coreRepository.createInvestmentPlanVersion(tx, {
+        planId: plan.id,
+        version: 1,
+        currency: input.currency.toUpperCase(),
+        minPrincipalMinor: BigInt(input.minPrincipalMinor),
+        maxPrincipalMinor: BigInt(input.maxPrincipalMinor),
+        termDays: input.termDays,
+        dailyRoiBps: input.dailyRoiBps,
+        totalRoiBps: input.totalRoiBps,
+        principalReturnPolicy: "return_at_maturity",
+        earlyExitPolicy: input.earlyExitPolicy,
+        effectiveFrom: this.deps.clock.now(),
+        status: "active",
+        metadata: {
+          slug,
+          earlyExitPenaltyBps: input.earlyExitPenaltyBps,
+          earlyExitEnabled: input.earlyExitPolicy === "allowed_with_penalty",
+        },
+        createdBy: admin.appUser.id,
+      });
+
+      await this.deps.operationsRepository.appendAuditLog(tx, {
+        actorUserId: admin.appUser.id,
+        actorType: "admin",
+        action: "investment_plan.created",
+        targetType: "investment_plan",
+        targetId: plan.id,
+        reason: "Administrative package creation",
+        metadata: { planVersionId: version.id, slug },
+        requestId: context.requestId,
+        ipAddressHash: context.ipAddressHash,
+        userAgentHash: context.userAgentHash,
+      });
+
+      return { plan, version };
+    });
+
+    return {
+      planId: result.plan.id,
+      planVersionId: result.version.id,
+      slug: result.plan.slug,
+      name: result.plan.name,
+    };
+  }
+
+  async updateInvestmentPlanVersion(
+    planVersionId: string,
+    input: {
+      status?: "draft" | "active" | "retired";
+      planStatus?: "draft" | "active" | "retired";
+      minPrincipalMinor?: string;
+      maxPrincipalMinor?: string;
+      termDays?: number;
+      dailyRoiBps?: number;
+      totalRoiBps?: number | null;
+      earlyExitPolicy?: "not_allowed" | "admin_review" | "allowed_with_penalty";
+      earlyExitPenaltyBps?: number;
+    },
+    context: RequestAuditContext,
+  ) {
+    const admin = await requireAdminActor(this.deps, "investments.update");
+    const version = await this.deps.coreRepository.findInvestmentPlanVersionById(planVersionId);
+    if (!version) {
+      throw new AppError({ code: "NOT_FOUND", message: "Plan version was not found." });
+    }
+
+    const updated = await this.deps.transactionManager.runInTransaction(async (tx) => {
+      if (input.planStatus) {
+        await this.deps.coreRepository.updateInvestmentPlanStatus(
+          tx,
+          version.planId,
+          input.planStatus,
+        );
+      }
+
+      const nextMetadata = {
+        ...version.metadata,
+        ...(input.earlyExitPenaltyBps !== undefined
+          ? { earlyExitPenaltyBps: input.earlyExitPenaltyBps }
+          : {}),
+        ...(input.earlyExitPolicy
+          ? { earlyExitEnabled: input.earlyExitPolicy === "allowed_with_penalty" }
+          : {}),
+      };
+
+      const next = await this.deps.coreRepository.updateInvestmentPlanVersionTerms(
+        tx,
+        planVersionId,
+        {
+          ...(input.status ? { status: input.status } : {}),
+          ...(input.minPrincipalMinor !== undefined
+            ? { minPrincipalMinor: BigInt(input.minPrincipalMinor) }
+            : {}),
+          ...(input.maxPrincipalMinor !== undefined
+            ? { maxPrincipalMinor: BigInt(input.maxPrincipalMinor) }
+            : {}),
+          ...(input.termDays !== undefined ? { termDays: input.termDays } : {}),
+          ...(input.dailyRoiBps !== undefined ? { dailyRoiBps: input.dailyRoiBps } : {}),
+          ...(input.totalRoiBps !== undefined ? { totalRoiBps: input.totalRoiBps } : {}),
+          ...(input.earlyExitPolicy ? { earlyExitPolicy: input.earlyExitPolicy } : {}),
+          metadata: nextMetadata,
+        },
+      );
+
+      await this.deps.operationsRepository.appendAuditLog(tx, {
+        actorUserId: admin.appUser.id,
+        actorType: "admin",
+        action: "investment_plan.updated",
+        targetType: "investment_plan_version",
+        targetId: planVersionId,
+        reason: "Administrative package update",
+        metadata: { input },
+        requestId: context.requestId,
+        ipAddressHash: context.ipAddressHash,
+        userAgentHash: context.userAgentHash,
+      });
+
+      return next;
+    });
+
+    return {
+      planVersionId: updated.id,
+      status: updated.status,
+      earlyExitPolicy: updated.earlyExitPolicy,
+    };
+  }
+
   async createInvestmentForCustomer(
     input: {
       userId: string;
@@ -547,60 +741,54 @@ export class AdminFinancialOpsService {
       });
     }
 
+    if (investment.status === "active" || investment.status === "maturing") {
+      const engine = new InvestmentEngineService({
+        clock: this.deps.clock,
+        transactionManager: this.deps.transactionManager,
+        coreRepository: this.deps.coreRepository,
+        investmentRepository: this.deps.investmentRepository,
+        ledgerRepository: this.deps.ledgerRepository,
+        settlementRepository: this.deps.settlementRepository,
+        notificationRepository: this.deps.notificationRepository,
+        identityRepository: this.deps.identityRepository,
+        ...(this.deps.referralRepository
+          ? { referralRepository: this.deps.referralRepository }
+          : {}),
+      });
+
+      const result = await engine.stopInvestment({
+        investmentId,
+        force: true,
+        actorUserId: admin.appUser.id,
+        reason: input.reason ?? "Administrative force stop",
+      });
+
+      await this.deps.transactionManager.runInTransaction(async (tx) => {
+        await this.deps.operationsRepository.appendAuditLog(tx, {
+          actorUserId: admin.appUser.id,
+          actorType: "admin",
+          action: "investment.admin_cancelled",
+          targetType: "investment",
+          targetId: investment.id,
+          reason: input.reason ?? "Administrative force stop",
+          metadata: {
+            beforeStatus: investment.status,
+            afterStatus: result.investment.status,
+            creditRoiMinor: result.creditRoiMinor.toString(),
+            penaltyMinor: result.penaltyMinor.toString(),
+            force: true,
+          },
+          requestId: context.requestId,
+          ipAddressHash: context.ipAddressHash,
+          userAgentHash: context.userAgentHash,
+        });
+      });
+
+      return result.investment;
+    }
+
     const updated = await this.deps.transactionManager.runInTransaction(async (tx) => {
       await this.deps.investmentRepository.lockInvestmentById(tx, investmentId);
-
-      if (investment.status === "active" || investment.status === "maturing") {
-        const balance =
-          await this.deps.ledgerRepository.findWalletBalanceByUserCurrencyInTransaction(
-            tx,
-            investment.userId,
-            investment.currency,
-          );
-        if (!balance) {
-          throw new AppError({ code: "INVALID_STATE", message: "Customer wallet was not found." });
-        }
-        const availableAccount =
-          await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
-            walletId: balance.walletId,
-            category: "available",
-          });
-        const lockedAccount =
-          await this.deps.ledgerRepository.findWalletAccountByCategoryInTransaction(tx, {
-            walletId: balance.walletId,
-            category: "locked",
-          });
-        if (!availableAccount || !lockedAccount) {
-          throw new AppError({
-            code: "INVALID_STATE",
-            message: "Customer wallet accounts were not found.",
-          });
-        }
-
-        const { assertBalancedLedgerPosting, createMaturityPrincipalReleaseEntries } =
-          await import("@/domains/ledger");
-        const entries = createMaturityPrincipalReleaseEntries({
-          lockedAccountId: lockedAccount.id,
-          availableAccountId: availableAccount.id,
-          amountMinor: investment.principalMinor,
-          currency: investment.currency,
-        });
-        assertBalancedLedgerPosting({ entries });
-        await this.deps.ledgerRepository.postLedgerTransaction(tx, {
-          transaction: {
-            transactionType: "maturity_principal_release",
-            idempotencyKey: `investment_cancel_release:${investment.id}`,
-            referenceType: "investment",
-            referenceId: investment.id,
-            description: "Admin investment cancellation principal release",
-            metadata: {
-              reason: input.reason ?? "Administrative cancellation",
-              cancelledBy: admin.appUser.id,
-            },
-          },
-          entries,
-        });
-      }
 
       const cancelled = await this.deps.investmentRepository.markInvestmentCancelled(
         tx,

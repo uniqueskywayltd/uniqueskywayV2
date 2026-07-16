@@ -136,8 +136,11 @@ function createPerformanceHarness() {
       idempotencyKey: string,
     ) => findInvestmentByIdempotencyKey(state, idempotencyKey),
     findInvestmentById: async (id: string) => state.investments.get(id) ?? null,
-    lockInvestmentById: async () => undefined,
-    createInvestment: async (_context: DrizzleTransactionContext, values: Record<string, unknown>) => {
+    lockInvestmentById: async () => null,
+    createInvestment: async (
+      _context: DrizzleTransactionContext,
+      values: Record<string, unknown>,
+    ) => {
       const id = `investment_${(state.investmentIdSequence += 1)}`;
       const investment = createInvestmentRecord(id, {
         ...values,
@@ -418,7 +421,7 @@ function createInvestmentRecord(id: string, overrides: Record<string, unknown>):
 
 function findInvestmentByIdempotencyKey(state: PerformanceState, idempotencyKey: string) {
   const investmentId = state.investmentIdsByIdempotencyKey.get(idempotencyKey);
-  return investmentId ? state.investments.get(investmentId) ?? null : null;
+  return investmentId ? (state.investments.get(investmentId) ?? null) : null;
 }
 
 function updateInvestment(

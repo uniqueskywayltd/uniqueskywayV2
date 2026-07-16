@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
@@ -6,6 +8,11 @@ import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { Progress } from "@/components/ui/progress";
 import { presentInvestmentStatus } from "@/features/customer/portfolio/status-presentation";
 import type { PortfolioInvestmentCard } from "@/features/customer/portfolio/types";
+import {
+  formatCountdown,
+  remainingDaysLabel,
+  useLiveAccrual,
+} from "@/features/customer/portfolio/use-live-accrual";
 import { cn } from "@/lib/utils";
 
 /** PF2 — platform-aligned card bound only to certified investment read fields. */
@@ -13,6 +20,25 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
   const status = presentInvestmentStatus(investment.status);
   const progress = investment.progressPercent;
   const isActiveLike = investment.status === "active" || investment.status === "maturing";
+  const live = useLiveAccrual(
+    isActiveLike && investment.dailyRoiBps !== undefined
+      ? {
+          principalMinor: investment.principalMinor,
+          dailyRoiBps: investment.dailyRoiBps,
+          activatedAt: investment.activatedAt,
+          termDays: investment.termDays,
+          postedRoiMinor: investment.postedRoiMinor,
+          promisedRoiMinor: investment.promisedRoiMinor ?? null,
+          status: investment.status,
+        }
+      : null,
+  );
+
+  const totalEarningsMinor = live?.totalLiveEarningsMinor ?? investment.postedRoiMinor;
+  const currentValueMinor =
+    live?.currentValueMinor ??
+    String(BigInt(investment.principalMinor) + BigInt(investment.postedRoiMinor));
+  const todayEarningsMinor = live?.todayEarningsMinor ?? "0";
 
   return (
     <Link
@@ -68,31 +94,76 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
           </dd>
         </div>
         <div>
-          <dt className="text-xs text-muted-foreground">ROI credited</dt>
+          <dt className="text-xs text-muted-foreground">
+            {isActiveLike ? "Live earnings" : "ROI credited"}
+          </dt>
           <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
             <CurrencyDisplay
-              amountMinor={Number(investment.postedRoiMinor)}
+              amountMinor={Number(totalEarningsMinor)}
               currency={investment.currency}
             />
           </dd>
         </div>
-        <div>
-          <dt className="text-xs text-muted-foreground">Activated</dt>
-          <dd className="mt-0.5 text-sm font-medium text-foreground">
-            {investment.activatedAt || investment.startAt ? (
-              <DateDisplay value={investment.activatedAt ?? investment.startAt!} />
-            ) : (
-              "—"
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs text-muted-foreground">Matures</dt>
-          <dd className="mt-0.5 text-sm font-medium text-foreground">
-            {investment.maturityDate ? <DateDisplay value={investment.maturityDate} /> : "—"}
-          </dd>
-        </div>
+        {isActiveLike ? (
+          <>
+            <div>
+              <dt className="text-xs text-muted-foreground">Today</dt>
+              <dd className="mt-0.5 font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
+                <CurrencyDisplay
+                  amountMinor={Number(todayEarningsMinor)}
+                  currency={investment.currency}
+                />
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Current value</dt>
+              <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
+                <CurrencyDisplay
+                  amountMinor={Number(currentValueMinor)}
+                  currency={investment.currency}
+                />
+              </dd>
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <dt className="text-xs text-muted-foreground">Activated</dt>
+              <dd className="mt-0.5 text-sm font-medium text-foreground">
+                {investment.activatedAt || investment.startAt ? (
+                  <DateDisplay value={investment.activatedAt ?? investment.startAt!} />
+                ) : (
+                  "—"
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Matures</dt>
+              <dd className="mt-0.5 text-sm font-medium text-foreground">
+                {investment.maturityDate ? <DateDisplay value={investment.maturityDate} /> : "—"}
+              </dd>
+            </div>
+          </>
+        )}
       </dl>
+
+      {isActiveLike && live ? (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span>
+            Daily ROI{" "}
+            <span className="tabular-nums text-foreground">
+              {((investment.dailyRoiBps ?? 0) / 100).toFixed(2)}%
+            </span>
+          </span>
+          <span>
+            Next settlement{" "}
+            <span className="font-mono tabular-nums text-foreground">
+              {formatCountdown(live.nextSettlementCountdownSeconds)}
+            </span>
+          </span>
+          <span>Remaining {remainingDaysLabel(investment.maturityDate)}</span>
+        </div>
+      ) : null}
 
       {progress !== null ? (
         <div className="mt-4">
@@ -106,8 +177,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
             value={progress}
             className={cn(
               isActiveLike && "[&_[data-slot=progress-indicator]]:bg-emerald-500",
-              investment.status === "matured" &&
-                "[&_[data-slot=progress-indicator]]:bg-sky-500",
+              investment.status === "matured" && "[&_[data-slot=progress-indicator]]:bg-sky-500",
             )}
             aria-label={`Progress ${progress}%`}
           />

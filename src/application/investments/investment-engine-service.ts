@@ -3,6 +3,7 @@ import "server-only";
 import { AppError } from "@/application/errors";
 import type { Clock } from "@/application/ports";
 import {
+  calculateContinuousLiveAccrual,
   calculateDailyRoi,
   calculateLiveEarnings,
   calculatePromisedRoiMinor,
@@ -64,6 +65,15 @@ export interface RunSettlementInput {
 export interface LiveEarningsInput {
   investmentId: string;
   now?: Date;
+}
+
+export interface StopInvestmentInput {
+  investmentId: string;
+  /** When false, only plans with early_exit_policy = allowed_with_penalty may stop. */
+  force?: boolean;
+  actorUserId?: string;
+  reason?: string;
+  stoppedAt?: Date;
 }
 
 export class InvestmentEngineService {
@@ -204,6 +214,222 @@ export class InvestmentEngineService {
       });
 
       return { investment: activatedInvestment, idempotent: false };
+    });
+  }
+
+  /**
+   * Early exit: credit exact-second accrued ROI (minus penalty if configured),
+   * unlock principal, skip remaining schedule, mark cancelled.
+   * One ledger write for ROI + one for principal release — never continuous writes.
+   */
+  async stopInvestment(input: StopInvestmentInput) {
+    const investment = await this.deps.investmentRepository.findInvestmentById(input.investmentId);
+    if (!investment) {
+      throw new AppError({ code: "NOT_FOUND", message: "Investment was not found." });
+    }
+
+    if (investment.status === "cancelled") {
+      return {
+        investment,
+        idempotent: true as const,
+        accruedRoiMinor: 0n,
+        penaltyMinor: 0n,
+        creditRoiMinor: 0n,
+        principalReleasedMinor: 0n,
+      };
+    }
+
+    if (investment.status === "matured") {
+      throw new AppError({
+        code: "INVALID_STATE",
+        message: "Matured investments cannot be stopped.",
+      });
+    }
+
+    if (investment.status !== "active" && investment.status !== "maturing") {
+      throw new AppError({
+        code: "INVALID_STATE",
+        message: `Investment cannot be stopped from status ${investment.status}.`,
+      });
+    }
+
+    if (!investment.activatedAt) {
+      throw new AppError({
+        code: "INVALID_STATE",
+        message: "Investment is not activated.",
+      });
+    }
+
+    const planVersion = await this.deps.coreRepository.findInvestmentPlanVersionById(
+      investment.planVersionId,
+    );
+    if (!planVersion) {
+      throw new AppError({ code: "NOT_FOUND", message: "Investment plan version was not found." });
+    }
+
+    const force = input.force === true;
+    if (!force && planVersion.earlyExitPolicy !== "allowed_with_penalty") {
+      throw new AppError({
+        code: "INVALID_STATE",
+        message: "Early exit is not allowed for this investment package.",
+      });
+    }
+
+    const stoppedAt = input.stoppedAt ?? this.deps.clock.now();
+    const penaltyBps = readEarlyExitPenaltyBps(planVersion.metadata);
+
+    return this.deps.transactionManager.runInTransaction(async (tx) => {
+      const fresh = await this.deps.investmentRepository.lockInvestmentById(tx, investment.id);
+      if (!fresh) {
+        throw new AppError({ code: "NOT_FOUND", message: "Investment was not found." });
+      }
+      if (fresh.status === "cancelled") {
+        return {
+          investment: fresh,
+          idempotent: true as const,
+          accruedRoiMinor: 0n,
+          penaltyMinor: 0n,
+          creditRoiMinor: 0n,
+          principalReleasedMinor: 0n,
+        };
+      }
+      if (fresh.status !== "active" && fresh.status !== "maturing") {
+        throw new AppError({
+          code: "INVALID_STATE",
+          message: `Investment cannot be stopped from status ${fresh.status}.`,
+        });
+      }
+      if (!fresh.activatedAt) {
+        throw new AppError({
+          code: "INVALID_STATE",
+          message: "Investment is not activated.",
+        });
+      }
+
+      const wallet = await this.deps.ledgerRepository.findWalletByUserCurrency(
+        fresh.userId,
+        fresh.currency,
+      );
+      if (!wallet) {
+        throw new AppError({ code: "INVALID_STATE", message: "Customer wallet was not found." });
+      }
+
+      const [availableAccount, lockedAccount, platformRoiAccount] = await Promise.all([
+        this.requireWalletAccount(wallet.id, "available"),
+        this.requireWalletAccount(wallet.id, "locked"),
+        this.deps.ledgerRepository.ensureLedgerAccount(tx, {
+          ownerType: "platform",
+          ownerId: "unique_sky_way",
+          accountType: "platform_roi_expense",
+          currency: fresh.currency,
+          status: "active",
+        }),
+      ]);
+
+      const postedRoiMinor =
+        await this.deps.settlementRepository.sumPostedRoiMinorByInvestmentInTransaction(
+          tx,
+          fresh.id,
+        );
+
+      const live = calculateContinuousLiveAccrual({
+        principalMinor: fresh.principalMinor,
+        dailyRoiBps: fresh.dailyRoiBps,
+        activatedAt: fresh.activatedAt,
+        termDays: fresh.termDays,
+        postedRoiMinor,
+        promisedRoiMinor: fresh.promisedRoiMinor,
+        now: stoppedAt,
+      });
+
+      const grossUnposted = live.unpostedAccruedMinor;
+      const penaltyMinor = (grossUnposted * BigInt(penaltyBps)) / 10_000n;
+      const creditRoiMinor = grossUnposted > penaltyMinor ? grossUnposted - penaltyMinor : 0n;
+
+      if (creditRoiMinor > 0n) {
+        const roiEntries = createRoiSettlementEntries({
+          platformRoiExpenseAccountId: platformRoiAccount.id,
+          customerAvailableAccountId: availableAccount.id,
+          amountMinor: creditRoiMinor,
+          currency: fresh.currency,
+        });
+        assertBalancedLedgerPosting({ entries: roiEntries });
+
+        await this.deps.ledgerRepository.postLedgerTransaction(tx, {
+          transaction: {
+            transactionType: "roi_settlement",
+            idempotencyKey: `roi_settlement:early_exit:${fresh.id}`,
+            referenceType: "investment",
+            referenceId: fresh.id,
+            description: "Early exit ROI settlement",
+            metadata: {
+              invariantIds: ["FI-501", "FI-604"],
+              earlyExit: true,
+              grossUnpostedMinor: String(grossUnposted),
+              penaltyBps,
+              penaltyMinor: String(penaltyMinor),
+              creditRoiMinor: String(creditRoiMinor),
+              elapsedSeconds: live.elapsedSeconds,
+              stoppedBy: input.actorUserId ?? null,
+              reason: input.reason ?? null,
+            },
+          },
+          entries: roiEntries,
+        });
+      }
+
+      const maturityEntries = createMaturityPrincipalReleaseEntries({
+        lockedAccountId: lockedAccount.id,
+        availableAccountId: availableAccount.id,
+        amountMinor: fresh.principalMinor,
+        currency: fresh.currency,
+      });
+      assertBalancedLedgerPosting({ entries: maturityEntries });
+
+      await this.deps.ledgerRepository.postLedgerTransaction(tx, {
+        transaction: {
+          transactionType: "maturity_principal_release",
+          idempotencyKey: `investment_cancel_release:${fresh.id}`,
+          referenceType: "investment",
+          referenceId: fresh.id,
+          description: force
+            ? "Force stop investment principal release"
+            : "Early exit investment principal release",
+          metadata: {
+            invariantIds: ["FI-701"],
+            earlyExit: true,
+            force,
+            reason: input.reason ?? null,
+            stoppedBy: input.actorUserId ?? null,
+          },
+        },
+        entries: maturityEntries,
+      });
+
+      await this.deps.investmentRepository.skipRemainingRoiScheduleItems(tx, fresh.id);
+
+      const cancelled = await this.deps.investmentRepository.markInvestmentCancelled(
+        tx,
+        fresh.id,
+        stoppedAt,
+      );
+
+      await this.enqueueInvestmentEmail(tx, fresh.userId, "investment.completed", {
+        investmentId: fresh.id,
+        settlementDate: "early_exit",
+        trigger: "investment.stopped",
+        creditRoiMinor: String(creditRoiMinor),
+        principalReleasedMinor: String(fresh.principalMinor),
+      });
+
+      return {
+        investment: cancelled,
+        idempotent: false as const,
+        accruedRoiMinor: grossUnposted,
+        penaltyMinor,
+        creditRoiMinor,
+        principalReleasedMinor: fresh.principalMinor,
+      };
     });
   }
 
@@ -685,4 +911,16 @@ function validatePlanVersion(
       message: "Investment plan version is not effective for the activation time.",
     });
   }
+}
+
+function readEarlyExitPenaltyBps(metadata: Record<string, unknown> | null | undefined): number {
+  const raw = metadata?.earlyExitPenaltyBps;
+  if (typeof raw === "number" && Number.isInteger(raw) && raw >= 0 && raw <= 10_000) {
+    return raw;
+  }
+  if (typeof raw === "string" && /^\d+$/.test(raw)) {
+    const parsed = Number(raw);
+    if (parsed >= 0 && parsed <= 10_000) return parsed;
+  }
+  return 0;
 }

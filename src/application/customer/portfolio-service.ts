@@ -4,6 +4,8 @@ import { AppError } from "@/application/errors";
 import type { IdentityProvider } from "@/application/auth";
 import type { Clock } from "@/application/ports";
 import { InvestmentEngineService } from "@/application/investments/investment-engine-service";
+import { calculateContinuousLiveAccrual } from "@/domains/investments";
+import { secondsUntilNextNewYorkMidnight } from "@/domains/settlement";
 import type {
   CoreRepository,
   DrizzleTransactionManager,
@@ -12,6 +14,7 @@ import type {
   InvestmentRepository,
   LedgerRepository,
   NotificationRepository,
+  PaymentRepository,
   ReferralRepository,
   RoiScheduleItemRecord,
   SettlementRepository,
@@ -44,6 +47,7 @@ export interface CustomerPortfolioServiceDependencies {
   clock: Clock;
   notificationRepository: NotificationRepository;
   referralRepository: ReferralRepository;
+  paymentRepository?: PaymentRepository;
 }
 
 const BUCKET_STATUSES: Record<Exclude<PortfolioBucket, "all">, InvestmentRecord["status"][]> = {
@@ -72,23 +76,15 @@ export class CustomerPortfolioService {
         termDays: version.termDays,
         dailyRoiBps: version.dailyRoiBps,
         totalRoiBps: version.totalRoiBps,
+        earlyExitPolicy: version.earlyExitPolicy,
+        earlyExitPenaltyBps: readPenaltyBps(version.metadata),
       })),
     };
   }
 
   async activateInvestment(input: ActivateCustomerInvestmentInput) {
     const appUser = await this.requireCurrentAppUser();
-    const engine = new InvestmentEngineService({
-      clock: this.deps.clock,
-      transactionManager: this.deps.transactionManager,
-      coreRepository: this.deps.coreRepository,
-      investmentRepository: this.deps.investmentRepository,
-      ledgerRepository: this.deps.ledgerRepository,
-      settlementRepository: this.deps.settlementRepository,
-      notificationRepository: this.deps.notificationRepository,
-      identityRepository: this.deps.identityRepository,
-      referralRepository: this.deps.referralRepository,
-    });
+    const engine = this.createEngine();
 
     const result = await engine.activateInvestment({
       userId: appUser.id,
@@ -100,6 +96,91 @@ export class CustomerPortfolioService {
     return {
       investment: await this.toPortfolioCard(result.investment),
       idempotent: result.idempotent,
+    };
+  }
+
+  async stopInvestment(investmentId: string) {
+    const appUser = await this.requireCurrentAppUser();
+    const investment = await this.deps.investmentRepository.findInvestmentById(investmentId);
+
+    if (!investment || investment.userId !== appUser.id) {
+      throw new AppError({ code: "NOT_FOUND", message: "Investment was not found." });
+    }
+
+    const engine = this.createEngine();
+    const result = await engine.stopInvestment({
+      investmentId,
+      force: false,
+      actorUserId: appUser.id,
+      reason: "Customer early exit",
+    });
+
+    return {
+      investment: await this.toPortfolioCard(result.investment),
+      accruedRoiMinor: result.accruedRoiMinor.toString(),
+      penaltyMinor: result.penaltyMinor.toString(),
+      creditRoiMinor: result.creditRoiMinor.toString(),
+      principalReleasedMinor: result.principalReleasedMinor.toString(),
+      idempotent: result.idempotent,
+    };
+  }
+
+  async previewStopInvestment(investmentId: string) {
+    const appUser = await this.requireCurrentAppUser();
+    const investment = await this.deps.investmentRepository.findInvestmentById(investmentId);
+
+    if (!investment || investment.userId !== appUser.id) {
+      throw new AppError({ code: "NOT_FOUND", message: "Investment was not found." });
+    }
+
+    if (investment.status !== "active" && investment.status !== "maturing") {
+      throw new AppError({
+        code: "INVALID_STATE",
+        message: "Only active investments can be stopped.",
+      });
+    }
+
+    if (!investment.activatedAt) {
+      throw new AppError({ code: "INVALID_STATE", message: "Investment is not activated." });
+    }
+
+    const planVersion = await this.deps.coreRepository.findInvestmentPlanVersionById(
+      investment.planVersionId,
+    );
+    if (!planVersion) {
+      throw new AppError({ code: "NOT_FOUND", message: "Investment plan version was not found." });
+    }
+
+    const canStop = planVersion.earlyExitPolicy === "allowed_with_penalty";
+    const penaltyBps = readPenaltyBps(planVersion.metadata);
+    const postedRoiMinor = await this.deps.settlementRepository.sumPostedRoiMinorByInvestment(
+      investment.id,
+    );
+    const live = calculateContinuousLiveAccrual({
+      principalMinor: investment.principalMinor,
+      dailyRoiBps: investment.dailyRoiBps,
+      activatedAt: investment.activatedAt,
+      termDays: investment.termDays,
+      postedRoiMinor,
+      promisedRoiMinor: investment.promisedRoiMinor,
+      now: this.deps.clock.now(),
+    });
+    const penaltyMinor = (live.unpostedAccruedMinor * BigInt(penaltyBps)) / 10_000n;
+    const creditRoiMinor =
+      live.unpostedAccruedMinor > penaltyMinor ? live.unpostedAccruedMinor - penaltyMinor : 0n;
+    const finalAmountMinor = investment.principalMinor + creditRoiMinor;
+
+    return {
+      canStop,
+      earlyExitPolicy: planVersion.earlyExitPolicy,
+      principalMinor: investment.principalMinor.toString(),
+      accruedRoiMinor: live.unpostedAccruedMinor.toString(),
+      postedRoiMinor: postedRoiMinor.toString(),
+      penaltyBps,
+      penaltyMinor: penaltyMinor.toString(),
+      creditRoiMinor: creditRoiMinor.toString(),
+      finalAmountMinor: finalAmountMinor.toString(),
+      currency: investment.currency,
     };
   }
 
@@ -124,9 +205,10 @@ export class CustomerPortfolioService {
     rows = sortInvestments(rows, sort).slice(0, limit);
 
     const cards = await Promise.all(rows.map((row) => this.toPortfolioCard(row)));
+    const summary = await this.buildEnrichedSummary(appUser.id, result.rows);
 
     return {
-      summary: buildPortfolioSummary(result.rows),
+      summary,
       investments: cards,
     };
   }
@@ -139,30 +221,75 @@ export class CustomerPortfolioService {
       throw new AppError({ code: "NOT_FOUND", message: "Investment was not found." });
     }
 
-    const [card, scheduleItems] = await Promise.all([
+    const [card, scheduleItems, stopPreview] = await Promise.all([
       this.toPortfolioCard(investment),
       this.deps.investmentRepository.listRoiScheduleItemsByInvestmentId(investmentId),
+      investment.status === "active" || investment.status === "maturing"
+        ? this.previewStopInvestment(investmentId).catch(() => null)
+        : Promise.resolve(null),
     ]);
 
     return {
       investment: card,
       schedule: scheduleItems.map(serializeScheduleItem),
       lifecycle: buildLifecycle(investment),
+      stopPreview,
     };
   }
 
+  private createEngine() {
+    return new InvestmentEngineService({
+      clock: this.deps.clock,
+      transactionManager: this.deps.transactionManager,
+      coreRepository: this.deps.coreRepository,
+      investmentRepository: this.deps.investmentRepository,
+      ledgerRepository: this.deps.ledgerRepository,
+      settlementRepository: this.deps.settlementRepository,
+      notificationRepository: this.deps.notificationRepository,
+      identityRepository: this.deps.identityRepository,
+      referralRepository: this.deps.referralRepository,
+    });
+  }
+
   private async toPortfolioCard(investment: InvestmentRecord) {
-    const [planName, postedRoiMinor] = await Promise.all([
-      this.resolvePlanName(investment.planVersionId),
+    const [planMeta, postedRoiMinor] = await Promise.all([
+      this.resolvePlanMeta(investment.planVersionId),
       this.deps.settlementRepository.sumPostedRoiMinorByInvestment(investment.id),
     ]);
 
+    const promisedRoiMinor =
+      investment.promisedRoiMinor ??
+      (investment.totalRoiBps !== null
+        ? (investment.principalMinor * BigInt(investment.totalRoiBps)) / 10_000n
+        : null);
+
+    const dailyRoiMinor = (investment.principalMinor * BigInt(investment.dailyRoiBps)) / 10_000n;
+
+    const isActiveLike = investment.status === "active" || investment.status === "maturing";
+    const now = this.deps.clock.now();
+    let liveSnapshot = null as ReturnType<typeof calculateContinuousLiveAccrual> | null;
+    if (isActiveLike && investment.activatedAt) {
+      liveSnapshot = calculateContinuousLiveAccrual({
+        principalMinor: investment.principalMinor,
+        dailyRoiBps: investment.dailyRoiBps,
+        activatedAt: investment.activatedAt,
+        termDays: investment.termDays,
+        postedRoiMinor,
+        promisedRoiMinor: investment.promisedRoiMinor,
+        now,
+      });
+    }
+
     return {
       id: investment.id,
-      planName,
+      planName: planMeta.name,
       currency: investment.currency,
       principalMinor: investment.principalMinor.toString(),
       postedRoiMinor: postedRoiMinor.toString(),
+      promisedRoiMinor: promisedRoiMinor?.toString() ?? null,
+      dailyRoiBps: investment.dailyRoiBps,
+      dailyRoiMinor: dailyRoiMinor.toString(),
+      totalRoiBps: investment.totalRoiBps,
       termDays: investment.termDays,
       status: investment.status,
       startAt: investment.startAt?.toISOString() ?? null,
@@ -174,14 +301,117 @@ export class CustomerPortfolioService {
       createdAt: investment.createdAt.toISOString(),
       progressPercent: computeProgressPercent(investment),
       nextMilestone: resolveNextMilestone(investment),
+      earlyExitPolicy: planMeta.earlyExitPolicy,
+      earlyExitPenaltyBps: planMeta.earlyExitPenaltyBps,
+      canStop: isActiveLike && planMeta.earlyExitPolicy === "allowed_with_penalty",
+      nextSettlementCountdownSeconds: isActiveLike ? secondsUntilNextNewYorkMidnight(now) : null,
+      expectedTotalReturnMinor: promisedRoiMinor
+        ? (investment.principalMinor + promisedRoiMinor).toString()
+        : null,
+      live: liveSnapshot
+        ? {
+            visualOnly: true as const,
+            todayEarningsMinor: liveSnapshot.todayEarningsMinor.toString(),
+            totalLiveEarningsMinor: liveSnapshot.totalLiveEarningsMinor.toString(),
+            currentValueMinor: liveSnapshot.currentValueMinor.toString(),
+            unpostedAccruedMinor: liveSnapshot.unpostedAccruedMinor.toString(),
+            elapsedSeconds: liveSnapshot.elapsedSeconds,
+          }
+        : null,
     };
   }
 
-  private async resolvePlanName(planVersionId: string): Promise<string> {
+  private async resolvePlanMeta(planVersionId: string): Promise<{
+    name: string;
+    earlyExitPolicy: string;
+    earlyExitPenaltyBps: number;
+  }> {
     const version = await this.deps.coreRepository.findInvestmentPlanVersionById(planVersionId);
-    if (!version) return "Investment plan";
+    if (!version) {
+      return { name: "Investment plan", earlyExitPolicy: "not_allowed", earlyExitPenaltyBps: 0 };
+    }
     const plan = await this.deps.coreRepository.findInvestmentPlanById(version.planId);
-    return plan?.name ?? "Investment plan";
+    return {
+      name: plan?.name ?? "Investment plan",
+      earlyExitPolicy: version.earlyExitPolicy,
+      earlyExitPenaltyBps: readPenaltyBps(version.metadata),
+    };
+  }
+
+  private async buildEnrichedSummary(userId: string, rows: InvestmentRecord[]) {
+    const base = buildPortfolioSummary(rows);
+    const currency = "USD";
+    const balance = await this.deps.ledgerRepository.findWalletBalanceByUserCurrency(
+      userId,
+      currency,
+    );
+
+    let totalPostedRoiMinor = 0n;
+    let totalLiveEarningsMinor = 0n;
+    let todayEarningsMinor = 0n;
+    let currentInvestmentValueMinor = 0n;
+    const now = this.deps.clock.now();
+
+    for (const row of rows) {
+      if (row.status !== "active" && row.status !== "maturing") continue;
+      const posted = await this.deps.settlementRepository.sumPostedRoiMinorByInvestment(row.id);
+      totalPostedRoiMinor += posted;
+      if (row.activatedAt) {
+        const live = calculateContinuousLiveAccrual({
+          principalMinor: row.principalMinor,
+          dailyRoiBps: row.dailyRoiBps,
+          activatedAt: row.activatedAt,
+          termDays: row.termDays,
+          postedRoiMinor: posted,
+          promisedRoiMinor: row.promisedRoiMinor,
+          now,
+        });
+        totalLiveEarningsMinor += live.totalLiveEarningsMinor;
+        todayEarningsMinor += live.todayEarningsMinor;
+        currentInvestmentValueMinor += live.currentValueMinor;
+      } else {
+        currentInvestmentValueMinor += row.principalMinor + posted;
+        totalLiveEarningsMinor += posted;
+      }
+    }
+
+    const available = balance?.availableBalanceMinor ?? 0n;
+    const locked = balance?.lockedBalanceMinor ?? 0n;
+    const pending = balance?.pendingBalanceMinor ?? 0n;
+    const portfolioValueMinor = available + locked + pending;
+
+    let openWithdrawals = 0;
+    let pendingDeposits = 0;
+    if (this.deps.paymentRepository) {
+      const [deposits, withdrawals] = await Promise.all([
+        this.deps.paymentRepository.listDepositIntentsByUserId(userId, 50),
+        this.deps.paymentRepository.listWithdrawalsByUserId(userId, 50),
+      ]);
+      pendingDeposits = deposits.filter(
+        (row) => row.status === "created" || row.status === "pending",
+      ).length;
+      openWithdrawals = withdrawals.filter(
+        (row) => !["paid", "rejected", "failed", "cancelled"].includes(row.status),
+      ).length;
+    }
+
+    return {
+      ...base,
+      currency,
+      availableBalanceMinor: available.toString(),
+      lockedBalanceMinor: locked.toString(),
+      pendingBalanceMinor: pending.toString(),
+      portfolioValueMinor: portfolioValueMinor.toString(),
+      totalPrincipalMinor: base.activePrincipalMinor,
+      totalRoiMinor: totalPostedRoiMinor.toString(),
+      todayEarningsMinor: todayEarningsMinor.toString(),
+      totalEarningsMinor: totalLiveEarningsMinor.toString(),
+      currentInvestmentValueMinor: currentInvestmentValueMinor.toString(),
+      positionsCount: base.totalCount,
+      openWithdrawals,
+      pendingDeposits,
+      nextSettlementCountdownSeconds: secondsUntilNextNewYorkMidnight(now),
+    };
   }
 
   private async requireCurrentAppUser() {
@@ -288,8 +518,8 @@ export function resolveNextMilestone(investment: InvestmentRecord): {
     return { label: "Maturity", date: investment.maturityDate };
   }
   return {
-    label: "Maturity (New York day)",
-    date: investment.maturityDate,
+    label: "Next settlement (New York midnight)",
+    date: investment.firstSettlementDate,
   };
 }
 
@@ -320,4 +550,11 @@ function buildLifecycle(investment: InvestmentRecord) {
       complete: investment.status === "matured" || Boolean(investment.maturedAt),
     },
   ];
+}
+
+function readPenaltyBps(metadata: Record<string, unknown> | null | undefined): number {
+  const raw = metadata?.earlyExitPenaltyBps;
+  if (typeof raw === "number" && Number.isInteger(raw) && raw >= 0) return raw;
+  if (typeof raw === "string" && /^\d+$/.test(raw)) return Number(raw);
+  return 0;
 }

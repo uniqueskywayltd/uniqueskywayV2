@@ -2,49 +2,106 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, PieChart } from "lucide-react";
 
 import { Button, Skeleton, StatusChip } from "@/components/ui";
 import { buttonVariants } from "@/components/ui/button";
 import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { Progress } from "@/components/ui/progress";
-import { getCustomerJson } from "@/features/customer/api-client";
+import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
 import { PortfolioReveal } from "@/features/customer/portfolio/portfolio-motion";
 import {
   presentInvestmentStatus,
   presentScheduleStatus,
 } from "@/features/customer/portfolio/status-presentation";
-import type { PortfolioDetailResponse } from "@/features/customer/portfolio/types";
+import type { PortfolioDetailResponse, StopPreview } from "@/features/customer/portfolio/types";
+import {
+  formatCountdown,
+  remainingDaysLabel,
+  useLiveAccrual,
+} from "@/features/customer/portfolio/use-live-accrual";
 import { cn } from "@/lib/utils";
 
 /** PF3–PF5 — investment passport over certified detail read models only. */
 export function InvestmentDetailView({ investmentId }: { investmentId: string }) {
+  const router = useRouter();
   const [data, setData] = useState<PortfolioDetailResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmStop, setConfirmStop] = useState(false);
+  const [stopPreview, setStopPreview] = useState<StopPreview | null>(null);
+  const [stopping, setStopping] = useState(false);
+  const [stopError, setStopError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
 
-    void getCustomerJson<PortfolioDetailResponse>(
-      `/api/customer/investments/${investmentId}`,
-    ).then((result) => {
-      if (!active) return;
-      if (result.error) {
-        setError(result.error);
-        setData(null);
+    void getCustomerJson<PortfolioDetailResponse>(`/api/customer/investments/${investmentId}`).then(
+      (result) => {
+        if (!active) return;
+        if (result.error) {
+          setError(result.error);
+          setData(null);
+          setLoading(false);
+          return;
+        }
+        setError(null);
+        setData(result.data ?? null);
+        setStopPreview(result.data?.stopPreview ?? null);
         setLoading(false);
-        return;
-      }
-      setError(null);
-      setData(result.data ?? null);
-      setLoading(false);
-    });
+      },
+    );
 
     return () => {
       active = false;
     };
   }, [investmentId]);
+
+  const investment = data?.investment;
+  const live = useLiveAccrual(
+    investment && (investment.status === "active" || investment.status === "maturing")
+      ? {
+          principalMinor: investment.principalMinor,
+          dailyRoiBps: investment.dailyRoiBps ?? 0,
+          activatedAt: investment.activatedAt,
+          termDays: investment.termDays,
+          postedRoiMinor: investment.postedRoiMinor,
+          promisedRoiMinor: investment.promisedRoiMinor ?? null,
+          status: investment.status,
+        }
+      : null,
+  );
+
+  async function openStopConfirm() {
+    setStopError(null);
+    const preview = await getCustomerJson<StopPreview>(
+      `/api/customer/investments/${investmentId}/stop`,
+    );
+    if (preview.error || !preview.data) {
+      setStopError(preview.error ?? "Unable to preview stop.");
+      return;
+    }
+    setStopPreview(preview.data);
+    setConfirmStop(true);
+  }
+
+  async function confirmStopInvestment() {
+    setStopping(true);
+    setStopError(null);
+    const result = await postCustomerJson<{ investment: { id: string } }>(
+      `/api/customer/investments/${investmentId}/stop`,
+      {},
+    );
+    setStopping(false);
+    if (result.error) {
+      setStopError(result.error);
+      return;
+    }
+    setConfirmStop(false);
+    router.push("/portfolio");
+    router.refresh();
+  }
 
   if (loading) {
     return (
@@ -61,7 +118,7 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
     );
   }
 
-  if (error || !data) {
+  if (error || !data || !investment) {
     return (
       <section
         className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
@@ -81,11 +138,17 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
     );
   }
 
-  const { investment, schedule, lifecycle } = data;
+  const { schedule, lifecycle } = data;
   const status = presentInvestmentStatus(investment.status);
   const progress = investment.progressPercent;
   const isActiveLike = investment.status === "active" || investment.status === "maturing";
   const activationDate = investment.activatedAt ?? investment.startAt;
+  const totalEarningsMinor = live?.totalLiveEarningsMinor ?? investment.postedRoiMinor;
+  const currentValueMinor =
+    live?.currentValueMinor ??
+    String(BigInt(investment.principalMinor) + BigInt(investment.postedRoiMinor));
+  const todayEarningsMinor = live?.todayEarningsMinor ?? "0";
+  const dailyPct = ((investment.dailyRoiBps ?? 0) / 100).toFixed(2);
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -106,6 +169,16 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
           >
             Open ledger
           </Link>
+          {investment.canStop ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void openStopConfirm()}
+            >
+              Stop investment
+            </Button>
+          ) : null}
         </div>
       </PortfolioReveal>
 
@@ -114,36 +187,100 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
           className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-7 md:p-8"
           aria-label="Investment header"
         >
-        <div
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_45%),linear-gradient(225deg,rgba(139,92,246,0.14)_0%,transparent_55%)] opacity-[0.18] dark:opacity-[0.28]"
-          aria-hidden
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-medium tracking-wide text-primary/80">Investment passport</p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              {investment.planName}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              Certified state from the investment engine — progress and next steps, never estimated
-              earnings.
-            </p>
+          <div
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_45%),linear-gradient(225deg,rgba(139,92,246,0.14)_0%,transparent_55%)] opacity-[0.18] dark:opacity-[0.28]"
+            aria-hidden
+          />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-medium tracking-wide text-primary/80">
+                Investment passport
+              </p>
+              <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                {investment.planName}
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                Live earnings update every second on your device. Wallet credits only post at New
+                York settlement, stop, or maturity — the ledger remains the source of truth.
+              </p>
+            </div>
+            <StatusChip tone={status.tone}>{status.label}</StatusChip>
           </div>
-          <StatusChip tone={status.tone}>{status.label}</StatusChip>
-        </div>
-        <div
-          className={cn(
-            "absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r",
-            isActiveLike
-              ? "from-transparent via-emerald-500/70 to-transparent"
-              : investment.status === "pending"
-                ? "from-transparent via-amber-500/70 to-transparent"
-                : "from-transparent via-violet-500/70 to-transparent",
-          )}
-          aria-hidden
-        />
-      </section>
+          <div
+            className={cn(
+              "absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r",
+              isActiveLike
+                ? "from-transparent via-emerald-500/70 to-transparent"
+                : investment.status === "pending"
+                  ? "from-transparent via-amber-500/70 to-transparent"
+                  : "from-transparent via-violet-500/70 to-transparent",
+            )}
+            aria-hidden
+          />
+        </section>
       </PortfolioReveal>
+
+      {confirmStop && stopPreview ? (
+        <section
+          className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-5"
+          role="dialog"
+          aria-label="Confirm stop investment"
+        >
+          <h2 className="text-sm font-semibold text-foreground">Stop this investment?</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Accrued ROI is calculated to the exact second, then principal unlocks to your wallet.
+          </p>
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+            <DetailField label="Current principal">
+              <CurrencyDisplay
+                amountMinor={Number(stopPreview.principalMinor)}
+                currency={stopPreview.currency}
+              />
+            </DetailField>
+            <DetailField label="Accrued ROI">
+              <CurrencyDisplay
+                amountMinor={Number(stopPreview.accruedRoiMinor)}
+                currency={stopPreview.currency}
+              />
+            </DetailField>
+            <DetailField label="Penalty">
+              <CurrencyDisplay
+                amountMinor={Number(stopPreview.penaltyMinor)}
+                currency={stopPreview.currency}
+              />
+            </DetailField>
+            <DetailField label="Final amount">
+              <CurrencyDisplay
+                amountMinor={Number(stopPreview.finalAmountMinor)}
+                currency={stopPreview.currency}
+              />
+            </DetailField>
+          </dl>
+          {stopError ? (
+            <p className="mt-3 text-sm text-destructive" role="alert">
+              {stopError}
+            </p>
+          ) : null}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={stopping || !stopPreview.canStop}
+              onClick={() => void confirmStopInvestment()}
+            >
+              {stopping ? "Stopping…" : "Confirm stop"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={stopping}
+              onClick={() => setConfirmStop(false)}
+            >
+              Keep investing
+            </Button>
+          </div>
+        </section>
+      ) : null}
 
       {investment.status === "pending" ? (
         <section
@@ -153,6 +290,67 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
         >
           <h2 className="text-sm font-semibold text-foreground">Activation in progress</h2>
           <p className="mt-1 text-sm text-muted-foreground">{status.explanation}</p>
+        </section>
+      ) : null}
+
+      {isActiveLike ? (
+        <section aria-label="Live performance">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Live performance
+          </h2>
+          <dl className="grid gap-4 rounded-xl border border-border/70 bg-card/90 p-5 text-sm shadow-sm sm:grid-cols-2 lg:grid-cols-3">
+            <DetailField label="Current principal">
+              <CurrencyDisplay
+                amountMinor={Number(investment.principalMinor)}
+                currency={investment.currency}
+              />
+            </DetailField>
+            <DetailField label="Live earnings">
+              <CurrencyDisplay
+                amountMinor={Number(totalEarningsMinor)}
+                currency={investment.currency}
+              />
+            </DetailField>
+            <DetailField label="Today's earnings">
+              <CurrencyDisplay
+                amountMinor={Number(todayEarningsMinor)}
+                currency={investment.currency}
+              />
+            </DetailField>
+            <DetailField label="ROI credited (ledger)">
+              <CurrencyDisplay
+                amountMinor={Number(investment.postedRoiMinor)}
+                currency={investment.currency}
+              />
+            </DetailField>
+            <DetailField label="Current investment value">
+              <CurrencyDisplay
+                amountMinor={Number(currentValueMinor)}
+                currency={investment.currency}
+              />
+            </DetailField>
+            <DetailField label="Daily ROI %">
+              <span className="tabular-nums">{dailyPct}%</span>
+            </DetailField>
+            <DetailField label="Remaining">
+              <span>{remainingDaysLabel(investment.maturityDate)}</span>
+            </DetailField>
+            <DetailField label="Next settlement">
+              <span className="font-mono tabular-nums">
+                {live ? formatCountdown(live.nextSettlementCountdownSeconds) : "—"}
+              </span>
+            </DetailField>
+            <DetailField label="Expected total return">
+              {investment.expectedTotalReturnMinor ? (
+                <CurrencyDisplay
+                  amountMinor={Number(investment.expectedTotalReturnMinor)}
+                  currency={investment.currency}
+                />
+              ) : (
+                "—"
+              )}
+            </DetailField>
+          </dl>
         </section>
       ) : null}
 
@@ -193,9 +391,7 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
             )}
           </DetailField>
           <DetailField label="Progress">
-            <span className="tabular-nums">
-              {progress === null ? "—" : `${progress}%`}
-            </span>
+            <span className="tabular-nums">{progress === null ? "—" : `${progress}%`}</span>
           </DetailField>
           <DetailField label="What happens next?" className="sm:col-span-2 lg:col-span-1">
             <span>
@@ -225,8 +421,7 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
               value={progress}
               className={cn(
                 isActiveLike && "[&_[data-slot=progress-indicator]]:bg-emerald-500",
-                investment.status === "matured" &&
-                  "[&_[data-slot=progress-indicator]]:bg-sky-500",
+                investment.status === "matured" && "[&_[data-slot=progress-indicator]]:bg-sky-500",
               )}
               aria-label={`Progress ${progress}%`}
             />
@@ -343,14 +538,13 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
         <h2 className="text-sm font-semibold text-foreground">Important notices</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
           <li>{status.explanation}</li>
-          <li>This page does not edit investments or move money.</li>
+          <li>
+            Live counters are visual only. Ledger postings happen on daily New York settlement,
+            stop, or maturity.
+          </li>
           <li>
             Returns are not guaranteed. Schedule rows are not withdrawable until credited to your
             wallet.
-          </li>
-          <li>
-            Every date shown here comes from the certified investment engine — never estimated in
-            the browser.
           </li>
         </ul>
       </section>

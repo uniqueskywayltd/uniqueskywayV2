@@ -303,6 +303,74 @@ export class CoreRepository extends BaseDrizzleRepository {
     return rows;
   }
 
+  async listAllPlanVersions(): Promise<
+    Array<{
+      plan: InvestmentPlanRecord;
+      version: InvestmentPlanVersionRecord;
+    }>
+  > {
+    return this.db
+      .select({
+        plan: investmentPlans,
+        version: investmentPlanVersions,
+      })
+      .from(investmentPlanVersions)
+      .innerJoin(investmentPlans, eq(investmentPlanVersions.planId, investmentPlans.id))
+      .orderBy(investmentPlans.name, investmentPlanVersions.version);
+  }
+
+  async updateInvestmentPlanStatus(
+    context: DrizzleTransactionContext,
+    planId: string,
+    status: "draft" | "active" | "retired",
+  ): Promise<InvestmentPlanRecord> {
+    const rows = await context.db
+      .update(investmentPlans)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(investmentPlans.id, planId))
+      .returning();
+    return singleRow(rows, "updateInvestmentPlanStatus");
+  }
+
+  async updateInvestmentPlanVersionStatus(
+    context: DrizzleTransactionContext,
+    planVersionId: string,
+    status: "draft" | "active" | "retired",
+  ): Promise<InvestmentPlanVersionRecord> {
+    const rows = await context.db
+      .update(investmentPlanVersions)
+      .set({ status })
+      .where(eq(investmentPlanVersions.id, planVersionId))
+      .returning();
+    return singleRow(rows, "updateInvestmentPlanVersionStatus");
+  }
+
+  async updateInvestmentPlanVersionTerms(
+    context: DrizzleTransactionContext,
+    planVersionId: string,
+    values: Partial<
+      Pick<
+        InferInsertModel<typeof investmentPlanVersions>,
+        | "minPrincipalMinor"
+        | "maxPrincipalMinor"
+        | "termDays"
+        | "dailyRoiBps"
+        | "totalRoiBps"
+        | "earlyExitPolicy"
+        | "metadata"
+        | "status"
+        | "effectiveTo"
+      >
+    >,
+  ): Promise<InvestmentPlanVersionRecord> {
+    const rows = await context.db
+      .update(investmentPlanVersions)
+      .set(values)
+      .where(eq(investmentPlanVersions.id, planVersionId))
+      .returning();
+    return singleRow(rows, "updateInvestmentPlanVersionTerms");
+  }
+
   async searchCustomers(query: SearchCustomersQuery): Promise<SearchCustomersResult> {
     const conditions = [];
 

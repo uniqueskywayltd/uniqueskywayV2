@@ -47,6 +47,7 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
       { href: "/admin/deposits", labelKey: "admin.nav.deposits", icon: ArrowDownLeft },
       { href: "/admin/withdrawals", labelKey: "admin.nav.withdrawals", icon: ArrowUpRight },
       { href: "/admin/investments", labelKey: "admin.nav.investments", icon: PieChart },
+      { href: "/admin/plans", labelKey: "admin.nav.plans", icon: Settings2 },
       { href: "/admin/settlements", labelKey: "admin.nav.settlements", icon: ClipboardList },
       { href: "/admin/jobs", labelKey: "admin.nav.jobs", icon: Workflow },
     ],

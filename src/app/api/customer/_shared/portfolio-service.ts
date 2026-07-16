@@ -6,6 +6,7 @@ import {
   InvestmentRepository,
   LedgerRepository,
   NotificationRepository,
+  PaymentRepository,
   ReferralRepository,
   SettlementRepository,
   getDatabaseConnection,
@@ -30,6 +31,7 @@ export async function createCustomerPortfolioService() {
     ledgerRepository: new LedgerRepository(db),
     notificationRepository: new NotificationRepository(db),
     referralRepository: new ReferralRepository(db),
+    paymentRepository: new PaymentRepository(db),
     transactionManager: new DrizzleTransactionManager(db),
     clock: { now: () => new Date() },
   });

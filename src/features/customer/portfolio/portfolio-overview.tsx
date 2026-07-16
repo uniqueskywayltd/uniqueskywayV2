@@ -129,7 +129,9 @@ export function PortfolioOverview() {
 
       {error && !data ? (
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5" role="alert">
-          <p className="text-sm font-semibold text-foreground">We couldn’t load your investments.</p>
+          <p className="text-sm font-semibold text-foreground">
+            We couldn’t load your investments.
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">{error}</p>
           <Button
             type="button"
@@ -271,34 +273,98 @@ export function PortfolioOverview() {
 }
 
 /** Orientation from certified list summary only — not dashboard widgets. */
-function PortfolioOrientation({
-  summary,
-}: {
-  summary: PortfolioListResponse["summary"];
-}) {
+function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["summary"] }) {
   const activeCount = (summary.byStatus.active ?? 0) + (summary.byStatus.maturing ?? 0);
+  const currency = summary.currency ?? "USD";
 
   return (
     <section
       aria-label="Portfolio summary"
-      className="grid gap-3 rounded-xl border border-border/70 bg-muted/20 p-4 sm:grid-cols-3 sm:p-5"
+      className="grid gap-3 rounded-xl border border-border/70 bg-muted/20 p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5"
     >
+      <div>
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          Portfolio value
+        </p>
+        <p className="mt-1 text-foreground">
+          <CurrencyDisplay
+            amountMinor={Number(summary.portfolioValueMinor ?? summary.activePrincipalMinor)}
+            currency={currency}
+          />
+        </p>
+      </div>
+      <div>
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          Available
+        </p>
+        <p className="mt-1 text-foreground">
+          <CurrencyDisplay
+            amountMinor={Number(summary.availableBalanceMinor ?? 0)}
+            currency={currency}
+          />
+        </p>
+      </div>
+      <div>
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Locked</p>
+        <p className="mt-1 text-foreground">
+          <CurrencyDisplay
+            amountMinor={Number(summary.lockedBalanceMinor ?? summary.activePrincipalMinor)}
+            currency={currency}
+          />
+        </p>
+      </div>
+      <div>
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          Today&apos;s earnings
+        </p>
+        <p className="mt-1 text-foreground">
+          <CurrencyDisplay
+            amountMinor={Number(summary.todayEarningsMinor ?? 0)}
+            currency={currency}
+          />
+        </p>
+      </div>
+      <div>
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          Total earnings
+        </p>
+        <p className="mt-1 text-foreground">
+          <CurrencyDisplay
+            amountMinor={Number(summary.totalEarningsMinor ?? summary.totalRoiMinor ?? 0)}
+            currency={currency}
+          />
+        </p>
+      </div>
+      <div>
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          Current investment value
+        </p>
+        <p className="mt-1 text-foreground">
+          <CurrencyDisplay
+            amountMinor={Number(
+              summary.currentInvestmentValueMinor ?? summary.activePrincipalMinor,
+            )}
+            currency={currency}
+          />
+        </p>
+      </div>
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Positions
         </p>
-        <p className="mt-1 font-mono text-lg tabular-nums text-foreground">{summary.totalCount}</p>
-      </div>
-      <div>
-        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Active</p>
-        <p className="mt-1 font-mono text-lg tabular-nums text-foreground">{activeCount}</p>
+        <p className="mt-1 font-mono text-lg tabular-nums text-foreground">
+          {summary.positionsCount ?? summary.totalCount}
+          <span className="ml-2 text-sm font-sans text-muted-foreground">
+            ({activeCount} active)
+          </span>
+        </p>
       </div>
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Active principal
+          Open / pending
         </p>
-        <p className="mt-1 text-foreground">
-          <CurrencyDisplay amountMinor={Number(summary.activePrincipalMinor)} />
+        <p className="mt-1 text-sm text-foreground">
+          {summary.openWithdrawals ?? 0} withdrawals · {summary.pendingDeposits ?? 0} deposits
         </p>
       </div>
     </section>

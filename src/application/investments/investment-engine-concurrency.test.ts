@@ -358,7 +358,7 @@ function createConcurrencyHarness(options: HarnessOptions = {}) {
   };
   const findInvestmentByIdempotencyKey = (idempotencyKey: string) => {
     const investmentId = state.investmentIdsByIdempotencyKey.get(idempotencyKey);
-    return investmentId ? state.investments.get(investmentId) ?? null : null;
+    return investmentId ? (state.investments.get(investmentId) ?? null) : null;
   };
 
   const coreRepository = {
@@ -385,9 +385,14 @@ function createConcurrencyHarness(options: HarnessOptions = {}) {
       idempotencyKey: string,
     ) => findInvestmentByIdempotencyKey(idempotencyKey),
     findInvestmentById: async (id: string) => state.investments.get(id) ?? null,
-    lockInvestmentById: async (context: DrizzleTransactionContext, investmentId: string) =>
-      lockForTransaction(context, `investment:${investmentId}`),
-    createInvestment: async (_context: DrizzleTransactionContext, values: Record<string, unknown>) => {
+    lockInvestmentById: async (context: DrizzleTransactionContext, investmentId: string) => {
+      await lockForTransaction(context, `investment:${investmentId}`);
+      return state.investments.get(investmentId) ?? null;
+    },
+    createInvestment: async (
+      _context: DrizzleTransactionContext,
+      values: Record<string, unknown>,
+    ) => {
       const idempotencyKey = values.idempotencyKey as string | null;
       if (idempotencyKey && state.investmentIdsByIdempotencyKey.has(idempotencyKey)) {
         throw new UniqueConstraintError("Duplicate investment idempotency key.");
@@ -607,8 +612,7 @@ function createConcurrencyHarness(options: HarnessOptions = {}) {
       if (
         state.roiLedgerEntries.some(
           (entry) =>
-            entry.investmentId === values.investmentId &&
-            entry.earningDate === values.earningDate,
+            entry.investmentId === values.investmentId && entry.earningDate === values.earningDate,
         )
       ) {
         throw new UniqueConstraintError("Duplicate ROI ledger entry.");
@@ -638,7 +642,9 @@ function createConcurrencyHarness(options: HarnessOptions = {}) {
     transactionManager,
     ledgerRepository,
     ledgerTransactionsByType: (transactionType: string) =>
-      state.ledgerTransactions.filter((transaction) => transaction.transactionType === transactionType),
+      state.ledgerTransactions.filter(
+        (transaction) => transaction.transactionType === transactionType,
+      ),
     onlyInvestment: () => Array.from(state.investments.values())[0] ?? null,
     seedSettlementRun: (id: string) => {
       state.settlementRuns.set(id, {

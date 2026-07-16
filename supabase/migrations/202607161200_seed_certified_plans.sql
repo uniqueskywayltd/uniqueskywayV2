@@ -43,11 +43,11 @@ values
     300,
     1500,
     'return_at_maturity',
-    'not_allowed',
+    'allowed_with_penalty',
     timestamptz '2026-01-01 00:00:00+00',
     null,
     'active',
-    '{"slug":"silver"}'::jsonb
+    '{"slug":"silver","earlyExitPenaltyBps":0,"earlyExitEnabled":true}'::jsonb
   ),
   (
     'b1000000-0000-4000-8000-000000000002',
@@ -60,11 +60,11 @@ values
     550,
     3850,
     'return_at_maturity',
-    'not_allowed',
+    'allowed_with_penalty',
     timestamptz '2026-01-01 00:00:00+00',
     null,
     'active',
-    '{"slug":"gold"}'::jsonb
+    '{"slug":"gold","earlyExitPenaltyBps":0,"earlyExitEnabled":true}'::jsonb
   ),
   (
     'b1000000-0000-4000-8000-000000000003',
@@ -77,11 +77,11 @@ values
     600,
     8400,
     'return_at_maturity',
-    'not_allowed',
+    'allowed_with_penalty',
     timestamptz '2026-01-01 00:00:00+00',
     null,
     'active',
-    '{"slug":"classic"}'::jsonb
+    '{"slug":"classic","earlyExitPenaltyBps":0,"earlyExitEnabled":true}'::jsonb
   ),
   (
     'b1000000-0000-4000-8000-000000000004',
@@ -94,11 +94,11 @@ values
     1000,
     30000,
     'return_at_maturity',
-    'not_allowed',
+    'allowed_with_penalty',
     timestamptz '2026-01-01 00:00:00+00',
     null,
     'active',
-    '{"slug":"master"}'::jsonb
+    '{"slug":"master","earlyExitPenaltyBps":0,"earlyExitEnabled":true}'::jsonb
   )
 on conflict (id) do update
 set
@@ -108,4 +108,5 @@ set
   term_days = excluded.term_days,
   daily_roi_bps = excluded.daily_roi_bps,
   total_roi_bps = excluded.total_roi_bps,
+  early_exit_policy = excluded.early_exit_policy,
   metadata = excluded.metadata;

@@ -294,6 +294,7 @@ export const enMessages = {
   "admin.nav.deposits": "Deposits",
   "admin.nav.withdrawals": "Withdrawals",
   "admin.nav.investments": "Investments",
+  "admin.nav.plans": "Packages",
   "admin.nav.settlements": "Settlements",
   "admin.nav.jobs": "Jobs",
   "admin.nav.staff": "Staff",

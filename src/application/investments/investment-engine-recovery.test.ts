@@ -323,8 +323,12 @@ function createRecoveryHarness() {
       idempotencyKey: string,
     ) => findInvestmentByIdempotencyKey(state, idempotencyKey),
     findInvestmentById: async (id: string) => state.investments.get(id) ?? null,
-    lockInvestmentById: async () => undefined,
-    createInvestment: async (_context: DrizzleTransactionContext, values: Record<string, unknown>) => {
+    lockInvestmentById: async (_context: DrizzleTransactionContext, investmentId: string) =>
+      state.investments.get(investmentId) ?? null,
+    createInvestment: async (
+      _context: DrizzleTransactionContext,
+      values: Record<string, unknown>,
+    ) => {
       const id = `investment_${state.investments.size + 1}`;
       const investment = createInvestmentRecord(id, {
         ...values,
@@ -567,7 +571,9 @@ function createRecoveryHarness() {
     runsByStatus: (status: string) =>
       Array.from(state.settlementRuns.values()).filter((run) => run.status === status),
     ledgerTransactionsByType: (transactionType: string) =>
-      state.ledgerTransactions.filter((transaction) => transaction.transactionType === transactionType),
+      state.ledgerTransactions.filter(
+        (transaction) => transaction.transactionType === transactionType,
+      ),
     seedActiveInvestment: (id: string, overrides: InvestmentOverrides) => {
       const investment = createInvestmentRecord(id, {
         userId: "user_1",
@@ -636,7 +642,7 @@ function createInvestmentRecord(id: string, overrides: Record<string, unknown>):
 
 function findInvestmentByIdempotencyKey(state: RecoveryState, idempotencyKey: string) {
   const investmentId = state.investmentIdsByIdempotencyKey.get(idempotencyKey);
-  return investmentId ? state.investments.get(investmentId) ?? null : null;
+  return investmentId ? (state.investments.get(investmentId) ?? null) : null;
 }
 
 function updateInvestment(

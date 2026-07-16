@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   MICRO_MINOR_UNITS_PER_MINOR,
+  calculateContinuousLiveAccrual,
   calculateDailyRoi,
   calculateLiveEarnings,
   calculatePromisedRoiMinor,
@@ -80,6 +81,37 @@ describe("ROI math", () => {
     expect(live.previewedDays).toBe(2);
     expect(live.liveRoiMicroMinor).toBe(2_000n * MICRO_MINOR_UNITS_PER_MINOR);
     expect(live.liveRoiMinorFloor).toBe(2_000n);
+  });
+
+  it("accrues continuous live ROI per second without floating point money", () => {
+    // Gold: 5.5% daily on $30,000 → $1,650/day → ~1.9097¢ per second
+    const live = calculateContinuousLiveAccrual({
+      principalMinor: 3_000_000n,
+      dailyRoiBps: 550,
+      activatedAt: new Date("2026-07-16T12:00:00.000Z"),
+      termDays: 7,
+      postedRoiMinor: 0n,
+      promisedRoiMinor: 1_155_000n,
+      now: new Date("2026-07-16T12:00:01.000Z"),
+    });
+
+    expect(live.visualOnly).toBe(true);
+    expect(live.dailyRoiMinorFloor).toBe(165_000n);
+    expect(live.elapsedSeconds).toBe(1);
+    expect(live.accruedRoiMinor).toBe(1n);
+    expect(live.todayEarningsMinor).toBe(1n);
+    expect(live.currentValueMinor).toBe(3_000_001n);
+
+    const afterHour = calculateContinuousLiveAccrual({
+      principalMinor: 3_000_000n,
+      dailyRoiBps: 550,
+      activatedAt: new Date("2026-07-16T12:00:00.000Z"),
+      termDays: 7,
+      postedRoiMinor: 0n,
+      promisedRoiMinor: 1_155_000n,
+      now: new Date("2026-07-16T13:00:00.000Z"),
+    });
+    expect(afterHour.accruedRoiMinor).toBe(6_875n); // $68.75
   });
 
   it("proves capped ROI across deterministic randomized inputs", () => {

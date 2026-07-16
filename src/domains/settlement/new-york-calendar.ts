@@ -72,6 +72,39 @@ export function minNewYorkDate(left: string, right: string): NewYorkDate {
   return (compareNewYorkDates(left, right) <= 0 ? left : right) as NewYorkDate;
 }
 
+const newYorkHourFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: NEW_YORK_TIME_ZONE,
+  hour: "2-digit",
+  hourCycle: "h23",
+});
+
+/** UTC instant of 00:00:00 America/New_York on the given NY calendar date. */
+export function newYorkDateAtMidnightUtc(nyDate: string): Date {
+  const { year, month, day } = parseDate(nyDate);
+
+  for (const utcHour of [4, 5] as const) {
+    const candidate = new Date(Date.UTC(year, month - 1, day, utcHour, 0, 0, 0));
+    if (toNewYorkDate(candidate) !== nyDate) continue;
+    const hour = newYorkHourFormatter
+      .formatToParts(candidate)
+      .find((part) => part.type === "hour")?.value;
+    if (hour === "00") return candidate;
+  }
+
+  throw new Error(`Unable to resolve New York midnight for ${nyDate}.`);
+}
+
+/** Next New York midnight strictly after `from`. */
+export function nextNewYorkMidnightUtc(from: Date): Date {
+  const nextDate = addNewYorkDays(toNewYorkDate(from), 1);
+  return newYorkDateAtMidnightUtc(nextDate);
+}
+
+export function secondsUntilNextNewYorkMidnight(from: Date): number {
+  const next = nextNewYorkMidnightUtc(from);
+  return Math.max(0, Math.floor((next.getTime() - from.getTime()) / 1000));
+}
+
 function parseDate(date: string): { year: number; month: number; day: number } {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
 

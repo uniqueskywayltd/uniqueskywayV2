@@ -189,6 +189,86 @@ export function calculateLiveEarnings(input: LiveEarningsInput): LiveEarningsRes
   };
 }
 
+/** Wall-clock seconds in a nominal day — used only for continuous live display / early-exit accrual. */
+export const SECONDS_PER_DAY = 86_400n;
+
+export interface ContinuousLiveAccrualInput {
+  principalMinor: bigint;
+  dailyRoiBps: number;
+  activatedAt: Date;
+  termDays: number;
+  postedRoiMinor: bigint;
+  promisedRoiMinor?: bigint | null;
+  now: Date;
+}
+
+export interface ContinuousLiveAccrualResult {
+  calculationVersion: typeof ROI_CALCULATION_VERSION;
+  dailyRoiMinorFloor: bigint;
+  elapsedSeconds: number;
+  accruedRoiMinor: bigint;
+  todayEarningsMinor: bigint;
+  totalLiveEarningsMinor: bigint;
+  currentValueMinor: bigint;
+  unpostedAccruedMinor: bigint;
+  visualOnly: true;
+}
+
+/**
+ * Continuous per-second accrual for dashboard display and early-exit settlement.
+ * Visual-only until posted via ledger (daily settlement or stop/maturity).
+ * Formula: floor(principal × dailyRoiBps × elapsedSeconds / (10_000 × 86_400)).
+ */
+export function calculateContinuousLiveAccrual(
+  input: ContinuousLiveAccrualInput,
+): ContinuousLiveAccrualResult {
+  assertNonNegativeBigint(input.principalMinor, "principalMinor");
+  assertNonNegativeBigint(input.postedRoiMinor, "postedRoiMinor");
+  assertNonNegativeInteger(input.dailyRoiBps, "dailyRoiBps");
+
+  if (!Number.isInteger(input.termDays) || input.termDays <= 0) {
+    throw new Error("termDays must be a positive integer.");
+  }
+
+  const dailyRoiMinorFloor =
+    (input.principalMinor * BigInt(input.dailyRoiBps)) / BASIS_POINTS_DIVISOR;
+
+  const rawElapsedMs = input.now.getTime() - input.activatedAt.getTime();
+  const cappedElapsedMs = Math.max(
+    0,
+    Math.min(rawElapsedMs, Number(BigInt(input.termDays) * SECONDS_PER_DAY * 1000n)),
+  );
+  const elapsedSeconds = Math.floor(cappedElapsedMs / 1000);
+
+  let accruedRoiMinor =
+    (input.principalMinor * BigInt(input.dailyRoiBps) * BigInt(elapsedSeconds)) /
+    (BASIS_POINTS_DIVISOR * SECONDS_PER_DAY);
+
+  if (input.promisedRoiMinor !== undefined && input.promisedRoiMinor !== null) {
+    assertNonNegativeBigint(input.promisedRoiMinor, "promisedRoiMinor");
+    if (accruedRoiMinor > input.promisedRoiMinor) {
+      accruedRoiMinor = input.promisedRoiMinor;
+    }
+  }
+
+  const unpostedAccruedMinor =
+    accruedRoiMinor > input.postedRoiMinor ? accruedRoiMinor - input.postedRoiMinor : 0n;
+  const todayEarningsMinor = unpostedAccruedMinor;
+  const totalLiveEarningsMinor = input.postedRoiMinor + unpostedAccruedMinor;
+
+  return {
+    calculationVersion: ROI_CALCULATION_VERSION,
+    dailyRoiMinorFloor,
+    elapsedSeconds,
+    accruedRoiMinor,
+    todayEarningsMinor,
+    totalLiveEarningsMinor,
+    currentValueMinor: input.principalMinor + totalLiveEarningsMinor,
+    unpostedAccruedMinor,
+    visualOnly: true,
+  };
+}
+
 export function proveTermRoi(input: {
   principalMinor: bigint;
   dailyRoiBps: number;
