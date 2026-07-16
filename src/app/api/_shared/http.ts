@@ -262,11 +262,11 @@ function normalizeError(error: unknown, requestId?: string): AppError {
     "Unhandled API error",
   );
 
-  // Safe client message — never leak stack/SQL; include request reference for support.
-  const reference = requestId ? ` Reference: ${requestId}.` : "";
+  // Safe client message — never leak stack/SQL or internal jargon.
   return new AppError({
     code: "INTERNAL_ERROR",
-    message: `Unable to complete this request.${reference} Please try again or contact support if it continues.`,
+    message:
+      "We couldn't complete your request. Please try again. If the problem continues, contact support.",
     cause: error,
   });
 }

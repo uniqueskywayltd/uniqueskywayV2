@@ -77,6 +77,10 @@ export function createPaymentRouteAuditContext(context: RequestSecurityContext) 
 }
 
 export function serializeDepositIntent(deposit: DepositIntentRecord) {
+  const metadata = deposit.providerMetadata ?? {};
+  const evidenceUrl = typeof metadata.evidenceUrl === "string" ? metadata.evidenceUrl : null;
+  const walletAddress = typeof metadata.address === "string" ? metadata.address : null;
+
   return {
     id: deposit.id,
     provider: deposit.provider,
@@ -86,6 +90,10 @@ export function serializeDepositIntent(deposit: DepositIntentRecord) {
     status: deposit.status,
     fundingAsset: deposit.fundingAsset,
     fundingNetwork: deposit.fundingNetwork,
+    transactionHash: deposit.transactionHash,
+    customerNote: deposit.customerNote,
+    evidenceUrl,
+    walletAddress,
     providerAuthorizationUrl: deposit.providerAuthorizationUrl,
     confirmationLedgerTransactionId: deposit.confirmationLedgerTransactionId,
     createdAt: deposit.createdAt.toISOString(),

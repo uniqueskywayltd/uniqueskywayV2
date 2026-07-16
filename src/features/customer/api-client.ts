@@ -1,6 +1,7 @@
 "use client";
 
 import { appPath } from "@/lib/app-path";
+import { friendlyClientError } from "@/lib/friendly-error";
 
 export interface ApiResult<TData> {
   data?: TData;
@@ -8,20 +9,27 @@ export interface ApiResult<TData> {
 }
 
 export async function getCustomerJson<TData>(url: string): Promise<ApiResult<TData>> {
-  const response = await fetch(appPath(url), {
-    method: "GET",
-    credentials: "include",
-  });
-  const payload = (await response.json()) as {
-    data?: TData;
-    error?: { message?: string };
-  };
+  try {
+    const response = await fetch(appPath(url), {
+      method: "GET",
+      credentials: "include",
+    });
+    const payload = (await response.json()) as {
+      data?: TData;
+      error?: { message?: string };
+    };
 
-  if (!response.ok) {
-    return { error: payload.error?.message ?? "Request failed." };
+    if (!response.ok) {
+      return { error: friendlyClientError(payload.error?.message ?? "Request failed.") };
+    }
+
+    return payload.data === undefined ? {} : { data: payload.data };
+  } catch {
+    return {
+      error:
+        "We couldn't complete your request. Please try again. If the problem continues, contact support.",
+    };
   }
-
-  return payload.data === undefined ? {} : { data: payload.data };
 }
 
 export async function patchCustomerJson<TData>(
@@ -29,27 +37,39 @@ export async function patchCustomerJson<TData>(
   body: Record<string, unknown>,
 ): Promise<ApiResult<TData>> {
   const csrfToken = await getCsrfToken();
-  if (!csrfToken) return { error: "Security token could not be created." };
-
-  const response = await fetch(appPath(url), {
-    method: "PATCH",
-    credentials: "include",
-    headers: {
-      "content-type": "application/json",
-      "x-csrf-token": csrfToken,
-    },
-    body: JSON.stringify(body),
-  });
-  const payload = (await response.json()) as {
-    data?: TData;
-    error?: { message?: string };
-  };
-
-  if (!response.ok) {
-    return { error: payload.error?.message ?? "Request failed." };
+  if (!csrfToken) {
+    return {
+      error:
+        "We couldn't complete your request. Please try again. If the problem continues, contact support.",
+    };
   }
 
-  return payload.data === undefined ? {} : { data: payload.data };
+  try {
+    const response = await fetch(appPath(url), {
+      method: "PATCH",
+      credentials: "include",
+      headers: {
+        "content-type": "application/json",
+        "x-csrf-token": csrfToken,
+      },
+      body: JSON.stringify(body),
+    });
+    const payload = (await response.json()) as {
+      data?: TData;
+      error?: { message?: string };
+    };
+
+    if (!response.ok) {
+      return { error: friendlyClientError(payload.error?.message ?? "Request failed.") };
+    }
+
+    return payload.data === undefined ? {} : { data: payload.data };
+  } catch {
+    return {
+      error:
+        "We couldn't complete your request. Please try again. If the problem continues, contact support.",
+    };
+  }
 }
 
 export async function postCustomerJson<TData>(
@@ -58,28 +78,40 @@ export async function postCustomerJson<TData>(
   options?: { idempotencyKey?: string },
 ): Promise<ApiResult<TData>> {
   const csrfToken = await getCsrfToken();
-  if (!csrfToken) return { error: "Security token could not be created." };
-
-  const response = await fetch(appPath(url), {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "content-type": "application/json",
-      "x-csrf-token": csrfToken,
-      ...(options?.idempotencyKey ? { "idempotency-key": options.idempotencyKey } : {}),
-    },
-    body: JSON.stringify(body),
-  });
-  const payload = (await response.json()) as {
-    data?: TData;
-    error?: { message?: string };
-  };
-
-  if (!response.ok) {
-    return { error: payload.error?.message ?? "Request failed." };
+  if (!csrfToken) {
+    return {
+      error:
+        "We couldn't complete your request. Please try again. If the problem continues, contact support.",
+    };
   }
 
-  return payload.data === undefined ? {} : { data: payload.data };
+  try {
+    const response = await fetch(appPath(url), {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "content-type": "application/json",
+        "x-csrf-token": csrfToken,
+        ...(options?.idempotencyKey ? { "idempotency-key": options.idempotencyKey } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+    const payload = (await response.json()) as {
+      data?: TData;
+      error?: { message?: string };
+    };
+
+    if (!response.ok) {
+      return { error: friendlyClientError(payload.error?.message ?? "Request failed.") };
+    }
+
+    return payload.data === undefined ? {} : { data: payload.data };
+  } catch {
+    return {
+      error:
+        "We couldn't complete your request. Please try again. If the problem continues, contact support.",
+    };
+  }
 }
 
 export async function postCustomerForm<TData>(
@@ -87,26 +119,38 @@ export async function postCustomerForm<TData>(
   body: FormData,
 ): Promise<ApiResult<TData>> {
   const csrfToken = await getCsrfToken();
-  if (!csrfToken) return { error: "Security token could not be created." };
-
-  const response = await fetch(appPath(url), {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "x-csrf-token": csrfToken,
-    },
-    body,
-  });
-  const payload = (await response.json()) as {
-    data?: TData;
-    error?: { message?: string };
-  };
-
-  if (!response.ok) {
-    return { error: payload.error?.message ?? "Request failed." };
+  if (!csrfToken) {
+    return {
+      error:
+        "We couldn't complete your request. Please try again. If the problem continues, contact support.",
+    };
   }
 
-  return payload.data === undefined ? {} : { data: payload.data };
+  try {
+    const response = await fetch(appPath(url), {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "x-csrf-token": csrfToken,
+      },
+      body,
+    });
+    const payload = (await response.json()) as {
+      data?: TData;
+      error?: { message?: string };
+    };
+
+    if (!response.ok) {
+      return { error: friendlyClientError(payload.error?.message ?? "Request failed.") };
+    }
+
+    return payload.data === undefined ? {} : { data: payload.data };
+  } catch {
+    return {
+      error:
+        "We couldn't complete your request. Please try again. If the problem continues, contact support.",
+    };
+  }
 }
 
 async function getCsrfToken(): Promise<string | null> {

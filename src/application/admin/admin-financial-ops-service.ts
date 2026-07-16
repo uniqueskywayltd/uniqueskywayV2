@@ -89,12 +89,26 @@ export interface DepositDetailsView {
   deposit: DepositIntentRecord;
   providerEvents: PaymentProviderEventRecord[];
   notes: AdminEntityNoteRecord[];
+  customer: {
+    userId: string;
+    email: string | null;
+    legalName: string | null;
+    displayName: string | null;
+    accountNumber: string | null;
+  };
 }
 
 export interface WithdrawalDetailsView {
   withdrawal: WithdrawalRequestRecord;
   providerEvents: PaymentProviderEventRecord[];
   notes: AdminEntityNoteRecord[];
+  customer: {
+    userId: string;
+    email: string | null;
+    legalName: string | null;
+    displayName: string | null;
+    accountNumber: string | null;
+  };
 }
 
 export interface SearchInvestmentsResultView {
@@ -163,15 +177,16 @@ export class AdminFinancialOpsService {
 
     const deposit = await this.deps.paymentRepository.findDepositIntentById(depositId);
     if (!deposit) {
-      throw new AppError({ code: "NOT_FOUND", message: "Deposit intent was not found." });
+      throw new AppError({ code: "NOT_FOUND", message: "Deposit was not found." });
     }
 
-    const [providerEvents, notes] = await Promise.all([
+    const [providerEvents, notes, customer] = await Promise.all([
       this.deps.paymentRepository.findProviderEventsRelatedToReference(deposit.providerIntentId),
       this.deps.operationsRepository.listAdminEntityNotes("deposit_intent", depositId, 20),
+      this.loadCustomerSummary(deposit.userId),
     ]);
 
-    return { deposit, providerEvents, notes };
+    return { deposit, providerEvents, notes, customer };
   }
 
   async getDepositTimeline(depositId: string, limit = 50): Promise<AuditLogRecord[]> {
@@ -266,19 +281,35 @@ export class AdminFinancialOpsService {
 
     const withdrawal = await this.deps.paymentRepository.findWithdrawalById(withdrawalId);
     if (!withdrawal) {
-      throw new AppError({ code: "NOT_FOUND", message: "Withdrawal request was not found." });
+      throw new AppError({ code: "NOT_FOUND", message: "Withdrawal was not found." });
     }
 
-    const [providerEvents, notes] = await Promise.all([
+    const [providerEvents, notes, customer] = await Promise.all([
       withdrawal.providerPayoutReference
         ? this.deps.paymentRepository.findProviderEventsRelatedToReference(
             withdrawal.providerPayoutReference,
           )
         : Promise.resolve([] as PaymentProviderEventRecord[]),
       this.deps.operationsRepository.listAdminEntityNotes("withdrawal_request", withdrawalId, 20),
+      this.loadCustomerSummary(withdrawal.userId),
     ]);
 
-    return { withdrawal, providerEvents, notes };
+    return { withdrawal, providerEvents, notes, customer };
+  }
+
+  private async loadCustomerSummary(userId: string) {
+    const [user, profile, account] = await Promise.all([
+      this.deps.identityRepository.findUserById(userId),
+      this.deps.coreRepository.findCustomerProfileByUserId(userId),
+      this.deps.coreRepository.findCustomerAccountByUserId(userId),
+    ]);
+    return {
+      userId,
+      email: user?.email ?? null,
+      legalName: profile?.legalName ?? null,
+      displayName: profile?.displayName ?? null,
+      accountNumber: account?.accountNumber ?? null,
+    };
   }
 
   async getWithdrawalTimeline(withdrawalId: string, limit = 50): Promise<AuditLogRecord[]> {

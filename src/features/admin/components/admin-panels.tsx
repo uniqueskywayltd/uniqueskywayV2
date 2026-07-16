@@ -29,7 +29,14 @@ import {
 } from "@/components/ui/dialog";
 
 import { getAdminJson, mutateAdminFormData, mutateAdminJson } from "../api-client";
+import {
+  formatAdminDateTime,
+  formatUsdFromMinor,
+  friendlyClientError,
+  humanizeStatus,
+} from "../lib/presentation";
 import { AdminDataTable, AdminMetricGrid, AdminToolbar } from "./admin-data-table";
+import { AdminInfoRow, AdminInfoSection, AdminStatusBadge } from "./admin-info";
 import {
   AdminEmptyBlock,
   AdminErrorBlock,
@@ -122,10 +129,7 @@ export function OverviewPanel() {
 
   return (
     <div className="space-y-8">
-      <AdminPageHeader
-        title="Executive dashboard"
-        description="Live operational snapshot across customers, money movement, and system health."
-      />
+      <AdminPageHeader title="Dashboard" description="What needs your attention right now." />
 
       <section className="space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -389,7 +393,7 @@ export function CustomersPanel() {
     <div>
       <AdminPageHeader
         title="Customers"
-        description="Search, filter, and open customer administration records. Select rows to suspend, reactivate, lock, unlock, or delete."
+        description="Search customers and manage their accounts."
         action={
           <Button asChild type="button">
             <Link href="/admin/customers/new">Create customer</Link>
@@ -743,10 +747,10 @@ export function CustomerDetailPanel() {
     <div>
       <AdminPageHeader
         title={profile?.displayName ?? user?.email ?? "Customer"}
-        description="Customer administration for certified account records."
+        description="Manage this customer's account and wallet."
         action={
           <Button type="button" variant="outline" onClick={() => router.push("/admin/customers")}>
-            Back
+            Back to Customers
           </Button>
         }
       />
@@ -757,16 +761,16 @@ export function CustomerDetailPanel() {
       ) : null}
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground uppercase">Email</p>
+          <p className="text-xs text-muted-foreground uppercase">Email Address</p>
           <p className="mt-1 text-sm font-medium">{user?.email ?? "—"}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground uppercase">Status</p>
-          <p className="mt-1 text-sm font-medium">{user?.status ?? "—"}</p>
+          <p className="text-xs text-muted-foreground uppercase">Current Status</p>
+          <p className="mt-1 text-sm font-medium">{humanizeStatus(user?.status ?? "")}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground uppercase">KYC</p>
-          <p className="mt-1 text-sm font-medium">{profile?.kycStatus ?? "—"}</p>
+          <p className="text-xs text-muted-foreground uppercase">Identity Check</p>
+          <p className="mt-1 text-sm font-medium">{humanizeStatus(profile?.kycStatus ?? "")}</p>
         </Card>
       </div>
       <div className="mb-6 flex flex-wrap gap-2">
@@ -925,9 +929,7 @@ export function CustomerDetailPanel() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm status change</DialogTitle>
-            <DialogDescription>
-              This updates the customer account status through the certified admin customer service.
-            </DialogDescription>
+            <DialogDescription>This updates the customer account status.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmOpen(false)}>
@@ -1490,16 +1492,17 @@ export function DepositsPanel() {
   return (
     <ResourceListPage
       title="Deposits"
-      description="Review deposit intents through the certified deposit engine wrappers."
+      description="Review customer deposits and approve or reject them."
       searchLabel="Search deposits"
       q={q}
       setQ={setQ}
       status={status}
       setStatus={setStatus}
       statusOptions={[
-        { value: "pending", label: "Pending" },
-        { value: "confirmed", label: "Confirmed" },
+        { value: "pending", label: "Awaiting Review" },
+        { value: "confirmed", label: "Approved" },
         { value: "failed", label: "Failed" },
+        { value: "cancelled", label: "Rejected" },
       ]}
       state={state}
       error={error}
@@ -1512,14 +1515,18 @@ export function DepositsPanel() {
         { key: "reference", header: "Reference", cell: (row) => row.reference },
         {
           key: "status",
-          header: "Status",
-          cell: (row) => <Badge variant="secondary">{row.status}</Badge>,
+          header: "Current Status",
+          cell: (row) => <AdminStatusBadge status={row.status} />,
         },
-        { key: "amount", header: "Amount (minor)", cell: (row) => row.amountMinor },
+        {
+          key: "amount",
+          header: "Amount",
+          cell: (row) => formatUsdFromMinor(row.amountMinor),
+        },
         {
           key: "created",
-          header: "Created",
-          cell: (row) => (row.createdAt ? new Date(row.createdAt).toLocaleString() : "—"),
+          header: "Submitted",
+          cell: (row) => formatAdminDateTime(row.createdAt),
         },
       ]}
     />
@@ -1546,16 +1553,17 @@ export function WithdrawalsPanel() {
   return (
     <ResourceListPage
       title="Withdrawals"
-      description="Review withdrawal requests through the certified withdrawal engine wrappers."
+      description="Review customer withdrawal requests and take action."
       searchLabel="Search withdrawals"
       q={q}
       setQ={setQ}
       status={status}
       setStatus={setStatus}
       statusOptions={[
-        { value: "under_review", label: "Under review" },
+        { value: "under_review", label: "Under Review" },
         { value: "approved", label: "Approved" },
         { value: "paid", label: "Paid" },
+        { value: "rejected", label: "Rejected" },
       ]}
       state={state}
       error={error}
@@ -1568,14 +1576,18 @@ export function WithdrawalsPanel() {
         { key: "reference", header: "Reference", cell: (row) => row.reference },
         {
           key: "status",
-          header: "Status",
-          cell: (row) => <Badge variant="secondary">{row.status}</Badge>,
+          header: "Current Status",
+          cell: (row) => <AdminStatusBadge status={row.status} />,
         },
-        { key: "amount", header: "Amount (minor)", cell: (row) => row.amountMinor },
+        {
+          key: "amount",
+          header: "Amount",
+          cell: (row) => formatUsdFromMinor(row.amountMinor),
+        },
         {
           key: "created",
-          header: "Created",
-          cell: (row) => (row.createdAt ? new Date(row.createdAt).toLocaleString() : "—"),
+          header: "Submitted",
+          cell: (row) => formatAdminDateTime(row.createdAt),
         },
       ]}
     />
@@ -1681,7 +1693,7 @@ export function InvestmentsPanel() {
     <div>
       <ResourceListPage
         title="Investments"
-        description="Create and manage certified investments. New investments fund from available balance (or auto-credit shortfall when enabled)."
+        description="Create and manage customer investments."
         searchLabel="Search investments"
         q={q}
         setQ={setQ}
@@ -1691,7 +1703,7 @@ export function InvestmentsPanel() {
           { value: "active", label: "Active" },
           { value: "matured", label: "Matured" },
           { value: "pending", label: "Pending" },
-          { value: "cancelled", label: "Cancelled" },
+          { value: "cancelled", label: "Stopped Early" },
         ]}
         state={state}
         error={error}
@@ -1711,21 +1723,20 @@ export function InvestmentsPanel() {
           </div>
         }
         columns={[
-          { key: "id", header: "Investment", cell: (row) => row.id },
           {
             key: "status",
-            header: "Status",
-            cell: (row) => <Badge variant="secondary">{row.status}</Badge>,
+            header: "Current Status",
+            cell: (row) => <AdminStatusBadge status={row.status} />,
           },
           {
             key: "principal",
-            header: "Principal",
-            cell: (row) => `$${(Number(row.amountMinor) / 100).toFixed(2)}`,
+            header: "Amount",
+            cell: (row) => formatUsdFromMinor(row.amountMinor),
           },
           {
             key: "created",
-            header: "Created",
-            cell: (row) => (row.createdAt ? new Date(row.createdAt).toLocaleString() : "—"),
+            header: "Submitted",
+            cell: (row) => formatAdminDateTime(row.createdAt),
           },
         ]}
       />
@@ -1735,16 +1746,16 @@ export function InvestmentsPanel() {
           <DialogHeader>
             <DialogTitle>Add investment</DialogTitle>
             <DialogDescription>
-              Activates a certified plan for a customer. When funding shortfall is enabled,
-              available balance is topped up automatically before activation.
+              Start an investment plan for a customer. When automatic funding is enabled, the wallet
+              is topped up if the balance is too low.
             </DialogDescription>
           </DialogHeader>
           <label className="grid gap-1.5 text-sm">
-            <span className="font-medium">Customer user ID</span>
+            <span className="font-medium">Customer ID</span>
             <Input
               value={userId}
               onChange={(event) => setUserId(event.target.value.trim())}
-              placeholder="UUID from customer detail page"
+              placeholder="Customer ID from the customer page"
             />
           </label>
           <label className="grid gap-1.5 text-sm">
@@ -1893,13 +1904,7 @@ function ResourceListPage<
   );
 }
 
-export function DepositDetailPanel() {
-  return <FinancialDetailView kind="deposit" />;
-}
-
-export function WithdrawalDetailPanel() {
-  return <FinancialDetailView kind="withdrawal" />;
-}
+export { DepositDetailPanel, WithdrawalDetailPanel } from "./financial-detail-panel";
 
 export function InvestmentDetailPanel() {
   const params = useParams<{ investmentId: string }>();
@@ -1916,7 +1921,10 @@ export function InvestmentDetailPanel() {
       `/api/admin/investments/${investmentId}`,
     );
     if (result.error) {
-      setError({ message: result.error, ...(result.status ? { status: result.status } : {}) });
+      setError({
+        message: friendlyClientError(result.error),
+        ...(result.status ? { status: result.status } : {}),
+      });
       setState("error");
       return;
     }
@@ -1941,11 +1949,11 @@ export function InvestmentDetailPanel() {
     );
     setBusy(false);
     if (result.error) {
-      setFeedback(result.error);
+      setFeedback(friendlyClientError(result.error));
       return;
     }
     setFeedback(
-      "Investment cancelled and principal released to available balance when applicable.",
+      "Investment stopped. The principal was returned to the customer's available balance when applicable.",
     );
     await load();
   }
@@ -1967,15 +1975,20 @@ export function InvestmentDetailPanel() {
   const investment = (detail?.investment ?? {}) as Record<string, unknown>;
   const status = String(investment.status ?? "");
   const canCancel = status === "active" || status === "pending" || status === "maturing";
+  const planName = String(
+    (detail?.plan as { name?: string } | undefined)?.name ??
+      investment.planName ??
+      "Investment plan",
+  );
 
   return (
     <div className="space-y-4">
       <AdminPageHeader
-        title="Investment detail"
-        description="Review schedule and cancel active investments when needed."
+        title="Investment Review"
+        description="Review this investment and stop it early if needed."
         action={
           <Button asChild type="button" variant="outline">
-            <Link href="/admin/investments">Back</Link>
+            <Link href="/admin/investments">Back to Investments</Link>
           </Button>
         }
       />
@@ -1984,186 +1997,53 @@ export function InvestmentDetailPanel() {
           <AlertDescription>{feedback}</AlertDescription>
         </Alert>
       ) : null}
-      <Card className="space-y-3 p-4">
-        <div className="grid gap-2 sm:grid-cols-2">
-          <p className="text-sm">
-            <span className="text-muted-foreground">ID:</span> {String(investment.id ?? "")}
-          </p>
-          <p className="text-sm">
-            <span className="text-muted-foreground">Status:</span> {status}
-          </p>
-          <p className="text-sm">
-            <span className="text-muted-foreground">Customer:</span>{" "}
-            {String(investment.userId ?? "")}
-          </p>
-          <p className="text-sm">
-            <span className="text-muted-foreground">Principal:</span> $
-            {(Number(investment.principalMinor ?? 0) / 100).toFixed(2)}
-          </p>
-          <p className="text-sm">
-            <span className="text-muted-foreground">Posted ROI:</span> $
-            {(Number(detail?.postedRoiMinor ?? 0) / 100).toFixed(2)}
-          </p>
-        </div>
-        {canCancel ? (
-          <div className="space-y-2 border-t pt-3">
-            <label className="grid gap-1.5 text-sm">
-              <span className="font-medium">Cancel reason</span>
-              <Input
-                value={cancelReason}
-                onChange={(event) => setCancelReason(event.target.value)}
-                placeholder="Optional reason"
-              />
-            </label>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={busy}
-              onClick={() => void cancelInvestment()}
-            >
-              {busy ? "Cancelling…" : "Cancel investment"}
-            </Button>
-          </div>
-        ) : null}
-      </Card>
-      <Card className="p-4">
-        <pre className="overflow-x-auto text-xs">{JSON.stringify(detail, null, 2)}</pre>
-      </Card>
-    </div>
-  );
-}
-
-function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
-  const params = useParams<{ depositId?: string; withdrawalId?: string }>();
-  const id = kind === "deposit" ? params.depositId : params.withdrawalId;
-  const [state, setState] = useState<LoadState>("loading");
-  const [error, setError] = useState<{ message: string; status?: number } | null>(null);
-  const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
-  const [reason, setReason] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [confirmAction, setConfirmAction] = useState<"approve" | "reject" | "complete" | null>(
-    null,
-  );
-
-  const base = kind === "deposit" ? `/api/admin/deposits/${id}` : `/api/admin/withdrawals/${id}`;
-
-  const load = useCallback(async () => {
-    const result = await getAdminJson<Record<string, unknown>>(base);
-    if (result.error) {
-      setError({ message: result.error, ...(result.status ? { status: result.status } : {}) });
-      setState("error");
-      return;
-    }
-    setDetail(result.data ?? null);
-    setState("ready");
-  }, [base]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  async function runAction() {
-    if (!confirmAction) return;
-    setBusy(true);
-    const path = confirmAction === "complete" ? `${base}/complete` : `${base}/${confirmAction}`;
-    const result = await mutateAdminJson("POST", path, {
-      reason: reason.trim() || "Administrative review",
-    });
-    setBusy(false);
-    setConfirmAction(null);
-    if (result.error) {
-      setFeedback(result.error);
-      return;
-    }
-    setFeedback(`${confirmAction} completed.`);
-    setReason("");
-    await load();
-  }
-
-  if (state === "loading") return <AdminLoadingBlock />;
-  if (state === "error" && error) {
-    return (
-      <AdminErrorBlock
-        message={error.message}
-        {...(error.status ? { status: error.status } : {})}
-        onRetry={() => {
-          setState("loading");
-          void load();
-        }}
-      />
-    );
-  }
-
-  return (
-    <div>
-      <AdminPageHeader
-        title={kind === "deposit" ? "Deposit detail" : "Withdrawal detail"}
-        description="Actions wrap certified financial engines. Reasons are required for review decisions."
-      />
-      {feedback ? (
-        <p className="mb-4 rounded-md border bg-card px-3 py-2 text-sm" role="status">
-          {feedback}
-        </p>
-      ) : null}
-      <Card className="mb-4 space-y-3 p-4">
-        <label className="grid gap-1.5 text-sm">
-          <span className="font-medium">Review reason</span>
-          <Input
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            aria-label="Review reason"
-            placeholder="Required for approve / reject"
-          />
-        </label>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" disabled={busy} onClick={() => setConfirmAction("approve")}>
-            Approve
-          </Button>
+      <div>
+        <AdminStatusBadge status={status || "unknown"} />
+      </div>
+      <AdminInfoSection title="Investment Information">
+        <AdminInfoRow label="Plan" value={planName} />
+        <AdminInfoRow
+          label="Principal"
+          value={formatUsdFromMinor(String(investment.principalMinor ?? 0))}
+          emphasize
+        />
+        <AdminInfoRow
+          label="Earnings Posted"
+          value={formatUsdFromMinor(String(detail?.postedRoiMinor ?? 0))}
+        />
+        <AdminInfoRow
+          label="Submitted"
+          value={formatAdminDateTime(String(investment.createdAt ?? ""))}
+        />
+        <AdminInfoRow
+          label="Last Updated"
+          value={formatAdminDateTime(String(investment.updatedAt ?? ""))}
+        />
+        <AdminInfoRow label="Current Status" value={humanizeStatus(status)} />
+      </AdminInfoSection>
+      {canCancel ? (
+        <Card className="space-y-3 p-5">
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Stop Investment
+          </h2>
+          <label className="grid gap-1.5 text-sm">
+            <span className="font-medium">Reason</span>
+            <Input
+              value={cancelReason}
+              onChange={(event) => setCancelReason(event.target.value)}
+              placeholder="Optional note for this decision"
+            />
+          </label>
           <Button
             type="button"
             variant="destructive"
             disabled={busy}
-            onClick={() => setConfirmAction("reject")}
+            onClick={() => void cancelInvestment()}
           >
-            Reject
+            {busy ? "Stopping…" : "Stop Investment"}
           </Button>
-          {kind === "withdrawal" ? (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy}
-              onClick={() => setConfirmAction("complete")}
-            >
-              Mark completed
-            </Button>
-          ) : null}
-        </div>
-      </Card>
-      <Card className="p-4">
-        <pre className="overflow-x-auto text-xs">{JSON.stringify(detail, null, 2)}</pre>
-      </Card>
-      <Dialog
-        open={confirmAction !== null}
-        onOpenChange={(open) => !open && setConfirmAction(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm {confirmAction}</DialogTitle>
-            <DialogDescription>
-              This calls the certified {kind} engine. No ledger bypass is performed by the UI.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setConfirmAction(null)}>
-              Cancel
-            </Button>
-            <Button type="button" disabled={busy} onClick={() => void runAction()}>
-              {busy ? "Working…" : "Confirm"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </Card>
+      ) : null}
     </div>
   );
 }

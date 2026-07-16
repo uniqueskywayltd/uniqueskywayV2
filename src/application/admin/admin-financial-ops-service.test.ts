@@ -256,6 +256,11 @@ function createFixture(options: FixtureOptions = {}) {
     findUserByAuthUserId: vi.fn(async (authUserId: string) =>
       authUserId === adminAppUser.authUserId ? adminAppUser : null,
     ),
+    findUserById: vi.fn(async (userId: string) => ({
+      id: userId,
+      email: "customer@example.com",
+      status: "active" as const,
+    })),
     findAdminProfileByUserId: vi.fn(async (userId: string) =>
       userId === adminAppUser.id
         ? {
@@ -273,6 +278,16 @@ function createFixture(options: FixtureOptions = {}) {
     listActivePermissionKeysForUser: vi.fn(async (userId: string) =>
       userId === adminAppUser.id ? permissionKeysForRoles(roleKeys) : [],
     ),
+  };
+
+  const coreRepository = {
+    findCustomerProfileByUserId: vi.fn(async () => ({
+      legalName: "Alex Customer",
+      displayName: "alex",
+    })),
+    findCustomerAccountByUserId: vi.fn(async () => ({
+      accountNumber: "USW-1001",
+    })),
   };
 
   const paymentRepository = {
@@ -392,7 +407,7 @@ function createFixture(options: FixtureOptions = {}) {
     clock,
     transactionManager: transactionManager as never,
     identityRepository: identityRepository as never,
-    coreRepository: {} as never,
+    coreRepository: coreRepository as never,
     paymentRepository: paymentRepository as never,
     ledgerRepository: ledgerRepository as never,
     investmentRepository: investmentRepository as never,

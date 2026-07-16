@@ -11,7 +11,9 @@ import { Badge, Button, Card, Textarea } from "@/components/ui";
 import { appPath } from "@/lib/app-path";
 
 import { getAdminJson, mutateAdminJson } from "../api-client";
+import { formatUsdFromMinor, humanizeStatus } from "../lib/presentation";
 import { AdminDataTable, AdminMetricGrid, AdminToolbar } from "./admin-data-table";
+import { AdminPlainRecord } from "./admin-info";
 import {
   AdminEmptyBlock,
   AdminErrorBlock,
@@ -143,11 +145,21 @@ export function SettlementDetailPanel({ runId }: { runId: string }) {
   }
 
   return (
-    <div>
-      <AdminPageHeader title="Settlement run" description="Read-only settlement details." />
-      <Card className="p-4">
-        <pre className="overflow-x-auto text-xs">{JSON.stringify(detail, null, 2)}</pre>
-      </Card>
+    <div className="space-y-4">
+      <AdminPageHeader
+        title="Settlement run"
+        description="Details for this settlement batch."
+        action={
+          <Button asChild type="button" variant="outline">
+            <Link href="/admin/settlements">Back to Settlements</Link>
+          </Button>
+        }
+      />
+      <AdminPlainRecord
+        title="Settlement Summary"
+        record={(detail?.run as Record<string, unknown> | undefined) ?? detail}
+        preferKeys={["status", "settlementDate", "runType", "createdAt", "updatedAt"]}
+      />
     </div>
   );
 }
@@ -295,11 +307,29 @@ export function StaffDetailPanel({ userId }: { userId: string }) {
   }
 
   return (
-    <div>
-      <AdminPageHeader title="Staff detail" description="Roles, sessions, and login history." />
-      <Card className="p-4">
-        <pre className="overflow-x-auto text-xs">{JSON.stringify(detail, null, 2)}</pre>
-      </Card>
+    <div className="space-y-4">
+      <AdminPageHeader
+        title="Staff member"
+        description="Roles, sessions, and recent sign-in activity."
+        action={
+          <Button asChild type="button" variant="outline">
+            <Link href="/admin/staff">Back to Staff</Link>
+          </Button>
+        }
+      />
+      <AdminPlainRecord
+        title="Account"
+        record={
+          (detail?.user as Record<string, unknown> | undefined) ??
+          (detail as Record<string, unknown> | null)
+        }
+        preferKeys={["email", "status", "createdAt", "updatedAt"]}
+      />
+      <AdminPlainRecord
+        title="Profile"
+        record={detail?.adminProfile as Record<string, unknown> | undefined}
+        preferKeys={["status", "createdAt", "updatedAt"]}
+      />
     </div>
   );
 }
@@ -462,7 +492,7 @@ export function ReportsPanel() {
     <div>
       <AdminPageHeader
         title="Reports"
-        description="Read-only reporting projections with audited CSV/Excel exports."
+        description="Business summary and downloadable exports."
         action={
           <div className="flex gap-2">
             <Button
@@ -503,7 +533,7 @@ export function ReportsPanel() {
             { label: "Suspended customers", value: customers.suspended ?? 0 },
             { label: "Pending deposits", value: money.pendingDeposits ?? 0 },
             { label: "Pending withdrawals", value: money.pendingWithdrawals ?? 0 },
-            { label: "ROI paid (minor)", value: money.totalRoiPaidMinor ?? "0" },
+            { label: "ROI paid", value: formatUsdFromMinor(money.totalRoiPaidMinor ?? "0") },
           ]}
         />
       ) : null}
@@ -653,14 +683,16 @@ export function SecurityPanel() {
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       <AdminPageHeader
         title="Security center"
-        description="Security events and recent administrative activity."
+        description="Recent security events and administrative activity."
       />
-      <Card className="p-4">
-        <pre className="overflow-x-auto text-xs">{JSON.stringify(payload, null, 2)}</pre>
-      </Card>
+      <AdminPlainRecord
+        title="Overview"
+        record={payload}
+        preferKeys={["status", "openIncidents", "failedLogins24h", "updatedAt"]}
+      />
     </div>
   );
 }
@@ -765,7 +797,7 @@ export function SettingsPanel() {
         typeof setting.value === "number" ||
         typeof setting.value === "boolean"
           ? String(setting.value)
-          : JSON.stringify(setting.value),
+          : formatPlainObject(setting.value),
       description: setting.description,
     }));
     setRows(nextRows);
@@ -800,8 +832,8 @@ export function SettingsPanel() {
   return (
     <div>
       <AdminPageHeader
-        title="System settings"
-        description="Editable platform configuration. Changes persist immediately."
+        title="Platform settings"
+        description="Edit platform options. Changes save immediately."
       />
       {feedback ? (
         <p className="mb-4 rounded-md border bg-card px-3 py-2 text-sm" role="status">
@@ -886,22 +918,20 @@ export function SystemPanel() {
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       <AdminPageHeader
         title="System health"
-        description="Release metadata, queue health, and runtime diagnostics."
+        description="Application status and release information."
       />
       <AdminMetricGrid
         metrics={[
-          { label: "Application", value: String(health?.application ?? "unknown") },
-          { label: "Version", value: String(health?.version ?? "unknown") },
-          { label: "Git commit", value: String(health?.gitCommit ?? "unknown") },
-          { label: "Release tag", value: String(health?.releaseTag ?? "unknown") },
+          { label: "Application", value: String(health?.application ?? "Unknown") },
+          { label: "Version", value: String(health?.version ?? "Unknown") },
+          { label: "Software Version", value: String(health?.gitCommit ?? "Unknown") },
+          { label: "Release", value: String(health?.releaseTag ?? "Unknown") },
         ]}
       />
-      <Card className="p-4">
-        <pre className="overflow-x-auto text-xs">{JSON.stringify(health, null, 2)}</pre>
-      </Card>
+      <AdminPlainRecord title="Additional Status" record={health} />
     </div>
   );
 }
@@ -1036,8 +1066,8 @@ export function EmailTemplatesPanel() {
   return (
     <div>
       <AdminPageHeader
-        title="Email templates"
-        description="Identity and transactional email templates managed by the platform."
+        title="Notifications"
+        description="Email messages sent to customers and administrators."
         action={
           <Button
             type="button"
@@ -1063,18 +1093,18 @@ export function EmailTemplatesPanel() {
         />
       ) : null}
       {state === "ready" && rows.length === 0 ? (
-        <AdminEmptyBlock title="No email templates" />
+        <AdminEmptyBlock title="No notification templates" />
       ) : null}
       {state === "ready" && rows.length > 0 ? (
         <AdminDataTable
           caption="Email templates"
           rows={rows}
           columns={[
-            { key: "key", header: "Key", cell: (row) => row.key },
+            { key: "key", header: "Template", cell: (row) => row.key },
             {
               key: "status",
-              header: "Status",
-              cell: (row) => <Badge variant="secondary">{row.status}</Badge>,
+              header: "Current Status",
+              cell: (row) => <Badge variant="secondary">{humanizeStatus(row.status)}</Badge>,
             },
             { key: "version", header: "Version", cell: (row) => row.currentVersion },
           ]}
@@ -1082,4 +1112,15 @@ export function EmailTemplatesPanel() {
       ) : null}
     </div>
   );
+}
+
+function formatPlainObject(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value !== "object") return String(value);
+  if (Array.isArray(value)) {
+    return value.map((item) => formatPlainObject(item)).join(", ");
+  }
+  return Object.entries(value as Record<string, unknown>)
+    .map(([key, entry]) => `${key}: ${formatPlainObject(entry)}`)
+    .join("; ");
 }

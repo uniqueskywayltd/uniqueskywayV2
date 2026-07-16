@@ -1,6 +1,7 @@
 "use client";
 
 import { appPath } from "@/lib/app-path";
+import { friendlyClientError } from "@/lib/friendly-error";
 
 export interface ApiResult<TData> {
   data?: TData;
@@ -17,7 +18,7 @@ export async function getAdminJson<TData>(url: string): Promise<ApiResult<TData>
     };
     if (!response.ok) {
       return {
-        error: payload.error?.message ?? "Request failed.",
+        error: friendlyClientError(payload.error?.message ?? "Request failed."),
         status: response.status,
       };
     }
@@ -25,7 +26,7 @@ export async function getAdminJson<TData>(url: string): Promise<ApiResult<TData>
       ? { status: response.status }
       : { data: payload.data, status: response.status };
   } catch {
-    return { error: "Network unavailable. Check your connection and retry." };
+    return { error: "We couldn't reach the server. Check your connection and try again." };
   }
 }
 
@@ -35,7 +36,12 @@ export async function mutateAdminJson<TData>(
   body?: Record<string, unknown>,
 ): Promise<ApiResult<TData>> {
   const csrfToken = await getCsrfToken();
-  if (!csrfToken) return { error: "Security token could not be created." };
+  if (!csrfToken) {
+    return {
+      error:
+        "We couldn't complete your request. Please try again. If the problem continues, contact support.",
+    };
+  }
 
   try {
     const init: RequestInit = {
@@ -54,7 +60,7 @@ export async function mutateAdminJson<TData>(
     };
     if (!response.ok) {
       return {
-        error: payload.error?.message ?? "Request failed.",
+        error: friendlyClientError(payload.error?.message ?? "Request failed."),
         status: response.status,
       };
     }
@@ -62,7 +68,7 @@ export async function mutateAdminJson<TData>(
       ? { status: response.status }
       : { data: payload.data, status: response.status };
   } catch {
-    return { error: "Network unavailable. Check your connection and retry." };
+    return { error: "We couldn't reach the server. Check your connection and try again." };
   }
 }
 
@@ -71,7 +77,12 @@ export async function mutateAdminFormData<TData>(
   formData: FormData,
 ): Promise<ApiResult<TData>> {
   const csrfToken = await getCsrfToken();
-  if (!csrfToken) return { error: "Security token could not be created." };
+  if (!csrfToken) {
+    return {
+      error:
+        "We couldn't complete your request. Please try again. If the problem continues, contact support.",
+    };
+  }
 
   try {
     const response = await fetch(appPath(url), {
@@ -86,7 +97,7 @@ export async function mutateAdminFormData<TData>(
     };
     if (!response.ok) {
       return {
-        error: payload.error?.message ?? "Request failed.",
+        error: friendlyClientError(payload.error?.message ?? "Request failed."),
         status: response.status,
       };
     }
@@ -94,7 +105,7 @@ export async function mutateAdminFormData<TData>(
       ? { status: response.status }
       : { data: payload.data, status: response.status };
   } catch {
-    return { error: "Network unavailable. Check your connection and retry." };
+    return { error: "We couldn't reach the server. Check your connection and try again." };
   }
 }
 

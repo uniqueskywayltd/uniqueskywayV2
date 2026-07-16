@@ -26,6 +26,7 @@ export async function GET(request: NextRequest, routeContext: RouteContext) {
     return jsonOk(
       {
         withdrawal: serializeWithdrawalRequest(details.withdrawal),
+        customer: details.customer,
         providerEvents: details.providerEvents.map(serializeAdminProviderEvent),
         notes: details.notes.map(serializeAdminEntityNote),
       },

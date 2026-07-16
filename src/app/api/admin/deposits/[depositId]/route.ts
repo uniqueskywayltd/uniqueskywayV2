@@ -26,6 +26,7 @@ export async function GET(request: NextRequest, routeContext: RouteContext) {
     return jsonOk(
       {
         deposit: serializeDepositIntent(details.deposit),
+        customer: details.customer,
         providerEvents: details.providerEvents.map(serializeAdminProviderEvent),
         notes: details.notes.map(serializeAdminEntityNote),
       },

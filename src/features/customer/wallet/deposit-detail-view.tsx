@@ -106,16 +106,19 @@ export function DepositDetailView({ depositId }: { depositId: string }) {
               />
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Created <DateDisplay value={deposit.createdAt} />
+              Submitted <DateDisplay value={deposit.createdAt} />
               {deposit.confirmedAt ? (
                 <>
                   {" · "}
-                  Confirmed <DateDisplay value={deposit.confirmedAt} />
+                  Approved <DateDisplay value={deposit.confirmedAt} />
                 </>
               ) : null}
             </p>
-            <p className="mt-1 text-sm capitalize text-muted-foreground">
-              Provider: {deposit.provider.replaceAll("_", " ")}
+            <p className="mt-1 text-sm text-muted-foreground">
+              Funding method:{" "}
+              {deposit.provider === "manual"
+                ? "Manual Crypto Deposit"
+                : deposit.provider.replaceAll("_", " ")}
             </p>
           </div>
           <StatusChip tone={status.tone}>{status.label}</StatusChip>
