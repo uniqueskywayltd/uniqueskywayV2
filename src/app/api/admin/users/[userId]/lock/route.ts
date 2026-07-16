@@ -24,31 +24,23 @@ interface RouteContext {
   params: Promise<{ userId: string }>;
 }
 
-const updateCustomerStatusInputSchema = z.object({
-  status: z.enum(["active", "restricted", "closed", "suspended"]),
-  reason: z.string().trim().min(1).max(500).optional(),
+const lockSchema = z.object({
+  reason: z.string().trim().min(1).max(500),
 });
 
-export async function PATCH(request: NextRequest, routeContext: RouteContext) {
+export async function POST(request: NextRequest, routeContext: RouteContext) {
   const context = createRequestContext(request);
-
   try {
     requireSameOrigin(request);
     await requireCsrf(request);
-
     const { userId } = await routeContext.params;
-    const raw = await parseJson(request, updateCustomerStatusInputSchema);
-    const status = raw.status === "suspended" ? "restricted" : raw.status;
+    const input = await parseJson(request, lockSchema);
     const service = await createAdminCustomerService();
-    const details = await service.updateCustomerStatus(
+    const details = await service.lockCustomer(
       userId,
-      {
-        status,
-        ...(raw.reason !== undefined ? { reason: raw.reason } : {}),
-      },
+      input.reason,
       createAdminRouteAuditContext(context),
     );
-
     return jsonOk(
       {
         user: serializeAdminUser(details.user),

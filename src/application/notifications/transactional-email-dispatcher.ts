@@ -1,8 +1,14 @@
 import "server-only";
 
 import type { EmailSender } from "@/application/ports";
+import {
+  PLATFORM_SUPPORT_EMAIL,
+  resolveResendFromAddress,
+  sanitizeResendTagValue,
+} from "@/config/email-identity";
 import { getServerEnv } from "@/config/server-env";
 import type { DrizzleTransactionManager, NotificationRepository } from "@/infrastructure/database";
+import { logger } from "@/infrastructure/logging/logger";
 
 import { renderTransactionalEmail } from "./transactional-email-templates";
 
@@ -24,6 +30,7 @@ export class TransactionalEmailDispatcher {
     const messages = await this.notifications.listQueuedEmails(limit);
     let sent = 0;
     let failed = 0;
+    const from = resolveResendFromAddress(getServerEnv().RESEND_FROM_EMAIL);
 
     for (const message of messages) {
       await this.transactionManager.runInTransaction((tx) =>
@@ -35,16 +42,22 @@ export class TransactionalEmailDispatcher {
           templateKey: message.templateKey,
           metadata: message.metadata,
         });
+        const category = sanitizeResendTagValue(
+          message.templateKey.split(".")[0] ?? "transactional",
+        );
         const result = await this.emailSender.send({
-          from: getServerEnv().RESEND_FROM_EMAIL,
+          from,
           to: message.toEmail,
           subject: rendered.subject,
           html: rendered.html,
           text: rendered.text,
           idempotencyKey: message.idempotencyKey,
+          headers: {
+            "Reply-To": PLATFORM_SUPPORT_EMAIL,
+          },
           tags: [
-            { name: "category", value: message.templateKey.split(".")[0] ?? "transactional" },
-            { name: "template", value: message.templateKey },
+            { name: "category", value: category },
+            { name: "template", value: sanitizeResendTagValue(message.templateKey) },
           ],
         });
 
@@ -53,12 +66,19 @@ export class TransactionalEmailDispatcher {
         );
         sent += 1;
       } catch (error) {
+        const cause = error instanceof Error ? error.message : "Unknown error";
+        logger.error(
+          {
+            event: "email.dispatch.failed",
+            emailMessageId: message.id,
+            templateKey: message.templateKey,
+            toEmail: message.toEmail,
+            cause,
+          },
+          "Transactional email delivery failed",
+        );
         await this.transactionManager.runInTransaction((tx) =>
-          this.notifications.markEmailFailed(
-            tx,
-            message.id,
-            error instanceof Error ? error.message : "Unknown error",
-          ),
+          this.notifications.markEmailFailed(tx, message.id, cause),
         );
         failed += 1;
       }

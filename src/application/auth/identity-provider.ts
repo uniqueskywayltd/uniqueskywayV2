@@ -44,6 +44,19 @@ export interface ResetPasswordWithOtpInput {
   password: string;
 }
 
+export interface AdminCreateUserInput {
+  email: string;
+  password: string;
+  displayName?: string;
+  emailConfirmed?: boolean;
+  mustChangePassword?: boolean;
+}
+
+export interface AdminCreatedUser {
+  authUserId: string;
+  email: string;
+}
+
 export interface IdentityProvider {
   generateSignupEmail(input: GenerateSignupEmailInput): Promise<GeneratedAuthEmail>;
   generateEmailVerificationLink(input: {
@@ -53,6 +66,10 @@ export interface IdentityProvider {
   generatePasswordResetEmail(
     input: GeneratePasswordResetEmailInput,
   ): Promise<GeneratedAuthEmail | null>;
+  adminCreateUser?(input: AdminCreateUserInput): Promise<AdminCreatedUser>;
+  adminDeleteUser?(authUserId: string): Promise<void>;
+  adminUpdatePassword?(authUserId: string, password: string): Promise<void>;
+  adminSetMustChangePassword?(authUserId: string, mustChangePassword: boolean): Promise<void>;
   verifySignupOtp(email: string, token: string): Promise<AuthenticatedIdentity>;
   verifyEmailTokenHash(
     tokenHash: string,

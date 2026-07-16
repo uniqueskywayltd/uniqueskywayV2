@@ -1,11 +1,9 @@
 import type { NextRequest } from "next/server";
-import { z } from "zod";
 
 import {
   createRequestContext,
   jsonError,
   jsonOk,
-  parseJson,
   requireCsrf,
   requireSameOrigin,
 } from "@/app/api/_shared/http";
@@ -24,31 +22,14 @@ interface RouteContext {
   params: Promise<{ userId: string }>;
 }
 
-const updateCustomerStatusInputSchema = z.object({
-  status: z.enum(["active", "restricted", "closed", "suspended"]),
-  reason: z.string().trim().min(1).max(500).optional(),
-});
-
-export async function PATCH(request: NextRequest, routeContext: RouteContext) {
+export async function POST(request: NextRequest, routeContext: RouteContext) {
   const context = createRequestContext(request);
-
   try {
     requireSameOrigin(request);
     await requireCsrf(request);
-
     const { userId } = await routeContext.params;
-    const raw = await parseJson(request, updateCustomerStatusInputSchema);
-    const status = raw.status === "suspended" ? "restricted" : raw.status;
     const service = await createAdminCustomerService();
-    const details = await service.updateCustomerStatus(
-      userId,
-      {
-        status,
-        ...(raw.reason !== undefined ? { reason: raw.reason } : {}),
-      },
-      createAdminRouteAuditContext(context),
-    );
-
+    const details = await service.unlockCustomer(userId, createAdminRouteAuditContext(context));
     return jsonOk(
       {
         user: serializeAdminUser(details.user),

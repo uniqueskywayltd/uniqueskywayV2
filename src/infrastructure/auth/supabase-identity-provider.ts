@@ -251,6 +251,87 @@ export class SupabaseIdentityProvider implements IdentityProvider {
       });
     }
   }
+
+  async adminCreateUser(input: {
+    email: string;
+    password: string;
+    displayName?: string;
+    emailConfirmed?: boolean;
+    mustChangePassword?: boolean;
+  }): Promise<{ authUserId: string; email: string }> {
+    const { data, error } = await this.adminClient.auth.admin.createUser({
+      email: input.email.toLowerCase(),
+      password: input.password,
+      email_confirm: input.emailConfirmed ?? true,
+      user_metadata: {
+        displayName: input.displayName ?? null,
+        must_change_password: input.mustChangePassword ?? true,
+        created_by_admin: true,
+      },
+    });
+
+    if (error || !data.user) {
+      throw new AppError({
+        code: "PROVIDER_ERROR",
+        message: error?.message ?? "Failed to create auth user.",
+        details: { provider: "supabase", operation: "adminCreateUser" },
+      });
+    }
+
+    return {
+      authUserId: data.user.id,
+      email: data.user.email ?? input.email.toLowerCase(),
+    };
+  }
+
+  async adminDeleteUser(authUserId: string): Promise<void> {
+    const { error } = await this.adminClient.auth.admin.deleteUser(authUserId);
+    if (error) {
+      throw new AppError({
+        code: "PROVIDER_ERROR",
+        message: error.message,
+        details: { provider: "supabase", operation: "adminDeleteUser" },
+      });
+    }
+  }
+
+  async adminUpdatePassword(authUserId: string, password: string): Promise<void> {
+    const { error } = await this.adminClient.auth.admin.updateUserById(authUserId, {
+      password,
+      user_metadata: { must_change_password: true },
+    });
+    if (error) {
+      throw new AppError({
+        code: "PROVIDER_ERROR",
+        message: error.message,
+        details: { provider: "supabase", operation: "adminUpdatePassword" },
+      });
+    }
+  }
+
+  async adminSetMustChangePassword(authUserId: string, mustChangePassword: boolean): Promise<void> {
+    const existing = await this.adminClient.auth.admin.getUserById(authUserId);
+    if (existing.error || !existing.data.user) {
+      throw new AppError({
+        code: "NOT_FOUND",
+        message: "Auth user was not found.",
+        details: { provider: "supabase", operation: "adminSetMustChangePassword" },
+      });
+    }
+    const { error } = await this.adminClient.auth.admin.updateUserById(authUserId, {
+      user_metadata: {
+        ...existing.data.user.user_metadata,
+        must_change_password: mustChangePassword,
+      },
+    });
+    if (error) {
+      throw new AppError({
+        code: "PROVIDER_ERROR",
+        message: error.message,
+        details: { provider: "supabase", operation: "adminSetMustChangePassword" },
+      });
+    }
+  }
 }
 
 function toAuthenticatedIdentity(user: User, session: Session): AuthenticatedIdentity {

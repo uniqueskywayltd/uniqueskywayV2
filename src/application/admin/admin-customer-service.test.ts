@@ -15,17 +15,17 @@ describe("AdminCustomerService", () => {
   it("rejects unauthenticated access to search", async () => {
     const fixture = createFixture({ authenticated: false });
 
-    await expect(
-      fixture.service.searchCustomers({ limit: 20 }),
-    ).rejects.toMatchObject({ code: "AUTHENTICATION_ERROR" });
+    await expect(fixture.service.searchCustomers({ limit: 20 })).rejects.toMatchObject({
+      code: "AUTHENTICATION_ERROR",
+    });
   });
 
   it("rejects actors without an authorized role", async () => {
     const fixture = createFixture({ roleKeys: [] });
 
-    await expect(
-      fixture.service.searchCustomers({ limit: 20 }),
-    ).rejects.toMatchObject({ code: "AUTHORIZATION_ERROR" });
+    await expect(fixture.service.searchCustomers({ limit: 20 })).rejects.toMatchObject({
+      code: "AUTHORIZATION_ERROR",
+    });
   });
 
   it("searches customers for support agents, finance admins, and platform admins", async () => {
@@ -301,13 +301,22 @@ function createFixture(options: FixtureOptions = {}) {
   };
 
   const identityRepository = {
-    findUserByAuthUserId: vi.fn(async (authUserId: string) =>
-      state.users.find((user) => user.authUserId === authUserId) ?? null,
+    findUserByAuthUserId: vi.fn(
+      async (authUserId: string) =>
+        state.users.find((user) => user.authUserId === authUserId) ?? null,
     ),
-    findUserById: vi.fn(async (userId: string) => state.users.find((user) => user.id === userId) ?? null),
+    findUserById: vi.fn(
+      async (userId: string) => state.users.find((user) => user.id === userId) ?? null,
+    ),
     findAdminProfileByUserId: vi.fn(async (userId: string) =>
       userId === adminAppUser.id
-        ? { id: "admin_profile_1", userId, status: "active" as const, createdAt: new Date(), updatedAt: new Date() }
+        ? {
+            id: "admin_profile_1",
+            userId,
+            status: "active" as const,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }
         : null,
     ),
     listActiveRoleKeysForUser: vi.fn(async (userId: string) =>
@@ -376,6 +385,16 @@ function createFixture(options: FixtureOptions = {}) {
     identityRepository: identityRepository as never,
     coreRepository: coreRepository as never,
     operationsRepository: operationsRepository as never,
+    ledgerRepository: {
+      lockWalletByUserCurrency: vi.fn(),
+      findWalletBalanceByUserCurrencyInTransaction: vi.fn(),
+      findWalletAccountByCategoryInTransaction: vi.fn(),
+      ensureLedgerAccount: vi.fn(),
+      postLedgerTransaction: vi.fn(),
+    } as never,
+    notificationRepository: {
+      enqueueEmail: vi.fn(async () => ({ id: "email_1" })),
+    } as never,
   });
 
   return {

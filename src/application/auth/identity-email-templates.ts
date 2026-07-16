@@ -32,12 +32,33 @@ export function renderIdentityEmail(input: RenderIdentityEmailInput): RenderedId
         title: "Email verified",
         body: "Your Unique Sky Way account email has been verified.",
       });
-    case AUTH_EMAIL_TEMPLATES.welcome:
+    case AUTH_EMAIL_TEMPLATES.welcome: {
+      const temporaryPassword = readString(input.metadata.temporaryPassword);
+      const loginUrl = readString(input.metadata.loginUrl);
+      const mustChangePassword = Boolean(input.metadata.mustChangePassword);
+      const adminCreated = Boolean(input.metadata.adminCreated);
+      const lines = [
+        "Your Unique Sky Way account is ready.",
+        adminCreated
+          ? "An administrator created this account for you."
+          : "You can sign in and continue setting up your profile.",
+      ];
+      if (temporaryPassword) {
+        lines.push(`Temporary password: ${temporaryPassword}`);
+      }
+      if (mustChangePassword) {
+        lines.push("Please change your password immediately after your first sign-in.");
+      }
+      if (loginUrl) {
+        lines.push(`Sign in: ${loginUrl}`);
+      }
       return renderTemplate({
         subject: "Welcome to Unique Sky Way",
         title: "Welcome",
-        body: "Your identity foundation is ready. You can continue setting up your account when the next platform phase is available.",
+        body: lines.join(" "),
+        actionLink: loginUrl,
       });
+    }
     case AUTH_EMAIL_TEMPLATES.passwordReset:
       return renderTemplate({
         subject: "Reset your Unique Sky Way password",

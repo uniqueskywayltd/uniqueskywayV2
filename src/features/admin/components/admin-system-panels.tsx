@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
-import { Badge, Button, Card } from "@/components/ui";
+import { Badge, Button, Card, Textarea } from "@/components/ui";
 import { appPath } from "@/lib/app-path";
 
 import { getAdminJson, mutateAdminJson } from "../api-client";
@@ -744,6 +744,9 @@ export function SettingsPanel() {
   const [rows, setRows] = useState<
     Array<{ id: string; key: string; value: string; description: string | null }>
   >([]);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const result = await getAdminJson<{
@@ -754,14 +757,19 @@ export function SettingsPanel() {
       setState("error");
       return;
     }
-    setRows(
-      (result.data?.settings ?? []).map((setting) => ({
-        id: setting.key,
-        key: setting.key,
-        value: JSON.stringify(setting.value),
-        description: setting.description,
-      })),
-    );
+    const nextRows = (result.data?.settings ?? []).map((setting) => ({
+      id: setting.key,
+      key: setting.key,
+      value:
+        typeof setting.value === "string" ||
+        typeof setting.value === "number" ||
+        typeof setting.value === "boolean"
+          ? String(setting.value)
+          : JSON.stringify(setting.value),
+      description: setting.description,
+    }));
+    setRows(nextRows);
+    setDrafts(Object.fromEntries(nextRows.map((row) => [row.key, row.value])));
     setState("ready");
   }, []);
 
@@ -769,9 +777,37 @@ export function SettingsPanel() {
     void load();
   }, [load]);
 
+  async function saveSetting(key: string) {
+    const raw = drafts[key] ?? "";
+    let value: string | number | boolean | Record<string, unknown> = raw;
+    try {
+      value = JSON.parse(raw) as string | number | boolean | Record<string, unknown>;
+    } catch {
+      value = raw;
+    }
+    setBusyKey(key);
+    setFeedback(null);
+    const result = await mutateAdminJson("POST", "/api/admin/settings", { key, value });
+    setBusyKey(null);
+    if (result.error) {
+      setFeedback(result.error);
+      return;
+    }
+    setFeedback(`Saved ${key}`);
+    await load();
+  }
+
   return (
     <div>
-      <AdminPageHeader title="System settings" description="Configurable platform settings." />
+      <AdminPageHeader
+        title="System settings"
+        description="Editable platform configuration. Changes persist immediately."
+      />
+      {feedback ? (
+        <p className="mb-4 rounded-md border bg-card px-3 py-2 text-sm" role="status">
+          {feedback}
+        </p>
+      ) : null}
       {state === "loading" ? <AdminLoadingBlock /> : null}
       {state === "error" && error ? (
         <AdminErrorBlock
@@ -785,19 +821,31 @@ export function SettingsPanel() {
       ) : null}
       {state === "ready" && rows.length === 0 ? <AdminEmptyBlock title="No settings" /> : null}
       {state === "ready" && rows.length > 0 ? (
-        <AdminDataTable
-          caption="System settings"
-          rows={rows}
-          columns={[
-            { key: "key", header: "Key", cell: (row) => row.key },
-            { key: "value", header: "Value", cell: (row) => row.value },
-            {
-              key: "description",
-              header: "Description",
-              cell: (row) => row.description ?? "—",
-            },
-          ]}
-        />
+        <div className="space-y-4">
+          {rows.map((row) => (
+            <Card key={row.key} className="space-y-3 p-4">
+              <div>
+                <p className="text-sm font-semibold">{row.key}</p>
+                <p className="text-xs text-muted-foreground">{row.description ?? "—"}</p>
+              </div>
+              <Textarea
+                value={drafts[row.key] ?? ""}
+                onChange={(event) =>
+                  setDrafts((current) => ({ ...current, [row.key]: event.target.value }))
+                }
+                aria-label={`Setting ${row.key}`}
+                rows={2}
+              />
+              <Button
+                type="button"
+                disabled={busyKey === row.key}
+                onClick={() => void saveSetting(row.key)}
+              >
+                {busyKey === row.key ? "Saving…" : "Save"}
+              </Button>
+            </Card>
+          ))}
+        </div>
       ) : null}
     </div>
   );

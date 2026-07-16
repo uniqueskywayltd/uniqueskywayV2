@@ -5,7 +5,11 @@ export {
   type AdminCapability,
   type AdminPermission,
 } from "./capabilities";
-export { requireAdminActor, type AdminActor, type RequireAdminActorDependencies } from "./require-admin";
+export {
+  requireAdminActor,
+  type AdminActor,
+  type RequireAdminActorDependencies,
+} from "./require-admin";
 export {
   AdminCustomerService,
   createAdminAuditContext,
@@ -39,21 +43,29 @@ export {
 } from "./admin-system-service";
 export {
   addCustomerNoteInputSchema,
+  adminCreateCustomerInputSchema,
+  adminWalletAdjustmentInputSchema,
   customerKycStatusSchema,
   customerRiskStatusSchema,
   customerStatusSchema,
+  deleteCustomerInputSchema,
   listCustomerAuditQuerySchema,
   listCustomerNotesQuerySchema,
   searchCustomersInputSchema,
   updateCustomerKycInputSchema,
+  updateCustomerProfileInputSchema,
   updateCustomerStatusInputSchema,
 } from "./schemas";
 export type {
   AddCustomerNoteInput,
+  AdminCreateCustomerInput,
+  AdminWalletAdjustmentInput,
+  DeleteCustomerInput,
   ListCustomerAuditQuery,
   ListCustomerNotesQuery,
   SearchCustomersInput,
   UpdateCustomerKycInput,
+  UpdateCustomerProfileInput,
   UpdateCustomerStatusInput,
 } from "./schemas";
 export {

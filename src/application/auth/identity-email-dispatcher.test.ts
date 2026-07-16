@@ -61,10 +61,15 @@ describe("IdentityEmailDispatcher", () => {
     expect(notifications.markEmailSending).toHaveBeenCalledWith(expect.anything(), "email_1");
     expect(emailSender.send).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: "security@uniqueskyway.example",
+        from: "Unique Sky Way <security@uniqueskyway.example>",
         to: "investor@example.com",
         subject: "Verify your Unique Sky Way email",
         idempotencyKey: "auth.verify_email:user_1",
+        headers: { "Reply-To": "info@uniqueskyway.com" },
+        tags: [
+          { name: "category", value: "identity" },
+          { name: "template", value: "auth_verify_email" },
+        ],
       }),
     );
     expect(notifications.markEmailSent).toHaveBeenCalledWith(

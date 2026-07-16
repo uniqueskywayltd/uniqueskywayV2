@@ -8,16 +8,29 @@ export const clientEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 });
 
+const resendFromEmailSchema = z
+  .string()
+  .min(3)
+  .refine((value) => {
+    const angled = value.trim().match(/^(.+?)\s*<([^>]+)>$/);
+    const email = (angled?.[2] ?? value).trim();
+    return z.string().email().safeParse(email).success;
+  }, "RESEND_FROM_EMAIL must be an email or Name <email>");
+
 export const serverEnvSchema = clientEnvSchema.extend({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   RESEND_API_KEY: z.string().min(1),
-  RESEND_FROM_EMAIL: z.string().email(),
+  RESEND_FROM_EMAIL: resendFromEmailSchema,
   PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
   PAYSTACK_BASE_URL: z.string().url().default("https://api.paystack.co"),
   INTERNAL_JOB_TOKEN: z.string().min(16),
   LOG_LEVEL: logLevelSchema.default("info"),
+  CONTACT_SUPPORT_EMAIL: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.string().email().optional(),
+  ),
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;

@@ -142,7 +142,11 @@ export class AdminSystemService {
     });
   }
 
-  async cloneRole(roleId: string, input: { key: string; name: string }, context: RequestAuditContext) {
+  async cloneRole(
+    roleId: string,
+    input: { key: string; name: string },
+    context: RequestAuditContext,
+  ) {
     await requireAdminActor(this.deps, "roles.manage");
     const sourcePermissions = await this.deps.identityRepository.listPermissionKeysForRole(roleId);
     return this.createRole(
@@ -179,11 +183,7 @@ export class AdminSystemService {
     });
   }
 
-  async setRolePermissions(
-    roleId: string,
-    permissionKeys: string[],
-    context: RequestAuditContext,
-  ) {
+  async setRolePermissions(roleId: string, permissionKeys: string[], context: RequestAuditContext) {
     const admin = await requireAdminActor(this.deps, "roles.manage");
     return this.deps.transactionManager.runInTransaction(async (tx) => {
       const existing = await this.deps.identityRepository.findRoleById(roleId);
@@ -195,11 +195,18 @@ export class AdminSystemService {
         permissionKeys,
         admin.appUser.id,
       );
-      await this.appendAdminAudit(tx, admin.appUser.id, "role.permissions_updated", roleId, context, {
-        permissionUsed: admin.permissionUsed,
-        before: { permissions: before },
-        after: { permissions: permissionKeys },
-      });
+      await this.appendAdminAudit(
+        tx,
+        admin.appUser.id,
+        "role.permissions_updated",
+        roleId,
+        context,
+        {
+          permissionUsed: admin.permissionUsed,
+          before: { permissions: before },
+          after: { permissions: permissionKeys },
+        },
+      );
       return { roleId, permissions: permissionKeys };
     });
   }
@@ -215,10 +222,7 @@ export class AdminSystemService {
     return this.deps.identityRepository.listStaff(query);
   }
 
-  async inviteStaff(
-    input: { email: string; roleIds: string[] },
-    context: RequestAuditContext,
-  ) {
+  async inviteStaff(input: { email: string; roleIds: string[] }, context: RequestAuditContext) {
     const admin = await requireAdminActor(this.deps, "staff.manage");
     const email = input.email.trim().toLowerCase();
     if (!email || input.roleIds.length === 0) {
@@ -276,17 +280,26 @@ export class AdminSystemService {
     }
     return this.deps.transactionManager.runInTransaction(async (tx) => {
       const before = await this.deps.identityRepository.findAdminProfileByUserId(userId);
-      if (!before) throw new AppError({ code: "NOT_FOUND", message: "Staff profile was not found." });
+      if (!before)
+        throw new AppError({ code: "NOT_FOUND", message: "Staff profile was not found." });
       const updated = await this.deps.identityRepository.updateAdminProfile(tx, userId, {
         status: input.status,
         disabledAt: input.status === "active" ? null : this.deps.clock.now(),
         disabledReason: input.status === "active" ? null : (input.reason ?? null),
       });
-      await this.appendAdminAudit(tx, admin.appUser.id, "staff.status_updated", userId, context, {
-        permissionUsed: admin.permissionUsed,
-        before: { status: before.status },
-        after: { status: updated.status },
-      }, input.reason);
+      await this.appendAdminAudit(
+        tx,
+        admin.appUser.id,
+        "staff.status_updated",
+        userId,
+        context,
+        {
+          permissionUsed: admin.permissionUsed,
+          before: { status: before.status },
+          after: { status: updated.status },
+        },
+        input.reason,
+      );
       return updated;
     });
   }
@@ -316,20 +329,11 @@ export class AdminSystemService {
     };
   }
 
-  async assignStaffRoles(
-    userId: string,
-    roleIds: string[],
-    context: RequestAuditContext,
-  ) {
+  async assignStaffRoles(userId: string, roleIds: string[], context: RequestAuditContext) {
     const admin = await requireAdminActor(this.deps, "staff.manage");
     return this.deps.transactionManager.runInTransaction(async (tx) => {
       const before = await this.deps.identityRepository.listRoleIdsForUser(userId);
-      await this.deps.identityRepository.replaceStaffRoles(
-        tx,
-        userId,
-        roleIds,
-        admin.appUser.id,
-      );
+      await this.deps.identityRepository.replaceStaffRoles(tx, userId, roleIds, admin.appUser.id);
       await this.appendAdminAudit(tx, admin.appUser.id, "staff.roles_assigned", userId, context, {
         permissionUsed: admin.permissionUsed,
         before: { roleIds: before },
@@ -343,15 +347,23 @@ export class AdminSystemService {
     const admin = await requireAdminActor(this.deps, "staff.manage");
     return this.deps.transactionManager.runInTransaction(async (tx) => {
       const before = await this.deps.identityRepository.findAdminProfileByUserId(userId);
-      if (!before) throw new AppError({ code: "NOT_FOUND", message: "Staff profile was not found." });
+      if (!before)
+        throw new AppError({ code: "NOT_FOUND", message: "Staff profile was not found." });
       const updated = await this.deps.identityRepository.updateAdminProfile(tx, userId, {
         mustChangePassword: true,
       });
-      await this.appendAdminAudit(tx, admin.appUser.id, "staff.force_password_change", userId, context, {
-        permissionUsed: admin.permissionUsed,
-        before: { mustChangePassword: before.mustChangePassword },
-        after: { mustChangePassword: updated.mustChangePassword },
-      });
+      await this.appendAdminAudit(
+        tx,
+        admin.appUser.id,
+        "staff.force_password_change",
+        userId,
+        context,
+        {
+          permissionUsed: admin.permissionUsed,
+          before: { mustChangePassword: before.mustChangePassword },
+          after: { mustChangePassword: updated.mustChangePassword },
+        },
+      );
       return updated;
     });
   }
@@ -421,7 +433,8 @@ export class AdminSystemService {
   async previewEmailTemplate(key: string) {
     await requireAdminActor(this.deps, "emails.manage");
     const template = await this.deps.operationsRepository.getEmailTemplate(key);
-    if (!template) throw new AppError({ code: "NOT_FOUND", message: "Email template was not found." });
+    if (!template)
+      throw new AppError({ code: "NOT_FOUND", message: "Email template was not found." });
     return template;
   }
 
@@ -433,16 +446,24 @@ export class AdminSystemService {
     const admin = await requireAdminActor(this.deps, "emails.manage");
     return this.deps.transactionManager.runInTransaction(async (tx) => {
       const before = await this.deps.operationsRepository.getEmailTemplate(key);
-      if (!before) throw new AppError({ code: "NOT_FOUND", message: "Email template was not found." });
+      if (!before)
+        throw new AppError({ code: "NOT_FOUND", message: "Email template was not found." });
       const updated = await this.deps.operationsRepository.updateEmailTemplate(tx, key, {
         status,
         updatedBy: admin.appUser.id,
       });
-      await this.appendAdminAudit(tx, admin.appUser.id, "email_template.status_updated", key, context, {
-        permissionUsed: admin.permissionUsed,
-        before: { status: before.status },
-        after: { status: updated.status },
-      });
+      await this.appendAdminAudit(
+        tx,
+        admin.appUser.id,
+        "email_template.status_updated",
+        key,
+        context,
+        {
+          permissionUsed: admin.permissionUsed,
+          before: { status: before.status },
+          after: { status: updated.status },
+        },
+      );
       return updated;
     });
   }
@@ -450,7 +471,8 @@ export class AdminSystemService {
   async testSendEmailTemplate(key: string, toEmail: string, context: RequestAuditContext) {
     const admin = await requireAdminActor(this.deps, "emails.manage");
     const template = await this.deps.operationsRepository.getEmailTemplate(key);
-    if (!template) throw new AppError({ code: "NOT_FOUND", message: "Email template was not found." });
+    if (!template)
+      throw new AppError({ code: "NOT_FOUND", message: "Email template was not found." });
     if (template.status !== "enabled") {
       throw new AppError({
         code: "VALIDATION_ERROR",
@@ -548,10 +570,17 @@ export class AdminSystemService {
           requestedBy: admin.appUser.id,
         },
       });
-      await this.appendAdminAudit(tx, admin.appUser.id, "notification_template.test", key, context, {
-        permissionUsed: admin.permissionUsed,
-        after: { userId, channel: template.channel },
-      });
+      await this.appendAdminAudit(
+        tx,
+        admin.appUser.id,
+        "notification_template.test",
+        key,
+        context,
+        {
+          permissionUsed: admin.permissionUsed,
+          after: { userId, channel: template.channel },
+        },
+      );
       return { queued: true, templateKey: key, userId };
     });
   }
@@ -625,11 +654,18 @@ export class AdminSystemService {
         enabledAt: input.status === "enabled" ? this.deps.clock.now() : null,
         disabledAt: input.status === "disabled" ? this.deps.clock.now() : null,
       });
-      await this.appendAdminAudit(tx, admin.appUser.id, "feature_flag.upserted", input.key, context, {
-        permissionUsed: admin.permissionUsed,
-        before,
-        after: flag,
-      });
+      await this.appendAdminAudit(
+        tx,
+        admin.appUser.id,
+        "feature_flag.upserted",
+        input.key,
+        context,
+        {
+          permissionUsed: admin.permissionUsed,
+          before,
+          after: flag,
+        },
+      );
       return flag;
     });
   }
@@ -648,10 +684,8 @@ export class AdminSystemService {
     context: RequestAuditContext,
   ) {
     const admin = await requireAdminActor(this.deps, "system.manage");
-    const value =
-      typeof input.value === "object" && input.value !== null && !Array.isArray(input.value)
-        ? (input.value as Record<string, unknown>)
-        : ({ value: input.value } as Record<string, unknown>);
+    // Persist JSON primitives and objects as-is (matches seed shape: string/number/object jsonb).
+    const value = input.value as unknown as Record<string, unknown>;
 
     return this.deps.transactionManager.runInTransaction(async (tx) => {
       const before = await this.deps.operationsRepository.getSystemSetting(input.key);
@@ -661,11 +695,18 @@ export class AdminSystemService {
         ...(input.description !== undefined ? { description: input.description } : {}),
         updatedBy: admin.appUser.id,
       });
-      await this.appendAdminAudit(tx, admin.appUser.id, "system_setting.upserted", input.key, context, {
-        permissionUsed: admin.permissionUsed,
-        before,
-        after: setting,
-      });
+      await this.appendAdminAudit(
+        tx,
+        admin.appUser.id,
+        "system_setting.upserted",
+        input.key,
+        context,
+        {
+          permissionUsed: admin.permissionUsed,
+          before,
+          after: setting,
+        },
+      );
       return setting;
     });
   }
@@ -738,7 +779,8 @@ export class AdminSystemService {
     const admin = await requireAdminActor(this.deps, "jobs.manage");
     return this.deps.transactionManager.runInTransaction(async (tx) => {
       const before = await this.deps.operationsRepository.findBackgroundJobById(jobId);
-      if (!before) throw new AppError({ code: "NOT_FOUND", message: "Background job was not found." });
+      if (!before)
+        throw new AppError({ code: "NOT_FOUND", message: "Background job was not found." });
       const job = await this.deps.operationsRepository.retryBackgroundJob(tx, jobId);
       await this.appendAdminAudit(tx, admin.appUser.id, "background_job.retried", jobId, context, {
         permissionUsed: admin.permissionUsed,
@@ -753,13 +795,21 @@ export class AdminSystemService {
     const admin = await requireAdminActor(this.deps, "jobs.manage");
     return this.deps.transactionManager.runInTransaction(async (tx) => {
       const before = await this.deps.operationsRepository.findBackgroundJobById(jobId);
-      if (!before) throw new AppError({ code: "NOT_FOUND", message: "Background job was not found." });
+      if (!before)
+        throw new AppError({ code: "NOT_FOUND", message: "Background job was not found." });
       const job = await this.deps.operationsRepository.cancelBackgroundJob(tx, jobId);
-      await this.appendAdminAudit(tx, admin.appUser.id, "background_job.cancelled", jobId, context, {
-        permissionUsed: admin.permissionUsed,
-        before: { status: before.status },
-        after: { status: job.status },
-      });
+      await this.appendAdminAudit(
+        tx,
+        admin.appUser.id,
+        "background_job.cancelled",
+        jobId,
+        context,
+        {
+          permissionUsed: admin.permissionUsed,
+          before: { status: before.status },
+          after: { status: job.status },
+        },
+      );
       return job;
     });
   }

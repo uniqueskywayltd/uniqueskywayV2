@@ -12,6 +12,8 @@ import {
   CoreRepository,
   DrizzleTransactionManager,
   IdentityRepository,
+  LedgerRepository,
+  NotificationRepository,
   OperationsRepository,
   getDatabaseConnection,
 } from "@/infrastructure/database";
@@ -34,6 +36,8 @@ export async function createAdminCustomerService() {
     identityRepository: new IdentityRepository(db),
     coreRepository: new CoreRepository(db),
     operationsRepository: new OperationsRepository(db),
+    ledgerRepository: new LedgerRepository(db),
+    notificationRepository: new NotificationRepository(db),
   });
 }
 

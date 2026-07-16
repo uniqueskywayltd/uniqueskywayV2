@@ -6,6 +6,7 @@ import {
   getDatabaseConnection,
 } from "@/infrastructure/database";
 import { ResendEmailSender } from "@/infrastructure/email";
+import { logger } from "@/infrastructure/logging/logger";
 
 /** Best-effort flush of queued emails after auth actions (does not throw to callers). */
 export async function dispatchQueuedEmails(limit = 10): Promise<void> {
@@ -16,8 +17,26 @@ export async function dispatchQueuedEmails(limit = 10): Promise<void> {
       new DrizzleTransactionManager(db),
       ResendEmailSender.fromApiKey(getServerEnv().RESEND_API_KEY),
     );
-    await dispatcher.dispatchQueued(limit);
-  } catch {
+    const result = await dispatcher.dispatchQueued(limit);
+    if (result.failed > 0) {
+      logger.error(
+        {
+          event: "email.dispatch.flush_partial_failure",
+          processed: result.processed,
+          sent: result.sent,
+          failed: result.failed,
+        },
+        "Email flush completed with delivery failures",
+      );
+    }
+  } catch (error) {
     // Queue remains for the internal job route; registration/login must not fail on send.
+    logger.error(
+      {
+        event: "email.dispatch.flush_error",
+        cause: error instanceof Error ? error.message : "Unknown error",
+      },
+      "Email flush failed before provider delivery",
+    );
   }
 }

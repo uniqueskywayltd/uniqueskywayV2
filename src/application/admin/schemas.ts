@@ -41,6 +41,40 @@ export const addCustomerNoteInputSchema = z.object({
 
 export type AddCustomerNoteInput = z.infer<typeof addCustomerNoteInputSchema>;
 
+export const adminCreateCustomerInputSchema = z.object({
+  email: z.string().trim().email().max(320),
+  password: z.string().min(12).max(128).optional(),
+  displayName: z.string().trim().min(1).max(120).optional(),
+  legalName: z.string().trim().min(1).max(160).optional(),
+  username: z.string().trim().min(3).max(40).optional(),
+});
+
+export type AdminCreateCustomerInput = z.infer<typeof adminCreateCustomerInputSchema>;
+
+export const updateCustomerProfileInputSchema = z.object({
+  displayName: z.string().trim().min(1).max(120).nullable().optional(),
+  legalName: z.string().trim().min(1).max(160).nullable().optional(),
+  phone: z.string().trim().min(5).max(40).nullable().optional(),
+  country: z.string().trim().min(2).max(80).nullable().optional(),
+  stateRegion: z.string().trim().min(1).max(80).nullable().optional(),
+});
+
+export type UpdateCustomerProfileInput = z.infer<typeof updateCustomerProfileInputSchema>;
+
+export const adminWalletAdjustmentInputSchema = z.object({
+  amountMinor: z.string().regex(/^\d+$/, "Amount must be a positive integer string."),
+  currency: z.string().trim().length(3).optional(),
+  reason: z.string().trim().min(1).max(500),
+});
+
+export type AdminWalletAdjustmentInput = z.infer<typeof adminWalletAdjustmentInputSchema>;
+
+export const deleteCustomerInputSchema = z.object({
+  confirmation: z.string().trim().min(1).max(20),
+});
+
+export type DeleteCustomerInput = z.infer<typeof deleteCustomerInputSchema>;
+
 export const listCustomerNotesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });

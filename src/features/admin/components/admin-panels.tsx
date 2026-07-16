@@ -92,9 +92,24 @@ export function OverviewPanel() {
 
   if (state === "loading") return <AdminLoadingBlock label="Loading overview" />;
   if (state === "error" && error) {
-    return <AdminErrorBlock message={error.message} {...(error.status ? { status: error.status } : {})} onRetry={() => { setState("loading"); void load(); }} />;
+    return (
+      <AdminErrorBlock
+        message={error.message}
+        {...(error.status ? { status: error.status } : {})}
+        onRetry={() => {
+          setState("loading");
+          void load();
+        }}
+      />
+    );
   }
-  if (!metrics) return <AdminEmptyBlock title="No overview data" description="Operational metrics are unavailable." />;
+  if (!metrics)
+    return (
+      <AdminEmptyBlock
+        title="No overview data"
+        description="Operational metrics are unavailable."
+      />
+    );
 
   return (
     <div className="space-y-8">
@@ -171,7 +186,11 @@ export function OverviewPanel() {
         />
       </section>
 
-      <DashboardPanelCard title="Recent administrative activity" href="/admin/security" accent="slate">
+      <DashboardPanelCard
+        title="Recent administrative activity"
+        href="/admin/security"
+        accent="slate"
+      >
         {activity.length === 0 ? (
           <p className="text-sm text-muted-foreground">No recent administrative activity.</p>
         ) : (
@@ -212,6 +231,12 @@ export function CustomersPanel() {
     }>
   >([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createEmail, setCreateEmail] = useState("");
+  const [createName, setCreateName] = useState("");
+  const [createBusy, setCreateBusy] = useState(false);
+  const [createFeedback, setCreateFeedback] = useState<string | null>(null);
+  const router = useRouter();
 
   const load = useCallback(async () => {
     const params = new URLSearchParams();
@@ -249,12 +274,55 @@ export function CustomersPanel() {
     void load();
   }, [load]);
 
+  async function createCustomer() {
+    if (!createEmail.trim()) return;
+    setCreateBusy(true);
+    setCreateFeedback(null);
+    const result = await mutateAdminJson<{
+      user?: { id?: string };
+      temporaryPassword?: string;
+    }>("POST", "/api/admin/users", {
+      email: createEmail.trim(),
+      displayName: createName.trim() || undefined,
+    });
+    setCreateBusy(false);
+    if (result.error) {
+      setCreateFeedback(result.error);
+      return;
+    }
+    setCreateOpen(false);
+    setCreateEmail("");
+    setCreateName("");
+    const temp = result.data?.temporaryPassword;
+    setCreateFeedback(
+      temp
+        ? `Customer created. Temporary password: ${temp}`
+        : "Customer created and welcome email queued.",
+    );
+    const id = result.data?.user?.id;
+    if (id) {
+      router.push(`/admin/customers/${id}`);
+      return;
+    }
+    await load();
+  }
+
   return (
     <div>
       <AdminPageHeader
         title="Customers"
         description="Search, filter, and open customer administration records."
+        action={
+          <Button type="button" onClick={() => setCreateOpen(true)}>
+            Create customer
+          </Button>
+        }
       />
+      {createFeedback ? (
+        <p className="mb-4 rounded-md border bg-card px-3 py-2 text-sm" role="status">
+          {createFeedback}
+        </p>
+      ) : null}
       <AdminToolbar
         searchLabel="Search customers"
         searchValue={q}
@@ -268,14 +336,28 @@ export function CustomersPanel() {
         ]}
         onStatusChange={setStatus}
         trailing={
-          <Button type="button" variant="outline" onClick={() => { setState("loading"); void load(); }}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setState("loading");
+              void load();
+            }}
+          >
             Refresh
           </Button>
         }
       />
       {state === "loading" ? <AdminLoadingBlock /> : null}
       {state === "error" && error ? (
-        <AdminErrorBlock message={error.message} {...(error.status ? { status: error.status } : {})} onRetry={() => { setState("loading"); void load(); }} />
+        <AdminErrorBlock
+          message={error.message}
+          {...(error.status ? { status: error.status } : {})}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
+        />
       ) : null}
       {state === "ready" && rows.length === 0 ? (
         <AdminEmptyBlock title="No customers found" description="Adjust filters or search terms." />
@@ -318,6 +400,42 @@ export function CustomersPanel() {
           )}
         />
       ) : null}
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create customer</DialogTitle>
+            <DialogDescription>
+              Creates an active, email-verified account with wallet bootstrap and sends a welcome
+              email with a temporary password. OTP verification is not required.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={createEmail}
+            onChange={(event) => setCreateEmail(event.target.value)}
+            aria-label="Customer email"
+            placeholder="customer@example.com"
+          />
+          <Input
+            value={createName}
+            onChange={(event) => setCreateName(event.target.value)}
+            aria-label="Display name"
+            placeholder="Display name (optional)"
+          />
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={createBusy || !createEmail.trim()}
+              onClick={() => void createCustomer()}
+            >
+              {createBusy ? "Creating…" : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -332,6 +450,12 @@ export function CustomerDetailPanel() {
   const [note, setNote] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<"active" | "suspended" | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [walletAmount, setWalletAmount] = useState("");
+  const [walletReason, setWalletReason] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -343,6 +467,9 @@ export function CustomerDetailPanel() {
       return;
     }
     setDetail(result.data ?? null);
+    const profile = result.data?.profile as { displayName?: string; phone?: string } | undefined;
+    setDisplayName(profile?.displayName ?? "");
+    setPhone(profile?.phone ?? "");
     setState("ready");
   }, [userId]);
 
@@ -371,7 +498,8 @@ export function CustomerDetailPanel() {
     setBusy(true);
     const result = await mutateAdminJson("PATCH", `/api/admin/users/${userId}/status`, {
       status: pendingStatus,
-      reason: pendingStatus === "suspended" ? "Administrative suspension" : "Administrative reactivation",
+      reason:
+        pendingStatus === "suspended" ? "Administrative suspension" : "Administrative reactivation",
     });
     setBusy(false);
     setConfirmOpen(false);
@@ -383,9 +511,76 @@ export function CustomerDetailPanel() {
     await load();
   }
 
+  async function saveProfile() {
+    setBusy(true);
+    const result = await mutateAdminJson("PATCH", `/api/admin/users/${userId}`, {
+      displayName: displayName.trim() || null,
+      phone: phone.trim() || null,
+    });
+    setBusy(false);
+    if (result.error) {
+      setFeedback(result.error);
+      return;
+    }
+    setFeedback("Customer profile updated.");
+    await load();
+  }
+
+  async function runAction(
+    method: "POST" | "DELETE",
+    path: string,
+    body?: Record<string, unknown>,
+    successMessage?: string,
+  ) {
+    setBusy(true);
+    const result = await mutateAdminJson(method, path, body);
+    setBusy(false);
+    if (result.error) {
+      setFeedback(result.error);
+      return;
+    }
+    setFeedback(successMessage ?? "Action completed.");
+    if (method === "DELETE") {
+      router.push("/admin/customers");
+      return;
+    }
+    await load();
+  }
+
+  async function adjustWallet(direction: "credit" | "debit") {
+    const cents = Math.round(Number(walletAmount) * 100);
+    if (!Number.isFinite(cents) || cents <= 0 || !walletReason.trim()) {
+      setFeedback("Enter a positive amount and reason.");
+      return;
+    }
+    setBusy(true);
+    const result = await mutateAdminJson("POST", `/api/admin/users/${userId}/wallet/${direction}`, {
+      amountMinor: String(cents),
+      currency: "USD",
+      reason: walletReason.trim(),
+    });
+    setBusy(false);
+    if (result.error) {
+      setFeedback(result.error);
+      return;
+    }
+    setWalletAmount("");
+    setWalletReason("");
+    setFeedback(`Wallet ${direction} posted to ledger.`);
+  }
+
   if (state === "loading") return <AdminLoadingBlock label="Loading customer" />;
   if (state === "error" && error) {
-    return <AdminErrorBlock message={error.message} {...(error.status ? { status: error.status } : {})} onRetry={() => { setState("loading"); void load(); }} />;
+    return (
+      <AdminErrorBlock
+        message={error.message}
+        {...(error.status ? { status: error.status } : {})}
+        onRetry={() => {
+          setState("loading");
+          void load();
+        }}
+      />
+    );
   }
   if (!detail) return <AdminEmptyBlock title="Customer not found" />;
 
@@ -444,7 +639,123 @@ export function CustomerDetailPanel() {
         >
           Reactivate
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={busy}
+          onClick={() =>
+            void runAction(
+              "POST",
+              `/api/admin/users/${userId}/lock`,
+              {
+                reason: "Administrative lock",
+              },
+              "Account locked.",
+            )
+          }
+        >
+          Lock
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={busy}
+          onClick={() =>
+            void runAction(
+              "POST",
+              `/api/admin/users/${userId}/unlock`,
+              undefined,
+              "Account unlocked.",
+            )
+          }
+        >
+          Unlock
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={busy}
+          onClick={() =>
+            void runAction(
+              "POST",
+              `/api/admin/users/${userId}/reset-password`,
+              undefined,
+              "Temporary password emailed.",
+            )
+          }
+        >
+          Reset password
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={busy}
+          onClick={() =>
+            void runAction(
+              "POST",
+              `/api/admin/users/${userId}/force-password-change`,
+              undefined,
+              "Password change required on next login.",
+            )
+          }
+        >
+          Force password change
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          disabled={busy}
+          onClick={() => setDeleteOpen(true)}
+        >
+          Delete
+        </Button>
       </div>
+      <Card className="mb-6 space-y-3 p-4">
+        <h2 className="text-sm font-semibold">Edit profile</h2>
+        <Input
+          value={displayName}
+          onChange={(event) => setDisplayName(event.target.value)}
+          aria-label="Display name"
+          placeholder="Display name"
+        />
+        <Input
+          value={phone}
+          onChange={(event) => setPhone(event.target.value)}
+          aria-label="Phone"
+          placeholder="Phone"
+        />
+        <Button type="button" disabled={busy} onClick={() => void saveProfile()}>
+          {busy ? "Saving…" : "Save profile"}
+        </Button>
+      </Card>
+      <Card className="mb-6 space-y-3 p-4">
+        <h2 className="text-sm font-semibold">Wallet adjustment (ledger)</h2>
+        <Input
+          value={walletAmount}
+          onChange={(event) => setWalletAmount(event.target.value)}
+          aria-label="Amount USD"
+          placeholder="Amount in USD (e.g. 25.00)"
+        />
+        <Input
+          value={walletReason}
+          onChange={(event) => setWalletReason(event.target.value)}
+          aria-label="Adjustment reason"
+          placeholder="Reason (required)"
+        />
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" disabled={busy} onClick={() => void adjustWallet("credit")}>
+            Credit wallet
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={busy}
+            onClick={() => void adjustWallet("debit")}
+          >
+            Debit wallet
+          </Button>
+        </div>
+      </Card>
       <Card className="space-y-3 p-4">
         <h2 className="text-sm font-semibold">Add note</h2>
         <Textarea
@@ -472,6 +783,46 @@ export function CustomerDetailPanel() {
             </Button>
             <Button type="button" disabled={busy} onClick={() => void confirmStatus()}>
               {busy ? "Updating…" : "Confirm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete customer</DialogTitle>
+            <DialogDescription>
+              This closes the account and removes auth access. Type DELETE to confirm. You cannot
+              delete your own administrator account.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={deleteConfirmation}
+            onChange={(event) => setDeleteConfirmation(event.target.value)}
+            aria-label="Delete confirmation"
+            placeholder="Type DELETE"
+          />
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={busy || deleteConfirmation !== "DELETE"}
+              onClick={() =>
+                void runAction(
+                  "DELETE",
+                  `/api/admin/users/${userId}`,
+                  {
+                    confirmation: deleteConfirmation,
+                  },
+                  "Customer deleted.",
+                )
+              }
+            >
+              {busy ? "Deleting…" : "Delete customer"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -554,7 +905,11 @@ export function DepositsPanel() {
       detailHref={(id) => `/admin/deposits/${id}`}
       columns={[
         { key: "reference", header: "Reference", cell: (row) => row.reference },
-        { key: "status", header: "Status", cell: (row) => <Badge variant="secondary">{row.status}</Badge> },
+        {
+          key: "status",
+          header: "Status",
+          cell: (row) => <Badge variant="secondary">{row.status}</Badge>,
+        },
         { key: "amount", header: "Amount (minor)", cell: (row) => row.amountMinor },
         {
           key: "created",
@@ -606,7 +961,11 @@ export function WithdrawalsPanel() {
       detailHref={(id) => `/admin/withdrawals/${id}`}
       columns={[
         { key: "reference", header: "Reference", cell: (row) => row.reference },
-        { key: "status", header: "Status", cell: (row) => <Badge variant="secondary">{row.status}</Badge> },
+        {
+          key: "status",
+          header: "Status",
+          cell: (row) => <Badge variant="secondary">{row.status}</Badge>,
+        },
         { key: "amount", header: "Amount (minor)", cell: (row) => row.amountMinor },
         {
           key: "created",
@@ -658,7 +1017,11 @@ export function InvestmentsPanel() {
       detailHref={(id) => `/admin/investments/${id}`}
       columns={[
         { key: "id", header: "Investment", cell: (row) => row.id },
-        { key: "status", header: "Status", cell: (row) => <Badge variant="secondary">{row.status}</Badge> },
+        {
+          key: "status",
+          header: "Status",
+          cell: (row) => <Badge variant="secondary">{row.status}</Badge>,
+        },
         { key: "principal", header: "Principal (minor)", cell: (row) => row.amountMinor },
         {
           key: "created",
@@ -671,7 +1034,13 @@ export function InvestmentsPanel() {
 }
 
 function ResourceListPage<
-  TRow extends { id: string; reference?: string; status: string; amountMinor?: string; createdAt: string },
+  TRow extends {
+    id: string;
+    reference?: string;
+    status: string;
+    amountMinor?: string;
+    createdAt: string;
+  },
 >({
   title,
   description,
@@ -718,14 +1087,28 @@ function ResourceListPage<
         statusOptions={statusOptions}
         onStatusChange={setStatus}
         trailing={
-          <Button type="button" variant="outline" onClick={() => { setState("loading"); void load(); }}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setState("loading");
+              void load();
+            }}
+          >
             Refresh
           </Button>
         }
       />
       {state === "loading" ? <AdminLoadingBlock /> : null}
       {state === "error" && error ? (
-        <AdminErrorBlock message={error.message} {...(error.status ? { status: error.status } : {})} onRetry={() => { setState("loading"); void load(); }} />
+        <AdminErrorBlock
+          message={error.message}
+          {...(error.status ? { status: error.status } : {})}
+          onRetry={() => {
+            setState("loading");
+            void load();
+          }}
+        />
       ) : null}
       {state === "ready" && rows.length === 0 ? <AdminEmptyBlock title={emptyTitle} /> : null}
       {state === "ready" && rows.length > 0 ? (
@@ -777,7 +1160,16 @@ export function InvestmentDetailPanel() {
 
   if (state === "loading") return <AdminLoadingBlock />;
   if (state === "error" && error) {
-    return <AdminErrorBlock message={error.message} {...(error.status ? { status: error.status } : {})} onRetry={() => { setState("loading"); void load(); }} />;
+    return (
+      <AdminErrorBlock
+        message={error.message}
+        {...(error.status ? { status: error.status } : {})}
+        onRetry={() => {
+          setState("loading");
+          void load();
+        }}
+      />
+    );
   }
 
   return (
@@ -821,10 +1213,7 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
   async function runAction() {
     if (!confirmAction) return;
     setBusy(true);
-    const path =
-      confirmAction === "queue"
-        ? `${base}/queue`
-        : `${base}/${confirmAction}`;
+    const path = confirmAction === "queue" ? `${base}/queue` : `${base}/${confirmAction}`;
     const result = await mutateAdminJson(
       "POST",
       path,
@@ -843,7 +1232,16 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
 
   if (state === "loading") return <AdminLoadingBlock />;
   if (state === "error" && error) {
-    return <AdminErrorBlock message={error.message} {...(error.status ? { status: error.status } : {})} onRetry={() => { setState("loading"); void load(); }} />;
+    return (
+      <AdminErrorBlock
+        message={error.message}
+        {...(error.status ? { status: error.status } : {})}
+        onRetry={() => {
+          setState("loading");
+          void load();
+        }}
+      />
+    );
   }
 
   return (
@@ -880,7 +1278,12 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
             Reject
           </Button>
           {kind === "withdrawal" ? (
-            <Button type="button" variant="outline" disabled={busy} onClick={() => setConfirmAction("queue")}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => setConfirmAction("queue")}
+            >
               Queue payout
             </Button>
           ) : null}
@@ -889,7 +1292,10 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
       <Card className="p-4">
         <pre className="overflow-x-auto text-xs">{JSON.stringify(detail, null, 2)}</pre>
       </Card>
-      <Dialog open={confirmAction !== null} onOpenChange={(open) => !open && setConfirmAction(null)}>
+      <Dialog
+        open={confirmAction !== null}
+        onOpenChange={(open) => !open && setConfirmAction(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm {confirmAction}</DialogTitle>
