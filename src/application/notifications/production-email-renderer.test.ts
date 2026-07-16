@@ -21,7 +21,9 @@ describe("renderProductionEmail", () => {
     expect(rendered.html).toContain("48291367");
     expect(rendered.html).toContain("Action required");
     expect(rendered.html).toContain("verification window");
-    expect(rendered.html).toContain("info@uniqueskyway.com");
+    expect(rendered.html).toContain("Reply to this email if you need help or have questions.");
+    expect(rendered.html).not.toContain("Need help? Contact");
+    expect(rendered.html).not.toContain("Questions? Contact our investor support team");
     expect(rendered.html).not.toContain("localhost");
     expect(rendered.text).toContain("48291367");
     expect(rendered.text).toContain("signup window");
