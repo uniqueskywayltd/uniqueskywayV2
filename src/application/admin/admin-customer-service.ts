@@ -388,13 +388,13 @@ export class AdminCustomerService {
     userId: string,
     confirmation: string,
     context: RequestAuditContext,
-  ): Promise<{ deleted: true }> {
+  ): Promise<{ deleted: true; email: string }> {
     const admin = await requireAdminActor(this.deps, "customers.suspend");
 
     if (confirmation.trim().toUpperCase() !== "DELETE") {
       throw new AppError({
         code: "VALIDATION_ERROR",
-        message: "Type DELETE to confirm customer deletion.",
+        message: "Type DELETE to confirm permanent customer purge.",
       });
     }
 
@@ -418,27 +418,65 @@ export class AdminCustomerService {
       });
     }
 
-    await this.deps.transactionManager.runInTransaction(async (tx) => {
-      await this.deps.identityRepository.updateUserStatus(tx, userId, "closed");
-      await this.deps.coreRepository.updateCustomerAccountStatus(tx, userId, {
-        status: "closed",
-        restrictionReason: "Deleted by administrator",
-        closedAt: new Date(),
+    const authUserId = user.authUserId;
+    const email = user.email;
+
+    try {
+      await this.deps.transactionManager.runInTransaction(async (tx) => {
+        await this.appendAdminAudit(
+          tx,
+          admin.appUser.id,
+          "customer.purged",
+          userId,
+          context,
+          { email, authUserId },
+          "Permanently purged by administrator",
+        );
+        await this.deps.identityRepository.purgeCustomerUser(tx, userId);
       });
-      await this.appendAdminAudit(
-        tx,
-        admin.appUser.id,
-        "customer.deleted",
-        userId,
-        context,
-        { email: user.email },
-        "Deleted by administrator",
-      );
-    });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Customer purge failed.";
+      if (message.includes("Staff accounts cannot be purged")) {
+        throw new AppError({
+          code: "AUTHORIZATION_ERROR",
+          message: "Staff accounts cannot be deleted from customer management.",
+        });
+      }
+      if (message.includes("Customer was not found")) {
+        throw new AppError({ code: "NOT_FOUND", message: "Customer was not found." });
+      }
+      throw new AppError({
+        code: "INTERNAL_ERROR",
+        message: "Failed to permanently purge customer data.",
+        details: { cause: message },
+      });
+    }
 
-    await this.deps.identityProvider?.adminDeleteUser?.(user.authUserId).catch(() => undefined);
+    if (!this.deps.identityProvider?.adminDeleteUser) {
+      throw new AppError({
+        code: "PROVIDER_ERROR",
+        message:
+          "Customer application data was purged, but auth provider cleanup is unavailable. Remove the auth user manually so the email can register again.",
+        details: { email, authUserId },
+      });
+    }
 
-    return { deleted: true };
+    try {
+      await this.deps.identityProvider.adminDeleteUser(authUserId);
+    } catch (error) {
+      throw new AppError({
+        code: "PROVIDER_ERROR",
+        message:
+          "Customer application data was purged, but auth identity cleanup failed. Remove the auth user in Supabase so the email can register again.",
+        details: {
+          email,
+          authUserId,
+          cause: error instanceof Error ? error.message : "Unknown auth delete error",
+        },
+      });
+    }
+
+    return { deleted: true, email };
   }
 
   /**

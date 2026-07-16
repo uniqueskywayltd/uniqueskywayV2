@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, ilike, inArray, isNull, ne } from "drizzle-orm";
+import { and, desc, eq, gt, ilike, inArray, isNull, ne, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import {
@@ -108,6 +108,29 @@ export class IdentityRepository extends BaseDrizzleRepository {
     return singleRow(rows, "updateUserStatus");
   }
 
+  /**
+   * Hard-deletes a non-staff customer and all owned application data.
+   * Runs `app_private.purge_customer_user` inside the current transaction.
+   */
+  async purgeCustomerUser(
+    context: DrizzleTransactionContext,
+    userId: string,
+  ): Promise<{ authUserId: string; email: string }> {
+    const rows = (await context.db.execute(sql`
+      select
+        auth_user_id as "authUserId",
+        email
+      from app_private.purge_customer_user(${userId}::uuid)
+    `)) as unknown as Array<{ authUserId: string; email: string }>;
+
+    const row = rows[0];
+    if (!row?.authUserId || !row.email) {
+      throw new Error("Customer purge did not return auth identity details.");
+    }
+
+    return { authUserId: row.authUserId, email: row.email };
+  }
+
   async listRoles(): Promise<RoleRecord[]> {
     return this.db.select().from(roles);
   }
@@ -127,11 +150,7 @@ export class IdentityRepository extends BaseDrizzleRepository {
       .from(userRoles)
       .innerJoin(roles, eq(userRoles.roleId, roles.id))
       .where(
-        and(
-          eq(userRoles.userId, userId),
-          isNull(userRoles.revokedAt),
-          eq(roles.status, "active"),
-        ),
+        and(eq(userRoles.userId, userId), isNull(userRoles.revokedAt), eq(roles.status, "active")),
       );
     return rows.map((row) => row.key);
   }
@@ -144,11 +163,7 @@ export class IdentityRepository extends BaseDrizzleRepository {
       .innerJoin(rolePermissions, eq(rolePermissions.roleId, roles.id))
       .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
       .where(
-        and(
-          eq(userRoles.userId, userId),
-          isNull(userRoles.revokedAt),
-          eq(roles.status, "active"),
-        ),
+        and(eq(userRoles.userId, userId), isNull(userRoles.revokedAt), eq(roles.status, "active")),
       );
     return [...new Set(rows.map((row) => row.key))];
   }
@@ -269,7 +284,11 @@ export class IdentityRepository extends BaseDrizzleRepository {
       .update(userRoles)
       .set({ revokedAt: new Date() })
       .where(
-        and(eq(userRoles.userId, userId), eq(userRoles.roleId, roleId), isNull(userRoles.revokedAt)),
+        and(
+          eq(userRoles.userId, userId),
+          eq(userRoles.roleId, roleId),
+          isNull(userRoles.revokedAt),
+        ),
       );
   }
 

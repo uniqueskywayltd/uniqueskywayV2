@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, lt, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, isNull, lt, ne, or, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 import {
@@ -320,6 +320,14 @@ export class CoreRepository extends BaseDrizzleRepository {
     }
     if (query.status) {
       conditions.push(eq(customerAccounts.status, query.status));
+    } else {
+      // Keep admin queues decluttered; closed accounts are only shown when filtered.
+      conditions.push(
+        and(
+          ne(users.status, "closed"),
+          or(ne(customerAccounts.status, "closed"), isNull(customerAccounts.status)),
+        ),
+      );
     }
     if (query.kycStatus) {
       conditions.push(eq(customerProfiles.kycStatus, query.kycStatus));

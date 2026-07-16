@@ -361,8 +361,8 @@ export function CustomersPanel() {
     const failed = result.data?.failed.length ?? 0;
     setBulkFeedback(
       failed > 0
-        ? `Deleted ${succeeded} customer(s); ${failed} failed.`
-        : `Deleted ${succeeded} customer(s).`,
+        ? `Permanently purged ${succeeded} customer(s); ${failed} failed.`
+        : `Permanently purged ${succeeded} customer(s). Their emails can register again.`,
     );
     setSelected(new Set());
     setBulkDeleteConfirmation("");
@@ -373,7 +373,7 @@ export function CustomersPanel() {
     <div>
       <AdminPageHeader
         title="Customers"
-        description="Search, filter, and open customer administration records. Select rows to suspend, reactivate, lock, unlock, or delete."
+        description="Search, filter, and open customer administration records. Select rows to suspend, reactivate, lock, unlock, or permanently purge."
         action={
           <Button asChild type="button">
             <Link href="/admin/customers/new">Create customer</Link>
@@ -447,7 +447,7 @@ export function CustomersPanel() {
                   disabled={bulkBusy}
                   onClick={() => void runBulkAction("delete")}
                 >
-                  Delete
+                  Purge
                 </Button>
                 <Button
                   type="button"
@@ -521,7 +521,7 @@ export function CustomersPanel() {
             disabled={bulkBusy}
             onClick={() => void runBulkAction("delete")}
           >
-            Delete
+            Purge
           </Button>
           <Button
             type="button"
@@ -536,7 +536,7 @@ export function CustomersPanel() {
       ) : (
         <p className="mb-3 text-sm text-muted-foreground">
           Tip: use the checkboxes in the table to select customers, then Suspend / Reactivate / Lock
-          / Unlock / Delete appear here.
+          / Unlock / Purge appear here.
         </p>
       )}
       {state === "loading" ? <AdminLoadingBlock /> : null}
@@ -613,10 +613,12 @@ export function CustomersPanel() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete {selected.size} customer(s)?</DialogTitle>
+            <DialogTitle>Permanently purge {selected.size} customer(s)?</DialogTitle>
             <DialogDescription>
-              This closes the selected accounts immediately. Type DELETE to confirm. Staff accounts
-              and your own admin account cannot be deleted here.
+              This permanently purges the selected customers and all of their application data
+              (profile, wallet, deposits, withdrawals, investments, notifications). Their email can
+              register again. Type DELETE to confirm. Staff accounts and your own admin account
+              cannot be deleted here.
             </DialogDescription>
           </DialogHeader>
           <Input
@@ -635,7 +637,7 @@ export function CustomersPanel() {
               disabled={bulkBusy || bulkDeleteConfirmation !== "DELETE" || !pendingBulkAction}
               onClick={() => void confirmBulkDelete()}
             >
-              {bulkBusy ? "Deleting…" : "Delete selected"}
+              {bulkBusy ? "Purging…" : "Purge selected"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -911,7 +913,7 @@ export function CustomerDetailPanel() {
           disabled={busy}
           onClick={() => setDeleteOpen(true)}
         >
-          Delete
+          Purge
         </Button>
       </div>
       <Card className="mb-6 space-y-3 p-4">
@@ -995,10 +997,12 @@ export function CustomerDetailPanel() {
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete customer</DialogTitle>
+            <DialogTitle>Permanently delete customer</DialogTitle>
             <DialogDescription>
-              This closes the account and removes auth access. Type DELETE to confirm. You cannot
-              delete your own administrator account.
+              This permanently purges the customer and all of their application data (profile,
+              wallet, deposits, withdrawals, investments, notifications). Their email can register
+              again afterward. Type DELETE to confirm. You cannot delete your own administrator
+              account.
             </DialogDescription>
           </DialogHeader>
           <Input
@@ -1022,11 +1026,11 @@ export function CustomerDetailPanel() {
                   {
                     confirmation: deleteConfirmation,
                   },
-                  "Customer deleted.",
+                  "Customer permanently purged. Their email can register again.",
                 )
               }
             >
-              {busy ? "Deleting…" : "Delete customer"}
+              {busy ? "Purging…" : "Purge customer"}
             </Button>
           </DialogFooter>
         </DialogContent>

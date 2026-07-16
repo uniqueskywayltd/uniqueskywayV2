@@ -191,6 +191,48 @@ describe("AdminCustomerService", () => {
     );
     expect(timeline).toEqual(fixture.state.auditLogs);
   });
+
+  it("permanently purges a customer and removes the auth identity", async () => {
+    const fixture = createFixture({ roleKeys: ["platform_admin"] });
+
+    const result = await fixture.service.deleteCustomer("user_1", "DELETE", auditContext);
+
+    expect(result).toEqual({ deleted: true, email: "customer@example.com" });
+    expect(fixture.identityRepository.purgeCustomerUser).toHaveBeenCalledWith(
+      expect.anything(),
+      "user_1",
+    );
+    expect(fixture.identityProvider.adminDeleteUser).toHaveBeenCalledWith(
+      "00000000-0000-0000-0000-000000000001",
+    );
+    expect(fixture.operationsRepository.appendAuditLog).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: "customer.purged",
+        targetId: "user_1",
+        metadata: expect.objectContaining({ email: "customer@example.com" }),
+      }),
+    );
+    expect(fixture.state.users.find((user) => user.id === "user_1")).toBeUndefined();
+  });
+
+  it("rejects delete confirmation that is not DELETE", async () => {
+    const fixture = createFixture({ roleKeys: ["platform_admin"] });
+
+    await expect(
+      fixture.service.deleteCustomer("user_1", "remove", auditContext),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(fixture.identityRepository.purgeCustomerUser).not.toHaveBeenCalled();
+  });
+
+  it("rejects purging staff accounts from customer management", async () => {
+    const fixture = createFixture({ roleKeys: ["platform_admin"] });
+
+    await expect(
+      fixture.service.deleteCustomer("admin_1", "DELETE", auditContext),
+    ).rejects.toMatchObject({ code: "AUTHORIZATION_ERROR" });
+    expect(fixture.identityRepository.purgeCustomerUser).not.toHaveBeenCalled();
+  });
 });
 
 interface FixtureOptions {
@@ -299,6 +341,7 @@ function createFixture(options: FixtureOptions = {}) {
 
   const identityProvider = {
     getCurrentUser: vi.fn(async () => (authenticated ? currentUser : null)),
+    adminDeleteUser: vi.fn(async () => undefined),
   };
 
   const identityRepository = {
@@ -331,6 +374,12 @@ function createFixture(options: FixtureOptions = {}) {
       if (!user) throw new Error("Missing user.");
       Object.assign(user, { status });
       return user;
+    }),
+    purgeCustomerUser: vi.fn(async (_tx: unknown, userId: string) => {
+      const user = state.users.find((candidate) => candidate.id === userId);
+      if (!user) throw new Error("Customer was not found.");
+      state.users = state.users.filter((candidate) => candidate.id !== userId);
+      return { authUserId: user.authUserId, email: user.email };
     }),
   };
 
