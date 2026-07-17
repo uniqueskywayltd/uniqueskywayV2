@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 
-import { Badge, Button, Card, Textarea } from "@/components/ui";
+import { Badge, Button, Card } from "@/components/ui";
 import { appPath } from "@/lib/app-path";
 import { cn } from "@/lib/utils";
 
@@ -771,118 +771,7 @@ export function FeatureFlagsPanel() {
   );
 }
 
-export function SettingsPanel() {
-  const [state, setState] = useState<LoadState>("loading");
-  const [error, setError] = useState<{ message: string; status?: number } | null>(null);
-  const [rows, setRows] = useState<
-    Array<{ id: string; key: string; value: string; description: string | null }>
-  >([]);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [busyKey, setBusyKey] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    const result = await getAdminJson<{
-      settings: Array<{ key: string; value: unknown; description: string | null }>;
-    }>("/api/admin/settings");
-    if (result.error) {
-      setError({ message: result.error, ...(result.status ? { status: result.status } : {}) });
-      setState("error");
-      return;
-    }
-    const nextRows = (result.data?.settings ?? []).map((setting) => ({
-      id: setting.key,
-      key: setting.key,
-      value:
-        typeof setting.value === "string" ||
-        typeof setting.value === "number" ||
-        typeof setting.value === "boolean"
-          ? String(setting.value)
-          : formatPlainObject(setting.value),
-      description: setting.description,
-    }));
-    setRows(nextRows);
-    setDrafts(Object.fromEntries(nextRows.map((row) => [row.key, row.value])));
-    setState("ready");
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  async function saveSetting(key: string) {
-    const raw = drafts[key] ?? "";
-    let value: string | number | boolean | Record<string, unknown> = raw;
-    try {
-      value = JSON.parse(raw) as string | number | boolean | Record<string, unknown>;
-    } catch {
-      value = raw;
-    }
-    setBusyKey(key);
-    setFeedback(null);
-    const result = await mutateAdminJson("POST", "/api/admin/settings", { key, value });
-    setBusyKey(null);
-    if (result.error) {
-      setFeedback(result.error);
-      return;
-    }
-    setFeedback(`Saved ${key}`);
-    await load();
-  }
-
-  return (
-    <div>
-      <AdminPageHeader
-        title="Platform settings"
-        description="Edit platform options. Changes save immediately."
-      />
-      {feedback ? (
-        <p className="mb-4 rounded-md border bg-card px-3 py-2 text-sm" role="status">
-          {feedback}
-        </p>
-      ) : null}
-      {state === "loading" ? <AdminLoadingBlock /> : null}
-      {state === "error" && error ? (
-        <AdminErrorBlock
-          message={error.message}
-          {...(error.status ? { status: error.status } : {})}
-          onRetry={() => {
-            setState("loading");
-            void load();
-          }}
-        />
-      ) : null}
-      {state === "ready" && rows.length === 0 ? <AdminEmptyBlock title="No settings" /> : null}
-      {state === "ready" && rows.length > 0 ? (
-        <div className="space-y-4">
-          {rows.map((row) => (
-            <Card key={row.key} className="space-y-3 p-4">
-              <div>
-                <p className="text-sm font-semibold">{row.key}</p>
-                <p className="text-xs text-muted-foreground">{row.description ?? "—"}</p>
-              </div>
-              <Textarea
-                value={drafts[row.key] ?? ""}
-                onChange={(event) =>
-                  setDrafts((current) => ({ ...current, [row.key]: event.target.value }))
-                }
-                aria-label={`Setting ${row.key}`}
-                rows={2}
-              />
-              <Button
-                type="button"
-                disabled={busyKey === row.key}
-                onClick={() => void saveSetting(row.key)}
-              >
-                {busyKey === row.key ? "Saving…" : "Save"}
-              </Button>
-            </Card>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
+export { SettingsPanel } from "./admin-settings-panel";
 
 export function SystemPanel() {
   const [state, setState] = useState<LoadState>("loading");
@@ -1412,15 +1301,4 @@ export function EmailTemplatesPanel() {
       ) : null}
     </div>
   );
-}
-
-function formatPlainObject(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  if (typeof value !== "object") return String(value);
-  if (Array.isArray(value)) {
-    return value.map((item) => formatPlainObject(item)).join(", ");
-  }
-  return Object.entries(value as Record<string, unknown>)
-    .map(([key, entry]) => `${key}: ${formatPlainObject(entry)}`)
-    .join("; ");
 }
