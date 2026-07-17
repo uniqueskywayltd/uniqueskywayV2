@@ -1,7 +1,7 @@
 export const APP_METADATA = {
   displayName: "Unique Sky Way V2",
   packageName: "unique-sky-way-v2",
-  version: "1.0.0",
+  version: "2.0.0",
 } as const;
 
 export const FINANCIAL_TIME_ZONE = "America/New_York" as const;

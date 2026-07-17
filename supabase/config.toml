@@ -31,6 +31,3 @@ verify_enabled = true
 [auth.mfa.phone]
 enroll_enabled = false
 verify_enabled = false
-
-[vector]
-enabled = false

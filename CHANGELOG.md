@@ -12,8 +12,22 @@ Every release must be backed by a clean build, passing tests, an immutable Git c
 
 ## Unreleased
 
-- Milestone 7 Stage 1 frozen (`DEC-0060`, score 99.8): Global Experience design pack + `LOCALE_EXPERIENCE_GUIDE.md`, `TRANSLATION_KEYS_POLICY.md`, `LANGUAGE_CATALOG.md`; `DEC-0061` / `DEC-0062`.
-- Sprint I1 (in progress): localization infrastructure — catalog, resolver, `t(key)`, locale cookie API, header selector, `lang`/`dir` shell.
+## v2.0.0-production - 2026-07-17
+
+Status: Final production release for the live Unique Sky Way V2 platform.
+
+Included:
+
+- Four-language customer experience (English, العربية, Español, Français) with mobile globe picker and opt-in browser language suggestion.
+- Auto-invest on deposit approval with amount-based plan bands (`202607171200_align_plan_principal_bands`).
+- Full-term investment tenure for customers; admin English-only console.
+- Production alias: `https://uniqueskyway.com` (Vercel + Supabase project `lngjjttkiuqlclalccah`).
+
+Verification:
+
+- Pending remote migrations: **zero**
+- Lint, typecheck, unit tests, and production build required before tag
+- Tag: `v2.0.0-production`
 
 ## v3.2.0 - 2026-07-13
 
