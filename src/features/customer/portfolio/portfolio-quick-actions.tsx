@@ -2,20 +2,22 @@ import Link from "next/link";
 import { LayoutDashboard, PieChart, ScrollText, Sparkles, Wallet } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
-
-const actions = [
-  { href: "/portfolio", label: "Manage investments", icon: PieChart },
-  { href: "/wallet/deposits/new", label: "Deposit funds", icon: Wallet },
-  { href: "/plans", label: "Explore plans", icon: Sparkles },
-  { href: "/ledger", label: "Ledger", icon: ScrollText },
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-] as const;
 
 /** PF1 — portfolio navigation shortcuts only (not dashboard widgets). */
 export function PortfolioQuickActions() {
+  const { t } = useI18n();
+  const actions = [
+    { href: "/portfolio", label: t("portfolio.actions.manage"), icon: PieChart },
+    { href: "/wallet/deposits/new", label: t("portfolio.actions.deposit"), icon: Wallet },
+    { href: "/plans", label: t("portfolio.actions.plans"), icon: Sparkles },
+    { href: "/ledger", label: t("portfolio.actions.ledger"), icon: ScrollText },
+    { href: "/dashboard", label: t("portfolio.actions.overview"), icon: LayoutDashboard },
+  ] as const;
+
   return (
-    <section aria-label="Portfolio navigation">
+    <section aria-label={t("portfolio.actions.manage")}>
       <div className="flex flex-wrap gap-2.5 sm:gap-2">
         {actions.map(({ href, label, icon: Icon }) => (
           <Link

@@ -246,6 +246,7 @@ export class InvestmentEngineService {
         currency: planVersion.currency,
         trigger: "investment.activated",
         assignmentLabel: "Investment Plan Assigned",
+        language: preferences?.language ?? "en",
         ...(profile?.legalName ? { name: profile.legalName, legalName: profile.legalName } : {}),
         ...(profile?.displayName ? { displayName: profile.displayName } : {}),
         planName: emailFields.planName,
@@ -266,11 +267,13 @@ export class InvestmentEngineService {
         amountMinor: String(input.principalMinor),
       });
 
+      const { translate, isAppLanguage } = await import("@/i18n");
+      const notifLanguage = isAppLanguage(preferences?.language) ? preferences.language : "en";
       await this.deps.notificationRepository.createNotification(tx, {
         userId: input.userId,
         type: "investment.activated",
-        title: "Investment started",
-        body: `Your investment qualified for ${emailFields.planName} automatically.`,
+        title: translate(notifLanguage, "portfolio.activate.started"),
+        body: translate(notifLanguage, "portfolio.activate.started_body"),
         priority: "success",
         data: {
           investmentId: activatedInvestment.id,

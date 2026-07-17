@@ -254,3 +254,23 @@
     animation: none;
   }
 }
+
+/* Arabic / RTL customer experience */
+html[dir="rtl"] body {
+  text-align: start;
+}
+
+html[dir="rtl"] .rtl\:rotate-180 {
+  transform: rotate(180deg);
+}
+
+html[dir="rtl"] input,
+html[dir="rtl"] textarea,
+html[dir="rtl"] select {
+  text-align: start;
+}
+
+html[dir="rtl"] [data-slot="select-trigger"],
+html[dir="rtl"] [data-slot="dialog-content"] {
+  text-align: start;
+}

@@ -8,6 +8,7 @@ import {
   formatCountdown,
   type AggregatedLiveAccrualView,
 } from "@/features/customer/portfolio/use-live-accrual";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { formatMoneyMinorUnits } from "@/lib/money-format";
 import { cn } from "@/lib/utils";
 
@@ -35,8 +36,9 @@ export function DashboardLiveEarnings({
   dailyTargetMinor = "0",
   className,
 }: DashboardLiveEarningsProps) {
+  const { t, language } = useI18n();
   const animatedTodayMinor = useAnimatedMinor(live.todayEarningsMinor);
-  const todayLabel = formatMoneyMinorUnits("en", animatedTodayMinor, currency, 2);
+  const todayLabel = formatMoneyMinorUnits(language, animatedTodayMinor, currency, 2);
   const signedToday = live.todayEarningsMinor.startsWith("-") ? todayLabel : `+${todayLabel}`;
 
   const targetMinor = BigInt(dailyTargetMinor || "0");
@@ -44,15 +46,15 @@ export function DashboardLiveEarnings({
   const accrualPercent =
     targetMinor > 0n ? Math.min(100, Number((todayMinor * 10_000n) / targetMinor) / 100) : 0;
 
-  const todayFormatted = formatMoneyMinorUnits("en", live.todayEarningsMinor, currency, 2);
-  const targetFormatted = formatMoneyMinorUnits("en", dailyTargetMinor, currency, 2);
+  const todayFormatted = formatMoneyMinorUnits(language, live.todayEarningsMinor, currency, 2);
+  const targetFormatted = formatMoneyMinorUnits(language, dailyTargetMinor, currency, 2);
   const countdown = formatCountdown(live.nextSettlementCountdownSeconds);
   const timeRemaining = formatTimeRemaining(timeRemainingLabel);
 
-  const totalRoiLabel = formatMoneyMinorUnits("en", live.totalLiveEarningsMinor, currency, 2);
-  const currentValueLabel = formatMoneyMinorUnits("en", live.currentValueMinor, currency, 2);
+  const totalRoiLabel = formatMoneyMinorUnits(language, live.totalLiveEarningsMinor, currency, 2);
+  const currentValueLabel = formatMoneyMinorUnits(language, live.currentValueMinor, currency, 2);
   const portfolioValueLabel = formatMoneyMinorUnits(
-    "en",
+    language,
     portfolioValueMinor ?? live.currentValueMinor,
     currency,
     2,
@@ -60,7 +62,7 @@ export function DashboardLiveEarnings({
 
   return (
     <section
-      aria-label="Live earnings"
+      aria-label={t("dashboard.live.title")}
       aria-live="polite"
       className={cn(
         "rounded-xl border border-border/60 bg-card p-4 shadow-[var(--elevation-2)] sm:p-5",
@@ -71,7 +73,7 @@ export function DashboardLiveEarnings({
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs">
           <span className="inline-flex shrink-0 items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400">
             <LivePulse className="h-1.5 w-1.5" />
-            Investment Active
+            {t("dashboard.live.investment_active")}
           </span>
           {planName ? (
             <>
@@ -82,7 +84,7 @@ export function DashboardLiveEarnings({
             </>
           ) : null}
           <Badge variant="success" className="h-5 shrink-0 px-1.5 text-[10px] uppercase">
-            Active
+            {t("ui.active")}
           </Badge>
           {dailyRoiBps > 0 || activatedAt ? (
             <span className="hidden text-muted-foreground lg:inline">
@@ -110,57 +112,58 @@ export function DashboardLiveEarnings({
           href="/portfolio"
           className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-primary/80"
         >
-          Manage investment
+          {t("dashboard.live.manage")}
         </Link>
       </header>
 
       <div className="mt-3">
         <h2 className="text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
-          Today&apos;s live earnings
+          {t("dashboard.live.title")}
         </h2>
         <p
           className="mt-0.5 font-heading text-4xl font-extrabold leading-none text-emerald-600 tabular-nums sm:text-[2.75rem] dark:text-emerald-400"
-          aria-label={`Live earnings ${todayLabel}`}
+          aria-label={`${t("dashboard.live.title")} ${todayLabel}`}
         >
           {todayLabel}
         </p>
         <p className="sr-only">
-          Today&apos;s accrued earnings {signedToday}. Visual estimate only; credited amounts appear
-          after settlement.
+          {t("dashboard.money.today_live_desc")} {signedToday}
         </p>
       </div>
 
       <div className="my-3 border-t border-border/50" aria-hidden />
 
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-6">
-        <MetricCell label="Today's Live Earnings">
+        <MetricCell label={t("dashboard.live.title")}>
           <span className="font-bold text-emerald-600 tabular-nums dark:text-emerald-400">
             {signedToday}
           </span>
         </MetricCell>
-        <MetricCell label="Total Earnings">
+        <MetricCell label={t("dashboard.money.total_earnings")}>
           <span className="font-bold text-foreground tabular-nums">{totalRoiLabel}</span>
         </MetricCell>
-        <MetricCell label="Current Investment Value">
+        <MetricCell label={t("dashboard.live.current_value")}>
           <span className="font-bold text-foreground tabular-nums">{currentValueLabel}</span>
         </MetricCell>
-        <MetricCell label="Current Investment">
+        <MetricCell label={t("dashboard.live.current_investment")}>
           <span className="font-bold text-foreground tabular-nums">{portfolioValueLabel}</span>
         </MetricCell>
-        <MetricCell label="Next Settlement">
+        <MetricCell label={t("dashboard.live.next_settlement")}>
           <span className="font-mono text-sm font-bold tabular-nums text-foreground">
             {countdown}
           </span>
-          <span className="sr-only">Next settlement in {countdown}</span>
+          <span className="sr-only">
+            {t("dashboard.live.next_settlement")} {countdown}
+          </span>
         </MetricCell>
-        <MetricCell label="Days Remaining">
+        <MetricCell label={t("dashboard.live.days_remaining")}>
           <span className="font-bold text-foreground tabular-nums">{timeRemaining}</span>
         </MetricCell>
       </dl>
 
       <div className="mt-3 border-t border-border/50 pt-3">
         <div className="mb-1.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>Today&apos;s accrual progress</span>
+          <span>{t("dashboard.live.title")}</span>
           <span className="shrink-0 tabular-nums text-foreground">
             {todayFormatted} / {targetFormatted}{" "}
             <span className="text-muted-foreground">({formatAccrualPercent(accrualPercent)})</span>
@@ -169,7 +172,7 @@ export function DashboardLiveEarnings({
         <Progress
           value={accrualPercent}
           className="h-1 rounded-full bg-muted [&_[data-slot=progress-indicator]]:rounded-full [&_[data-slot=progress-indicator]]:bg-emerald-500 [&_[data-slot=progress-indicator]]:transition-transform [&_[data-slot=progress-indicator]]:duration-500 [&_[data-slot=progress-indicator]]:ease-out"
-          aria-label={`Today's accrual progress ${formatAccrualPercent(accrualPercent)}`}
+          aria-label={`${t("dashboard.live.title")} ${formatAccrualPercent(accrualPercent)}`}
         />
       </div>
     </section>

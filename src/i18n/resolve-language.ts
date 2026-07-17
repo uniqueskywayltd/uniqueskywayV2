@@ -9,8 +9,8 @@ export interface ResolveLanguageInput {
 }
 
 /**
- * Priority (DEC-0060): saved preference → browser → optional country → English.
- * Never invent unsupported tags.
+ * Priority: saved preference → browser → optional country → English.
+ * Unsupported legacy tags (pt, ja, etc.) are ignored and fall through.
  */
 export function resolveLanguage(input: ResolveLanguageInput): AppLanguage {
   const fallback = input.defaultLanguage ?? DEFAULT_LANGUAGE;
@@ -48,10 +48,6 @@ export function firstSupportedFromAcceptLanguage(
     }
 
     const primary = candidate.split("-")[0]?.toLowerCase();
-    if (primary === "zh") {
-      // Default Simplified for Phase 1 when script/region omitted.
-      if (isAppLanguage("zh-Hans")) return "zh-Hans";
-    }
     if (primary && isAppLanguage(primary)) {
       return primary;
     }
@@ -60,7 +56,7 @@ export function firstSupportedFromAcceptLanguage(
   return null;
 }
 
-/** Optional, never stronger than preference or browser (DEC-0060). */
+/** Optional, never stronger than preference or browser. */
 export function languageFromCountryHint(country: string | null | undefined): AppLanguage | null {
   if (!country) return null;
   const normalized = country.trim().toUpperCase();
@@ -76,20 +72,15 @@ export function languageFromCountryHint(country: string | null | undefined): App
     SN: "fr",
     CI: "fr",
     CM: "fr",
-    MA: "fr",
+    BE: "fr",
+    MA: "ar",
     DZ: "ar",
     EG: "ar",
     SA: "ar",
     AE: "ar",
     IQ: "ar",
-    BR: "pt",
-    PT: "pt",
-    IN: "hi",
-    BD: "bn",
-    CN: "zh-Hans",
-    SG: "zh-Hans",
-    RU: "ru",
-    JP: "ja",
+    KW: "ar",
+    QA: "ar",
     US: "en",
     GB: "en",
     NG: "en",

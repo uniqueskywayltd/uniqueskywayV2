@@ -4,13 +4,15 @@ import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 /** Deposit CTA when wallet has no active investments and no leftover cash. */
 export function DashboardInvestCta({ className }: { className?: string }) {
+  const { t } = useI18n();
   return (
     <section
-      aria-label="Fund your investment"
+      aria-label={t("dashboard.cta.deposit_title")}
       className={cn(
         "relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/12 via-card to-card p-6 shadow-[var(--elevation-2)] sm:p-8",
         "motion-safe:transition-[box-shadow,transform,border-color] motion-safe:duration-300 motion-reduce:transition-none",
@@ -19,11 +21,11 @@ export function DashboardInvestCta({ className }: { className?: string }) {
       )}
     >
       <div
-        className="pointer-events-none absolute -top-16 -right-10 h-44 w-44 rounded-full bg-primary/15 blur-3xl dark:bg-primary/25"
+        className="pointer-events-none absolute -top-16 -end-10 h-44 w-44 rounded-full bg-primary/15 blur-3xl dark:bg-primary/25"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -bottom-20 -left-8 h-40 w-40 rounded-full bg-emerald-400/10 blur-3xl"
+        className="pointer-events-none absolute -bottom-20 -start-8 h-40 w-40 rounded-full bg-emerald-400/10 blur-3xl"
         aria-hidden
       />
 
@@ -31,14 +33,13 @@ export function DashboardInvestCta({ className }: { className?: string }) {
         <div className="max-w-xl space-y-3">
           <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            Ready to grow
+            {t("dashboard.cta.ready")}
           </p>
           <h2 className="font-heading text-2xl leading-tight text-foreground sm:text-3xl">
-            Submit a deposit to start earning
+            {t("dashboard.cta.deposit_title")}
           </h2>
           <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Once your deposit is approved, your investment plan is assigned automatically and
-            accrual begins immediately — no activation step.
+            {t("dashboard.cta.deposit_body")}
           </p>
         </div>
 
@@ -53,12 +54,12 @@ export function DashboardInvestCta({ className }: { className?: string }) {
             )}
           >
             <Link href="/wallet/deposits/new">
-              Deposit funds
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              {t("dashboard.cta.deposit_funds")}
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden />
             </Link>
           </Button>
           <Button asChild variant="link" className="h-auto justify-center px-0 text-sm">
-            <Link href="/plans">View investment plans</Link>
+            <Link href="/plans">{t("dashboard.cta.view_plans")}</Link>
           </Button>
         </div>
       </div>
@@ -68,9 +69,10 @@ export function DashboardInvestCta({ className }: { className?: string }) {
 
 /** Edge-case CTA when leftover available cash exists without an active investment. */
 export function DashboardInvestAvailableCashCta({ className }: { className?: string }) {
+  const { t } = useI18n();
   return (
     <section
-      aria-label="Invest available cash"
+      aria-label={t("dashboard.cta.available_title")}
       className={cn(
         "relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/12 via-card to-card p-6 shadow-[var(--elevation-2)] sm:p-8",
         className,
@@ -80,20 +82,19 @@ export function DashboardInvestAvailableCashCta({ className }: { className?: str
         <div className="max-w-xl space-y-3">
           <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            Available cash
+            {t("dashboard.money.available_cash")}
           </p>
           <h2 className="font-heading text-2xl leading-tight text-foreground sm:text-3xl">
-            Invest available cash
+            {t("dashboard.cta.available_title")}
           </h2>
           <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-            You have leftover available cash. Your plan will be assigned automatically from the
-            amount.
+            {t("dashboard.cta.available_body")}
           </p>
         </div>
         <Button asChild size="lg" className="h-11 w-full gap-2 sm:min-w-[12.5rem]">
           <Link href="/portfolio/activate">
-            Invest available cash
-            <ArrowRight className="h-4 w-4" aria-hidden />
+            {t("dashboard.cta.available_title")}
+            <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden />
           </Link>
         </Button>
       </div>

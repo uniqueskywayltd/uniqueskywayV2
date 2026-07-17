@@ -3,16 +3,17 @@ import { describe, expect, it } from "vitest";
 import { resolveLanguage, firstSupportedFromAcceptLanguage } from "./resolve-language";
 import { translate } from "./translate";
 import { formatMoneyMinorUnits } from "./format";
+import { APP_LANGUAGE_CODES, listSelectableLanguages } from "./index";
 
 describe("resolveLanguage", () => {
   it("prefers saved preference over browser and country", () => {
     expect(
       resolveLanguage({
-        savedPreference: "ja",
+        savedPreference: "ar",
         acceptLanguageHeader: "fr-FR,fr;q=0.9",
         countryHint: "EG",
       }),
-    ).toBe("ja");
+    ).toBe("ar");
   });
 
   it("uses browser language when no preference is saved", () => {
@@ -23,12 +24,14 @@ describe("resolveLanguage", () => {
     ).toBe("es");
   });
 
-  it("maps zh Accept-Language to zh-Hans", () => {
-    expect(firstSupportedFromAcceptLanguage("zh-CN,zh;q=0.9")).toBe("zh-Hans");
+  it("ignores retired language tags from Accept-Language", () => {
+    expect(firstSupportedFromAcceptLanguage("zh-CN,zh;q=0.9,en;q=0.8")).toBe("en");
+    expect(firstSupportedFromAcceptLanguage("ja,en;q=0.8")).toBe("en");
   });
 
   it("falls back to country then English", () => {
-    expect(resolveLanguage({ countryHint: "BR" })).toBe("pt");
+    expect(resolveLanguage({ countryHint: "MX" })).toBe("es");
+    expect(resolveLanguage({ countryHint: "BR" })).toBe("en");
     expect(resolveLanguage({})).toBe("en");
   });
 
@@ -39,6 +42,27 @@ describe("resolveLanguage", () => {
         acceptLanguageHeader: "fr",
       }),
     ).toBe("fr");
+  });
+
+  it("ignores retired saved preferences", () => {
+    expect(
+      resolveLanguage({
+        savedPreference: "ja",
+        acceptLanguageHeader: "en",
+      }),
+    ).toBe("en");
+  });
+});
+
+describe("language catalog", () => {
+  it("exposes only English, Arabic, Spanish, and French", () => {
+    expect([...APP_LANGUAGE_CODES].sort()).toEqual(["ar", "en", "es", "fr"]);
+    expect(listSelectableLanguages().map((entry) => entry.nativeName)).toEqual([
+      "English",
+      "العربية",
+      "Español",
+      "Français",
+    ]);
   });
 });
 

@@ -14,7 +14,6 @@ import { getAdminJson } from "@/features/admin/api-client";
 import { postAuthJson } from "@/features/auth/api-client";
 import { SessionInactivityGuard } from "@/features/auth/components/session-inactivity-guard";
 import { useI18n } from "@/features/i18n/i18n-provider";
-import { LanguageSelector } from "@/features/i18n/language-selector";
 import { ADMIN_NAV_SECTIONS } from "@/features/admin/navigation";
 import { cn } from "@/lib/utils";
 
@@ -100,7 +99,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             <ThemeToggle compact />
-            <LanguageSelector compact />
             <button
               type="button"
               disabled={signingOut}
@@ -118,7 +116,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 });
               }}
             >
-              {signingOut ? t("chrome.signing_out") : t("chrome.sign_out")}
+              {signingOut ? "Signing out…" : "Sign out"}
             </button>
           </div>
         </header>

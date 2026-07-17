@@ -1,15 +1,4 @@
-export const APP_LANGUAGE_CODES = [
-  "en",
-  "es",
-  "fr",
-  "ar",
-  "pt",
-  "hi",
-  "bn",
-  "zh-Hans",
-  "ru",
-  "ja",
-] as const;
+export const APP_LANGUAGE_CODES = ["en", "es", "fr", "ar"] as const;
 
 export type AppLanguage = (typeof APP_LANGUAGE_CODES)[number];
 

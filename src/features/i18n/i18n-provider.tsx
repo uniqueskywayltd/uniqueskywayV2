@@ -23,17 +23,21 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 export function I18nProvider({
   initialLanguage,
   children,
+  syncDocument = true,
 }: {
   initialLanguage: AppLanguage;
   children: ReactNode;
+  /** When false, nested providers (e.g. admin English lock) do not rewrite document lang/dir. */
+  syncDocument?: boolean;
 }) {
   const [override, setOverride] = useState<AppLanguage | null>(null);
   const language = override ?? initialLanguage;
 
   useEffect(() => {
+    if (!syncDocument) return;
     document.documentElement.lang = language;
     document.documentElement.dir = getLanguageDirection(language);
-  }, [language]);
+  }, [language, syncDocument]);
 
   const setLanguage = useCallback((next: AppLanguage) => {
     if (!isAppLanguage(next)) return;

@@ -40,6 +40,7 @@ import RegistrationWelcomeEmail from "@/emails/registration-welcome";
 import VerifyEmail from "@/emails/verify-email";
 import WelcomeEmail from "@/emails/welcome";
 import { formatMoneyMinorUnits } from "@/lib/money-format";
+import { isAppLanguage, translate, type AppLanguage } from "@/i18n";
 
 export interface RenderProductionEmailInput {
   templateKey: string;
@@ -101,7 +102,12 @@ function buildEmail(
       }
       return {
         previewId: "verify-email",
-        subject: `Your ${brand.name} verification code`,
+        subject: localizedSubject(
+          metadata,
+          "email.subject.verify",
+          undefined,
+          `Your ${brand.name} verification code`,
+        ),
         text: [
           `Hi ${name},`,
           "",
@@ -131,7 +137,12 @@ function buildEmail(
       if (isAdminOrProvisioned) {
         return {
           previewId: "welcome",
-          subject: `Welcome to ${brand.name}`,
+          subject: localizedSubject(
+            metadata,
+            "email.subject.welcome",
+            undefined,
+            `Welcome to ${brand.name}`,
+          ),
           text: [
             `Hi ${firstName},`,
             "",
@@ -672,7 +683,7 @@ function buildEmail(
     case "deposit.confirmed":
       return {
         previewId: "deposit-approved",
-        subject: "Deposit approved",
+        subject: localizedSubject(metadata, "email.subject.deposit_approved"),
         text: financialPlainText.depositApproved({ ...base, status: status ?? "Approved" }),
         element: DepositApprovedEmail({ ...base, status: status ?? "Approved" }),
       };
@@ -761,7 +772,9 @@ function buildEmail(
       };
       return {
         previewId: "investment-activated",
-        subject: `Investment Started — ${planName}`,
+        subject: localizedSubject(metadata, "email.subject.investment_started", {
+          planName,
+        }),
         text: financialPlainText.investmentActivated(activatedProps),
         element: InvestmentActivatedEmail(activatedProps),
       };
@@ -897,6 +910,23 @@ function referenceFrom(metadata: Record<string, unknown>): string | null {
 
 function readString(value: unknown): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function customerEmailLanguage(metadata: Record<string, unknown>): AppLanguage {
+  const raw = readString(metadata.language);
+  return isAppLanguage(raw) ? raw : "en";
+}
+
+function localizedSubject(
+  metadata: Record<string, unknown>,
+  key: string,
+  values?: Record<string, string | number>,
+  fallback?: string,
+): string {
+  const language = customerEmailLanguage(metadata);
+  const value = translate(language, key, values);
+  if (value === key && fallback) return fallback;
+  return value;
 }
 
 function readSchedule(value: unknown): Array<{ label: string; amount: string }> | undefined {

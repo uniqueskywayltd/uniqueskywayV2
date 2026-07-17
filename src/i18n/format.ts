@@ -29,6 +29,6 @@ export function formatDateTime(locale: AppLanguage | string, iso: string, timeZo
 }
 
 function localeForIntl(locale: string): string {
-  if (locale === "zh-Hans") return "zh-CN";
+  if (locale === "en") return "en-US";
   return locale;
 }

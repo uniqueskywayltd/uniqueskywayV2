@@ -1,26 +1,14 @@
 import type { AppLanguage, MessageCatalog } from "./types";
 import { arMessages } from "./messages/ar";
-import { bnMessages } from "./messages/bn";
 import { enMessages } from "./messages/en";
 import { esMessages } from "./messages/es";
 import { frMessages } from "./messages/fr";
-import { hiMessages } from "./messages/hi";
-import { jaMessages } from "./messages/ja";
-import { ptMessages } from "./messages/pt";
-import { ruMessages } from "./messages/ru";
-import { zhHansMessages } from "./messages/zh-Hans";
 
 const catalogs: Record<AppLanguage, MessageCatalog> = {
   en: enMessages,
   es: esMessages,
   fr: frMessages,
   ar: arMessages,
-  pt: ptMessages,
-  hi: hiMessages,
-  bn: bnMessages,
-  "zh-Hans": zhHansMessages,
-  ru: ruMessages,
-  ja: jaMessages,
 };
 
 export function loadMessages(language: AppLanguage): MessageCatalog {

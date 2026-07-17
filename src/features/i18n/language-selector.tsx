@@ -2,36 +2,19 @@
 
 import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Languages } from "lucide-react";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { useI18n } from "@/features/i18n/i18n-provider";
 import {
   getLanguageDirection,
+  getLanguageEntry,
   LANGUAGE_COOKIE_NAME,
   listSelectableLanguages,
   type AppLanguage,
 } from "@/i18n";
 import { appPath } from "@/lib/app-path";
 import { cn } from "@/lib/utils";
-
-const SHORT_LABEL: Record<AppLanguage, string> = {
-  en: "EN",
-  es: "ES",
-  fr: "FR",
-  ar: "AR",
-  pt: "PT",
-  hi: "HI",
-  bn: "BN",
-  "zh-Hans": "ZH",
-  ru: "RU",
-  ja: "JA",
-};
 
 async function getCsrfToken(): Promise<string | null> {
   try {
@@ -61,6 +44,7 @@ export interface LanguageSelectorProps {
   compact?: boolean;
 }
 
+/** Premium language selector — native language names only (no EN/ES abbreviations). */
 export function LanguageSelector({ className, compact = true }: LanguageSelectorProps) {
   const router = useRouter();
   const labelId = useId();
@@ -68,6 +52,7 @@ export function LanguageSelector({ className, compact = true }: LanguageSelector
   const [pending, setPending] = useState(false);
   const [, startTransition] = useTransition();
   const options = listSelectableLanguages();
+  const current = getLanguageEntry(language);
 
   async function onChange(next: string) {
     const typed = next as AppLanguage;
@@ -112,22 +97,27 @@ export function LanguageSelector({ className, compact = true }: LanguageSelector
           aria-label={t("language.selector.change")}
           className={cn(
             compact
-              ? "h-9 w-[4.25rem] shrink-0 justify-center gap-1 border-border/60 bg-background/80 px-2 text-xs font-semibold tracking-wide shadow-none"
-              : "w-full",
+              ? "h-9 min-w-[8.5rem] shrink-0 justify-between gap-2 border-border/60 bg-background/80 px-2.5 text-sm font-medium shadow-none"
+              : "h-10 w-full min-w-[12rem]",
           )}
         >
-          <SelectValue placeholder={SHORT_LABEL[language]}>
-            {SHORT_LABEL[language] ?? language.toUpperCase()}
-          </SelectValue>
+          <span className="inline-flex min-w-0 items-center gap-2">
+            <Languages className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+            <SelectValue placeholder={current.nativeName}>
+              <span className="truncate" dir={current.direction === "rtl" ? "rtl" : "ltr"}>
+                {current.nativeName}
+              </span>
+            </SelectValue>
+          </span>
         </SelectTrigger>
-        <SelectContent align="end" className="z-[var(--z-dropdown)] min-w-[10rem]">
+        <SelectContent align="end" className="z-[var(--z-dropdown)] min-w-[12rem]">
           {options.map((option) => (
             <SelectItem key={option.code} value={option.code}>
-              <span className="inline-flex w-full items-center justify-between gap-3">
-                <span>{option.nativeName}</span>
-                <span className="text-xs font-medium text-muted-foreground">
-                  {SHORT_LABEL[option.code]}
-                </span>
+              <span
+                className="inline-flex w-full items-center font-medium"
+                dir={option.direction === "rtl" ? "rtl" : "ltr"}
+              >
+                {option.nativeName}
               </span>
             </SelectItem>
           ))}

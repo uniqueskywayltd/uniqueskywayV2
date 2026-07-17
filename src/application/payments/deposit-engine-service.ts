@@ -769,13 +769,19 @@ export class DepositEngineService {
       data: depositEventPayload(deposit),
     });
     if (user) {
+      const preferences = await this.deps.coreRepository.findCustomerPreferencesByUserId(
+        deposit.userId,
+      );
       await this.deps.notificationRepository.enqueueEmail(tx, {
         recipientUserId: deposit.userId,
         toEmail: user.email,
         templateKey: DEPOSIT_EMAIL_TEMPLATES.confirmed,
         templateVersion: "v1",
         idempotencyKey: `deposit.confirmed:${deposit.id}`,
-        metadata: depositEventPayload(deposit),
+        metadata: {
+          ...depositEventPayload(deposit),
+          language: preferences?.language ?? "en",
+        },
       });
     }
 

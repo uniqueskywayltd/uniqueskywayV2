@@ -1,9 +1,8 @@
 import type { AppLanguage } from "./types";
 
 /**
- * Runtime registry kept in sync with LANGUAGE_CATALOG.md.
- * Selector may expose Phase 1 tags during I1 for infrastructure/RTL testing;
- * missing translations fall back to English until a locale reaches pilot/production.
+ * Customer-facing language catalog.
+ * Admin remains English-only and does not offer a selector.
  */
 export const LANGUAGE_CATALOG = [
   {
@@ -14,67 +13,25 @@ export const LANGUAGE_CATALOG = [
     status: "production",
   },
   {
+    code: "ar",
+    nativeName: "العربية",
+    englishName: "Arabic",
+    direction: "rtl",
+    status: "production",
+  },
+  {
     code: "es",
     nativeName: "Español",
     englishName: "Spanish",
     direction: "ltr",
-    status: "design",
+    status: "production",
   },
   {
     code: "fr",
     nativeName: "Français",
     englishName: "French",
     direction: "ltr",
-    status: "design",
-  },
-  {
-    code: "ar",
-    nativeName: "العربية",
-    englishName: "Arabic",
-    direction: "rtl",
-    status: "design",
-  },
-  {
-    code: "pt",
-    nativeName: "Português",
-    englishName: "Portuguese",
-    direction: "ltr",
-    status: "design",
-  },
-  {
-    code: "hi",
-    nativeName: "हिन्दी",
-    englishName: "Hindi",
-    direction: "ltr",
-    status: "design",
-  },
-  {
-    code: "bn",
-    nativeName: "বাংলা",
-    englishName: "Bengali",
-    direction: "ltr",
-    status: "design",
-  },
-  {
-    code: "zh-Hans",
-    nativeName: "简体中文",
-    englishName: "Chinese (Simplified)",
-    direction: "ltr",
-    status: "design",
-  },
-  {
-    code: "ru",
-    nativeName: "Русский",
-    englishName: "Russian",
-    direction: "ltr",
-    status: "design",
-  },
-  {
-    code: "ja",
-    nativeName: "日本語",
-    englishName: "Japanese",
-    direction: "ltr",
-    status: "design",
+    status: "production",
   },
 ] as const satisfies ReadonlyArray<{
   code: AppLanguage;
@@ -104,7 +61,7 @@ export function getLanguageDirection(code: AppLanguage): "ltr" | "rtl" {
   return getLanguageEntry(code).direction;
 }
 
-/** Languages offered in the selector during infrastructure rollout. */
+/** Languages offered in the customer language selector. */
 export function listSelectableLanguages() {
   return [...LANGUAGE_CATALOG];
 }

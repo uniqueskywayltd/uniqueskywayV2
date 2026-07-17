@@ -20,7 +20,6 @@ const MINOR_KEY_PATTERN =
   /(^|_)(amount|principal|balance|credit|debit|roi|reward|penalty|commission|value|total|net|posted|reserved|available|pending|locked|withdrawable|deposits|withdrawals).*minor$/i;
 
 function localeForIntl(locale: string): string {
-  if (locale === "zh-Hans") return "zh-CN";
   if (locale === "en") return "en-US";
   return locale;
 }

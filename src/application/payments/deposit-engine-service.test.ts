@@ -286,6 +286,11 @@ function createFixture(options: { withAdmin?: boolean; availableBalanceMinor?: b
       stateRegion: null,
       dateOfBirth: null,
     })),
+    findCustomerPreferencesByUserId: vi.fn(async () => ({
+      userId: "user_1",
+      language: "en",
+      timeZone: "America/New_York",
+    })),
   };
   const paymentRepository = {
     findDepositIntentByIdempotencyKey: vi.fn(
