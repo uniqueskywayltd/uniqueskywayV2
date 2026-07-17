@@ -79,7 +79,7 @@ export const FAQ_COPY = {
     title: "Answers without the noise.",
     lead: "Plain language aligned to certified platform behavior. If something is not built yet, we say so.",
   },
-  searchPlaceholder: "Search questions…",
+  searchPlaceholder: "Search FAQs...",
   empty: "No questions match that search. Try another phrase, or contact us.",
   items: [
     {
@@ -202,10 +202,12 @@ export const CONTACT_COPY = {
   },
   expectations: {
     title: "What to expect",
-    hours: "Business hours: Monday–Friday (America/New_York), excluding public holidays — pending formal publish confirmation.",
+    hours:
+      "Business hours: Monday–Friday (America/New_York), excluding public holidays — pending formal publish confirmation.",
     response:
       "Expected response time: within 1–2 business days after your message is received by the support intake.",
-    topics: "Use the form for questions about accounts, plans, deposits, withdrawals, or diligence.",
+    topics:
+      "Use the form for questions about accounts, plans, deposits, withdrawals, or diligence.",
   },
   form: {
     title: "Send a message",

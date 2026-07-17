@@ -1,6 +1,7 @@
 "use client";
 
 import { useDeferredValue, useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 import {
   FAQ_CATEGORIES,
@@ -14,6 +15,9 @@ import { cn } from "@/lib/utils";
 export function FaqExplorer() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<FaqCategory | "All">("All");
+  const [openQuestion, setOpenQuestion] = useState<string | null>(
+    FAQ_COPY.items[0]?.question ?? null,
+  );
   const deferredQuery = useDeferredValue(query);
 
   const filtered = useMemo(() => {
@@ -36,28 +40,23 @@ export function FaqExplorer() {
   return (
     <section className="py-12 sm:py-14" aria-label="FAQ explorer">
       <PublicPageContainer>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="w-full max-w-md">
-            <label htmlFor="faq-search" className="text-sm font-medium text-foreground">
-              Search
-            </label>
-            <Input
-              id="faq-search"
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={FAQ_COPY.searchPlaceholder}
-              className="mt-2"
-              autoComplete="off"
-            />
-          </div>
+        <div className="mx-auto max-w-3xl">
+          <label htmlFor="faq-search" className="text-sm font-medium text-foreground">
+            Search
+          </label>
+          <Input
+            id="faq-search"
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search FAQs..."
+            className="mt-2"
+            autoComplete="off"
+            aria-label="Search FAQs"
+          />
         </div>
 
-        <div
-          className="mt-6 flex flex-wrap gap-2"
-          role="tablist"
-          aria-label="FAQ categories"
-        >
+        <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="FAQ categories">
           {(["All", ...FAQ_CATEGORIES] as const).map((item) => {
             const selected = category === item;
             return (
@@ -68,10 +67,10 @@ export function FaqExplorer() {
                 aria-selected={selected}
                 onClick={() => setCategory(item)}
                 className={cn(
-                  "rounded-md border px-3 py-1.5 text-sm transition-colors",
+                  "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
                   selected
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : "border-border/70 bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground",
                 )}
               >
                 {item}
@@ -80,46 +79,83 @@ export function FaqExplorer() {
           })}
         </div>
 
-        <div className="mt-8 space-y-8">
-          {FAQ_CATEGORIES.filter(
-            (cat) => category === "All" || category === cat,
-          ).map((cat) => {
+        <div className="mt-10 space-y-10">
+          {FAQ_CATEGORIES.filter((cat) => category === "All" || category === cat).map((cat) => {
             const items = filtered.filter((item) => item.category === cat);
             if (items.length === 0) {
               return null;
             }
             return (
               <div key={cat}>
-                <h2 className="font-[family-name:var(--font-instrument-serif)] text-2xl tracking-normal text-foreground">
+                <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
                   {cat}
                 </h2>
-                <div className="mt-4 divide-y divide-border rounded-xl border border-border/80 bg-background">
-                  {items.map((item) => (
-                    <details key={item.question} className="group px-4 py-1">
-                      <summary className="cursor-pointer list-none py-3 text-sm font-semibold text-foreground outline-none marker:content-none focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
-                        <span className="flex items-start justify-between gap-4">
-                          {item.question}
-                          <span
-                            aria-hidden="true"
-                            className="mt-0.5 text-muted-foreground transition-transform group-open:rotate-45"
-                          >
-                            +
-                          </span>
-                        </span>
-                      </summary>
-                      <p className="pb-4 text-sm leading-6 text-muted-foreground">{item.answer}</p>
-                    </details>
-                  ))}
+                <div className="mt-4 space-y-3">
+                  {items.map((item) => {
+                    const open = openQuestion === item.question;
+                    const panelId = `faq-panel-${slugFaqQuestion(item.question)}`;
+                    const buttonId = `faq-trigger-${slugFaqQuestion(item.question)}`;
+                    return (
+                      <div
+                        key={item.question}
+                        className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm"
+                      >
+                        <button
+                          id={buttonId}
+                          type="button"
+                          aria-expanded={open}
+                          aria-controls={panelId}
+                          className="flex w-full items-start justify-between gap-4 px-5 py-4 text-left text-sm font-semibold text-foreground transition-colors hover:bg-muted/30 sm:text-base"
+                          onClick={() =>
+                            setOpenQuestion((current) =>
+                              current === item.question ? null : item.question,
+                            )
+                          }
+                        >
+                          <span>{item.question}</span>
+                          <ChevronDown
+                            className={cn(
+                              "mt-0.5 size-5 shrink-0 text-muted-foreground transition-transform duration-200",
+                              open && "rotate-180",
+                            )}
+                            aria-hidden
+                          />
+                        </button>
+                        <div
+                          id={panelId}
+                          role="region"
+                          aria-labelledby={buttonId}
+                          className={cn(
+                            "grid transition-[grid-template-rows] duration-200 ease-out",
+                            open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                          )}
+                        >
+                          <div className="overflow-hidden">
+                            <p className="px-5 pb-5 text-sm leading-7 text-muted-foreground sm:text-base">
+                              {item.answer}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
           })}
 
           {filtered.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{FAQ_COPY.empty}</p>
+            <p className="text-center text-sm text-muted-foreground">{FAQ_COPY.empty}</p>
           ) : null}
         </div>
       </PublicPageContainer>
     </section>
   );
+}
+
+function slugFaqQuestion(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }

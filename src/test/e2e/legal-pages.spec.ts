@@ -5,7 +5,10 @@ test.describe("sprint A5 legal and recovery", () => {
     await page.goto("/legal/privacy");
     await expect(page.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeVisible();
     await expect(page.getByText("Subject to legal counsel review")).toBeVisible();
-    await expect(page.getByText("Requires legal counsel review").first()).toBeVisible();
+    await expect(
+      page.getByText("Important notice — subject to legal counsel review").first(),
+    ).toBeVisible();
+    await expect(page.getByText("Last Updated")).toBeVisible();
     await expect(page.getByText("ISO 27001 certified", { exact: false })).toHaveCount(0);
   });
 

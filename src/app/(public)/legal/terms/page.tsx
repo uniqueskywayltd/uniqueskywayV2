@@ -8,5 +8,5 @@ import {
 export const metadata: Metadata = buildLegalMetadata("terms");
 
 export default function TermsPage() {
-  return <LegalDocumentPage pageKey="terms" />;
+  return <LegalDocumentPage pageKey="terms" numberedSections />;
 }
