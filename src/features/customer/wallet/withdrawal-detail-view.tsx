@@ -7,6 +7,7 @@ import { Button, Skeleton, StatusChip } from "@/components/ui";
 import { DashboardPanelCard } from "@/components/ui/dashboard-panel-card";
 import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { presentWithdrawalStatus } from "@/features/customer/wallet/status-presentation";
 import type { TimelineStep, WalletWithdrawal } from "@/features/customer/wallet/types";
 import {
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 
 /** Plain-English withdrawal detail — never renders destination JSON. */
 export function WithdrawalDetailView({ withdrawalId }: { withdrawalId: string }) {
+  const { t } = useI18n();
   const [withdrawal, setWithdrawal] = useState<WalletWithdrawal | null>(null);
   const [timeline, setTimeline] = useState<TimelineStep[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function WithdrawalDetailView({ withdrawalId }: { withdrawalId: string })
 
   if (loading) {
     return (
-      <div className="space-y-4" aria-busy="true" aria-label="Loading withdrawal">
+      <div className="space-y-4" aria-busy="true" aria-label={t("wallet.loading_withdrawal")}>
         <Skeleton className="h-28 w-full rounded-xl" />
         <Skeleton className="h-40 w-full rounded-xl" />
         <Skeleton className="h-56 w-full rounded-xl" />
@@ -59,16 +61,16 @@ export function WithdrawalDetailView({ withdrawalId }: { withdrawalId: string })
   if (error || !withdrawal) {
     return (
       <section className="rounded-xl border border-border/80 bg-card p-6 shadow-sm">
-        <h2 className="text-base font-semibold">Withdrawal unavailable</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{error ?? "Not found."}</p>
+        <h2 className="text-base font-semibold">{t("wallet.withdrawal_unavailable")}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{error ?? t("ui.not_found")}</p>
         <Button asChild variant="outline" className="mt-4">
-          <Link href="/wallet/withdrawals">Back to withdrawals</Link>
+          <Link href="/wallet/withdrawals">{t("wallet.back_to_withdrawals")}</Link>
         </Button>
       </section>
     );
   }
 
-  const status = presentWithdrawalStatus(withdrawal.status);
+  const status = presentWithdrawalStatus(withdrawal.status, t);
   const destination = parseWithdrawalDestination(
     withdrawal.destinationType,
     withdrawal.destinationReference,
@@ -91,7 +93,7 @@ export function WithdrawalDetailView({ withdrawalId }: { withdrawalId: string })
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Withdrawal Details
+          {t("wallet.withdrawal_details")}
         </h1>
         <div className="mt-3">
           <StatusChip tone={status.tone}>
@@ -100,9 +102,9 @@ export function WithdrawalDetailView({ withdrawalId }: { withdrawalId: string })
         </div>
       </div>
 
-      <DashboardPanelCard title="Withdrawal Summary" accent="rose">
+      <DashboardPanelCard title={t("wallet.withdrawal_summary")} accent="rose">
         <dl className="space-y-3 text-sm">
-          <DetailRow label="Amount">
+          <DetailRow label={t("wallet.amount")}>
             <span className="text-base font-semibold tabular-nums">
               <CurrencyDisplay
                 amountMinor={Number(withdrawal.amountMinor)}
@@ -117,36 +119,33 @@ export function WithdrawalDetailView({ withdrawalId }: { withdrawalId: string })
             onCopy={(address) => void copyAddress(address)}
             copied={copied}
           />
-          <DetailRow label="Reference">
+          <DetailRow label={t("wallet.reference")}>
             <span className="font-mono text-xs">{reference}</span>
           </DetailRow>
-          <DetailRow label="Requested On">
+          <DetailRow label={t("wallet.requested_on")}>
             <DateDisplay value={withdrawal.createdAt} />
           </DetailRow>
-          <DetailRow label="Current Status">{status.label}</DetailRow>
+          <DetailRow label={t("wallet.current_status")}>{status.label}</DetailRow>
         </dl>
       </DashboardPanelCard>
 
-      <DashboardPanelCard title="What Happens Next?" accent="amber">
+      <DashboardPanelCard title={t("wallet.what_happens_next")} accent="amber">
         <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-          <li>Your withdrawal request has been received.</li>
-          <li>Our Finance Team will review your request.</li>
-          <li>Once approved, your funds will be sent to your selected wallet or bank account.</li>
-          <li>
-            You will receive an email notification when your withdrawal has been approved, rejected,
-            or completed.
-          </li>
+          <li>{t("wallet.withdraw_detail_next_1")}</li>
+          <li>{t("wallet.withdraw_detail_next_2")}</li>
+          <li>{t("wallet.withdraw_detail_next_3")}</li>
+          <li>{t("wallet.withdraw_detail_next_4")}</li>
         </ul>
       </DashboardPanelCard>
 
       {withdrawal.reviewReason ? (
-        <DashboardPanelCard title="Review note" accent="primary">
+        <DashboardPanelCard title={t("wallet.review_note")} accent="primary">
           <p className="text-sm text-muted-foreground">{withdrawal.reviewReason}</p>
         </DashboardPanelCard>
       ) : null}
 
       {timeline.length > 0 ? (
-        <DashboardPanelCard title="Timeline" accent="primary">
+        <DashboardPanelCard title={t("wallet.timeline")} accent="primary">
           <ol className="space-y-4">
             {timeline.map((step) => (
               <li key={step.key} className="flex gap-3">
@@ -183,14 +182,14 @@ export function WithdrawalDetailView({ withdrawalId }: { withdrawalId: string })
             variant="outline"
             onClick={() => void copyAddress(destination.address)}
           >
-            {copied ? "Address copied" : "Copy Wallet Address"}
+            {copied ? t("wallet.address_copied") : t("wallet.copy_wallet_address")}
           </Button>
         ) : null}
         <Button asChild variant="ghost">
-          <Link href="/wallet">Back to Wallet</Link>
+          <Link href="/wallet">{t("wallet.back_to_wallet")}</Link>
         </Button>
         <Button asChild variant="ghost">
-          <Link href="/wallet/withdrawals">Withdrawals</Link>
+          <Link href="/wallet/withdrawals">{t("wallet.action.withdrawals")}</Link>
         </Button>
       </div>
     </div>
@@ -219,12 +218,14 @@ function DestinationRows({
   onCopy: (address: string) => void;
   copied: boolean;
 }) {
+  const { t } = useI18n();
+
   if (destination.kind === "crypto") {
     return (
       <>
-        <DetailRow label="Withdrawal Method">{destination.methodLabel}</DetailRow>
-        <DetailRow label="Network">{destination.networkLabel}</DetailRow>
-        <DetailRow label="Destination Wallet">
+        <DetailRow label={t("wallet.withdrawal_method")}>{destination.methodLabel}</DetailRow>
+        <DetailRow label={t("wallet.network")}>{destination.networkLabel}</DetailRow>
+        <DetailRow label={t("wallet.destination_wallet")}>
           <div className="space-y-2">
             <p className="break-all font-mono text-xs">
               {showFullAddress ? destination.address : shortenWalletAddress(destination.address)}
@@ -236,10 +237,10 @@ function DestinationRows({
                 variant="outline"
                 onClick={() => onCopy(destination.address)}
               >
-                {copied ? "Copied" : "Copy Address"}
+                {copied ? t("ui.copied") : t("wallet.copy_address")}
               </Button>
               <Button type="button" size="sm" variant="ghost" onClick={onToggleFull}>
-                {showFullAddress ? "Hide Full Address" : "Show Full Address"}
+                {showFullAddress ? t("wallet.hide_full_address") : t("wallet.show_full_address")}
               </Button>
             </div>
           </div>
@@ -251,15 +252,17 @@ function DestinationRows({
   if (destination.kind === "bank") {
     return (
       <>
-        <DetailRow label="Withdrawal Method">Bank Transfer</DetailRow>
-        <DetailRow label="Bank Name">{destination.bankName}</DetailRow>
-        <DetailRow label="Account Name">{destination.accountName}</DetailRow>
-        <DetailRow label="Account Number">{destination.accountNumber}</DetailRow>
+        <DetailRow label={t("wallet.withdrawal_method")}>
+          {t("wallet.dest_bank_transfer")}
+        </DetailRow>
+        <DetailRow label={t("wallet.bank_name")}>{destination.bankName}</DetailRow>
+        <DetailRow label={t("wallet.account_name")}>{destination.accountName}</DetailRow>
+        <DetailRow label={t("wallet.account_number")}>{destination.accountNumber}</DetailRow>
       </>
     );
   }
 
-  return <DetailRow label="Destination">{destination.summary}</DetailRow>;
+  return <DetailRow label={t("wallet.destination")}>{destination.summary}</DetailRow>;
 }
 
 function statusEmoji(status: string): string {

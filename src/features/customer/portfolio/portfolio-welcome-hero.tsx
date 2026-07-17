@@ -1,5 +1,8 @@
+"use client";
+
 import { PieChart } from "lucide-react";
 
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 type PortfolioWelcomeHeroProps = {
@@ -8,13 +11,15 @@ type PortfolioWelcomeHeroProps = {
 
 /** PF1 — portfolio hero; primary question: How are my investments performing? */
 export function PortfolioWelcomeHero({ className }: PortfolioWelcomeHeroProps) {
+  const { t } = useI18n();
+
   return (
     <section
       className={cn(
         "relative overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm",
         className,
       )}
-      aria-label="Investments header"
+      aria-label={t("portfolio.hero.header_aria")}
     >
       <div
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_45%),linear-gradient(225deg,rgba(139,92,246,0.14)_0%,transparent_55%)] opacity-[0.2] dark:opacity-[0.32]"
@@ -31,14 +36,13 @@ export function PortfolioWelcomeHero({ className }: PortfolioWelcomeHeroProps) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium tracking-wide text-primary/80 sm:text-sm">
-            Investor portal
+            {t("portfolio.hero.portal")}
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:mt-2.5 sm:text-3xl">
-            Investments
+            {t("nav.investments")}
           </h1>
           <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground sm:mt-2">
-            How are my investments performing? Positions, progress, and what happens next — not
-            deposits, withdrawals, or a second dashboard.
+            {t("portfolio.hero.subtitle")}
           </p>
         </div>
       </div>

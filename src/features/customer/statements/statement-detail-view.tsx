@@ -8,10 +8,12 @@ import { FileText } from "lucide-react";
 import { Button, EmptyState, Skeleton } from "@/components/ui";
 import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import type { StatementDetail } from "@/features/customer/statements/types";
 import { formatMoneyMinorUnits } from "@/lib/money-format";
 
 export function StatementDetailView() {
+  const { t, language } = useI18n();
   const params = useParams<{ statementId: string }>();
   const statementId = decodeURIComponent(params.statementId ?? "");
   const [detail, setDetail] = useState<StatementDetail | null>(null);
@@ -46,7 +48,7 @@ export function StatementDetailView() {
         line.postedAt,
         line.label,
         line.direction,
-        formatMoneyMinorUnits("en", line.amountMinor, line.currency || "USD"),
+        formatMoneyMinorUnits(language, line.amountMinor, line.currency || "USD"),
         line.currency,
         line.walletCategory,
         line.transactionType,
@@ -66,25 +68,23 @@ export function StatementDetailView() {
       {},
     );
     setDownloadNote(
-      recorded.error
-        ? "Download started — same totals as on screen. History could not be recorded."
-        : "Download started — same totals as on screen.",
+      recorded.error ? t("statements.download_history_failed") : t("statements.download_started"),
     );
   }
 
   if (loading) {
-    return <Skeleton className="h-64 w-full rounded-xl" aria-label="Loading statement" />;
+    return <Skeleton className="h-64 w-full rounded-xl" aria-label={t("ui.loading")} />;
   }
 
   if (error || !detail) {
     return (
       <EmptyState
         icon={FileText}
-        title="Statement unavailable"
-        description={error ?? "This statement could not be projected from your ledger."}
+        title={t("statements.detail_unavailable")}
+        description={error ?? t("statements.detail_unavailable_desc")}
         action={
           <Button asChild>
-            <Link href="/account/statements">Back to statements</Link>
+            <Link href="/account/statements">{t("statements.back")}</Link>
           </Button>
         }
       />
@@ -93,7 +93,7 @@ export function StatementDetailView() {
 
   return (
     <div className="space-y-6 print:space-y-4">
-      <p className="sr-only">Primary question: Can I understand my financial history?</p>
+      <p className="sr-only">{t("statements.sr_question")}</p>
 
       <section className="rounded-xl border border-border/80 p-5 print:border-black">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -102,20 +102,26 @@ export function StatementDetailView() {
         <h2 className="mt-1 text-xl font-semibold">{detail.periodLabel}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{detail.periodBounds}</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Timezone: {detail.timezone} (financial calendar)
+          {t("statements.timezone_hint", { timezone: detail.timezone })}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Projected at <DateDisplay value={detail.projectedAt} /> — rebuilt from your ledger each
-          time you open it.
+          {t("statements.projected_prefix")} <DateDisplay value={detail.projectedAt} /> —{" "}
+          {t("statements.projected_suffix")}
         </p>
         <p className="mt-3 text-sm text-muted-foreground">{detail.understanding}</p>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-3">
-        <SummaryTile label="Period credits" amountMinor={detail.summary.creditTotalMinor} />
-        <SummaryTile label="Period debits" amountMinor={detail.summary.debitTotalMinor} />
         <SummaryTile
-          label="Period net activity"
+          label={t("statements.period_credits")}
+          amountMinor={detail.summary.creditTotalMinor}
+        />
+        <SummaryTile
+          label={t("statements.period_debits")}
+          amountMinor={detail.summary.debitTotalMinor}
+        />
+        <SummaryTile
+          label={t("statements.period_net")}
           amountMinor={detail.summary.periodNetMinor}
           hint={detail.summary.note}
         />
@@ -123,7 +129,7 @@ export function StatementDetailView() {
 
       {detail.categoryTotals.length > 0 ? (
         <section className="space-y-2">
-          <h3 className="text-sm font-semibold">Wallet category totals (this period)</h3>
+          <h3 className="text-sm font-semibold">{t("statements.category_totals")}</h3>
           <ul className="divide-y divide-border/70 rounded-xl border border-border/80">
             {detail.categoryTotals.map((row) => (
               <li
@@ -143,13 +149,13 @@ export function StatementDetailView() {
 
       <div className="flex flex-wrap gap-2 print:hidden">
         <Button type="button" onClick={() => void downloadCsv()}>
-          Download CSV
+          {t("statements.download_csv")}
         </Button>
         <Button type="button" variant="outline" onClick={() => window.print()}>
-          Print
+          {t("statements.print")}
         </Button>
         <Button asChild variant="outline">
-          <Link href={detail.related.ledgerHref}>View live ledger</Link>
+          <Link href={detail.related.ledgerHref}>{t("statements.view_ledger")}</Link>
         </Button>
       </div>
       {downloadNote ? (
@@ -157,9 +163,11 @@ export function StatementDetailView() {
       ) : null}
 
       <section className="space-y-2">
-        <h3 className="text-sm font-semibold">Line items ({detail.lineCount})</h3>
+        <h3 className="text-sm font-semibold">
+          {t("statements.line_items", { count: detail.lineCount })}
+        </h3>
         {detail.lines.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No activity in this period.</p>
+          <p className="text-sm text-muted-foreground">{t("statements.no_activity_period")}</p>
         ) : (
           <ul className="divide-y divide-border/70 rounded-xl border border-border/80">
             {detail.lines.map((line) => (
@@ -171,7 +179,7 @@ export function StatementDetailView() {
                   <p className="text-sm font-medium">{line.label}</p>
                   <p className="text-xs text-muted-foreground">
                     <DateDisplay value={line.postedAt} /> · {line.walletCategory} ·{" "}
-                    {line.direction === "credit" ? "Credit" : "Debit"}
+                    {line.direction === "credit" ? t("statements.credit") : t("statements.debit")}
                   </p>
                 </div>
                 <CurrencyDisplay
@@ -188,10 +196,10 @@ export function StatementDetailView() {
 
       <div className="flex flex-wrap gap-3 print:hidden">
         <Button asChild variant="link" className="h-auto px-0">
-          <Link href="/account/statements">Back to statements</Link>
+          <Link href="/account/statements">{t("statements.back")}</Link>
         </Button>
         <Button asChild variant="link" className="h-auto px-0">
-          <Link href={detail.related.successHref}>Success Hub</Link>
+          <Link href={detail.related.successHref}>{t("statements.success_hub")}</Link>
         </Button>
       </div>
     </div>

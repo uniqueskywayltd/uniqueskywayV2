@@ -12,7 +12,12 @@ import {
   type DashboardWidgetId,
 } from "@/features/customer/dashboard/widget-registry";
 import { WHATS_NEW_ITEMS } from "@/application/customer/communication-presentation";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
+
+function widgetMessageKey(widgetId: DashboardWidgetId, field: string) {
+  return `dashboard.widget.${widgetId.replace(/-/g, "_")}.${field}`;
+}
 
 interface WalletOverviewPayload {
   balances: {
@@ -60,6 +65,7 @@ interface DashboardData {
 
 /** DP2+ widget surface — preserved from Sprint B1; not mounted in DP1 frame. */
 export function DashboardWidgetSurface() {
+  const { t } = useI18n();
   const widgets = resolveDashboardWidgets();
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -93,19 +99,13 @@ export function DashboardWidgetSurface() {
     <div>
       {error ? (
         <p className="mb-4 rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
-          Some dashboard figures could not load. Open Investments or Wallet directly, or retry by
-          refreshing. {error}
+          {t("dashboard.widgets.load_error")} {error}
         </p>
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         {widgets.map((widget) => (
-          <DashboardWidgetCard
-            key={widget.id}
-            widget={widget}
-            loading={loading}
-            data={data}
-          />
+          <DashboardWidgetCard key={widget.id} widget={widget} loading={loading} data={data} />
         ))}
       </div>
     </div>
@@ -121,11 +121,14 @@ function DashboardWidgetCard({
   loading: boolean;
   data: DashboardData | null;
 }) {
+  const { t } = useI18n();
   const priority = widget.hierarchyRank !== null;
+  const title = t(widgetMessageKey(widget.id, "title"));
+  const primaryQuestion = t(widgetMessageKey(widget.id, "question"));
 
   return (
     <section
-      aria-label={widget.title}
+      aria-label={title}
       data-widget-id={widget.id}
       data-hierarchy-rank={widget.hierarchyRank ?? undefined}
       className={cn(
@@ -138,21 +141,21 @@ function DashboardWidgetCard({
         <div>
           {widget.hierarchyRank !== null ? (
             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Priority {widget.hierarchyRank}
+              {t("dashboard.widgets.priority", { rank: widget.hierarchyRank })}
             </p>
           ) : (
             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Supporting
+              {t("dashboard.widgets.supporting")}
             </p>
           )}
-          <h2 className="mt-1 text-base font-semibold text-foreground">{widget.title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{widget.primaryQuestion}</p>
+          <h2 className="mt-1 text-base font-semibold text-foreground">{title}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{primaryQuestion}</p>
         </div>
       </div>
 
       <div className="mt-4">
         {loading ? (
-          <div className="space-y-2" aria-busy="true" aria-label={`Loading ${widget.title}`}>
+          <div className="space-y-2" aria-busy="true" aria-label={title}>
             <Skeleton className="h-8 w-40" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
@@ -174,17 +177,19 @@ function DashboardWidgetBody({
   widget: DashboardWidgetDefinition;
   data: DashboardData | null;
 }) {
+  const { t } = useI18n();
+
   if (widgetId === "quick-actions") {
     return (
       <div className="flex flex-wrap gap-3">
         <Button asChild>
-          <Link href="/wallet/deposits/new">Add funds</Link>
+          <Link href="/wallet/deposits/new">{t("dashboard.widgets.add_funds")}</Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href="/wallet/withdrawals/new">Withdraw</Link>
+          <Link href="/wallet/withdrawals/new">{t("dashboard.widgets.withdraw")}</Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href="/portfolio">View investments</Link>
+          <Link href="/portfolio">{t("dashboard.widgets.view_investments")}</Link>
         </Button>
       </div>
     );
@@ -194,7 +199,9 @@ function DashboardWidgetBody({
     const principal = data?.portfolio?.summary.activePrincipalMinor ?? "0";
     const count = data?.portfolio?.summary.totalCount ?? 0;
     if (count === 0) {
-      return <EmptyCopy widget={widget} href="/portfolio" cta="Open portfolio" />;
+      return (
+        <EmptyCopy widget={widget} href="/portfolio" cta={t("dashboard.widgets.open_portfolio")} />
+      );
     }
     return (
       <div>
@@ -202,10 +209,10 @@ function DashboardWidgetBody({
           <CurrencyDisplay amountMinor={Number(principal)} />
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Active principal from certified investments — not client ROI math.
+          {t("dashboard.widgets.active_principal_hint")}
         </p>
         <Button asChild variant="link" className="mt-2 h-auto px-0">
-          <Link href="/portfolio">View investments</Link>
+          <Link href="/portfolio">{t("dashboard.widgets.view_investments")}</Link>
         </Button>
       </div>
     );
@@ -217,7 +224,7 @@ function DashboardWidgetBody({
     const locked = data?.wallet?.balances.lockedBalanceMinor ?? "0";
     const empty = available === "0" && pending === "0" && locked === "0";
     if (empty) {
-      return <EmptyCopy widget={widget} href="/wallet" cta="Open wallet" />;
+      return <EmptyCopy widget={widget} href="/wallet" cta={t("dashboard.widgets.open_wallet")} />;
     }
     return (
       <div>
@@ -225,23 +232,26 @@ function DashboardWidgetBody({
           <CurrencyDisplay amountMinor={Number(available)} />
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Pending{" "}
-          <CurrencyDisplay amountMinor={Number(pending)} /> · Locked{" "}
-          <CurrencyDisplay amountMinor={Number(locked)} />
+          {t("wallet.pending")} <CurrencyDisplay amountMinor={Number(pending)} /> ·{" "}
+          {t("dashboard.widgets.locked")} <CurrencyDisplay amountMinor={Number(locked)} />
         </p>
         <Button asChild variant="link" className="mt-2 h-auto px-0">
-          <Link href="/wallet">Open wallet</Link>
+          <Link href="/wallet">{t("dashboard.widgets.open_wallet")}</Link>
         </Button>
       </div>
     );
   }
 
   if (widgetId === "todays-activity") {
-    const today = (data?.wallet?.recentActivity ?? []).filter((item) =>
-      isLikelyToday(item.at),
-    );
+    const today = (data?.wallet?.recentActivity ?? []).filter((item) => isLikelyToday(item.at));
     if (today.length === 0) {
-      return <EmptyCopy widget={widget} href="/account/activity" cta="Open activity" />;
+      return (
+        <EmptyCopy
+          widget={widget}
+          href="/account/activity"
+          cta={t("dashboard.widgets.open_activity")}
+        />
+      );
     }
     return (
       <ul className="space-y-2">
@@ -267,10 +277,10 @@ function DashboardWidgetBody({
       <div>
         <p className="text-2xl font-semibold">{pending}</p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Open deposit or withdrawal items need attention in Wallet.
+          {t("dashboard.widgets.pending_attention")}
         </p>
         <Button asChild variant="outline" className="mt-3">
-          <Link href="/wallet">Review in wallet</Link>
+          <Link href="/wallet">{t("dashboard.widgets.review_wallet")}</Link>
         </Button>
       </div>
     );
@@ -281,7 +291,9 @@ function DashboardWidgetBody({
       ["active", "maturing"].includes(item.status),
     );
     if (active.length === 0) {
-      return <EmptyCopy widget={widget} href="/portfolio" cta="Open portfolio" />;
+      return (
+        <EmptyCopy widget={widget} href="/portfolio" cta={t("dashboard.widgets.open_portfolio")} />
+      );
     }
     const primary = active[0]!;
     const progress = primary.progressPercent ?? 0;
@@ -291,7 +303,7 @@ function DashboardWidgetBody({
         <p className="mt-2 text-2xl font-semibold">{progress}%</p>
         <p className="mt-1 text-sm text-muted-foreground">{primary.nextMilestone.label}</p>
         <Button asChild variant="link" className="mt-2 h-auto px-0">
-          <Link href={`/portfolio/${primary.id}`}>View details</Link>
+          <Link href={`/portfolio/${primary.id}`}>{t("dashboard.widgets.view_details")}</Link>
         </Button>
       </div>
     );
@@ -300,16 +312,24 @@ function DashboardWidgetBody({
   if (widgetId === "notifications") {
     const unread = data?.unreadNotifications ?? 0;
     if (unread === 0) {
-      return <EmptyCopy widget={widget} href="/account/notifications" cta="Open notifications" />;
+      return (
+        <EmptyCopy
+          widget={widget}
+          href="/account/notifications"
+          cta={t("dashboard.widgets.open_notifications")}
+        />
+      );
     }
     return (
       <div>
-        <p className="text-2xl font-semibold">{unread} unread</p>
+        <p className="text-2xl font-semibold">
+          {t("dashboard.widgets.unread_count", { count: unread })}
+        </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Security and money alerts take priority in the Notification Center.
+          {t("dashboard.widgets.notifications_priority")}
         </p>
         <Button asChild variant="outline" className="mt-3">
-          <Link href="/account/notifications">Open notifications</Link>
+          <Link href="/account/notifications">{t("dashboard.widgets.open_notifications")}</Link>
         </Button>
       </div>
     );
@@ -320,13 +340,16 @@ function DashboardWidgetBody({
       (item) => item.nextMilestone.date && ["active", "maturing"].includes(item.status),
     );
     if (!next?.nextMilestone.date) {
-      return <EmptyCopy widget={widget} href="/portfolio" cta="Open portfolio" />;
+      return (
+        <EmptyCopy widget={widget} href="/portfolio" cta={t("dashboard.widgets.open_portfolio")} />
+      );
     }
     return (
       <div>
         <p className="text-sm font-medium text-foreground">{next.nextMilestone.label}</p>
         <p className="mt-2 text-sm text-muted-foreground">
-          <DateDisplay value={next.nextMilestone.date} /> · New York day expectancy
+          <DateDisplay value={next.nextMilestone.date} /> ·{" "}
+          {t("dashboard.widgets.settlement_expectancy")}
         </p>
       </div>
     );
@@ -335,7 +358,7 @@ function DashboardWidgetBody({
   if (widgetId === "money-timeline") {
     const items = data?.wallet?.recentActivity ?? [];
     if (items.length === 0) {
-      return <EmptyCopy widget={widget} href="/ledger" cta="Open ledger" />;
+      return <EmptyCopy widget={widget} href="/ledger" cta={t("dashboard.widgets.open_ledger")} />;
     }
     return (
       <ul className="space-y-2">
@@ -354,14 +377,14 @@ function DashboardWidgetBody({
   if (widgetId === "whats-new") {
     const latest = WHATS_NEW_ITEMS[0];
     if (!latest) {
-      return <EmptyCopy widget={widget} href="/account/whats-new" cta="What’s New" />;
+      return <EmptyCopy widget={widget} href="/account/whats-new" cta={t("whats_new.title")} />;
     }
     return (
       <div>
         <p className="text-sm font-medium text-foreground">{latest.title}</p>
         <p className="mt-1 text-sm text-muted-foreground">{latest.summary}</p>
         <Button asChild variant="outline" className="mt-3">
-          <Link href="/account/whats-new">What’s New</Link>
+          <Link href="/account/whats-new">{t("whats_new.title")}</Link>
         </Button>
       </div>
     );
@@ -379,10 +402,16 @@ function EmptyCopy({
   href?: string;
   cta?: string;
 }) {
+  const { t } = useI18n();
+
   return (
     <div>
-      <p className="text-sm font-medium text-foreground">{widget.emptyTitle}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{widget.emptyDescription}</p>
+      <p className="text-sm font-medium text-foreground">
+        {t(widgetMessageKey(widget.id, "empty_title"))}
+      </p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {t(widgetMessageKey(widget.id, "empty_description"))}
+      </p>
       {href && cta ? (
         <Button asChild variant="outline" className="mt-4">
           <Link href={href}>{cta}</Link>

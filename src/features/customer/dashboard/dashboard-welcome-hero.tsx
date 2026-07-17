@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { brandAssets } from "@/features/brand";
+import { useI18n } from "@/features/i18n/i18n-provider";
+import { getTimeGreetingKey } from "@/lib/utils/time-greeting";
 import { cn } from "@/lib/utils";
-import { getTimeGreeting } from "@/lib/utils/time-greeting";
 
 type DashboardWelcomeHeroProps = {
   fullName: string;
@@ -18,6 +21,7 @@ export function DashboardWelcomeHero({
   avatarUrl,
   className,
 }: DashboardWelcomeHeroProps) {
+  const { t } = useI18n();
   const initials = fullName
     .split(/[\s@.]+/)
     .filter(Boolean)
@@ -31,7 +35,7 @@ export function DashboardWelcomeHero({
         "relative overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm",
         className,
       )}
-      aria-label="Welcome"
+      aria-label={t("dashboard.welcome_aria")}
     >
       <div
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_42%),linear-gradient(225deg,rgba(245,158,11,0.14)_0%,transparent_55%)] opacity-[0.22] dark:opacity-[0.35]"
@@ -51,7 +55,7 @@ export function DashboardWelcomeHero({
           <Link
             href="/account/profile"
             className="relative block rounded-2xl ring-1 ring-border/80 ring-offset-2 ring-offset-card motion-safe:transition-shadow motion-safe:duration-200 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            aria-label="Open profile"
+            aria-label={t("dashboard.open_profile")}
           >
             <Avatar className="h-16 w-16 rounded-2xl sm:h-[4.5rem] sm:w-[4.5rem]">
               <AvatarImage src={avatarUrl ?? brandAssets.icon} alt="" />
@@ -64,7 +68,7 @@ export function DashboardWelcomeHero({
 
         <div className="min-w-0 flex-1 py-0.5">
           <p className="text-xs font-medium tracking-wide text-primary/80 sm:text-sm">
-            {getTimeGreeting()}
+            {t(getTimeGreetingKey())}
           </p>
           <h1 className="mt-2 truncate text-2xl font-bold tracking-tight text-foreground sm:mt-2.5 sm:text-3xl">
             {fullName}

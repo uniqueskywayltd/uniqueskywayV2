@@ -7,20 +7,22 @@ import { FileText, Search } from "lucide-react";
 import { Button, EmptyState, Skeleton } from "@/components/ui";
 import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import type {
   StatementListItem,
   StatementListResponse,
   StatementType,
 } from "@/features/customer/statements/types";
 
-const TYPE_FILTERS: Array<{ id: "all" | StatementType; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "monthly", label: "Monthly" },
-  { id: "wallet", label: "Wallet" },
-  { id: "investment", label: "Investment" },
+const TYPE_FILTER_KEYS: Array<{ id: "all" | StatementType; labelKey: string }> = [
+  { id: "all", labelKey: "statements.filter.all" },
+  { id: "monthly", labelKey: "statements.filter.monthly" },
+  { id: "wallet", labelKey: "statements.filter.wallet" },
+  { id: "investment", labelKey: "statements.filter.investment" },
 ];
 
 export function StatementsExplorer() {
+  const { t } = useI18n();
   const [type, setType] = useState<"all" | StatementType>("all");
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
@@ -62,10 +64,10 @@ export function StatementsExplorer() {
   if (error) {
     return (
       <section className="rounded-xl border border-border/80 p-6">
-        <h2 className="text-base font-semibold">Statements unavailable</h2>
+        <h2 className="text-base font-semibold">{t("statements.unavailable")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{error}</p>
         <Button asChild variant="outline" className="mt-4">
-          <Link href="/account/help">Open Help</Link>
+          <Link href="/account/help">{t("statements.open_help")}</Link>
         </Button>
       </section>
     );
@@ -73,26 +75,27 @@ export function StatementsExplorer() {
 
   return (
     <div className="space-y-8">
-      <p className="sr-only">Primary question: Can I understand my financial history?</p>
+      <p className="sr-only">{t("statements.sr_question")}</p>
       <section className="rounded-xl border border-border/80 p-5">
         <div className="flex items-start gap-3">
           <FileText className="mt-0.5 size-5 text-muted-foreground" aria-hidden />
           <div className="space-y-2">
-            <h2 className="text-base font-semibold">Understand your history</h2>
+            <h2 className="text-base font-semibold">{t("statements.understand_title")}</h2>
             <p className="text-sm text-muted-foreground">
-              {payload?.understanding ??
-                "Statements project certified ledger postings by New York calendar month."}
+              {payload?.understanding ?? t("statements.default_understanding")}
             </p>
             <p className="text-xs text-muted-foreground">
-              Timezone: {payload?.timezone ?? "America/New_York"} (financial calendar)
+              {t("statements.timezone_hint", {
+                timezone: payload?.timezone ?? "America/New_York",
+              })}
             </p>
           </div>
         </div>
       </section>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Statement type">
-          {TYPE_FILTERS.map((item) => (
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label={t("nav.statements")}>
+          {TYPE_FILTER_KEYS.map((item) => (
             <Button
               key={item.id}
               type="button"
@@ -100,7 +103,7 @@ export function StatementsExplorer() {
               variant={type === item.id ? "default" : "outline"}
               onClick={() => beginReload({ type: item.id })}
             >
-              {item.label}
+              {t(item.labelKey)}
             </Button>
           ))}
         </div>
@@ -112,7 +115,7 @@ export function StatementsExplorer() {
           }}
         >
           <label className="sr-only" htmlFor="statement-search">
-            Search statements
+            {t("statements.search_label")}
           </label>
           <div className="relative flex-1">
             <Search
@@ -123,29 +126,26 @@ export function StatementsExplorer() {
               id="statement-search"
               value={q}
               onChange={(event) => setQ(event.target.value)}
-              placeholder="Search period or type"
+              placeholder={t("statements.search_placeholder")}
               className="h-9 w-full rounded-md border bg-background pr-3 pl-9 text-sm"
             />
           </div>
           <Button type="submit" size="sm" variant="outline">
-            Search
+            {t("ui.search")}
           </Button>
         </form>
       </div>
 
       {loading ? (
-        <Skeleton className="h-48 w-full rounded-xl" aria-label="Loading statements" />
+        <Skeleton className="h-48 w-full rounded-xl" aria-label={t("ui.loading")} />
       ) : !payload || payload.statements.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title="No statements yet"
-          description={
-            payload?.emptyHint ??
-            "When deposits, ROI, or withdrawals post, New York months appear here."
-          }
+          title={t("statements.empty_title")}
+          description={payload?.emptyHint ?? t("statements.default_empty_hint")}
           action={
             <Button asChild>
-              <Link href="/ledger">Open ledger</Link>
+              <Link href="/ledger">{t("activity.open_ledger")}</Link>
             </Button>
           }
         />
@@ -158,11 +158,9 @@ export function StatementsExplorer() {
       )}
 
       <section className="space-y-3">
-        <h2 className="text-base font-semibold">Download history</h2>
+        <h2 className="text-base font-semibold">{t("statements.download_history")}</h2>
         {!payload || payload.downloads.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No downloads yet. Open a statement and download CSV when you need a copy.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("statements.no_downloads")}</p>
         ) : (
           <ul className="divide-y divide-border/70 rounded-xl border border-border/80">
             {payload.downloads.map((row) => (
@@ -178,7 +176,7 @@ export function StatementsExplorer() {
                 </div>
                 <Button asChild variant="link" className="h-auto px-0">
                   <Link href={`/account/statements/${encodeURIComponent(row.statementId)}`}>
-                    Open
+                    {t("communications.open")}
                   </Link>
                 </Button>
               </li>
@@ -191,6 +189,8 @@ export function StatementsExplorer() {
 }
 
 function StatementListRow({ row }: { row: StatementListItem }) {
+  const { t } = useI18n();
+
   return (
     <li>
       <Link
@@ -202,16 +202,16 @@ function StatementListRow({ row }: { row: StatementListItem }) {
             {row.periodLabel} · {row.typeLabel}
           </p>
           <p className="text-xs text-muted-foreground">
-            {row.periodBounds} · {row.statusLabel} · {row.lineCount} lines
+            {row.periodBounds} · {row.statusLabel} · {row.lineCount} {t("statements.lines")}
           </p>
         </div>
         <div className="text-sm sm:text-right">
           <p>
-            Credits{" "}
+            {t("statements.credits")}{" "}
             <CurrencyDisplay amountMinor={Number(row.creditTotalMinor)} className="font-medium" />
           </p>
           <p className="text-muted-foreground">
-            Debits{" "}
+            {t("statements.debits")}{" "}
             <CurrencyDisplay amountMinor={Number(row.debitTotalMinor)} className="font-medium" />
           </p>
         </div>

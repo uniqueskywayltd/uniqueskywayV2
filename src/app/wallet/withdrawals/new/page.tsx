@@ -13,8 +13,8 @@ export default function NewWithdrawalPage() {
   return (
     <div className="space-y-8">
       <WithdrawalSurfaceHero
-        title="New withdrawal"
-        description="How do I get my money? Clear status after submit — never clock promises."
+        titleKey="wallet.page.new_withdrawal_title"
+        descriptionKey="wallet.page.new_withdrawal_desc"
       />
       <WithdrawalJourney />
     </div>

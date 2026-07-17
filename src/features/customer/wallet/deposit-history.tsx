@@ -15,23 +15,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { presentDepositStatus } from "@/features/customer/wallet/status-presentation";
 import type { WalletDeposit } from "@/features/customer/wallet/types";
 import { cn } from "@/lib/utils";
 
 const FILTERS = [
-  { value: "all", label: "All" },
-  { value: "created", label: "Created" },
-  { value: "pending", label: "Pending" },
-  { value: "confirmed", label: "Confirmed" },
-  { value: "failed", label: "Failed" },
-  { value: "cancelled", label: "Cancelled" },
+  { value: "all", labelKey: "ui.all" },
+  { value: "created", labelKey: "status.deposit.filter.created" },
+  { value: "pending", labelKey: "ui.pending" },
+  { value: "confirmed", labelKey: "status.deposit.confirmed" },
+  { value: "failed", labelKey: "ui.failed" },
+  { value: "cancelled", labelKey: "ui.cancelled" },
 ] as const;
 
 type FilterValue = (typeof FILTERS)[number]["value"];
 
 /** WP2 — deposit history over certified deposit read models only. */
 export function DepositHistory() {
+  const { t } = useI18n();
   const [deposits, setDeposits] = useState<WalletDeposit[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,18 +41,16 @@ export function DepositHistory() {
 
   useEffect(() => {
     let active = true;
-    void getCustomerJson<{ deposits: WalletDeposit[] }>("/api/customer/deposits").then(
-      (result) => {
-        if (!active) return;
-        if (result.error) {
-          setError(result.error);
-          setLoading(false);
-          return;
-        }
-        setDeposits(result.data?.deposits ?? []);
+    void getCustomerJson<{ deposits: WalletDeposit[] }>("/api/customer/deposits").then((result) => {
+      if (!active) return;
+      if (result.error) {
+        setError(result.error);
         setLoading(false);
-      },
-    );
+        return;
+      }
+      setDeposits(result.data?.deposits ?? []);
+      setLoading(false);
+    });
     return () => {
       active = false;
     };
@@ -71,7 +71,7 @@ export function DepositHistory() {
 
   if (loading) {
     return (
-      <div className="space-y-4" aria-busy="true" aria-label="Loading deposits">
+      <div className="space-y-4" aria-busy="true" aria-label={t("wallet.loading_deposits")}>
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: 4 }).map((_, index) => (
             <Skeleton key={index} className="h-8 w-20 rounded-lg" />
@@ -86,11 +86,11 @@ export function DepositHistory() {
     return (
       <EmptyState
         icon={ArrowDownLeft}
-        title="No deposits"
-        description="Funding history stays here after you add funds — start when you’re ready."
+        title={t("wallet.deposits_empty_title")}
+        description={t("wallet.deposits_empty_body")}
         action={
           <Button asChild>
-            <Link href="/wallet/deposits/new">New deposit</Link>
+            <Link href="/wallet/deposits/new">{t("wallet.new_deposit")}</Link>
           </Button>
         }
       />
@@ -102,7 +102,7 @@ export function DepositHistory() {
       <div
         className="flex flex-wrap gap-2"
         role="group"
-        aria-label="Filter deposits by status"
+        aria-label={t("wallet.deposits_filter_aria")}
       >
         {FILTERS.map((option) => {
           const active = filter === option.value;
@@ -119,7 +119,7 @@ export function DepositHistory() {
                   : "border-border/70 bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground",
               )}
             >
-              {option.label}
+              {t(option.labelKey)}
             </button>
           );
         })}
@@ -127,23 +127,23 @@ export function DepositHistory() {
 
       {filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border/80 p-4 text-sm text-muted-foreground">
-          No deposits match this status filter.
+          {t("wallet.deposits_no_filter_match")}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border/70 bg-card/90 shadow-sm">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Amount</TableHead>
-                <TableHead>Provider</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Detail</TableHead>
+                <TableHead>{t("wallet.amount")}</TableHead>
+                <TableHead>{t("wallet.table.provider")}</TableHead>
+                <TableHead>{t("ui.status")}</TableHead>
+                <TableHead>{t("ui.created")}</TableHead>
+                <TableHead className="text-right">{t("ui.detail")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((deposit) => {
-                const status = presentDepositStatus(deposit.status);
+                const status = presentDepositStatus(deposit.status, t);
                 return (
                   <TableRow key={deposit.id} className="hover:bg-muted/30">
                     <TableCell className="font-medium tabular-nums">
@@ -166,7 +166,7 @@ export function DepositHistory() {
                         href={`/wallet/deposits/${deposit.id}`}
                         className="text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
-                        View
+                        {t("ui.view")}
                       </Link>
                     </TableCell>
                   </TableRow>

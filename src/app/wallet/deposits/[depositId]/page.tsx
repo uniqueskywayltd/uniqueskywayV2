@@ -19,8 +19,8 @@ export default async function DepositDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-8">
       <DepositSurfaceHero
-        title="Deposit"
-        description="Status, timeline, and next expected step — read-only from the certified deposit engine."
+        titleKey="wallet.page.deposit_detail_title"
+        descriptionKey="wallet.page.deposit_detail_desc"
       />
       <DepositDetailView depositId={depositId} />
     </div>

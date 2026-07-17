@@ -47,7 +47,7 @@ interface CreateDepositResponse {
 const ASSETS: FundingAsset[] = ["BTC", "ETH", "USDT"];
 
 export function DepositJourney() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const router = useRouter();
   const [asset, setAsset] = useState<FundingAsset>("USDT");
   const [walletId, setWalletId] = useState<string | null>(null);
@@ -102,7 +102,7 @@ export function DepositJourney() {
     event.preventDefault();
     setError(null);
     if (!selectedWallet) {
-      setError("No active funding wallet is configured for this asset. Contact support.");
+      setError(t("wallet.no_funding_wallet"));
       return;
     }
     setStep("transfer");
@@ -117,9 +117,9 @@ export function DepositJourney() {
     if (!selectedWallet) return;
     try {
       await navigator.clipboard.writeText(selectedWallet.address);
-      setCopyFeedback("Address copied.");
+      setCopyFeedback(t("wallet.address_copied"));
     } catch {
-      setCopyFeedback("Could not copy. Select the address manually.");
+      setCopyFeedback(t("wallet.address_copy_failed"));
     }
   }
 
@@ -132,7 +132,7 @@ export function DepositJourney() {
       formData,
     );
     if (result.error || !result.data?.url) {
-      setError(result.error ?? "Screenshot upload failed.");
+      setError(result.error ?? t("wallet.screenshot_upload_failed"));
       return;
     }
     setEvidenceUrl(result.data.url);
@@ -141,7 +141,7 @@ export function DepositJourney() {
   async function onSubmit() {
     if (amountMinor === null || !selectedWallet) return;
     if (!txHash.trim()) {
-      setError("Enter the transaction hash from your transfer.");
+      setError(t("wallet.tx_hash_required"));
       return;
     }
     setStep("submitting");
@@ -171,9 +171,9 @@ export function DepositJourney() {
     const intent = result.data.depositIntent;
     const minor = Number(intent.amountMinor);
     const amountLabel = Number.isFinite(minor)
-      ? formatMoneyMinorUnits("en", minor, intent.currency || "USD")
+      ? formatMoneyMinorUnits(language, minor, intent.currency || "USD")
       : amount;
-    const firstName = result.data.customerFirstName?.trim() || "Investor";
+    const firstName = result.data.customerFirstName?.trim() || t("wallet.default_investor_name");
 
     setSuccessSummary({
       firstName,
@@ -181,7 +181,7 @@ export function DepositJourney() {
       currency: intent.currency || "USD",
       network: intent.fundingNetwork || selectedWallet.network,
       reference: intent.providerIntentId || intent.id,
-      submittedAtLabel: formatDateTime("en", intent.createdAt || new Date().toISOString()),
+      submittedAtLabel: formatDateTime(language, intent.createdAt || new Date().toISOString()),
     });
     setStep("notify");
   }
@@ -203,14 +203,19 @@ export function DepositJourney() {
         onConfirm={onSuccessConfirm}
       />
       <FormStepIndicator
-        steps={["Asset", "Transfer", "Notify", "Status"]}
+        steps={[
+          t("wallet.step_asset"),
+          t("wallet.step_transfer"),
+          t("wallet.step_notify"),
+          t("wallet.step_status"),
+        ]}
         currentStep={step === "select" ? 1 : step === "transfer" ? 2 : 3}
       />
 
       {step === "select" ? (
         <form onSubmit={onSelectContinue} className="space-y-4 rounded-2xl border bg-card p-5">
           <div className="space-y-2">
-            <Label>Select asset</Label>
+            <Label>{t("wallet.select_asset")}</Label>
             <div className="grid grid-cols-3 gap-2">
               {ASSETS.map((option) => (
                 <Button
@@ -226,7 +231,7 @@ export function DepositJourney() {
           </div>
           {assetWallets.length > 1 ? (
             <div className="space-y-2">
-              <Label htmlFor="funding-network">Network</Label>
+              <Label htmlFor="funding-network">{t("wallet.network")}</Label>
               <select
                 id="funding-network"
                 className="w-full rounded-md border bg-background px-3 py-2 text-sm"
@@ -241,11 +246,13 @@ export function DepositJourney() {
               </select>
             </div>
           ) : selectedWallet ? (
-            <p className="text-sm text-muted-foreground">Network: {selectedWallet.network}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("wallet.network")}: {selectedWallet.network}
+            </p>
           ) : null}
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="w-full">
-            Continue
+            {t("wallet.continue")}
           </Button>
         </form>
       ) : null}
@@ -253,17 +260,19 @@ export function DepositJourney() {
       {step === "transfer" && selectedWallet ? (
         <form onSubmit={onTransferContinue} className="space-y-4 rounded-2xl border bg-card p-5">
           <div>
-            <p className="text-sm text-muted-foreground">Send {selectedWallet.asset} on</p>
+            <p className="text-sm text-muted-foreground">
+              {t("wallet.send_asset_on", { asset: selectedWallet.asset })}
+            </p>
             <p className="font-semibold">{selectedWallet.network}</p>
           </div>
           <div>
-            <Label>Wallet address</Label>
+            <Label>{t("wallet.wallet_address")}</Label>
             <p className="mt-1 break-all rounded-md border bg-muted/40 px-3 py-2 font-mono text-sm">
               {selectedWallet.address}
             </p>
             <div className="mt-2 flex items-center gap-2">
               <Button type="button" size="sm" variant="outline" onClick={() => void copyAddress()}>
-                Copy address
+                {t("wallet.copy_address")}
               </Button>
               {copyFeedback ? (
                 <span className="text-xs text-muted-foreground">{copyFeedback}</span>
@@ -274,7 +283,7 @@ export function DepositJourney() {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={selectedWallet.qrCodeUrl}
-              alt={`${selectedWallet.asset} QR code`}
+              alt={t("wallet.qr_code_alt", { asset: selectedWallet.asset })}
               className="mx-auto h-40 w-40 rounded-md border bg-white object-contain p-2"
             />
           ) : null}
@@ -285,10 +294,10 @@ export function DepositJourney() {
           ) : null}
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => setStep("select")}>
-              Back
+              {t("wallet.back")}
             </Button>
             <Button type="submit" className="flex-1">
-              I sent the transfer
+              {t("wallet.sent_transfer")}
             </Button>
           </div>
         </form>
@@ -298,14 +307,16 @@ export function DepositJourney() {
         <div className="space-y-4 rounded-2xl border bg-card p-5">
           <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
             <p>
-              <span className="text-muted-foreground">Asset:</span> {selectedWallet?.asset}
+              <span className="text-muted-foreground">{t("wallet.step_asset")}:</span>{" "}
+              {selectedWallet?.asset}
             </p>
             <p>
-              <span className="text-muted-foreground">Network:</span> {selectedWallet?.network}
+              <span className="text-muted-foreground">{t("wallet.network")}:</span>{" "}
+              {selectedWallet?.network}
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="deposit-amount">Amount to credit (USD)</Label>
+            <Label htmlFor="deposit-amount">{t("wallet.amount_to_credit")}</Label>
             <MoneyAmountInput
               id="deposit-amount"
               value={amount}
@@ -313,22 +324,23 @@ export function DepositJourney() {
               disabled={step === "submitting"}
             />
             <p className="text-sm text-muted-foreground">
-              Enter the USD value of your {selectedWallet?.asset ?? "crypto"} transfer for admin
-              review.
+              {t("wallet.deposit_credit_hint", {
+                asset: selectedWallet?.asset ?? "crypto",
+              })}
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tx-hash">Transaction hash</Label>
+            <Label htmlFor="tx-hash">{t("wallet.tx_hash")}</Label>
             <Input
               id="tx-hash"
               value={txHash}
               onChange={(event) => setTxHash(event.target.value)}
-              placeholder="0x… or blockchain tx id"
+              placeholder={t("wallet.tx_hash_placeholder")}
               disabled={step === "submitting"}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="deposit-note">Optional note</Label>
+            <Label htmlFor="deposit-note">{t("wallet.optional_note")}</Label>
             <Input
               id="deposit-note"
               value={note}
@@ -337,7 +349,7 @@ export function DepositJourney() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="deposit-screenshot">Optional screenshot</Label>
+            <Label htmlFor="deposit-screenshot">{t("wallet.optional_screenshot")}</Label>
             <Input
               id="deposit-screenshot"
               type="file"
@@ -350,7 +362,7 @@ export function DepositJourney() {
               }}
             />
             {evidenceUrl ? (
-              <p className="text-xs text-muted-foreground">Screenshot attached for admin review.</p>
+              <p className="text-xs text-muted-foreground">{t("wallet.screenshot_attached")}</p>
             ) : null}
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -361,7 +373,7 @@ export function DepositJourney() {
               disabled={step === "submitting"}
               onClick={() => setStep("transfer")}
             >
-              Back
+              {t("wallet.back")}
             </Button>
             <Button
               type="button"
@@ -369,7 +381,7 @@ export function DepositJourney() {
               disabled={step === "submitting"}
               onClick={() => void onSubmit()}
             >
-              {step === "submitting" ? "Submitting…" : "Submit for review"}
+              {step === "submitting" ? t("wallet.submitting") : t("wallet.submit_for_review")}
             </Button>
           </div>
         </div>

@@ -1,21 +1,34 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowDownLeft, ArrowUpRight, PieChart, Wallet } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 const actions = [
-  { href: "/wallet/deposits/new", label: "Deposit", icon: ArrowDownLeft },
-  { href: "/wallet/withdrawals/new", label: "Withdraw", icon: ArrowUpRight },
-  { href: "/portfolio", label: "Investments", icon: PieChart },
-  { href: "/wallet", label: "Wallet", icon: Wallet },
+  {
+    href: "/wallet/deposits/new",
+    labelKey: "dashboard.quick_actions.deposit",
+    icon: ArrowDownLeft,
+  },
+  {
+    href: "/wallet/withdrawals/new",
+    labelKey: "dashboard.quick_actions.withdraw",
+    icon: ArrowUpRight,
+  },
+  { href: "/portfolio", labelKey: "dashboard.quick_actions.investments", icon: PieChart },
+  { href: "/wallet", labelKey: "dashboard.quick_actions.wallet", icon: Wallet },
 ] as const;
 
 export function DashboardQuickActions() {
+  const { t } = useI18n();
+
   return (
-    <section aria-label="Quick actions">
+    <section aria-label={t("dashboard.quick_actions.aria")}>
       <div className="flex flex-wrap gap-2.5 sm:gap-2">
-        {actions.map(({ href, label, icon: Icon }) => (
+        {actions.map(({ href, labelKey, icon: Icon }) => (
           <Link
             key={href}
             href={href}
@@ -25,7 +38,7 @@ export function DashboardQuickActions() {
             )}
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden />
-            {label}
+            {t(labelKey)}
           </Link>
         ))}
       </div>

@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { LedgerEntryRow } from "@/features/customer/wallet/types";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 function LedgerAmount({ entry }: { entry: LedgerEntryRow }) {
@@ -32,14 +33,16 @@ function LedgerAmount({ entry }: { entry: LedgerEntryRow }) {
 
 /** Certified ledger rows — exact API order, no derived balances or merged entries. */
 export function LedgerTransactionTable({ entries }: { entries: LedgerEntryRow[] }) {
+  const { t } = useI18n();
+
   return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Activity</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead>Date</TableHead>
+            <TableHead>{t("wallet.table.activity")}</TableHead>
+            <TableHead className="text-right">{t("wallet.amount")}</TableHead>
+            <TableHead>{t("wallet.table.date")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

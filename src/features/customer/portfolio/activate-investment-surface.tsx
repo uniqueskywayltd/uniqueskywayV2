@@ -11,6 +11,8 @@ import { CurrencyDisplay } from "@/components/ui/display";
 import { MoneyAmountInput } from "@/components/ui/money-amount-input";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
 import { formatCountdown } from "@/features/customer/portfolio/use-live-accrual";
+import { useI18n } from "@/features/i18n/i18n-provider";
+import type { MessageKey } from "@/i18n/messages/en";
 import { appPath } from "@/lib/app-path";
 import {
   formatMoneyInputDisplay,
@@ -53,20 +55,20 @@ type ActivationSuccess = {
   maturityLabel: string;
 };
 
-const PLAN_BEST_FOR: Record<string, string> = {
-  silver: "Getting started with shorter cycles",
-  gold: "Balanced growth over one week",
-  classic: "Stronger returns with a longer term",
-  master: "Maximum commitment and elite returns",
+const PLAN_BEST_FOR_KEYS: Record<string, MessageKey> = {
+  silver: "portfolio.activate.plan.silver",
+  gold: "portfolio.activate.plan.gold",
+  classic: "portfolio.activate.plan.classic",
+  master: "portfolio.activate.plan.master",
 };
 
 function dailyRoiLabel(bps: number): string {
   return `${(bps / 100).toFixed(2)}%`;
 }
 
-function formatMaturityLabel(termDays: number, now = new Date()): string {
+function formatMaturityLabel(termDays: number, language: string, now = new Date()): string {
   const maturity = new Date(now.getTime() + termDays * 86_400_000);
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(language, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -82,19 +84,23 @@ function minorToMajorInput(amountMinor: bigint): string {
   return negative ? `-${body}` : body;
 }
 
-function presentActivationError(message: string | undefined, reference?: string): string {
+function presentActivationError(
+  message: string | undefined,
+  t: (key: string, values?: Record<string, string | number>) => string,
+  reference?: string,
+): string {
   const raw = (message ?? "").trim();
   const lower = raw.toLowerCase();
-  let text = "Unable to activate your investment at this time.";
+  let text = t("portfolio.activate.error.generic");
   if (
     lower.includes("insufficient available balance") ||
     lower.includes("available balance is insufficient")
   ) {
-    text = "Insufficient available balance.";
+    text = t("portfolio.activate.error.insufficient");
   } else if (lower.includes("below the minimum")) {
-    text = "Investment amount is below the minimum.";
+    text = t("portfolio.activate.error.below_min");
   } else if (lower.includes("exceeds this plan") || lower.includes("outside the investment plan")) {
-    text = "Investment amount exceeds this plan's maximum.";
+    text = t("portfolio.activate.error.exceeds_max");
   } else if (
     raw &&
     !lower.includes("couldn't complete") &&
@@ -103,13 +109,14 @@ function presentActivationError(message: string | undefined, reference?: string)
   ) {
     text = raw;
   }
-  if (reference) return `${text}\n\nReference:\n${reference}`;
+  if (reference) return `${text}\n\n${t("portfolio.activate.error.reference")}\n${reference}`;
   return text;
 }
 
 /** Activate an investment from available wallet balance using certified plan versions. */
 export function ActivateInvestmentSurface() {
   const router = useRouter();
+  const { t, language } = useI18n();
   const submittingRef = useRef(false);
   const [plans, setPlans] = useState<PublishedPlan[]>([]);
   const [availableMinor, setAvailableMinor] = useState<bigint>(0n);
@@ -132,7 +139,7 @@ export function ActivateInvestmentSurface() {
     ]).then(([plansResult, walletResult]) => {
       if (!active) return;
       if (plansResult.error || walletResult.error) {
-        setError(plansResult.error ?? walletResult.error ?? "Unable to load activation data.");
+        setError(plansResult.error ?? walletResult.error ?? t("portfolio.activate.error.load"));
         setLoading(false);
         return;
       }
@@ -150,7 +157,7 @@ export function ActivateInvestmentSurface() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const id = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -183,10 +190,10 @@ export function ActivateInvestmentSurface() {
       dailyEarningsMinor,
       expectedRoiMinor,
       maturityValueMinor,
-      maturityLabel: formatMaturityLabel(selected.termDays, new Date(nowMs)),
+      maturityLabel: formatMaturityLabel(selected.termDays, language, new Date(nowMs)),
       nextCredit: formatCountdown(secondsUntilNextNewYorkMidnight(new Date(nowMs))),
     };
-  }, [selected, principalMinor, nowMs]);
+  }, [selected, principalMinor, nowMs, language]);
 
   function fillMin() {
     if (!selected) return;
@@ -198,7 +205,7 @@ export function ActivateInvestmentSurface() {
     const planMax = BigInt(selected.maxPrincipalMinor);
     const maxInvestable = availableMinor < planMax ? availableMinor : planMax;
     if (maxInvestable <= 0n) {
-      setError("Insufficient available balance.");
+      setError(t("portfolio.activate.error.insufficient"));
       return;
     }
     setAmount(formatMoneyInputDisplay(minorToMajorInput(maxInvestable)));
@@ -207,19 +214,19 @@ export function ActivateInvestmentSurface() {
   async function submit() {
     if (!selected || submittingRef.current) return;
     if (principalMinor === null) {
-      setError("Enter a valid USD amount.");
+      setError(t("portfolio.activate.error.invalid_amount"));
       return;
     }
     if (principalMinor < BigInt(selected.minPrincipalMinor)) {
-      setError("Investment amount is below the minimum.");
+      setError(t("portfolio.activate.error.below_min"));
       return;
     }
     if (principalMinor > BigInt(selected.maxPrincipalMinor)) {
-      setError("Investment amount exceeds this plan's maximum.");
+      setError(t("portfolio.activate.error.exceeds_max"));
       return;
     }
     if (principalMinor > availableMinor) {
-      setError("Insufficient available balance.");
+      setError(t("portfolio.activate.error.insufficient"));
       return;
     }
 
@@ -236,7 +243,7 @@ export function ActivateInvestmentSurface() {
     );
 
     if (result.error) {
-      setError(presentActivationError(result.error, result.reference));
+      setError(presentActivationError(result.error, t, result.reference));
       setPending(false);
       submittingRef.current = false;
       return;
@@ -244,7 +251,7 @@ export function ActivateInvestmentSurface() {
 
     const investmentId = result.data?.investment.id;
     if (!investmentId) {
-      setError(presentActivationError(undefined));
+      setError(presentActivationError(undefined, t));
       setPending(false);
       submittingRef.current = false;
       return;
@@ -259,18 +266,18 @@ export function ActivateInvestmentSurface() {
     setSuccess({
       investmentId,
       planName: selected.name,
-      amountLabel: formatMoneyMinorUnits("en", principalMinor, currency),
+      amountLabel: formatMoneyMinorUnits(language, principalMinor, currency),
       dailyRoiLabel: dailyRoiLabel(selected.dailyRoiBps),
-      dailyEarningsLabel: formatMoneyMinorUnits("en", dailyEarningsMinor, currency),
-      expectedRoiLabel: formatMoneyMinorUnits("en", expectedRoiMinor, currency),
-      maturityLabel: formatMaturityLabel(selected.termDays),
+      dailyEarningsLabel: formatMoneyMinorUnits(language, dailyEarningsMinor, currency),
+      expectedRoiLabel: formatMoneyMinorUnits(language, expectedRoiMinor, currency),
+      maturityLabel: formatMaturityLabel(selected.termDays, language),
     });
     setPending(false);
   }
 
   if (loading) {
     return (
-      <div className="space-y-4" aria-busy="true" aria-label="Loading activation">
+      <div className="space-y-4" aria-busy="true" aria-label={t("portfolio.loading.activation")}>
         <Skeleton className="h-10 w-72 rounded-md" />
         <Skeleton className="h-28 w-full rounded-2xl" />
         <Skeleton className="h-64 w-full rounded-2xl" />
@@ -282,37 +289,38 @@ export function ActivateInvestmentSurface() {
     <div className="mx-auto max-w-5xl space-y-6 sm:space-y-8">
       <header className="space-y-2">
         <h1 className="font-heading text-3xl tracking-tight text-foreground sm:text-4xl">
-          Invest available cash
+          {t("portfolio.activate.title")}
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Use leftover available cash. Your investment plan is assigned automatically from the
-          amount — deposits start investments on approval without this step.
+          {t("portfolio.activate.body")}
         </p>
       </header>
 
       <section
-        aria-label="Available balance"
+        aria-label={t("portfolio.activate.balance_aria")}
         className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/12 via-card to-card p-6 shadow-[var(--elevation-2)] sm:p-7"
       >
         <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
-          Wallet Balance
+          {t("portfolio.activate.wallet_balance")}
         </p>
         <p className="mt-2 font-heading text-4xl font-semibold tracking-tight text-foreground tabular-nums sm:text-5xl">
           <CurrencyDisplay amountMinor={Number(availableMinor)} currency={currency} />
         </p>
-        <p className="mt-2 text-sm font-medium text-muted-foreground">Available to Invest</p>
+        <p className="mt-2 text-sm font-medium text-muted-foreground">
+          {t("portfolio.activate.available_to_invest")}
+        </p>
         {(lockedMinor > 0n || reservedMinor > 0n) && (
           <p className="mt-3 text-xs text-muted-foreground">
             {lockedMinor > 0n ? (
               <>
-                Invested principal:{" "}
+                {t("portfolio.summary.invested_principal")}:{" "}
                 <CurrencyDisplay amountMinor={Number(lockedMinor)} currency={currency} />
               </>
             ) : null}
             {lockedMinor > 0n && reservedMinor > 0n ? " · " : null}
             {reservedMinor > 0n ? (
               <>
-                Reserved for withdrawals:{" "}
+                {t("portfolio.activate.reserved_withdrawals")}:{" "}
                 <CurrencyDisplay amountMinor={Number(reservedMinor)} currency={currency} />
               </>
             ) : null}
@@ -322,21 +330,16 @@ export function ActivateInvestmentSurface() {
 
       {plans.length === 0 ? (
         <Alert>
-          <AlertDescription>
-            No published investment plans are available yet. Deposit funds and check back after
-            plans are published.
-          </AlertDescription>
+          <AlertDescription>{t("portfolio.activate.no_plans")}</AlertDescription>
         </Alert>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
           <div className="space-y-5">
-            <section aria-label="Investment plans" className="space-y-3">
+            <section aria-label={t("portfolio.activate.plans_aria")} className="space-y-3">
               <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-                Investment plan assigned
+                {t("portfolio.activate.plan_assigned")}
               </h2>
-              <p className="text-sm text-muted-foreground">
-                Your investment qualifies for a plan automatically based on the amount you enter.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("portfolio.activate.plan_hint")}</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {plans.map((plan) => {
                   const selectedPlan = plan.planVersionId === selected?.planVersionId;
@@ -358,32 +361,34 @@ export function ActivateInvestmentSurface() {
                     >
                       {recommended ? (
                         <span className="absolute top-3 right-3 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-primary uppercase">
-                          Recommended
+                          {t("portfolio.activate.recommended")}
                         </span>
                       ) : null}
                       <p className="text-base font-semibold text-foreground">{plan.name}</p>
                       <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-400">
-                        {dailyRoiLabel(plan.dailyRoiBps)} daily
+                        {dailyRoiLabel(plan.dailyRoiBps)} {t("portfolio.activate.daily_suffix")}
                       </p>
                       <dl className="mt-3 space-y-1 text-xs text-muted-foreground">
                         <div className="flex justify-between gap-2">
-                          <dt>Duration</dt>
-                          <dd className="font-medium text-foreground">{plan.termDays} days</dd>
+                          <dt>{t("plans.duration")}</dt>
+                          <dd className="font-medium text-foreground">
+                            {t("plans.days", { count: plan.termDays })}
+                          </dd>
                         </div>
                         <div className="flex justify-between gap-2">
-                          <dt>Minimum</dt>
+                          <dt>{t("plans.min")}</dt>
                           <dd className="font-medium text-foreground">
                             <CurrencyDisplay amountMinor={Number(plan.minPrincipalMinor)} />
                           </dd>
                         </div>
                         <div className="flex justify-between gap-2">
-                          <dt>Maximum</dt>
+                          <dt>{t("plans.max")}</dt>
                           <dd className="font-medium text-foreground">
                             <CurrencyDisplay amountMinor={Number(plan.maxPrincipalMinor)} />
                           </dd>
                         </div>
                         <div className="flex justify-between gap-2">
-                          <dt>Expected total return</dt>
+                          <dt>{t("portfolio.activate.expected_return")}</dt>
                           <dd className="font-medium text-foreground">
                             {plan.totalRoiBps != null
                               ? `${(plan.totalRoiBps / 100).toFixed(2)}%`
@@ -392,7 +397,8 @@ export function ActivateInvestmentSurface() {
                         </div>
                       </dl>
                       <p className="mt-3 text-xs text-muted-foreground">
-                        Best for: {PLAN_BEST_FOR[plan.slug] ?? "Steady certified returns"}
+                        {t("portfolio.activate.best_for")}{" "}
+                        {t(PLAN_BEST_FOR_KEYS[plan.slug] ?? "portfolio.activate.plan.default")}
                       </p>
                     </button>
                   );
@@ -403,7 +409,7 @@ export function ActivateInvestmentSurface() {
             <section className="space-y-3 rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <label className="block space-y-1.5 text-sm">
-                  <span className="font-medium">Investment amount (USD)</span>
+                  <span className="font-medium">{t("portfolio.activate.amount_label")}</span>
                   <MoneyAmountInput
                     placeholder="50,000.00"
                     value={amount}
@@ -420,7 +426,7 @@ export function ActivateInvestmentSurface() {
                     disabled={pending}
                     onClick={fillMin}
                   >
-                    MIN
+                    {t("portfolio.activate.min_btn")}
                   </Button>
                   <Button
                     type="button"
@@ -429,7 +435,7 @@ export function ActivateInvestmentSurface() {
                     disabled={pending}
                     onClick={fillMax}
                   >
-                    MAX
+                    {t("portfolio.activate.max_btn")}
                   </Button>
                 </div>
               </div>
@@ -447,46 +453,67 @@ export function ActivateInvestmentSurface() {
                 disabled={pending || !selected}
                 onClick={() => void submit()}
               >
-                {pending ? "Starting your investment..." : "Confirm investment"}
+                {pending ? t("portfolio.activate.starting") : t("portfolio.activate.confirm")}
               </Button>
             </section>
           </div>
 
           <aside className="space-y-4">
             <section
-              aria-label="Live investment summary"
+              aria-label={t("portfolio.activate.summary_aria")}
               className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--elevation-1)]"
             >
               <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-                Live summary
+                {t("portfolio.activate.live_summary")}
               </h2>
               {selected && liveSummary && principalMinor != null ? (
                 <dl className="mt-4 space-y-3 text-sm">
                   <SummaryRow
-                    label="Investment Amount"
-                    value={formatMoneyMinorUnits("en", principalMinor, currency)}
+                    label={t("portfolio.activate.summary.amount")}
+                    value={formatMoneyMinorUnits(language, principalMinor, currency)}
                     emphasize
                   />
-                  <SummaryRow label="Daily ROI" value={dailyRoiLabel(selected.dailyRoiBps)} />
                   <SummaryRow
-                    label="Daily Earnings"
-                    value={formatMoneyMinorUnits("en", liveSummary.dailyEarningsMinor, currency)}
-                  />
-                  <SummaryRow label="Investment Duration" value={`${selected.termDays} Days`} />
-                  <SummaryRow
-                    label="Expected Total Earnings"
-                    value={formatMoneyMinorUnits("en", liveSummary.expectedRoiMinor, currency)}
+                    label={t("portfolio.card.daily_roi")}
+                    value={dailyRoiLabel(selected.dailyRoiBps)}
                   />
                   <SummaryRow
-                    label="Expected Maturity Value"
-                    value={formatMoneyMinorUnits("en", liveSummary.maturityValueMinor, currency)}
+                    label={t("portfolio.activate.summary.daily_earnings")}
+                    value={formatMoneyMinorUnits(
+                      language,
+                      liveSummary.dailyEarningsMinor,
+                      currency,
+                    )}
                   />
-                  <SummaryRow label="Maturity Date" value={liveSummary.maturityLabel} />
-                  <SummaryRow label="Next Daily Credit" value={liveSummary.nextCredit} mono />
+                  <SummaryRow
+                    label={t("portfolio.activate.summary.duration")}
+                    value={t("plans.days", { count: selected.termDays })}
+                  />
+                  <SummaryRow
+                    label={t("portfolio.activate.summary.expected_earnings")}
+                    value={formatMoneyMinorUnits(language, liveSummary.expectedRoiMinor, currency)}
+                  />
+                  <SummaryRow
+                    label={t("portfolio.activate.summary.maturity_value")}
+                    value={formatMoneyMinorUnits(
+                      language,
+                      liveSummary.maturityValueMinor,
+                      currency,
+                    )}
+                  />
+                  <SummaryRow
+                    label={t("portfolio.activate.summary.maturity_date")}
+                    value={liveSummary.maturityLabel}
+                  />
+                  <SummaryRow
+                    label={t("portfolio.activate.summary.next_credit")}
+                    value={liveSummary.nextCredit}
+                    mono
+                  />
                 </dl>
               ) : (
                 <p className="mt-4 text-sm text-muted-foreground">
-                  Select a plan and enter an amount to preview earnings.
+                  {t("portfolio.activate.preview_hint")}
                 </p>
               )}
             </section>
@@ -498,24 +525,15 @@ export function ActivateInvestmentSurface() {
                   aria-hidden
                 />
                 <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">
-                  <p>
-                    Your investment principal is committed for the full duration of your selected
-                    investment plan.
-                  </p>
-                  <p>
-                    Daily earnings are calculated continuously and settled according to your
-                    investment schedule.
-                  </p>
-                  <p>
-                    Your investment is committed for the full investment period in accordance with
-                    the Terms of Service accepted during registration. Funds release at maturity.
-                  </p>
+                  <p>{t("portfolio.activate.info.principal_committed")}</p>
+                  <p>{t("portfolio.activate.info.daily_earnings")}</p>
+                  <p>{t("portfolio.activate.info.terms_commitment")}</p>
                 </div>
               </div>
             </section>
 
             <Button asChild type="button" variant="ghost" className="w-full">
-              <Link href="/portfolio">Back to portfolio</Link>
+              <Link href="/portfolio">{t("portfolio.activate.back_portfolio")}</Link>
             </Button>
           </aside>
         </div>
@@ -570,6 +588,7 @@ function ActivationSuccessModal({
   summary: ActivationSuccess | null;
   onView: () => void;
 }) {
+  const { t } = useI18n();
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -587,23 +606,39 @@ function ActivationSuccessModal({
             <div className="space-y-5">
               <div className="space-y-2 text-center">
                 <DialogPrimitive.Title className="text-xl font-semibold tracking-tight">
-                  Investment started
+                  {t("portfolio.activate.started")}
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="text-sm text-muted-foreground">
-                  Your investment plan was assigned automatically and accrual has begun.
+                  {t("portfolio.activate.started_body")}
                 </DialogPrimitive.Description>
               </div>
               <dl className="space-y-2 rounded-xl border border-border/70 bg-muted/30 px-4 py-3 text-sm">
-                <SummaryRow label="Plan" value={summary.planName} />
-                <SummaryRow label="Investment Amount" value={summary.amountLabel} emphasize />
-                <SummaryRow label="Daily ROI" value={summary.dailyRoiLabel} />
-                <SummaryRow label="Daily Earnings" value={summary.dailyEarningsLabel} />
-                <SummaryRow label="Expected ROI" value={summary.expectedRoiLabel} />
-                <SummaryRow label="Maturity Date" value={summary.maturityLabel} />
-                <SummaryRow label="Current Status" value="🟢 Active" />
+                <SummaryRow label={t("portfolio.activate.modal.plan")} value={summary.planName} />
+                <SummaryRow
+                  label={t("portfolio.activate.summary.amount")}
+                  value={summary.amountLabel}
+                  emphasize
+                />
+                <SummaryRow label={t("portfolio.card.daily_roi")} value={summary.dailyRoiLabel} />
+                <SummaryRow
+                  label={t("portfolio.activate.summary.daily_earnings")}
+                  value={summary.dailyEarningsLabel}
+                />
+                <SummaryRow
+                  label={t("portfolio.activate.modal.expected_roi")}
+                  value={summary.expectedRoiLabel}
+                />
+                <SummaryRow
+                  label={t("portfolio.activate.summary.maturity_date")}
+                  value={summary.maturityLabel}
+                />
+                <SummaryRow
+                  label={t("portfolio.activate.modal.current_status")}
+                  value={t("portfolio.activate.modal.status_active")}
+                />
               </dl>
               <Button ref={buttonRef} type="button" className="w-full" onClick={onView}>
-                View My Investment
+                {t("portfolio.activate.modal.view_investment")}
               </Button>
             </div>
           ) : null}

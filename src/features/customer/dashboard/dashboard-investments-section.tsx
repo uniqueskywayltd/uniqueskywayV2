@@ -14,6 +14,7 @@ import type {
   PortfolioInvestmentCard,
   PortfolioListResponse,
 } from "@/features/customer/portfolio/types";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 const DISPLAY_LIMIT = 4;
@@ -30,6 +31,7 @@ function daysUntil(date: string | null, now = new Date()): number | null {
 
 /** DP4 — investment navigator widgets from certified portfolio read models only. */
 export function DashboardInvestmentsSection() {
+  const { t } = useI18n();
   const [data, setData] = useState<PortfolioListResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ export function DashboardInvestmentsSection() {
 
   if (loading) {
     return (
-      <div className="space-y-4" aria-busy="true" aria-label="Loading investments">
+      <div className="space-y-4" aria-busy="true" aria-label={t("ui.loading")}>
         <Skeleton className="h-24 w-full rounded-xl" />
         <Skeleton className="h-36 w-full rounded-xl" />
         <Skeleton className="h-36 w-full rounded-xl" />
@@ -64,7 +66,7 @@ export function DashboardInvestmentsSection() {
   if (error || !data) {
     return (
       <p className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
-        Investments could not load. Open Investments directly, or refresh. {error}
+        {t("dashboard.investments.load_error")} {error}
       </p>
     );
   }
@@ -77,44 +79,52 @@ export function DashboardInvestmentsSection() {
   const activeCount = (data.summary.byStatus.active ?? 0) + (data.summary.byStatus.maturing ?? 0);
   const byStatus = data.summary.byStatus;
 
+  const statusLabels: Record<string, string> = {
+    active: t("status.investment.active"),
+    maturing: t("status.investment.maturing"),
+    pending: t("dashboard.investments.status_activating"),
+    matured: t("status.investment.matured"),
+  };
+
   return (
-    <section className="space-y-4" aria-label="Investments">
-      <DashboardPanelCard title="Investments" href="/portfolio" accent="violet">
+    <section className="space-y-4" aria-label={t("dashboard.investments.title")}>
+      <DashboardPanelCard
+        title={t("dashboard.investments.title")}
+        href="/portfolio"
+        accent="violet"
+      >
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <p className="text-xs text-muted-foreground">Active principal</p>
+            <p className="text-xs text-muted-foreground">
+              {t("dashboard.investments.active_principal")}
+            </p>
             <p className="mt-1 text-lg font-semibold tabular-nums text-foreground">
               <CurrencyDisplay amountMinor={Number(data.summary.activePrincipalMinor)} />
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Active investments</p>
+            <p className="text-xs text-muted-foreground">
+              {t("dashboard.investments.active_count")}
+            </p>
             <p className="mt-1 text-lg font-semibold tabular-nums text-foreground">{activeCount}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Positions</p>
+            <p className="text-xs text-muted-foreground">{t("dashboard.investments.positions")}</p>
             <p className="mt-1 text-lg font-semibold tabular-nums text-foreground">
               {data.summary.totalCount}
             </p>
           </div>
         </div>
 
-        <ul className="mt-4 flex flex-wrap gap-2" aria-label="Investment status">
-          {(
-            [
-              ["active", "Active"],
-              ["maturing", "Maturing"],
-              ["pending", "Activating"],
-              ["matured", "Matured"],
-            ] as const
-          ).map(([key, label]) => {
+        <ul className="mt-4 flex flex-wrap gap-2" aria-label={t("ui.status")}>
+          {(["active", "maturing", "pending", "matured"] as const).map((key) => {
             const count = byStatus[key] ?? 0;
             if (count === 0) return null;
-            const tone = presentInvestmentStatus(key).tone;
+            const tone = presentInvestmentStatus(key, t).tone;
             return (
               <li key={key}>
                 <StatusChip tone={tone}>
-                  {label} · {count}
+                  {statusLabels[key]} · {count}
                 </StatusChip>
               </li>
             );
@@ -125,11 +135,11 @@ export function DashboardInvestmentsSection() {
       {featured.length === 0 ? (
         <EmptyState
           icon={PieChart}
-          title="No active investments yet"
-          description="Submit a deposit. After approval, your investment starts automatically."
+          title={t("dashboard.investments.empty_title")}
+          description={t("dashboard.investments.empty_body")}
           action={
             <Button asChild>
-              <Link href="/wallet/deposits/new">Deposit funds</Link>
+              <Link href="/wallet/deposits/new">{t("portfolio.empty.deposit")}</Link>
             </Button>
           }
         />
@@ -137,15 +147,15 @@ export function DashboardInvestmentsSection() {
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-              Active investments
+              {t("dashboard.investments.section_active")}
             </h2>
             <Button asChild variant="link" className="h-auto px-0 text-sm">
-              <Link href="/portfolio">View investments</Link>
+              <Link href="/portfolio">{t("dashboard.investments.view_all")}</Link>
             </Button>
           </div>
           {activeInvestments.length > 0 ? (
             <p className="text-xs text-muted-foreground">
-              Active investments are committed for the full plan term under the Terms of Service.
+              {t("dashboard.investments.term_notice")}
             </p>
           ) : null}
           <div className="grid gap-4">
@@ -160,7 +170,8 @@ export function DashboardInvestmentsSection() {
 }
 
 function InvestmentSummaryCard({ investment }: { investment: PortfolioInvestmentCard }) {
-  const status = presentInvestmentStatus(investment.status);
+  const { t } = useI18n();
+  const status = presentInvestmentStatus(investment.status, t);
   const progress = investment.progressPercent ?? 0;
   const daysLeft = daysUntil(investment.maturityDate);
   const isActiveLike = investment.status === "active" || investment.status === "maturing";
@@ -177,7 +188,9 @@ function InvestmentSummaryCard({ investment }: { investment: PortfolioInvestment
 
       <dl className="mt-4 grid gap-3 sm:grid-cols-2">
         <div>
-          <dt className="text-xs text-muted-foreground">Investment</dt>
+          <dt className="text-xs text-muted-foreground">
+            {t("dashboard.investments.card_investment")}
+          </dt>
           <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
             <CurrencyDisplay
               amountMinor={Number(investment.principalMinor)}
@@ -187,21 +200,23 @@ function InvestmentSummaryCard({ investment }: { investment: PortfolioInvestment
         </div>
         <div>
           <dt className="text-xs text-muted-foreground">
-            {isActiveLike ? "Days remaining" : "Status detail"}
+            {isActiveLike
+              ? t("dashboard.investments.days_remaining")
+              : t("dashboard.investments.status_detail")}
           </dt>
           <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
             {isActiveLike
               ? daysLeft === null
                 ? "—"
                 : daysLeft === 0
-                  ? "Matured"
+                  ? t("status.investment.matured")
                   : daysLeft
               : status.explanation}
           </dd>
         </div>
         {investment.nextMilestone.label ? (
           <div className="sm:col-span-2">
-            <dt className="text-xs text-muted-foreground">Next settlement</dt>
+            <dt className="text-xs text-muted-foreground">{t("portfolio.card.next_settlement")}</dt>
             <dd className="mt-0.5 text-sm text-foreground">
               {investment.nextMilestone.label}
               {investment.nextMilestone.date ? (
@@ -215,7 +230,7 @@ function InvestmentSummaryCard({ investment }: { investment: PortfolioInvestment
         ) : null}
         {investment.maturityDate ? (
           <div className="sm:col-span-2">
-            <dt className="text-xs text-muted-foreground">Maturity</dt>
+            <dt className="text-xs text-muted-foreground">{t("dashboard.investments.maturity")}</dt>
             <dd className="mt-0.5 text-sm text-foreground">
               <DateDisplay value={investment.maturityDate} />
             </dd>
@@ -226,7 +241,7 @@ function InvestmentSummaryCard({ investment }: { investment: PortfolioInvestment
       {investment.progressPercent !== null ? (
         <div className="mt-4">
           <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
-            <span>Progress</span>
+            <span>{t("dashboard.investments.progress")}</span>
             <span className="tabular-nums">{progress}%</span>
           </div>
           <Progress
@@ -234,7 +249,7 @@ function InvestmentSummaryCard({ investment }: { investment: PortfolioInvestment
             className={cn(
               investment.status === "active" && "[&_[data-slot=progress-indicator]]:bg-emerald-500",
             )}
-            aria-label={`Progress ${progress}%`}
+            aria-label={t("dashboard.investments.progress_aria", { percent: progress })}
           />
         </div>
       ) : null}

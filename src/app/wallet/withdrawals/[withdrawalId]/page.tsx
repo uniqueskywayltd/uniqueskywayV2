@@ -19,8 +19,8 @@ export default async function WithdrawalDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-8">
       <WithdrawalSurfaceHero
-        title="Withdrawal"
-        description="What is happening, what happens next, and whether you need to do anything — from certified engine status only."
+        titleKey="wallet.page.withdrawal_detail_title"
+        descriptionKey="wallet.page.withdrawal_detail_desc"
       />
       <WithdrawalDetailView withdrawalId={withdrawalId} />
     </div>

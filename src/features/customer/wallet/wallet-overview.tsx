@@ -16,8 +16,13 @@ import type { WalletOverviewResponse } from "@/features/customer/wallet/types";
 import { formatMoneyMinorUnits } from "@/lib/money-format";
 
 function WalletFrameSkeleton() {
+  const { t } = useI18n();
   return (
-    <div className="space-y-8 sm:space-y-9" aria-busy="true" aria-label="Loading wallet">
+    <div
+      className="space-y-8 sm:space-y-9"
+      aria-busy="true"
+      aria-label={t("wallet.loading_wallet")}
+    >
       <Skeleton className="h-36 w-full rounded-2xl sm:h-40" />
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: 5 }).map((_, index) => (
@@ -73,10 +78,10 @@ export function WalletOverview() {
           className="rounded-xl border border-destructive/40 bg-destructive/5 p-6"
           role="alert"
         >
-          <h2 className="text-base font-semibold text-destructive">Wallet unavailable</h2>
+          <h2 className="text-base font-semibold text-destructive">{t("wallet.unavailable")}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{error}</p>
           <Button asChild variant="outline" className="mt-4">
-            <Link href="/contact">Contact support</Link>
+            <Link href="/contact">{t("wallet.contact_support")}</Link>
           </Button>
         </section>
       </div>
@@ -173,11 +178,11 @@ export function WalletOverview() {
         <WalletReveal delayMs={140}>
           <EmptyState
             icon={Wallet}
-            title="Your wallet is ready"
-            description="Add funds when you’re ready—no rush. Accrued investment earnings stay on Investments until they post here."
+            title={t("wallet.empty_ready_title")}
+            description={t("wallet.empty_ready_body")}
             action={
               <Button asChild>
-                <Link href="/wallet/deposits/new">Add funds</Link>
+                <Link href="/wallet/deposits/new">{t("wallet.add_funds")}</Link>
               </Button>
             }
           />
@@ -187,11 +192,13 @@ export function WalletOverview() {
       <WalletReveal delayMs={160}>
         <section
           className="rounded-xl border border-border/60 bg-muted/20 p-5 sm:p-6"
-          aria-label="Balance vocabulary"
+          aria-label={t("wallet.balance_vocabulary")}
         >
-          <h2 className="text-sm font-semibold text-foreground">Balance vocabulary</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            {t("wallet.balance_vocabulary")}
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Accrued earnings live on Investments — they never look like Available here.
+            {t("wallet.balance_vocabulary_hint")}
           </p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
             {data.vocabulary.map((term) => (

@@ -72,12 +72,16 @@ export function formatCountdown(totalSeconds: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export function remainingDaysLabel(maturityDate: string | null, now = new Date()): string {
+export function remainingDaysLabel(
+  maturityDate: string | null,
+  t: (key: string, values?: Record<string, string | number>) => string,
+  now = new Date(),
+): string {
   if (!maturityDate) return "—";
   const end = Date.parse(`${maturityDate}T23:59:59.000Z`);
   if (!Number.isFinite(end)) return "—";
   const days = Math.max(0, Math.ceil((end - now.getTime()) / 86_400_000));
-  return days === 1 ? "1 day" : `${days} days`;
+  return days === 1 ? t("portfolio.days.one") : t("portfolio.days.many", { count: days });
 }
 
 export type AggregatedLiveAccrualView = {

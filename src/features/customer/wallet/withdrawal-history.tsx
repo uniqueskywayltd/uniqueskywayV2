@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { presentWithdrawalStatus } from "@/features/customer/wallet/status-presentation";
 import type { WalletWithdrawal } from "@/features/customer/wallet/types";
 import {
@@ -24,22 +25,23 @@ import {
 import { cn } from "@/lib/utils";
 
 const FILTERS = [
-  { value: "all", label: "All" },
-  { value: "requested", label: "Requested" },
-  { value: "reserved", label: "Reserved" },
-  { value: "under_review", label: "Under review" },
-  { value: "approved", label: "Approved" },
-  { value: "processing", label: "Processing" },
-  { value: "paid", label: "Paid" },
-  { value: "rejected", label: "Rejected" },
-  { value: "failed", label: "Failed" },
-  { value: "cancelled", label: "Cancelled" },
+  { value: "all", labelKey: "ui.all" },
+  { value: "requested", labelKey: "status.withdrawal.filter.requested" },
+  { value: "reserved", labelKey: "status.withdrawal.filter.reserved" },
+  { value: "under_review", labelKey: "status.withdrawal.filter.under_review" },
+  { value: "approved", labelKey: "status.withdrawal.approved" },
+  { value: "processing", labelKey: "status.withdrawal.filter.processing" },
+  { value: "paid", labelKey: "status.withdrawal.paid.label" },
+  { value: "rejected", labelKey: "status.withdrawal.rejected" },
+  { value: "failed", labelKey: "ui.failed" },
+  { value: "cancelled", labelKey: "ui.cancelled" },
 ] as const;
 
 type FilterValue = (typeof FILTERS)[number]["value"];
 
 /** WP3 — withdrawal history over certified withdrawal read models only. */
 export function WithdrawalHistory() {
+  const { t } = useI18n();
   const [withdrawals, setWithdrawals] = useState<WalletWithdrawal[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ export function WithdrawalHistory() {
 
   if (loading) {
     return (
-      <div className="space-y-4" aria-busy="true" aria-label="Loading withdrawals">
+      <div className="space-y-4" aria-busy="true" aria-label={t("wallet.loading_withdrawals")}>
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: 5 }).map((_, index) => (
             <Skeleton key={index} className="h-8 w-24 rounded-lg" />
@@ -94,11 +96,11 @@ export function WithdrawalHistory() {
     return (
       <EmptyState
         icon={ArrowUpRight}
-        title="No withdrawals"
-        description="When you request a withdrawal, status and next steps stay visible so you always know what to expect."
+        title={t("wallet.withdrawals_empty_title")}
+        description={t("wallet.withdrawals_empty_body")}
         action={
           <Button asChild>
-            <Link href="/wallet/withdrawals/new">New withdrawal</Link>
+            <Link href="/wallet/withdrawals/new">{t("wallet.new_withdrawal")}</Link>
           </Button>
         }
       />
@@ -107,7 +109,11 @@ export function WithdrawalHistory() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Filter withdrawals by status">
+      <div
+        className="flex flex-wrap gap-2"
+        role="group"
+        aria-label={t("wallet.withdrawals_filter_aria")}
+      >
         {FILTERS.map((option) => {
           const active = filter === option.value;
           return (
@@ -123,7 +129,7 @@ export function WithdrawalHistory() {
                   : "border-border/70 bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground",
               )}
             >
-              {option.label}
+              {t(option.labelKey)}
             </button>
           );
         })}
@@ -131,24 +137,24 @@ export function WithdrawalHistory() {
 
       {filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border/80 p-4 text-sm text-muted-foreground">
-          No withdrawals match this status filter.
+          {t("wallet.withdrawals_no_filter_match")}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border/70 bg-card/90 shadow-sm">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Amount</TableHead>
-                <TableHead>Destination</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Requested</TableHead>
-                <TableHead>Paid</TableHead>
-                <TableHead className="text-right">Detail</TableHead>
+                <TableHead>{t("wallet.amount")}</TableHead>
+                <TableHead>{t("wallet.table.destination")}</TableHead>
+                <TableHead>{t("ui.status")}</TableHead>
+                <TableHead>{t("wallet.table.requested")}</TableHead>
+                <TableHead>{t("wallet.table.paid")}</TableHead>
+                <TableHead className="text-right">{t("ui.detail")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((withdrawal) => {
-                const status = presentWithdrawalStatus(withdrawal.status);
+                const status = presentWithdrawalStatus(withdrawal.status, t);
                 return (
                   <TableRow key={withdrawal.id} className="hover:bg-muted/30">
                     <TableCell className="font-medium tabular-nums">
@@ -181,7 +187,7 @@ export function WithdrawalHistory() {
                         href={`/wallet/withdrawals/${withdrawal.id}`}
                         className="text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
-                        View
+                        {t("ui.view")}
                       </Link>
                     </TableCell>
                   </TableRow>

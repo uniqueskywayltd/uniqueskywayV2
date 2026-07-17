@@ -5,26 +5,34 @@ import { usePathname } from "next/navigation";
 import { Activity, Bell, HelpCircle, Megaphone, MessagesSquare } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 const items = [
-  { href: "/account/communications", label: "Center", exact: true, icon: MessagesSquare },
-  { href: "/account/notifications", label: "Notifications", exact: true, icon: Bell },
-  { href: "/account/activity", label: "Activity", exact: true, icon: Activity },
-  { href: "/account/whats-new", label: "What’s New", exact: true, icon: Megaphone },
-  { href: "/account/help", label: "Help", exact: true, icon: HelpCircle },
+  {
+    href: "/account/communications",
+    labelKey: "communications.nav.center",
+    exact: true,
+    icon: MessagesSquare,
+  },
+  { href: "/account/notifications", labelKey: "notifications.title", exact: true, icon: Bell },
+  { href: "/account/activity", labelKey: "nav.activity", exact: true, icon: Activity },
+  { href: "/account/whats-new", labelKey: "whats_new.title", exact: true, icon: Megaphone },
+  { href: "/account/help", labelKey: "nav.help", exact: true, icon: HelpCircle },
 ] as const;
 
 /** In-surface nav for Notifications & Communication. */
 export function CommunicationsSurfaceNav() {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
-    <section aria-label="Communications navigation">
+    <section aria-label={t("communications.nav.aria")}>
       <div className="flex flex-wrap gap-2.5 sm:gap-2">
-        {items.map(({ href, label, exact, icon: Icon }) => {
+        {items.map(({ href, labelKey, exact, icon: Icon }) => {
           const active = exact
-            ? pathname === href || (href === "/account/help" && pathname.startsWith("/account/help"))
+            ? pathname === href ||
+              (href === "/account/help" && pathname.startsWith("/account/help"))
             : pathname.startsWith(href);
           return (
             <Link
@@ -37,7 +45,7 @@ export function CommunicationsSurfaceNav() {
               aria-current={active ? "page" : undefined}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden />
-              {label}
+              {t(labelKey)}
             </Link>
           );
         })}

@@ -22,7 +22,7 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { LanguageSelector } from "@/features/i18n/language-selector";
 import { useI18n } from "@/features/i18n/i18n-provider";
 import { getPersonFullName, getPersonHandle, getPersonInitials } from "@/lib/utils/person-display";
-import { getTimeGreeting } from "@/lib/utils/time-greeting";
+import { getTimeGreetingKey } from "@/lib/utils/time-greeting";
 import { cn } from "@/lib/utils";
 
 type DashboardShellProps = {
@@ -58,7 +58,7 @@ function DashboardNavPanel({
           </Avatar>
           <div className="min-w-0">
             <p className="text-[10px] font-medium tracking-wide text-primary/80">
-              {getTimeGreeting()}
+              {t(getTimeGreetingKey())}
             </p>
             <p className="mt-1.5 truncate text-sm font-semibold text-foreground">{fullName}</p>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">@{handle}</p>
@@ -66,7 +66,7 @@ function DashboardNavPanel({
         </div>
       </div>
 
-      <nav className="flex flex-col gap-1 p-3" aria-label="Dashboard navigation">
+      <nav className="flex flex-col gap-1 p-3" aria-label={t("dashboard.nav_title")}>
         {dashboardNavItems.map((item) => {
           const active = item.exact
             ? pathname === item.href
@@ -136,14 +136,14 @@ export function DashboardShell({ children }: DashboardShellProps) {
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-md focus:ring-2 focus:ring-ring"
         >
-          Skip to main content
+          {t("chrome.skip_to_content")}
         </a>
 
         <aside className="hidden w-64 shrink-0 flex-col border-r border-border/60 bg-card/80 backdrop-blur-sm lg:sticky lg:top-0 lg:flex lg:h-dvh lg:overflow-y-auto">
           {summary ? (
             <DashboardNavPanel summary={summary} />
           ) : (
-            <div className="space-y-3 p-4" aria-busy="true" aria-label="Loading navigation">
+            <div className="space-y-3 p-4" aria-busy="true" aria-label={t("ui.loading")}>
               <Skeleton className="h-16 w-full rounded-lg" />
               <Skeleton className="h-8 w-full" />
               <Skeleton className="h-8 w-full" />
@@ -161,7 +161,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
                 size="icon"
                 className="h-10 w-10 shrink-0 lg:hidden"
                 onClick={() => setMobileOpen(true)}
-                aria-label="Open navigation menu"
+                aria-label={t("chrome.open_nav")}
                 aria-expanded={mobileOpen}
                 aria-controls="dashboard-mobile-nav"
               >
@@ -179,13 +179,15 @@ export function DashboardShell({ children }: DashboardShellProps) {
               )}
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-foreground">
-                  {isOverview ? "Overview" : currentLabel}
+                  {isOverview ? t("nav.overview") : currentLabel}
                 </p>
                 {!isOverview ? (
-                  <p className="truncate text-xs text-muted-foreground">Investor portal</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {t("dashboard.investor_portal")}
+                  </p>
                 ) : (
                   <p className="truncate text-xs text-muted-foreground lg:hidden">
-                    Investor portal
+                    {t("dashboard.investor_portal")}
                   </p>
                 )}
               </div>
@@ -208,7 +210,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
               >
                 <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
                   <DialogPrimitive.Title className="px-1 text-sm font-semibold text-foreground">
-                    Dashboard navigation
+                    {t("dashboard.nav_title")}
                   </DialogPrimitive.Title>
                   <DialogPrimitive.Close asChild>
                     <Button
@@ -216,7 +218,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9"
-                      aria-label="Close navigation menu"
+                      aria-label={t("chrome.close_nav")}
                     >
                       <X className="h-4 w-4" aria-hidden />
                     </Button>

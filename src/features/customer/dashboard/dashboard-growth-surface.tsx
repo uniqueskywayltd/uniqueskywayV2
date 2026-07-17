@@ -15,6 +15,7 @@ import {
   useAggregatedLiveAccrual,
   type LiveAccrualSource,
 } from "@/features/customer/portfolio/use-live-accrual";
+import { useI18n } from "@/features/i18n/i18n-provider";
 
 interface WalletBalancesPayload {
   balances: {
@@ -28,6 +29,7 @@ interface WalletBalancesPayload {
  * Display only — uses the existing client-side accrual engine (no DB writes).
  */
 export function DashboardGrowthSurface() {
+  const { t } = useI18n();
   const [wallet, setWallet] = useState<WalletBalancesPayload | null>(null);
   const [portfolio, setPortfolio] = useState<PortfolioListResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -132,7 +134,7 @@ export function DashboardGrowthSurface() {
         portfolioValueMinor={
           portfolio.summary.portfolioValueMinor ?? portfolio.summary.activePrincipalMinor
         }
-        timeRemainingLabel={remainingDaysLabel(earliestMaturity ?? null)}
+        timeRemainingLabel={remainingDaysLabel(earliestMaturity ?? null, t)}
         planName={primaryInvestment.planName}
         dailyRoiBps={primaryInvestment.dailyRoiBps ?? 0}
         activatedAt={primaryInvestment.activatedAt}

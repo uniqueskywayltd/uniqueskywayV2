@@ -7,6 +7,7 @@ import { BookOpen } from "lucide-react";
 
 import { Button, EmptyState, Skeleton } from "@/components/ui";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 
 interface LessonDetailPayload {
   lesson: {
@@ -36,6 +37,7 @@ interface LessonDetailPayload {
 }
 
 export function LessonDetailView() {
+  const { t } = useI18n();
   const params = useParams<{ slug: string }>();
   const slug = params.slug ?? "";
   const [payload, setPayload] = useState<LessonDetailPayload | null>(null);
@@ -45,18 +47,18 @@ export function LessonDetailView() {
 
   useEffect(() => {
     let active = true;
-    void getCustomerJson<LessonDetailPayload>(`/api/customer/learn/${encodeURIComponent(slug)}`).then(
-      (result) => {
-        if (!active) return;
-        if (result.error) {
-          setError(result.error);
-          setLoading(false);
-          return;
-        }
-        setPayload(result.data ?? null);
+    void getCustomerJson<LessonDetailPayload>(
+      `/api/customer/learn/${encodeURIComponent(slug)}`,
+    ).then((result) => {
+      if (!active) return;
+      if (result.error) {
+        setError(result.error);
         setLoading(false);
-      },
-    );
+        return;
+      }
+      setPayload(result.data ?? null);
+      setLoading(false);
+    });
     return () => {
       active = false;
     };
@@ -77,18 +79,18 @@ export function LessonDetailView() {
   }
 
   if (loading) {
-    return <Skeleton className="h-64 w-full rounded-xl" aria-label="Loading lesson" />;
+    return <Skeleton className="h-64 w-full rounded-xl" aria-label={t("ui.loading")} />;
   }
 
   if (error || !payload) {
     return (
       <EmptyState
         icon={BookOpen}
-        title="Lesson unavailable"
-        description={error ?? "This lesson could not be found."}
+        title={t("learn.lesson_unavailable")}
+        description={error ?? t("learn.lesson_not_found")}
         action={
           <Button asChild>
-            <Link href="/account/learn">Back to Learning</Link>
+            <Link href="/account/learn">{t("learn.back")}</Link>
           </Button>
         }
       />
@@ -99,7 +101,7 @@ export function LessonDetailView() {
 
   return (
     <article className="space-y-6">
-      <p className="sr-only">Primary question: What should I learn next?</p>
+      <p className="sr-only">{t("learn.sr_question")}</p>
       <header className="space-y-2 rounded-xl border border-border/80 p-5">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           {lesson.pathTitle}
@@ -108,7 +110,8 @@ export function LessonDetailView() {
         <p className="text-sm text-muted-foreground">{lesson.question}</p>
         <p className="text-sm text-muted-foreground">{lesson.summary}</p>
         <p className="text-xs text-muted-foreground">
-          About {lesson.estimatedMinutes} min · {lesson.completed ? "Completed" : "Recommended"}
+          {t("learn.about_minutes", { minutes: lesson.estimatedMinutes })} ·{" "}
+          {lesson.completed ? t("learn.completed") : t("learn.recommended")}
         </p>
       </header>
 
@@ -121,18 +124,16 @@ export function LessonDetailView() {
       {lesson.videoNote ? (
         <p className="text-sm text-muted-foreground">{lesson.videoNote}</p>
       ) : (
-        <p className="text-xs text-muted-foreground">
-          Text-first lesson. Video is optional on Unique Sky Way and not required to continue.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("learn.text_first")}</p>
       )}
 
       <div className="flex flex-wrap gap-2">
         {!lesson.completed ? (
           <Button type="button" onClick={() => void markComplete()} disabled={saving}>
-            {saving ? "Saving…" : "Mark as read"}
+            {saving ? t("settings.saving") : t("learn.mark_read")}
           </Button>
         ) : (
-          <p className="text-sm text-muted-foreground">Marked complete — revisit anytime.</p>
+          <p className="text-sm text-muted-foreground">{t("learn.marked_complete")}</p>
         )}
         {lesson.appHref && lesson.appHrefLabel ? (
           <Button asChild variant="outline">
@@ -140,23 +141,23 @@ export function LessonDetailView() {
           </Button>
         ) : null}
         <Button asChild variant="outline">
-          <Link href="/account/learn">All lessons</Link>
+          <Link href="/account/learn">{t("learn.all_lessons")}</Link>
         </Button>
       </div>
 
       {payload.nextAfterComplete && lesson.completed ? (
         <section className="rounded-xl border border-dashed border-border/80 p-4">
-          <h3 className="text-sm font-semibold">Suggested next</h3>
+          <h3 className="text-sm font-semibold">{t("learn.suggested_next")}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{payload.nextAfterComplete.title}</p>
           <Button asChild variant="link" className="mt-2 h-auto px-0">
-            <Link href={payload.nextAfterComplete.href}>Continue</Link>
+            <Link href={payload.nextAfterComplete.href}>{t("learn.continue")}</Link>
           </Button>
         </section>
       ) : null}
 
       {payload.related.length > 0 ? (
         <section className="space-y-2">
-          <h3 className="text-sm font-semibold">Related lessons</h3>
+          <h3 className="text-sm font-semibold">{t("learn.related_lessons")}</h3>
           <ul className="space-y-2">
             {payload.related.map((item) => (
               <li key={item.slug}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { PieChart, Search } from "lucide-react";
 
@@ -13,25 +13,18 @@ import { PortfolioQuickActions } from "@/features/customer/portfolio/portfolio-q
 import { PortfolioStatusDistribution } from "@/features/customer/portfolio/portfolio-status-distribution";
 import { PortfolioWelcomeHero } from "@/features/customer/portfolio/portfolio-welcome-hero";
 import type { PortfolioListResponse } from "@/features/customer/portfolio/types";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
-const BUCKETS = [
-  { id: "all", label: "All" },
-  { id: "pending", label: "Pending" },
-  { id: "active", label: "Active" },
-  { id: "completed", label: "Completed" },
-  { id: "archived", label: "Archived" },
-] as const;
+const BUCKET_IDS = ["all", "pending", "active", "completed", "archived"] as const;
+const SORT_IDS = ["newest", "maturity", "status"] as const;
 
-const SORTS = [
-  { id: "newest", label: "Newest" },
-  { id: "maturity", label: "Maturity soonest" },
-  { id: "status", label: "Status" },
-] as const;
+type BucketId = (typeof BUCKET_IDS)[number];
+type SortId = (typeof SORT_IDS)[number];
 
-function PortfolioFrameSkeleton() {
+function PortfolioFrameSkeleton({ loadingLabel }: { loadingLabel: string }) {
   return (
-    <div className="space-y-8 sm:space-y-9" aria-busy="true" aria-label="Loading investments">
+    <div className="space-y-8 sm:space-y-9" aria-busy="true" aria-label={loadingLabel}>
       <Skeleton className="h-36 w-full rounded-2xl sm:h-40" />
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: 4 }).map((_, index) => (
@@ -55,8 +48,42 @@ function PortfolioFrameSkeleton() {
 
 /** PF1–PF5: certified portfolio surface (shell → cards → detail link → status counts + polish). */
 export function PortfolioOverview() {
-  const [bucket, setBucket] = useState<(typeof BUCKETS)[number]["id"]>("all");
-  const [sort, setSort] = useState<(typeof SORTS)[number]["id"]>("newest");
+  const { t } = useI18n();
+  const buckets = useMemo(
+    () =>
+      BUCKET_IDS.map((id) => ({
+        id,
+        label: t(
+          id === "all"
+            ? "portfolio.filter.all"
+            : id === "pending"
+              ? "portfolio.filter.pending"
+              : id === "active"
+                ? "portfolio.filter.active"
+                : id === "completed"
+                  ? "portfolio.filter.completed"
+                  : "portfolio.filter.archived",
+        ),
+      })),
+    [t],
+  );
+  const sorts = useMemo(
+    () =>
+      SORT_IDS.map((id) => ({
+        id,
+        label: t(
+          id === "newest"
+            ? "portfolio.sort.newest"
+            : id === "maturity"
+              ? "portfolio.sort.maturity"
+              : "portfolio.sort.status",
+        ),
+      })),
+    [t],
+  );
+
+  const [bucket, setBucket] = useState<BucketId>("all");
+  const [sort, setSort] = useState<SortId>("newest");
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const [data, setData] = useState<PortfolioListResponse | null>(null);
@@ -97,8 +124,8 @@ export function PortfolioOverview() {
 
   function beginReload(
     next?: Partial<{
-      bucket: (typeof BUCKETS)[number]["id"];
-      sort: (typeof SORTS)[number]["id"];
+      bucket: BucketId;
+      sort: SortId;
       query: string;
     }>,
   ) {
@@ -110,14 +137,14 @@ export function PortfolioOverview() {
   }
 
   if (initialLoad && loading && !data) {
-    return <PortfolioFrameSkeleton />;
+    return <PortfolioFrameSkeleton loadingLabel={t("portfolio.loading.investments")} />;
   }
 
   const resultCount = data?.investments.length ?? 0;
 
   return (
     <div className="space-y-8 sm:space-y-9">
-      <p className="sr-only">Primary question: How are my investments performing?</p>
+      <p className="sr-only">{t("portfolio.hero.primary_question")}</p>
 
       <PortfolioReveal>
         <PortfolioWelcomeHero />
@@ -129,9 +156,7 @@ export function PortfolioOverview() {
 
       {error && !data ? (
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5" role="alert">
-          <p className="text-sm font-semibold text-foreground">
-            We couldn’t load your investments.
-          </p>
+          <p className="text-sm font-semibold text-foreground">{t("portfolio.error.load_title")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{error}</p>
           <Button
             type="button"
@@ -139,7 +164,7 @@ export function PortfolioOverview() {
             className="mt-4"
             onClick={() => beginReload({ bucket: "all", query: "" })}
           >
-            Reset filters and retry
+            {t("portfolio.error.reset_retry")}
           </Button>
         </div>
       ) : null}
@@ -151,7 +176,7 @@ export function PortfolioOverview() {
             <PortfolioStatusDistribution byStatus={data.summary.byStatus} />
           </div>
         ) : loading ? (
-          <div className="space-y-3" aria-busy="true" aria-label="Loading portfolio summary">
+          <div className="space-y-3" aria-busy="true" aria-label={t("portfolio.loading.summary")}>
             <Skeleton className="h-24 w-full rounded-xl" />
             <Skeleton className="h-28 w-full rounded-xl" />
           </div>
@@ -159,14 +184,14 @@ export function PortfolioOverview() {
       </PortfolioReveal>
 
       <PortfolioReveal delayMs={120}>
-        <section aria-label="Investment filters" className="space-y-3">
+        <section aria-label={t("portfolio.filters.aria")} className="space-y-3">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div
               className="flex flex-wrap gap-2"
               role="tablist"
-              aria-label="Filter investments by status"
+              aria-label={t("portfolio.filter.aria")}
             >
-              {BUCKETS.map((item) => {
+              {buckets.map((item) => {
                 const selected = bucket === item.id;
                 return (
                   <button
@@ -195,12 +220,12 @@ export function PortfolioOverview() {
                   aria-hidden
                 />
                 <label htmlFor="portfolio-search" className="sr-only">
-                  Search investments
+                  {t("portfolio.search.label")}
                 </label>
                 <Input
                   id="portfolio-search"
                   type="search"
-                  placeholder="Search by plan name…"
+                  placeholder={t("portfolio.search.placeholder")}
                   value={query}
                   onChange={(event) => beginReload({ query: event.target.value })}
                   autoComplete="off"
@@ -208,16 +233,14 @@ export function PortfolioOverview() {
                 />
               </div>
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="shrink-0">Sort by</span>
+                <span className="shrink-0">{t("portfolio.sort.by")}</span>
                 <select
                   className="h-9 min-w-[10.5rem] rounded-lg border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   value={sort}
-                  aria-label="Sort investments"
-                  onChange={(event) =>
-                    beginReload({ sort: event.target.value as (typeof SORTS)[number]["id"] })
-                  }
+                  aria-label={t("portfolio.sort.aria")}
+                  onChange={(event) => beginReload({ sort: event.target.value as SortId })}
                 >
-                  {SORTS.map((item) => (
+                  {sorts.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.label}
                     </option>
@@ -229,8 +252,12 @@ export function PortfolioOverview() {
 
           {data && !loading ? (
             <p className="text-xs text-muted-foreground" aria-live="polite">
-              {resultCount === 1 ? "1 position shown" : `${resultCount} positions shown`}
-              {deferredQuery.trim() ? ` for “${deferredQuery.trim()}”` : null}
+              {resultCount === 1
+                ? t("portfolio.results.one")
+                : t("portfolio.results.many", { count: resultCount })}
+              {deferredQuery.trim()
+                ? t("portfolio.results.for_query", { query: deferredQuery.trim() })
+                : null}
             </p>
           ) : null}
         </section>
@@ -238,13 +265,19 @@ export function PortfolioOverview() {
 
       {error && data ? (
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5" role="alert">
-          <p className="text-sm font-semibold text-foreground">Refresh failed.</p>
+          <p className="text-sm font-semibold text-foreground">
+            {t("portfolio.error.refresh_failed")}
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">{error}</p>
         </div>
       ) : null}
 
       {loading ? (
-        <div className="grid gap-4 md:grid-cols-2" aria-busy="true" aria-label="Loading positions">
+        <div
+          className="grid gap-4 md:grid-cols-2"
+          aria-busy="true"
+          aria-label={t("portfolio.loading.positions")}
+        >
           <Skeleton className="h-64 rounded-xl" />
           <Skeleton className="h-64 rounded-xl" />
         </div>
@@ -259,7 +292,7 @@ export function PortfolioOverview() {
         ) : null}
 
         {!loading && data && data.investments.length > 0 ? (
-          <ul className="grid gap-4 md:grid-cols-2" aria-label="Investment positions">
+          <ul className="grid gap-4 md:grid-cols-2" aria-label={t("portfolio.positions.aria")}>
             {data.investments.map((investment) => (
               <li key={investment.id}>
                 <InvestmentCard investment={investment} />
@@ -274,17 +307,18 @@ export function PortfolioOverview() {
 
 /** Orientation from certified list summary only — not dashboard widgets. */
 function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["summary"] }) {
+  const { t } = useI18n();
   const activeCount = (summary.byStatus.active ?? 0) + (summary.byStatus.maturing ?? 0);
   const currency = summary.currency ?? "USD";
 
   return (
     <section
-      aria-label="Portfolio summary"
+      aria-label={t("portfolio.summary.aria")}
       className="grid gap-3 rounded-xl border border-border/70 bg-muted/20 p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5"
     >
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Current investment value
+          {t("portfolio.summary.current_value")}
         </p>
         <p className="mt-1 text-foreground">
           <CurrencyDisplay
@@ -295,7 +329,7 @@ function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["sum
       </div>
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Available cash
+          {t("portfolio.summary.available_cash")}
         </p>
         <p className="mt-1 text-foreground">
           <CurrencyDisplay
@@ -306,7 +340,7 @@ function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["sum
       </div>
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Invested principal
+          {t("portfolio.summary.invested_principal")}
         </p>
         <p className="mt-1 text-foreground">
           <CurrencyDisplay
@@ -317,7 +351,7 @@ function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["sum
       </div>
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Today&apos;s live earnings
+          {t("portfolio.summary.today_live")}
         </p>
         <p className="mt-1 text-foreground">
           <CurrencyDisplay
@@ -328,7 +362,7 @@ function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["sum
       </div>
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Total earnings
+          {t("portfolio.summary.total_earnings")}
         </p>
         <p className="mt-1 text-foreground">
           <CurrencyDisplay
@@ -339,7 +373,7 @@ function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["sum
       </div>
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Current investment value
+          {t("portfolio.summary.current_value")}
         </p>
         <p className="mt-1 text-foreground">
           <CurrencyDisplay
@@ -352,21 +386,24 @@ function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["sum
       </div>
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Positions
+          {t("portfolio.summary.positions")}
         </p>
         <p className="mt-1 font-mono text-lg tabular-nums text-foreground">
           {summary.positionsCount ?? summary.totalCount}
           <span className="ml-2 text-sm font-sans text-muted-foreground">
-            ({activeCount} active)
+            {t("portfolio.summary.active_count", { count: activeCount })}
           </span>
         </p>
       </div>
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Open / pending
+          {t("portfolio.summary.open_pending")}
         </p>
         <p className="mt-1 text-sm text-foreground">
-          {summary.openWithdrawals ?? 0} withdrawals · {summary.pendingDeposits ?? 0} deposits
+          {t("portfolio.summary.withdrawals_deposits", {
+            withdrawals: summary.openWithdrawals ?? 0,
+            deposits: summary.pendingDeposits ?? 0,
+          })}
         </p>
       </div>
     </section>
@@ -380,15 +417,17 @@ function PortfolioEmptyState({
   hasPortfolio: boolean;
   onClear: () => void;
 }) {
+  const { t } = useI18n();
+
   if (hasPortfolio) {
     return (
       <EmptyState
         icon={PieChart}
-        title="No matches"
-        description="Try a different status filter or clear search to see your investments again."
+        title={t("portfolio.empty.no_matches.title")}
+        description={t("portfolio.empty.no_matches.body")}
         action={
           <Button type="button" variant="outline" onClick={onClear}>
-            Clear filters
+            {t("portfolio.empty.clear_filters")}
           </Button>
         }
       />
@@ -398,15 +437,15 @@ function PortfolioEmptyState({
   return (
     <EmptyState
       icon={PieChart}
-      title="No investments yet"
-      description="Submit a deposit. After approval, your investment starts automatically and appears here."
+      title={t("portfolio.empty.title")}
+      description={t("portfolio.empty.body")}
       action={
         <div className="flex flex-wrap justify-center gap-3">
           <Button asChild>
-            <Link href="/wallet/deposits/new">Deposit funds</Link>
+            <Link href="/wallet/deposits/new">{t("portfolio.empty.deposit")}</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/plans">Explore plans</Link>
+            <Link href="/plans">{t("portfolio.empty.explore")}</Link>
           </Button>
         </div>
       }

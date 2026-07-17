@@ -1,125 +1,159 @@
 import type { StatusTone } from "@/components/ui/status-chip";
 
+type Translate = (key: string, values?: Record<string, string | number>) => string;
+
+type StatusPresentation = {
+  label: string;
+  tone: StatusTone;
+  explanation: string;
+  nextExpectedStep: string;
+};
+
 const DEPOSIT_STATUS: Record<
   string,
-  { label: string; tone: StatusTone; explanation: string; nextExpectedStep: string }
+  { labelKey: string; tone: StatusTone; explanationKey: string; nextKey: string }
 > = {
   created: {
-    label: "Deposit created",
+    labelKey: "status.deposit.created.label",
     tone: "pending",
-    explanation: "We recorded your deposit intent.",
-    nextExpectedStep: "Complete payment / provider step if prompted.",
+    explanationKey: "status.deposit.created.explanation",
+    nextKey: "status.deposit.created.next",
   },
   pending: {
-    label: "Awaiting confirmation",
+    labelKey: "status.deposit.pending.label",
     tone: "pending",
-    explanation: "Payment is submitted and waiting for confirmation or review.",
-    nextExpectedStep: "Wait for provider/admin confirmation; check back for status.",
+    explanationKey: "status.deposit.pending.explanation",
+    nextKey: "status.deposit.pending.next",
   },
   confirmed: {
-    label: "Available",
+    labelKey: "status.deposit.confirmed.label",
     tone: "matured",
-    explanation: "Funds were confirmed and credited per ledger rules.",
-    nextExpectedStep: "Use funds in wallet / invest.",
+    explanationKey: "status.deposit.confirmed.explanation",
+    nextKey: "status.deposit.confirmed.next",
   },
   failed: {
-    label: "Failed",
+    labelKey: "status.deposit.failed.label",
     tone: "restricted",
-    explanation: "The deposit could not complete.",
-    nextExpectedStep: "Retry with a new deposit or contact support.",
+    explanationKey: "status.deposit.failed.explanation",
+    nextKey: "status.deposit.failed.next",
   },
   cancelled: {
-    label: "Cancelled",
+    labelKey: "status.deposit.cancelled",
     tone: "neutral",
-    explanation: "This deposit was cancelled.",
-    nextExpectedStep: "Start a new deposit if needed.",
+    explanationKey: "status.deposit.cancelled.explanation",
+    nextKey: "status.deposit.cancelled.next",
   },
   reversed: {
-    label: "Reversed",
+    labelKey: "status.deposit.reversed.label",
     tone: "restricted",
-    explanation: "A confirmed deposit was reversed under platform rules.",
-    nextExpectedStep: "Review wallet activity; contact support if unclear.",
+    explanationKey: "status.deposit.reversed.explanation",
+    nextKey: "status.deposit.reversed.next",
   },
 };
 
 const WITHDRAWAL_STATUS: Record<
   string,
-  { label: string; tone: StatusTone; explanation: string; nextExpectedStep: string }
+  { labelKey: string; tone: StatusTone; explanationKey: string; nextKey: string }
 > = {
   requested: {
-    label: "Awaiting Review",
+    labelKey: "status.withdrawal.requested.label",
     tone: "pending",
-    explanation: "Your withdrawal request was received and is waiting for review.",
-    nextExpectedStep: "Finance will review your request.",
+    explanationKey: "status.withdrawal.requested.explanation",
+    nextKey: "status.withdrawal.requested.next",
   },
   reserved: {
-    label: "Funds reserved",
+    labelKey: "status.withdrawal.reserved.label",
     tone: "pending",
-    explanation: "Amount is reserved so it cannot be spent twice.",
-    nextExpectedStep: "Review or approval.",
+    explanationKey: "status.withdrawal.reserved.explanation",
+    nextKey: "status.withdrawal.reserved.next",
   },
   under_review: {
-    label: "Pending Review",
+    labelKey: "status.withdrawal.under_review.label",
     tone: "pending",
-    explanation: "A reviewer is checking this request.",
-    nextExpectedStep: "Wait for approve or reject.",
+    explanationKey: "status.withdrawal.under_review.explanation",
+    nextKey: "status.withdrawal.under_review.next",
   },
   approved: {
-    label: "Approved",
+    labelKey: "status.withdrawal.approved",
     tone: "active",
-    explanation: "The request cleared review.",
-    nextExpectedStep: "Provider payout processing.",
+    explanationKey: "status.withdrawal.approved.explanation",
+    nextKey: "status.withdrawal.approved.next",
   },
   processing: {
-    label: "Processing",
+    labelKey: "status.withdrawal.processing.label",
     tone: "pending",
-    explanation: "Payout is being sent through the payment provider.",
-    nextExpectedStep: "Wait for paid or failure update.",
+    explanationKey: "status.withdrawal.processing.explanation",
+    nextKey: "status.withdrawal.processing.next",
   },
   paid: {
-    label: "Completed",
+    labelKey: "status.withdrawal.paid.label",
     tone: "matured",
-    explanation: "The withdrawal completed successfully.",
-    nextExpectedStep: "Confirm receipt in your destination.",
+    explanationKey: "status.withdrawal.paid.explanation",
+    nextKey: "status.withdrawal.paid.next",
   },
   rejected: {
-    label: "Rejected",
+    labelKey: "status.withdrawal.rejected",
     tone: "restricted",
-    explanation: "The request was not approved.",
-    nextExpectedStep: "Read reason if shown; adjust and retry or contact support.",
+    explanationKey: "status.withdrawal.rejected.explanation",
+    nextKey: "status.withdrawal.rejected.next",
   },
   failed: {
-    label: "Failed",
+    labelKey: "ui.failed",
     tone: "restricted",
-    explanation: "Processing failed after approval.",
-    nextExpectedStep: "Support/recovery path; do not assume silent retry.",
+    explanationKey: "status.withdrawal.failed.explanation",
+    nextKey: "status.withdrawal.failed.next",
   },
   cancelled: {
-    label: "Cancelled",
+    labelKey: "ui.cancelled",
     tone: "neutral",
-    explanation: "The withdrawal was cancelled.",
-    nextExpectedStep: "Request again if still eligible.",
+    explanationKey: "status.withdrawal.cancelled.explanation",
+    nextKey: "status.withdrawal.cancelled.next",
   },
 };
 
-export function presentDepositStatus(status: string) {
-  return (
-    DEPOSIT_STATUS[status] ?? {
+function resolveStatus(
+  map: Record<
+    string,
+    { labelKey: string; tone: StatusTone; explanationKey: string; nextKey: string }
+  >,
+  status: string,
+  t: Translate,
+  fallbackExplanationKey: string,
+  fallbackNextKey: string,
+): StatusPresentation {
+  const entry = map[status];
+  if (!entry) {
+    return {
       label: status,
-      tone: "neutral" as const,
-      explanation: "Status from the certified deposit engine.",
-      nextExpectedStep: "Check back or contact support.",
-    }
+      tone: "neutral",
+      explanation: t(fallbackExplanationKey),
+      nextExpectedStep: t(fallbackNextKey),
+    };
+  }
+  return {
+    label: t(entry.labelKey),
+    tone: entry.tone,
+    explanation: t(entry.explanationKey),
+    nextExpectedStep: t(entry.nextKey),
+  };
+}
+
+export function presentDepositStatus(status: string, t: Translate): StatusPresentation {
+  return resolveStatus(
+    DEPOSIT_STATUS,
+    status,
+    t,
+    "status.deposit.fallback.explanation",
+    "status.deposit.fallback.next",
   );
 }
 
-export function presentWithdrawalStatus(status: string) {
-  return (
-    WITHDRAWAL_STATUS[status] ?? {
-      label: status,
-      tone: "neutral" as const,
-      explanation: "Status from the certified withdrawal engine.",
-      nextExpectedStep: "Check back or contact support.",
-    }
+export function presentWithdrawalStatus(status: string, t: Translate): StatusPresentation {
+  return resolveStatus(
+    WITHDRAWAL_STATUS,
+    status,
+    t,
+    "status.withdrawal.fallback.explanation",
+    "status.withdrawal.fallback.next",
   );
 }

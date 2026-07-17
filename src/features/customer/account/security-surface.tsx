@@ -22,26 +22,18 @@ import {
   TrustedDevicesClient,
 } from "@/features/auth/components/security-management";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import type { CustomerActivity } from "@/features/customer/types";
 
-const SECURITY_TIPS = [
-  {
-    title: "Use a unique password",
-    body: "Do not reuse passwords from other sites for this account.",
-  },
-  {
-    title: "Review devices regularly",
-    body: "Revoke any trusted device or session you do not recognize.",
-  },
-  {
-    title: "Keep email secure",
-    body: "Account recovery and security notices depend on access to your verified email.",
-  },
+const SECURITY_TIP_KEYS = [
+  { titleKey: "security.tip_unique_password_title", bodyKey: "security.tip_unique_password_body" },
+  { titleKey: "security.tip_review_devices_title", bodyKey: "security.tip_review_devices_body" },
+  { titleKey: "security.tip_email_title", bodyKey: "security.tip_email_body" },
 ] as const;
 
-function SecurityFrameSkeleton() {
+function SecurityFrameSkeleton({ label }: { label: string }) {
   return (
-    <div className="space-y-8 sm:space-y-9" aria-busy="true" aria-label="Loading security">
+    <div className="space-y-8 sm:space-y-9" aria-busy="true" aria-label={label}>
       <Skeleton className="h-36 w-full rounded-2xl sm:h-40" />
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: 6 }).map((_, index) => (
@@ -62,6 +54,7 @@ function DeviceIcon({ detail }: { detail: string }) {
 
 /** Security surface — password, devices, sessions, certified security activity. */
 export function SecuritySurface() {
+  const { t } = useI18n();
   const [activity, setActivity] = useState<CustomerActivity[]>([]);
   const [activityError, setActivityError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,7 +67,8 @@ export function SecuritySurface() {
         if (result.error) setActivityError(result.error);
         else {
           const rows = (result.data?.activity ?? []).filter(
-            (item) => item.category === "security" || /sign.?in|login|session|device/i.test(item.title),
+            (item) =>
+              item.category === "security" || /sign.?in|login|session|device/i.test(item.title),
           );
           setActivity(rows.slice(0, 12));
         }
@@ -86,18 +80,18 @@ export function SecuritySurface() {
     };
   }, []);
 
-  if (loading) return <SecurityFrameSkeleton />;
+  if (loading) return <SecurityFrameSkeleton label={t("security.loading")} />;
 
   return (
     <div className="space-y-8 sm:space-y-9">
       <AccountReveal>
         <AccountWelcomeHero
-          title="Security"
-          description="What do I control about my account? Password, trusted devices, and sessions — using certified auth services only."
+          title={t("profile.security")}
+          description={t("security.hero_description")}
           icon={Shield}
           accentClassName="bg-amber-500/10 text-amber-800 ring-amber-500/20 dark:text-amber-400"
           barClassName="via-amber-500/70"
-          ariaLabel="Security header"
+          ariaLabel={t("security.header_aria")}
         />
       </AccountReveal>
 
@@ -108,10 +102,8 @@ export function SecuritySurface() {
       <AccountReveal delayMs={80}>
         <section className="max-w-lg space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Password</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Change the password for this account through the certified identity API.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("security.password")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("security.password_desc")}</p>
           </div>
           <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
             <PasswordChangeForm />
@@ -122,17 +114,14 @@ export function SecuritySurface() {
       <AccountReveal delayMs={100}>
         <section className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Two-factor authentication</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Status reflects existing platform capability only — nothing is enabled here unless
-              already offered by certified auth.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("security.two_factor")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("security.two_factor_desc")}</p>
           </div>
           <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
             <EmptyState
               icon={Shield}
-              title="No additional factor enrolled"
-              description="Two-factor enrollment controls appear here when your account pathway supports them. Password, devices, and sessions remain available now."
+              title={t("security.no_2fa")}
+              description={t("security.no_2fa_desc")}
               className="min-h-0 border-0 bg-transparent p-0"
             />
           </div>
@@ -143,13 +132,15 @@ export function SecuritySurface() {
         <section className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Trusted devices</h2>
+              <h2 className="text-lg font-semibold text-foreground">
+                {t("security.trusted_devices")}
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Devices you have trusted for sign-in. Revoke any you do not recognize.
+                {t("security.trusted_devices_desc")}
               </p>
             </div>
             <Button asChild variant="outline" size="sm">
-              <Link href="/account/security/trusted-devices">Open devices</Link>
+              <Link href="/account/security/trusted-devices">{t("security.open_devices")}</Link>
             </Button>
           </div>
           <TrustedDevicesClient />
@@ -160,13 +151,15 @@ export function SecuritySurface() {
         <section className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Active sessions</h2>
+              <h2 className="text-lg font-semibold text-foreground">
+                {t("security.active_sessions")}
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Review and revoke authenticated sessions for this account.
+                {t("security.active_sessions_desc")}
               </p>
             </div>
             <Button asChild variant="outline" size="sm">
-              <Link href="/account/security/sessions">Open sessions</Link>
+              <Link href="/account/security/sessions">{t("security.open_sessions")}</Link>
             </Button>
           </div>
           <SessionsClient />
@@ -176,10 +169,8 @@ export function SecuritySurface() {
       <AccountReveal delayMs={160}>
         <section className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Login & security history</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Security events from the certified activity read model — not a fabricated timeline.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("security.history")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("security.history_desc")}</p>
           </div>
           {activityError ? (
             <Alert variant="destructive">
@@ -188,8 +179,8 @@ export function SecuritySurface() {
           ) : activity.length === 0 ? (
             <EmptyState
               icon={Shield}
-              title="No security events yet"
-              description="Sign-ins and security notices appear here when the platform records them."
+              title={t("security.no_events")}
+              description={t("security.no_events_desc")}
             />
           ) : (
             <ul className="space-y-3">
@@ -217,19 +208,17 @@ export function SecuritySurface() {
       <AccountReveal delayMs={180}>
         <section className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Security tips</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Practical notices — not certifications or compliance claims.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("security.tips")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("security.tips_desc")}</p>
           </div>
           <ul className="grid gap-3 sm:grid-cols-3">
-            {SECURITY_TIPS.map((tip) => (
+            {SECURITY_TIP_KEYS.map((tip) => (
               <li
-                key={tip.title}
+                key={tip.titleKey}
                 className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm"
               >
-                <p className="text-sm font-semibold text-foreground">{tip.title}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{tip.body}</p>
+                <p className="text-sm font-semibold text-foreground">{t(tip.titleKey)}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{t(tip.bodyKey)}</p>
               </li>
             ))}
           </ul>
@@ -240,6 +229,7 @@ export function SecuritySurface() {
 }
 
 function PasswordChangeForm() {
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -255,14 +245,14 @@ function PasswordChangeForm() {
     });
 
     if (result.error) setError(result.error);
-    else setMessage("Password changed.");
+    else setMessage(t("security.changed"));
     setPending(false);
   }
 
   return (
     <form action={submit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="currentPassword">Current password</Label>
+        <Label htmlFor="currentPassword">{t("security.current_password")}</Label>
         <Input
           id="currentPassword"
           name="currentPassword"
@@ -272,7 +262,7 @@ function PasswordChangeForm() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="newPassword">New password</Label>
+        <Label htmlFor="newPassword">{t("security.new_password")}</Label>
         <Input
           id="newPassword"
           name="newPassword"
@@ -292,7 +282,7 @@ function PasswordChangeForm() {
         </Alert>
       ) : null}
       <Button type="submit" disabled={pending}>
-        {pending ? "Changing" : "Change password"}
+        {pending ? t("security.changing") : t("security.change_password")}
       </Button>
     </form>
   );

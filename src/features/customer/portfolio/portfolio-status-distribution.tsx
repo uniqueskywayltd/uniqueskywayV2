@@ -1,16 +1,12 @@
+"use client";
+
 import { presentInvestmentStatus } from "@/features/customer/portfolio/status-presentation";
 import type { PortfolioSummary } from "@/features/customer/portfolio/types";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 /** Certified status order from the investment engine — presentation only. */
-const STATUS_ORDER = [
-  "pending",
-  "active",
-  "maturing",
-  "matured",
-  "cancelled",
-  "failed",
-] as const;
+const STATUS_ORDER = ["pending", "active", "maturing", "matured", "cancelled", "failed"] as const;
 
 /**
  * PF4 — status distribution from certified `summary.byStatus` counts only.
@@ -21,10 +17,12 @@ export function PortfolioStatusDistribution({
 }: {
   byStatus: PortfolioSummary["byStatus"];
 }) {
+  const { t } = useI18n();
+
   const rows = STATUS_ORDER.map((status) => ({
     status,
     count: byStatus[status] ?? 0,
-    label: presentInvestmentStatus(status).label,
+    label: presentInvestmentStatus(status, t).label,
   })).filter((row) => row.count > 0);
 
   if (rows.length === 0) {
@@ -32,9 +30,9 @@ export function PortfolioStatusDistribution({
   }
 
   return (
-    <section aria-label="Status distribution" className="space-y-3">
+    <section aria-label={t("portfolio.status.distribution_aria")} className="space-y-3">
       <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        Status distribution
+        {t("portfolio.status.distribution")}
       </h2>
       <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((row) => (
@@ -51,9 +49,7 @@ export function PortfolioStatusDistribution({
           </li>
         ))}
       </ul>
-      <p className="text-xs text-muted-foreground">
-        Counts come from the certified investment summary — not calculated in the browser.
-      </p>
+      <p className="text-xs text-muted-foreground">{t("portfolio.status.distribution_hint")}</p>
     </section>
   );
 }

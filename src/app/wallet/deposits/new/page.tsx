@@ -13,8 +13,8 @@ export default function NewDepositPage() {
   return (
     <div className="space-y-8">
       <DepositSurfaceHero
-        title="New deposit"
-        description="How do I add funds safely? Amount → confirm → provider → status. Not instant."
+        titleKey="wallet.page.new_deposit_title"
+        descriptionKey="wallet.page.new_deposit_desc"
       />
       <DepositJourney />
     </div>

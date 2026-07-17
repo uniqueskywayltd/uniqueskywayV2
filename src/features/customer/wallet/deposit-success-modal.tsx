@@ -5,6 +5,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 export type DepositSuccessSummary = {
@@ -23,6 +24,7 @@ type DepositSuccessModalProps = {
 };
 
 export function DepositSuccessModal({ open, summary, onConfirm }: DepositSuccessModalProps) {
+  const { t } = useI18n();
   const okButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -71,50 +73,45 @@ export function DepositSuccessModal({ open, summary, onConfirm }: DepositSuccess
                   ✅
                 </div>
                 <DialogPrimitive.Title className="text-xl font-semibold tracking-tight text-foreground">
-                  Deposit Submitted Successfully
+                  {t("wallet.deposit_success_title")}
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="text-sm leading-6 text-muted-foreground">
-                  Thank you, {summary.firstName}.
+                  {t("wallet.deposit_success_thanks", { name: summary.firstName })}
                   <br />
-                  Your deposit request has been received successfully and is now awaiting review by
-                  our Finance Team.
+                  {t("wallet.deposit_success_body")}
                 </DialogPrimitive.Description>
               </div>
 
               <div className="rounded-xl border border-border/70 bg-muted/30 px-4 py-3">
                 <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  Deposit Summary
+                  {t("wallet.deposit_summary")}
                 </p>
                 <dl className="mt-3 space-y-2 text-sm">
-                  <SummaryRow label="Amount" value={summary.amountLabel} emphasize />
-                  <SummaryRow label="Currency" value={summary.currency} />
-                  <SummaryRow label="Network" value={summary.network} />
-                  <SummaryRow label="Reference" value={summary.reference} mono />
-                  <SummaryRow label="Submitted" value={summary.submittedAtLabel} />
+                  <SummaryRow label={t("wallet.amount")} value={summary.amountLabel} emphasize />
+                  <SummaryRow label={t("ui.currency")} value={summary.currency} />
+                  <SummaryRow label={t("wallet.network")} value={summary.network} />
+                  <SummaryRow label={t("wallet.reference")} value={summary.reference} mono />
+                  <SummaryRow label={t("wallet.submitted")} value={summary.submittedAtLabel} />
                 </dl>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-semibold text-foreground">What Happens Next?</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {t("wallet.what_happens_next")}
+                </p>
                 <ul className="list-disc space-y-1.5 pl-5 text-sm leading-6 text-muted-foreground">
-                  <li>Your Account Officer will review your deposit submission.</li>
-                  <li>Your blockchain transaction will be verified.</li>
-                  <li>Once confirmed, your wallet will be credited automatically.</li>
-                  <li>
-                    If additional information is required, our team will contact you using your
-                    registered email address.
-                  </li>
-                  <li>
-                    You will also receive an email notification once your deposit has been approved
-                    or rejected.
-                  </li>
+                  <li>{t("wallet.deposit_success_next_1")}</li>
+                  <li>{t("wallet.deposit_success_next_2")}</li>
+                  <li>{t("wallet.deposit_success_next_3")}</li>
+                  <li>{t("wallet.deposit_success_next_4")}</li>
+                  <li>{t("wallet.deposit_success_next_5")}</li>
                 </ul>
               </div>
 
               <div className="flex justify-center">
                 <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
                   <span aria-hidden="true">🟡</span>
-                  Awaiting Review
+                  {t("wallet.awaiting_review")}
                 </span>
               </div>
 
@@ -131,15 +128,15 @@ export function DepositSuccessModal({ open, summary, onConfirm }: DepositSuccess
                     }
                   }}
                 >
-                  OK
+                  {t("ui.ok")}
                 </Button>
                 <p className="text-center text-sm text-muted-foreground">
-                  Need assistance?{" "}
+                  {t("wallet.need_assistance")}{" "}
                   <Link
                     href="/account/help/support"
                     className="font-medium text-foreground underline-offset-4 hover:underline"
                   >
-                    Contact Support
+                    {t("wallet.contact_support")}
                   </Link>
                 </p>
               </div>

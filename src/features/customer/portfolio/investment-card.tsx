@@ -13,11 +13,13 @@ import {
   remainingDaysLabel,
   useLiveAccrual,
 } from "@/features/customer/portfolio/use-live-accrual";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 /** PF2 — platform-aligned card bound only to certified investment read fields. */
 export function InvestmentCard({ investment }: { investment: PortfolioInvestmentCard }) {
-  const status = presentInvestmentStatus(investment.status);
+  const { t } = useI18n();
+  const status = presentInvestmentStatus(investment.status, t);
   const progress = investment.progressPercent;
   const isActiveLike = investment.status === "active" || investment.status === "maturing";
   const live = useLiveAccrual(
@@ -68,7 +70,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Assigned plan
+            {t("portfolio.card.assigned_plan")}
           </p>
           <h2 className="mt-1 truncate text-base font-semibold text-foreground">
             {investment.planName}
@@ -85,7 +87,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
 
       <dl className="mt-4 grid gap-3 sm:grid-cols-2">
         <div>
-          <dt className="text-xs text-muted-foreground">Investment amount</dt>
+          <dt className="text-xs text-muted-foreground">{t("portfolio.card.investment_amount")}</dt>
           <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
             <CurrencyDisplay
               amountMinor={Number(investment.principalMinor)}
@@ -95,7 +97,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
         </div>
         <div>
           <dt className="text-xs text-muted-foreground">
-            {isActiveLike ? "Live earnings" : "ROI credited"}
+            {isActiveLike ? t("portfolio.card.live_earnings") : t("portfolio.card.roi_credited")}
           </dt>
           <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
             <CurrencyDisplay
@@ -107,7 +109,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
         {isActiveLike ? (
           <>
             <div>
-              <dt className="text-xs text-muted-foreground">Today&apos;s live earnings</dt>
+              <dt className="text-xs text-muted-foreground">{t("portfolio.card.today_live")}</dt>
               <dd className="mt-0.5 font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
                 <CurrencyDisplay
                   amountMinor={Number(todayEarningsMinor)}
@@ -116,7 +118,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Current investment value</dt>
+              <dt className="text-xs text-muted-foreground">{t("portfolio.card.current_value")}</dt>
               <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
                 <CurrencyDisplay
                   amountMinor={Number(currentValueMinor)}
@@ -125,13 +127,15 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Days remaining</dt>
+              <dt className="text-xs text-muted-foreground">
+                {t("portfolio.card.days_remaining")}
+              </dt>
               <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
-                {remainingDaysLabel(investment.maturityDate)}
+                {remainingDaysLabel(investment.maturityDate, t)}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Maturity date</dt>
+              <dt className="text-xs text-muted-foreground">{t("portfolio.card.maturity_date")}</dt>
               <dd className="mt-0.5 text-sm font-semibold text-foreground">
                 {investment.maturityDate ? <DateDisplay value={investment.maturityDate} /> : "—"}
               </dd>
@@ -140,7 +144,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
         ) : (
           <>
             <div>
-              <dt className="text-xs text-muted-foreground">Start date</dt>
+              <dt className="text-xs text-muted-foreground">{t("portfolio.card.start_date")}</dt>
               <dd className="mt-0.5 text-sm font-medium text-foreground">
                 {investment.activatedAt || investment.startAt ? (
                   <DateDisplay value={investment.activatedAt ?? investment.startAt!} />
@@ -150,7 +154,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Matures</dt>
+              <dt className="text-xs text-muted-foreground">{t("portfolio.card.matures")}</dt>
               <dd className="mt-0.5 text-sm font-medium text-foreground">
                 {investment.maturityDate ? <DateDisplay value={investment.maturityDate} /> : "—"}
               </dd>
@@ -162,27 +166,29 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
       {isActiveLike && live ? (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
           <span>
-            Daily ROI{" "}
+            {t("portfolio.card.daily_roi")}{" "}
             <span className="tabular-nums text-foreground">
               {((investment.dailyRoiBps ?? 0) / 100).toFixed(2)}%
             </span>
           </span>
           <span>
-            Next settlement{" "}
+            {t("portfolio.card.next_settlement")}{" "}
             <span className="font-mono tabular-nums text-foreground">
               {formatCountdown(live.nextSettlementCountdownSeconds)}
             </span>
           </span>
-          <span>Remaining {remainingDaysLabel(investment.maturityDate)}</span>
+          <span>
+            {t("portfolio.card.remaining")} {remainingDaysLabel(investment.maturityDate, t)}
+          </span>
         </div>
       ) : null}
 
       {progress !== null ? (
         <div className="mt-4">
           <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
-            <span>Progress</span>
+            <span>{t("portfolio.card.progress")}</span>
             <span className="tabular-nums">
-              {progress}% · {investment.termDays}-day term
+              {t("portfolio.card.progress_term", { progress, days: investment.termDays })}
             </span>
           </div>
           <Progress
@@ -191,18 +197,16 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
               isActiveLike && "[&_[data-slot=progress-indicator]]:bg-emerald-500",
               investment.status === "matured" && "[&_[data-slot=progress-indicator]]:bg-sky-500",
             )}
-            aria-label={`Progress ${progress}%`}
+            aria-label={t("portfolio.card.progress_aria", { progress })}
           />
         </div>
       ) : (
-        <p className="mt-4 text-xs text-muted-foreground">
-          Progress appears after activation dates post.
-        </p>
+        <p className="mt-4 text-xs text-muted-foreground">{t("portfolio.card.progress_pending")}</p>
       )}
 
       <div className="mt-4 rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          What happens next?
+          {t("portfolio.card.what_next")}
         </p>
         <p className="mt-1 text-sm text-foreground">
           {investment.nextMilestone.label}

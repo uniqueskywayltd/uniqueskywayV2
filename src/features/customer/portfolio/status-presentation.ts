@@ -1,66 +1,76 @@
 import type { StatusTone } from "@/components/ui/status-chip";
 
-const INVESTMENT_STATUS_PRESENTATION: Record<
+type Translate = (key: string, values?: Record<string, string | number>) => string;
+
+const INVESTMENT_STATUS_KEYS: Record<
   string,
-  { label: string; tone: StatusTone; explanation: string }
+  { labelKey: string; tone: StatusTone; explanationKey: string }
 > = {
   pending: {
-    label: "Activating",
+    labelKey: "status.investment.pending",
     tone: "pending",
-    explanation: "Your investment is being activated.",
+    explanationKey: "status.investment.explanation.pending",
   },
   active: {
-    label: "Active",
+    labelKey: "status.investment.active",
     tone: "active",
-    explanation: "The investment is running under certified plan terms.",
+    explanationKey: "status.investment.explanation.active",
   },
   maturing: {
-    label: "Maturing",
+    labelKey: "status.investment.maturing",
     tone: "pending",
-    explanation: "Approaching end of term.",
+    explanationKey: "status.investment.explanation.maturing",
   },
   matured: {
-    label: "Matured",
+    labelKey: "status.investment.matured",
     tone: "matured",
-    explanation: "Term completed under plan rules.",
+    explanationKey: "status.investment.explanation.matured",
   },
   cancelled: {
-    label: "Cancelled",
+    labelKey: "status.investment.cancelled",
     tone: "neutral",
-    explanation: "This investment was cancelled.",
+    explanationKey: "status.investment.explanation.cancelled",
   },
   failed: {
-    label: "Failed",
+    labelKey: "status.investment.failed",
     tone: "restricted",
-    explanation: "Activation or lifecycle failed.",
+    explanationKey: "status.investment.explanation.failed",
   },
 };
 
-const SCHEDULE_STATUS_PRESENTATION: Record<
-  string,
-  { label: string; tone: StatusTone }
-> = {
-  scheduled: { label: "Scheduled", tone: "pending" },
-  posted: { label: "Credited", tone: "matured" },
-  skipped: { label: "Skipped", tone: "neutral" },
-  failed: { label: "Failed", tone: "restricted" },
+const SCHEDULE_STATUS_KEYS: Record<string, { labelKey: string; tone: StatusTone }> = {
+  scheduled: { labelKey: "status.schedule.scheduled", tone: "pending" },
+  posted: { labelKey: "status.schedule.posted", tone: "matured" },
+  skipped: { labelKey: "status.schedule.skipped", tone: "neutral" },
+  failed: { labelKey: "status.schedule.failed", tone: "restricted" },
 };
 
-export function presentInvestmentStatus(status: string) {
-  return (
-    INVESTMENT_STATUS_PRESENTATION[status] ?? {
+export function presentInvestmentStatus(status: string, t: Translate) {
+  const config = INVESTMENT_STATUS_KEYS[status];
+  if (!config) {
+    return {
       label: status,
       tone: "neutral" as const,
-      explanation: "Status from the certified investment engine.",
-    }
-  );
+      explanation: t("status.investment.explanation.fallback"),
+    };
+  }
+  return {
+    label: t(config.labelKey),
+    tone: config.tone,
+    explanation: t(config.explanationKey),
+  };
 }
 
-export function presentScheduleStatus(status: string) {
-  return (
-    SCHEDULE_STATUS_PRESENTATION[status] ?? {
+export function presentScheduleStatus(status: string, t: Translate) {
+  const config = SCHEDULE_STATUS_KEYS[status];
+  if (!config) {
+    return {
       label: status,
       tone: "neutral" as const,
-    }
-  );
+    };
+  }
+  return {
+    label: t(config.labelKey),
+    tone: config.tone,
+  };
 }

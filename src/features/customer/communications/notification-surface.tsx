@@ -19,21 +19,23 @@ import { AccountWelcomeHero } from "@/features/customer/account/account-welcome-
 import { CommunicationsReveal } from "@/features/customer/communications/communications-motion";
 import { CommunicationsSurfaceNav } from "@/features/customer/communications/communications-surface-nav";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import type { CustomerNotification } from "@/features/customer/types";
 import { cn } from "@/lib/utils";
 
-const CATEGORIES = [
-  { id: "all", label: "All" },
-  { id: "financial", label: "Financial" },
-  { id: "security", label: "Security" },
-  { id: "system", label: "System" },
+const CATEGORY_KEYS = [
+  { id: "all", labelKey: "notifications.category.all" },
+  { id: "financial", labelKey: "notifications.category.financial" },
+  { id: "security", labelKey: "notifications.category.security" },
+  { id: "system", labelKey: "notifications.category.system" },
 ] as const;
 
 /** Notification Center — certified notifications read model only. */
 export function NotificationSurface() {
+  const { t } = useI18n();
   const [notifications, setNotifications] = useState<CustomerNotification[]>([]);
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<(typeof CATEGORIES)[number]["id"]>("all");
+  const [category, setCategory] = useState<(typeof CATEGORY_KEYS)[number]["id"]>("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -110,12 +112,12 @@ export function NotificationSurface() {
     <div className="mx-auto max-w-3xl space-y-8 sm:space-y-9">
       <CommunicationsReveal>
         <AccountWelcomeHero
-          title="Notifications"
-          description="What do I need to know right now? Security first, then money that needs attention, then system updates."
+          title={t("notifications.title")}
+          description={t("notifications.hero_description")}
           icon={Bell}
           accentClassName="bg-rose-500/10 text-rose-800 ring-rose-500/20 dark:text-rose-400"
           barClassName="via-rose-500/70"
-          ariaLabel="Notifications header"
+          ariaLabel={t("notifications.title")}
         />
       </CommunicationsReveal>
 
@@ -131,9 +133,9 @@ export function NotificationSurface() {
               id="notification-search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search notifications"
+              placeholder={t("notifications.search_placeholder")}
               className="pl-9"
-              aria-label="Search notifications"
+              aria-label={t("notifications.search_placeholder")}
             />
           </div>
           <Button
@@ -141,7 +143,7 @@ export function NotificationSurface() {
             variant={unreadOnly ? "default" : "outline"}
             onClick={() => setUnreadOnly((value) => !value)}
           >
-            Unread
+            {t("notifications.unread")}
             {unreadCount > 0 ? (
               <Badge variant="secondary" className="ml-1 tabular-nums">
                 {unreadCount}
@@ -155,16 +157,16 @@ export function NotificationSurface() {
             onClick={() => void markAllRead()}
           >
             <CheckCheck className="mr-2 h-4 w-4" aria-hidden />
-            {markingAll ? "Marking…" : "Mark all read"}
+            {markingAll ? t("notifications.marking_all") : t("notifications.mark_all_read")}
           </Button>
         </div>
 
         <div
           className="mt-4 flex flex-wrap gap-2"
           role="tablist"
-          aria-label="Notification categories"
+          aria-label={t("notifications.title")}
         >
-          {CATEGORIES.map((item) => (
+          {CATEGORY_KEYS.map((item) => (
             <button
               key={item.id}
               type="button"
@@ -178,15 +180,15 @@ export function NotificationSurface() {
               )}
               onClick={() => setCategory(item.id)}
             >
-              {item.label}
+              {t(item.labelKey)}
             </button>
           ))}
         </div>
 
         <p className="mt-3 text-sm text-muted-foreground">
-          Priority: Security → money failures → money success → system.{" "}
+          {t("notifications.priority_hint")}{" "}
           <Link href="/account/preferences" className="underline underline-offset-2">
-            Notification preferences
+            {t("notifications.preferences_link")}
           </Link>
         </p>
       </CommunicationsReveal>
@@ -199,7 +201,7 @@ export function NotificationSurface() {
         ) : null}
 
         {!loaded ? (
-          <div className="space-y-3" aria-busy="true" aria-label="Loading notifications">
+          <div className="space-y-3" aria-busy="true" aria-label={t("ui.loading")}>
             <Skeleton className="h-16 w-full rounded-lg" />
             <Skeleton className="h-16 w-full rounded-lg" />
             <Skeleton className="h-16 w-full rounded-lg" />
@@ -207,18 +209,26 @@ export function NotificationSurface() {
         ) : notifications.length === 0 ? (
           <EmptyState
             icon={Bell}
-            title="You're all caught up"
-            description="Financial, security, and system updates appear here when something needs your attention."
+            title={t("notifications.empty")}
+            description={t("notifications.empty_description")}
             action={
               <Button asChild variant="outline">
-                <Link href="/account/help">Open Help Center</Link>
+                <Link href="/account/help">{t("notifications.open_help")}</Link>
               </Button>
             }
           />
         ) : (
           <div className="space-y-6" aria-live="polite">
-            <NotificationGroup title="Today" items={today} onMarkRead={markRead} />
-            <NotificationGroup title="Earlier" items={earlier} onMarkRead={markRead} />
+            <NotificationGroup
+              title={t("notifications.today")}
+              items={today}
+              onMarkRead={markRead}
+            />
+            <NotificationGroup
+              title={t("notifications.earlier")}
+              items={earlier}
+              onMarkRead={markRead}
+            />
           </div>
         )}
       </CommunicationsReveal>
@@ -235,6 +245,8 @@ function NotificationGroup({
   items: CustomerNotification[];
   onMarkRead: (id: string) => Promise<void>;
 }) {
+  const { t } = useI18n();
+
   if (items.length === 0) return null;
 
   return (
@@ -259,7 +271,9 @@ function NotificationGroup({
                     <h3 className="truncate text-sm font-semibold text-foreground">
                       {notification.title}
                     </h3>
-                    {unread ? <Badge variant="info">Unread</Badge> : null}
+                    {unread ? (
+                      <Badge variant="info">{t("notifications.unread_badge")}</Badge>
+                    ) : null}
                     <StatusChip tone={priorityTone(notification.priority)}>
                       {notification.priority}
                     </StatusChip>
@@ -275,7 +289,7 @@ function NotificationGroup({
                   </p>
                   {notification.href ? (
                     <Button asChild variant="link" className="h-auto px-0">
-                      <Link href={notification.href}>Open related item</Link>
+                      <Link href={notification.href}>{t("notifications.open_related")}</Link>
                     </Button>
                   ) : null}
                 </div>
@@ -287,7 +301,7 @@ function NotificationGroup({
                     className="shrink-0"
                     onClick={() => void onMarkRead(notification.id)}
                   >
-                    Read
+                    {t("notifications.read")}
                   </Button>
                 ) : null}
               </div>

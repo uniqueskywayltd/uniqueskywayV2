@@ -12,9 +12,11 @@ import {
 import { AccountWelcomeHero } from "@/features/customer/account/account-welcome-hero";
 import { CommunicationsReveal } from "@/features/customer/communications/communications-motion";
 import { CommunicationsSurfaceNav } from "@/features/customer/communications/communications-surface-nav";
+import { useI18n } from "@/features/i18n/i18n-provider";
 
 /** Help Center — approved articles + existing support/FAQ paths only. */
 export function HelpSurface() {
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const articles = useMemo(() => searchHelpArticles(deferredQuery), [deferredQuery]);
@@ -23,12 +25,12 @@ export function HelpSurface() {
     <div className="mx-auto max-w-3xl space-y-8 sm:space-y-9">
       <CommunicationsReveal>
         <AccountWelcomeHero
-          title="Help Center"
-          description="What do I need to know right now? Search approved guidance first — then support if you still need help."
+          title={t("help.title")}
+          description={t("help.hero_description")}
           icon={HelpCircle}
           accentClassName="bg-emerald-500/10 text-emerald-800 ring-emerald-500/20 dark:text-emerald-400"
           barClassName="via-emerald-500/70"
-          ariaLabel="Help Center header"
+          ariaLabel={t("help.header_aria")}
         />
       </CommunicationsReveal>
 
@@ -39,25 +41,25 @@ export function HelpSurface() {
       <CommunicationsReveal delayMs={80}>
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="help-article-search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search guidance"
-              className="pl-9"
-              aria-label="Search help articles"
-            />
+          <Input
+            id="help-article-search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t("help.search_placeholder")}
+            className="pl-9"
+            aria-label={t("help.search_placeholder")}
+          />
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3">
           <Button asChild>
-            <Link href="/account/help/support">Request support</Link>
+            <Link href="/account/help/support">{t("help.request_support")}</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/faq">Public FAQ</Link>
+            <Link href="/faq">{t("help.public_faq")}</Link>
           </Button>
           <Button asChild variant="ghost">
-            <Link href="/contact">Contact</Link>
+            <Link href="/contact">{t("help.contact")}</Link>
           </Button>
         </div>
       </CommunicationsReveal>
@@ -66,11 +68,11 @@ export function HelpSurface() {
         {articles.length === 0 ? (
           <EmptyState
             icon={LifeBuoy}
-            title="No matching guidance"
-            description="Try another search, or open a support request if you still need help."
+            title={t("help.no_match")}
+            description={t("help.no_match_desc")}
             action={
               <Button asChild>
-                <Link href="/account/help/support">Request support</Link>
+                <Link href="/account/help/support">{t("help.request_support")}</Link>
               </Button>
             }
           />
@@ -93,8 +95,7 @@ export function HelpSurface() {
         )}
 
         <p className="mt-6 text-sm text-muted-foreground">
-          {HELP_ARTICLES.length} approved educational articles. This is guidance — not investment
-          advice.
+          {t("help.articles_footer", { count: HELP_ARTICLES.length })}
         </p>
       </CommunicationsReveal>
     </div>

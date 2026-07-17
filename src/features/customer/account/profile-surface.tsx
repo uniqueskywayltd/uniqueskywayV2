@@ -23,15 +23,16 @@ import {
   patchCustomerJson,
   postCustomerForm,
 } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import type { CustomerSummary } from "@/features/customer/types";
 
 type ReferralSummary = {
   code: { code: string } | null;
 };
 
-function ProfileFrameSkeleton() {
+function ProfileFrameSkeleton({ label }: { label: string }) {
   return (
-    <div className="space-y-8 sm:space-y-9" aria-busy="true" aria-label="Loading profile">
+    <div className="space-y-8 sm:space-y-9" aria-busy="true" aria-label={label}>
       <Skeleton className="h-36 w-full rounded-2xl sm:h-40" />
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: 6 }).map((_, index) => (
@@ -47,6 +48,7 @@ function ProfileFrameSkeleton() {
 
 /** Profile surface — certified summary + profile/avatar APIs only. */
 export function ProfileSurface() {
+  const { t } = useI18n();
   const [summary, setSummary] = useState<CustomerSummary | null>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +105,7 @@ export function ProfileSurface() {
 
     if (result.error) setError(result.error);
     else {
-      setMessage("Profile updated.");
+      setMessage(t("profile.updated"));
       await load();
     }
     setPending(false);
@@ -120,34 +122,36 @@ export function ProfileSurface() {
       const result = await postCustomerForm("/api/customer/avatar", formData);
       if (result.error) setError(result.error);
       else {
-        setMessage("Avatar updated.");
+        setMessage(t("profile.avatar_updated"));
         await load();
       }
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Avatar upload failed.");
+      setError(
+        uploadError instanceof Error ? uploadError.message : t("profile.avatar_upload_failed"),
+      );
     }
     setUploading(false);
   }
 
-  if (loading) return <ProfileFrameSkeleton />;
+  if (loading) return <ProfileFrameSkeleton label={t("profile.loading")} />;
 
   if (error && !summary) {
     return (
       <div className="space-y-8 sm:space-y-9">
         <AccountWelcomeHero
-          title="Profile"
-          description="What do I control about my account? Identity details you can update — not balances or investments."
+          title={t("profile.title")}
+          description={t("profile.hero_description")}
           icon={UserRound}
-          ariaLabel="Profile header"
+          ariaLabel={t("profile.header_aria")}
         />
         <section
           className="rounded-xl border border-destructive/40 bg-destructive/5 p-6"
           role="alert"
         >
-          <h2 className="text-base font-semibold text-destructive">Profile unavailable</h2>
+          <h2 className="text-base font-semibold text-destructive">{t("profile.unavailable")}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{error}</p>
           <Button asChild variant="outline" className="mt-4">
-            <Link href="/contact">Contact support</Link>
+            <Link href="/contact">{t("wallet.contact_support")}</Link>
           </Button>
         </section>
       </div>
@@ -163,10 +167,10 @@ export function ProfileSurface() {
     <div className="space-y-8 sm:space-y-9">
       <AccountReveal>
         <AccountWelcomeHero
-          title="Profile"
-          description="What do I control about my account? Identity details you can update — not balances or investments."
+          title={t("profile.title")}
+          description={t("profile.hero_description")}
           icon={UserRound}
-          ariaLabel="Profile header"
+          ariaLabel={t("profile.header_aria")}
         />
       </AccountReveal>
 
@@ -179,35 +183,43 @@ export function ProfileSurface() {
           <div className="w-full max-w-xs space-y-3 text-center">
             <ProfileImageUploader
               fallback={fallback}
-              label={uploading ? "Uploading" : "Upload image"}
+              label={uploading ? t("profile.uploading") : t("profile.upload_image")}
               onFileSelected={(file) => void uploadAvatar(file)}
               {...(profile?.avatarUrl ? { imageUrl: profile.avatarUrl } : {})}
             />
-            <p className="text-xs text-muted-foreground">Compressed to WebP before upload.</p>
-            {uploading ? <p className="text-sm text-muted-foreground">Optimizing image…</p> : null}
+            <p className="text-xs text-muted-foreground">{t("profile.compressed_hint")}</p>
+            {uploading ? (
+              <p className="text-sm text-muted-foreground">{t("profile.optimizing")}</p>
+            ) : null}
           </div>
         </div>
       </AccountReveal>
 
       <AccountReveal delayMs={100}>
-        <form action={submit} className="space-y-6" aria-label="Personal information">
+        <form action={submit} className="space-y-6" aria-label={t("profile.personal_info")}>
           <section className="space-y-4 rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Personal information</h2>
+              <h2 className="text-lg font-semibold text-foreground">
+                {t("profile.personal_info")}
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Keep your legal name and username current for your account.
+                {t("profile.personal_info_desc")}
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Legal name" name="legalName" defaultValue={profile?.legalName ?? ""} />
               <Field
-                label="Username"
+                label={t("profile.legal_name")}
+                name="legalName"
+                defaultValue={profile?.legalName ?? ""}
+              />
+              <Field
+                label={t("auth.username")}
                 name="displayName"
                 defaultValue={profile?.displayName ?? ""}
               />
-              <Field label="Phone" name="phone" defaultValue={profile?.phone ?? ""} />
+              <Field label={t("profile.phone")} name="phone" defaultValue={profile?.phone ?? ""} />
               <Field
-                label="Date of birth"
+                label={t("profile.date_of_birth")}
                 name="dateOfBirth"
                 type="date"
                 defaultValue={profile?.dateOfBirth ?? ""}
@@ -217,24 +229,22 @@ export function ProfileSurface() {
 
           <section className="space-y-4 rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Contact information</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Email is managed by sign-in. Location fields stay on your profile record.
-              </p>
+              <h2 className="text-lg font-semibold text-foreground">{t("profile.contact_info")}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t("profile.contact_info_desc")}</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("auth.email")}</Label>
                 <Input id="email" value={summary?.user.email ?? ""} disabled readOnly />
               </div>
               <Field
-                label="Country"
+                label={t("profile.country")}
                 name="country"
                 maxLength={2}
                 defaultValue={profile?.country ?? ""}
               />
               <Field
-                label="State / region"
+                label={t("profile.state_region")}
                 name="stateRegion"
                 defaultValue={profile?.stateRegion ?? ""}
               />
@@ -243,27 +253,31 @@ export function ProfileSurface() {
 
           <section className="space-y-4 rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Account information</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Certified account facts — status and membership dates from the platform.
-              </p>
+              <h2 className="text-lg font-semibold text-foreground">{t("profile.account_info")}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t("profile.account_info_desc")}</p>
             </div>
             <dl className="grid gap-4 sm:grid-cols-2">
-              <InfoRow label="Customer ID" value={summary?.account?.accountNumber ?? "—"} />
-              <InfoRow label="Account status" value={summary?.account?.status ?? "—"} />
-              <InfoRow label="Verification (KYC)" value={profile?.kycStatus ?? "—"} />
               <InfoRow
-                label="Email verified"
+                label={t("profile.customer_id")}
+                value={summary?.account?.accountNumber ?? "—"}
+              />
+              <InfoRow
+                label={t("profile.account_status")}
+                value={summary?.account?.status ?? "—"}
+              />
+              <InfoRow label={t("profile.kyc")} value={profile?.kycStatus ?? "—"} />
+              <InfoRow
+                label={t("profile.email_verified")}
                 value={
                   summary?.user.emailVerifiedAt ? (
                     <DateDisplay value={summary.user.emailVerifiedAt} />
                   ) : (
-                    "Pending"
+                    t("ui.pending")
                   )
                 }
               />
               <InfoRow
-                label="Member since"
+                label={t("profile.member_since")}
                 value={
                   summary?.account?.openedAt ? (
                     <DateDisplay value={summary.account.openedAt} />
@@ -273,18 +287,18 @@ export function ProfileSurface() {
                 }
               />
               <InfoRow
-                label="Referral code"
+                label={t("referrals.code")}
                 value={
                   referralCode ? (
                     <span className="inline-flex flex-wrap items-center gap-2">
                       <span className="font-mono tracking-wide">{referralCode}</span>
                       <Button asChild variant="link" className="h-auto px-0">
-                        <Link href="/account/referrals">Open referrals</Link>
+                        <Link href="/account/referrals">{t("profile.open_referrals")}</Link>
                       </Button>
                     </span>
                   ) : (
                     <Button asChild variant="link" className="h-auto px-0">
-                      <Link href="/account/referrals">View referrals</Link>
+                      <Link href="/account/referrals">{t("profile.view_referrals")}</Link>
                     </Button>
                   )
                 }
@@ -304,7 +318,7 @@ export function ProfileSurface() {
           ) : null}
 
           <Button type="submit" disabled={pending}>
-            {pending ? "Saving" : "Save changes"}
+            {pending ? t("profile.saving") : t("profile.save_changes")}
           </Button>
         </form>
       </AccountReveal>

@@ -7,6 +7,7 @@ import { ScrollText } from "lucide-react";
 import { Button, EmptyState, Skeleton } from "@/components/ui";
 import { DashboardPanelCard } from "@/components/ui/dashboard-panel-card";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { LedgerTransactionTable } from "@/features/customer/wallet/ledger-transaction-list";
 import type { LedgerEntryRow } from "@/features/customer/wallet/types";
 
@@ -19,6 +20,7 @@ interface LedgerPayload {
 
 /** WP4 — recent wallet transactions from certified ledger read model only. */
 export function WalletLedgerPreview() {
+  const { t } = useI18n();
   const [ledger, setLedger] = useState<LedgerPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +44,7 @@ export function WalletLedgerPreview() {
 
   if (loading) {
     return (
-      <section aria-busy="true" aria-label="Loading recent wallet transactions">
+      <section aria-busy="true" aria-label={t("wallet.loading_recent_transactions")}>
         <div className="overflow-hidden rounded-xl border border-border/70 bg-card/90 shadow-sm">
           <Skeleton className="h-1 w-full rounded-none" />
           <div className="space-y-3 p-5">
@@ -59,13 +61,15 @@ export function WalletLedgerPreview() {
   if (error) {
     return (
       <section
-        aria-label="Recent wallet transactions"
+        aria-label={t("wallet.recent_transactions_aria")}
         className="rounded-xl border border-destructive/40 bg-destructive/5 p-5"
       >
-        <h2 className="text-base font-semibold text-destructive">Recent transactions unavailable</h2>
+        <h2 className="text-base font-semibold text-destructive">
+          {t("wallet.ledger_recent_unavailable")}
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground">{error}</p>
         <Button asChild variant="outline" className="mt-4">
-          <Link href="/ledger">Open full ledger</Link>
+          <Link href="/ledger">{t("wallet.ledger_open_full")}</Link>
         </Button>
       </section>
     );
@@ -75,30 +79,30 @@ export function WalletLedgerPreview() {
   const previewEntries = entries.slice(0, PREVIEW_LIMIT);
 
   return (
-    <section aria-label="Recent wallet transactions">
-      <DashboardPanelCard title="Recent activity" href="/ledger" accent="sky">
+    <section aria-label={t("wallet.recent_transactions_aria")}>
+      <DashboardPanelCard title={t("activity.title")} href="/ledger" accent="sky">
         {previewEntries.length === 0 ? (
           <EmptyState
             icon={ScrollText}
-            title="No transactions yet"
-            description="Posted deposits, credits, reservations, and withdrawals appear here in ledger order — never recalculated."
+            title={t("wallet.ledger_empty_title")}
+            description={t("wallet.ledger_empty_body")}
             className="min-h-36 border-0 bg-transparent p-3 sm:p-4"
             action={
               <Button asChild variant="outline" size="sm">
-                <Link href="/wallet/deposits/new">Add funds</Link>
+                <Link href="/wallet/deposits/new">{t("wallet.add_funds")}</Link>
               </Button>
             }
           />
         ) : (
           <div className="space-y-4">
-            <p className="text-xs text-muted-foreground">
-              Historical ledger record — each row is a certified posting, shown exactly as posted.
-            </p>
+            <p className="text-xs text-muted-foreground">{t("wallet.ledger_historical_hint")}</p>
             <LedgerTransactionTable entries={previewEntries} />
             {entries.length > PREVIEW_LIMIT ? (
               <div className="flex justify-end">
                 <Button asChild variant="ghost" size="sm">
-                  <Link href="/ledger">View full ledger ({entries.length} entries)</Link>
+                  <Link href="/ledger">
+                    {t("wallet.ledger_view_full", { count: entries.length })}
+                  </Link>
                 </Button>
               </div>
             ) : null}

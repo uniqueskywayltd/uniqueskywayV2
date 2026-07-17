@@ -6,11 +6,13 @@ import { BookOpenText } from "lucide-react";
 
 import { Button, EmptyState, Input, Skeleton } from "@/components/ui";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { LedgerTransactionList } from "@/features/customer/wallet/ledger-transaction-list";
 import type { LedgerEntryRow } from "@/features/customer/wallet/types";
 
 /** Full ledger — certified history with client-side search/filters (V1 parity). */
 export function LedgerExplorer() {
+  const { t } = useI18n();
   const [entries, setEntries] = useState<LedgerEntryRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,10 +59,10 @@ export function LedgerExplorer() {
   if (error) {
     return (
       <section className="rounded-xl border border-border/80 p-6">
-        <h2 className="text-base font-semibold">Ledger unavailable</h2>
+        <h2 className="text-base font-semibold">{t("wallet.ledger_unavailable")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{error}</p>
         <Button asChild variant="outline" className="mt-4">
-          <Link href="/contact">Contact support</Link>
+          <Link href="/contact">{t("wallet.contact_support")}</Link>
         </Button>
       </section>
     );
@@ -68,7 +70,7 @@ export function LedgerExplorer() {
 
   if (loading) {
     return (
-      <div className="space-y-4" aria-busy="true" aria-label="Loading ledger">
+      <div className="space-y-4" aria-busy="true" aria-label={t("wallet.loading_ledger")}>
         <Skeleton className="h-5 w-full max-w-xl rounded-md" />
         <div className="space-y-2 rounded-xl border border-border/70 p-4">
           {Array.from({ length: 6 }).map((_, index) => (
@@ -83,11 +85,11 @@ export function LedgerExplorer() {
     return (
       <EmptyState
         icon={BookOpenText}
-        title="No ledger entries yet"
-        description="Posted deposits, credits, reservations, and withdrawals appear here after they settle — never invented."
+        title={t("wallet.ledger_explorer_empty_title")}
+        description={t("wallet.ledger_explorer_empty_body")}
         action={
           <Button asChild>
-            <Link href="/wallet/deposits/new">Add funds</Link>
+            <Link href="/wallet/deposits/new">{t("wallet.add_funds")}</Link>
           </Button>
         }
       />
@@ -96,23 +98,20 @@ export function LedgerExplorer() {
 
   return (
     <div className="space-y-4">
-      <p className="sr-only">Primary question: What exactly happened?</p>
-      <p className="text-sm text-muted-foreground">
-        The ledger is an historical record, not a financial summary. Entries appear in certified
-        posting order — nothing is hidden, merged, or reordered here.
-      </p>
+      <p className="sr-only">{t("wallet.ledger_explorer_question")}</p>
+      <p className="text-sm text-muted-foreground">{t("wallet.ledger_explorer_hint")}</p>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="block flex-1 space-y-1.5 text-sm">
-          <span className="font-medium text-foreground">Search</span>
+          <span className="font-medium text-foreground">{t("ui.search")}</span>
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Label, type, reference…"
+            placeholder={t("wallet.ledger_search_placeholder")}
             autoComplete="off"
           />
         </label>
         <label className="block space-y-1.5 text-sm sm:w-56">
-          <span className="font-medium text-foreground">Type</span>
+          <span className="font-medium text-foreground">{t("ui.type")}</span>
           <select
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             value={typeFilter}
@@ -120,14 +119,14 @@ export function LedgerExplorer() {
           >
             {transactionTypes.map((type) => (
               <option key={type} value={type}>
-                {type === "all" ? "All types" : type}
+                {type === "all" ? t("wallet.ledger_all_types") : type}
               </option>
             ))}
           </select>
         </label>
       </div>
       {filtered.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No entries match these filters.</p>
+        <p className="text-sm text-muted-foreground">{t("wallet.ledger_no_filter_match")}</p>
       ) : (
         <LedgerTransactionList entries={filtered} />
       )}

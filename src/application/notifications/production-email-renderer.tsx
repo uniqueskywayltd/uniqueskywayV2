@@ -190,7 +190,7 @@ function buildEmail(
     case AUTH_EMAIL_TEMPLATES.emailVerified: {
       return {
         previewId: "welcome",
-        subject: "Your email is verified",
+        subject: localizedSubject(metadata, "email.subject.email_verified"),
         text: `Hi ${name},\n\nYour email is verified. You can sign in at ${brand.url}/auth/login\n\nReply to this email if you need help or have questions.`,
         element: RegistrationWelcomeEmail({
           firstName: name.split(" ")[0] ?? name,
@@ -205,7 +205,12 @@ function buildEmail(
       const resetUrl = readString(metadata.actionLink) ?? `${brand.url}/auth/reset-password`;
       return {
         previewId: "password-reset",
-        subject: `Reset your ${brand.name} password`,
+        subject: localizedSubject(
+          metadata,
+          "email.subject.password_reset",
+          undefined,
+          `Reset your ${brand.name} password`,
+        ),
         text: [
           `Hi ${name},`,
           "",
@@ -227,7 +232,7 @@ function buildEmail(
       const changedAt = formatEmailDateTime(changedAtRaw);
       return {
         previewId: "password-changed",
-        subject: "Your password was changed",
+        subject: localizedSubject(metadata, "email.subject.password_changed"),
         text: `Hi ${name},\n\nYour password was changed on ${changedAt}.\n\nReply to this email if you need help or have questions.`,
         element: PasswordChangedEmail({
           name,
@@ -252,7 +257,7 @@ function buildEmail(
       const sessionsUrl = `${brand.url}/account/security/sessions`;
       return {
         previewId: "new-device-login",
-        subject: "New device sign-in",
+        subject: localizedSubject(metadata, "email.subject.new_device"),
         text: [
           `Hi ${name},`,
           "",
@@ -285,7 +290,7 @@ function buildEmail(
     case AUTH_EMAIL_TEMPLATES.accountLocked: {
       return {
         previewId: "login-alert",
-        subject: "Account temporarily locked",
+        subject: localizedSubject(metadata, "email.subject.account_locked"),
         text: financialPlainText.accountSuspended({
           name,
           reason: "Repeated failed sign-in attempts",
@@ -300,7 +305,7 @@ function buildEmail(
     case AUTH_EMAIL_TEMPLATES.accountUnlocked: {
       return {
         previewId: "welcome",
-        subject: "Account unlocked",
+        subject: localizedSubject(metadata, "email.subject.account_unlocked"),
         text: `Hi ${name},\n\nYour account lockout has ended. You can sign in again.\n\nReply to this email if you need help or have questions.`,
         element: AccountReactivatedEmail({
           name,
@@ -311,7 +316,7 @@ function buildEmail(
     case "deposit.initiated":
       return {
         previewId: "deposit-submitted",
-        subject: "Deposit submitted successfully",
+        subject: localizedSubject(metadata, "email.subject.deposit_submitted"),
         text: financialPlainText.depositSubmitted({
           ...base,
           status: status ?? "Awaiting Review",
@@ -692,14 +697,14 @@ function buildEmail(
     case "deposit.reversed":
       return {
         previewId: "deposit-rejected",
-        subject: "Deposit not approved",
+        subject: localizedSubject(metadata, "email.subject.deposit_rejected"),
         text: financialPlainText.depositRejected(withOptional(base, { reason })),
         element: DepositRejectedEmail(withOptional(base, { reason })),
       };
     case "withdrawal.requested":
       return {
         previewId: "withdrawal-submitted",
-        subject: "Withdrawal submitted",
+        subject: localizedSubject(metadata, "email.subject.withdrawal_submitted"),
         text: financialPlainText.withdrawalSubmitted(
           withOptional(base, {
             method: base.paymentMethod,
@@ -716,7 +721,7 @@ function buildEmail(
     case "withdrawal.approved":
       return {
         previewId: "withdrawal-approved",
-        subject: "Withdrawal approved",
+        subject: localizedSubject(metadata, "email.subject.withdrawal_approved"),
         text: financialPlainText.withdrawalApproved(
           withOptional(base, { status: status ?? "Approved" }),
         ),
@@ -726,14 +731,14 @@ function buildEmail(
     case "withdrawal.failed":
       return {
         previewId: "withdrawal-rejected",
-        subject: "Withdrawal not approved",
+        subject: localizedSubject(metadata, "email.subject.withdrawal_rejected"),
         text: financialPlainText.withdrawalRejected(withOptional(base, { reason })),
         element: WithdrawalRejectedEmail(withOptional(base, { reason })),
       };
     case "withdrawal.paid":
       return {
         previewId: "withdrawal-completed",
-        subject: "Withdrawal paid",
+        subject: localizedSubject(metadata, "email.subject.withdrawal_paid"),
         text: financialPlainText.withdrawalCompleted(
           withOptional(base, { status: status ?? "Paid" }),
         ),
@@ -742,7 +747,7 @@ function buildEmail(
     case "withdrawal.cancelled":
       return {
         previewId: "withdrawal-rejected",
-        subject: "Withdrawal cancelled",
+        subject: localizedSubject(metadata, "email.subject.withdrawal_cancelled"),
         text: financialPlainText.withdrawalCancelled(withOptional(base, { status: "Cancelled" })),
         element: WithdrawalCancelledEmail(withOptional(base, { status: "Cancelled" })),
       };
@@ -791,7 +796,7 @@ function buildEmail(
         roiAmount.startsWith("+") || roiAmount.startsWith("-") ? roiAmount : `+${roiAmount}`;
       return {
         previewId: "daily-roi",
-        subject: `Daily ROI credited — ${signed}`,
+        subject: localizedSubject(metadata, "email.subject.daily_roi", { amount: signed }),
         text: financialPlainText.dailyRoi(
           withOptional(base, { amount: signed, roiAmount: signed }),
         ),
@@ -803,7 +808,7 @@ function buildEmail(
       if (reinvested) {
         return {
           previewId: "reinvestment-completed",
-          subject: "Reinvestment completed",
+          subject: localizedSubject(metadata, "email.subject.reinvestment_completed"),
           text: financialPlainText.reinvestmentCompleted(
             withOptional(base, { planName: readString(metadata.planName) }),
           ),
@@ -814,7 +819,7 @@ function buildEmail(
       }
       return {
         previewId: "investment-matured",
-        subject: "Investment matured",
+        subject: localizedSubject(metadata, "email.subject.investment_matured"),
         text: financialPlainText.investmentMatured(
           withOptional(base, { planName: readString(metadata.planName) }),
         ),
@@ -826,7 +831,7 @@ function buildEmail(
     case "referral.reward":
       return {
         previewId: "referral-commission",
-        subject: "Referral commission earned",
+        subject: localizedSubject(metadata, "email.subject.referral_commission"),
         text: financialPlainText.referralCommission(
           withOptional(base, {
             commissionAmount: amount,

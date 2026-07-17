@@ -90,11 +90,11 @@ export function WithdrawalJourney() {
     }
     if (mode === "crypto_wallet") {
       if (!walletAddress.trim() || !network.trim()) {
-        setError("Wallet address and network are required.");
+        setError(t("wallet.crypto_destination_required"));
         return;
       }
     } else if (!bankName.trim() || !accountName.trim() || !accountNumber.trim()) {
-      setError("Bank name, account name, and account number are required.");
+      setError(t("wallet.bank_destination_required"));
       return;
     }
     setStep("confirm");
@@ -129,7 +129,9 @@ export function WithdrawalJourney() {
   if (loadError) {
     return (
       <section className="rounded-xl border border-border/80 bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-foreground">Withdrawal unavailable</h2>
+        <h2 className="text-base font-semibold text-foreground">
+          {t("wallet.withdrawal_unavailable")}
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground">{loadError}</p>
         <Button asChild variant="outline" className="mt-4">
           <Link href="/contact">{t("wallet.contact_support")}</Link>
@@ -148,7 +150,7 @@ export function WithdrawalJourney() {
       {step === "amount" ? (
         <form onSubmit={onContinue} className="space-y-4 rounded-2xl border bg-card p-5">
           <p className="text-sm text-muted-foreground">
-            Available:{" "}
+            {t("wallet.available_label")}:{" "}
             {availableMinor === null ? (
               <Skeleton className="inline-block h-4 w-16" />
             ) : (
@@ -160,21 +162,21 @@ export function WithdrawalJourney() {
             <MoneyAmountInput id="withdraw-amount" value={amount} onValueChange={setAmount} />
           </div>
           <div className="space-y-2">
-            <Label>Destination</Label>
+            <Label>{t("wallet.destination")}</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant={mode === "crypto_wallet" ? "default" : "outline"}
                 onClick={() => setMode("crypto_wallet")}
               >
-                Crypto
+                {t("wallet.dest_crypto")}
               </Button>
               <Button
                 type="button"
                 variant={mode === "bank_transfer" ? "default" : "outline"}
                 onClick={() => setMode("bank_transfer")}
               >
-                Bank transfer
+                {t("wallet.dest_bank_transfer")}
               </Button>
             </div>
           </div>
@@ -193,16 +195,16 @@ export function WithdrawalJourney() {
                 ))}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="network">Network</Label>
+                <Label htmlFor="network">{t("wallet.network")}</Label>
                 <Input
                   id="network"
                   value={network}
                   onChange={(event) => setNetwork(event.target.value)}
-                  placeholder="e.g. TRC20, ERC20, Bitcoin"
+                  placeholder={t("wallet.network_placeholder")}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="wallet-address">Wallet address</Label>
+                <Label htmlFor="wallet-address">{t("wallet.wallet_address")}</Label>
                 <Input
                   id="wallet-address"
                   value={walletAddress}
@@ -213,7 +215,7 @@ export function WithdrawalJourney() {
           ) : (
             <>
               <div className="space-y-2">
-                <Label htmlFor="bank-name">Bank name</Label>
+                <Label htmlFor="bank-name">{t("wallet.bank_name")}</Label>
                 <Input
                   id="bank-name"
                   value={bankName}
@@ -221,7 +223,7 @@ export function WithdrawalJourney() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="account-name">Account name</Label>
+                <Label htmlFor="account-name">{t("wallet.account_name")}</Label>
                 <Input
                   id="account-name"
                   value={accountName}
@@ -229,7 +231,7 @@ export function WithdrawalJourney() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="account-number">Account number</Label>
+                <Label htmlFor="account-number">{t("wallet.account_number")}</Label>
                 <Input
                   id="account-number"
                   value={accountNumber}
@@ -240,17 +242,17 @@ export function WithdrawalJourney() {
           )}
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="w-full">
-            Continue
+            {t("wallet.continue")}
           </Button>
         </form>
       ) : null}
 
       {step === "confirm" || step === "submitting" ? (
         <div className="space-y-4 rounded-2xl border bg-card p-5">
-          <p className="text-sm text-muted-foreground">Please confirm your withdrawal request.</p>
+          <p className="text-sm text-muted-foreground">{t("wallet.withdraw_confirm_prompt")}</p>
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Amount</dt>
+              <dt className="text-muted-foreground">{t("wallet.amount")}</dt>
               <dd className="font-semibold">
                 {amountMinor !== null ? (
                   <CurrencyDisplay amountMinor={amountMinor} currency="USD" />
@@ -262,15 +264,15 @@ export function WithdrawalJourney() {
             {mode === "crypto_wallet" ? (
               <>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Withdrawal Method</dt>
+                  <dt className="text-muted-foreground">{t("wallet.withdrawal_method")}</dt>
                   <dd>{cryptoMethodLabel(asset)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Network</dt>
+                  <dt className="text-muted-foreground">{t("wallet.network")}</dt>
                   <dd>{networkDisplayLabel(network)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Destination Wallet</dt>
+                  <dt className="text-muted-foreground">{t("wallet.destination_wallet")}</dt>
                   <dd className="font-mono text-xs">
                     {shortenWalletAddress(walletAddress.trim())}
                   </dd>
@@ -279,19 +281,19 @@ export function WithdrawalJourney() {
             ) : (
               <>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Withdrawal Method</dt>
-                  <dd>Bank Transfer</dd>
+                  <dt className="text-muted-foreground">{t("wallet.withdrawal_method")}</dt>
+                  <dd>{t("wallet.dest_bank_transfer")}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Bank Name</dt>
+                  <dt className="text-muted-foreground">{t("wallet.bank_name")}</dt>
                   <dd>{bankName.trim()}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Account Name</dt>
+                  <dt className="text-muted-foreground">{t("wallet.account_name")}</dt>
                   <dd>{accountName.trim()}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Account Number</dt>
+                  <dt className="text-muted-foreground">{t("wallet.account_number")}</dt>
                   <dd>{accountNumber.trim()}</dd>
                 </div>
               </>
@@ -305,7 +307,7 @@ export function WithdrawalJourney() {
               disabled={step === "submitting"}
               onClick={() => setStep("amount")}
             >
-              Back
+              {t("wallet.back")}
             </Button>
             <Button
               type="button"
@@ -313,7 +315,7 @@ export function WithdrawalJourney() {
               disabled={step === "submitting"}
               onClick={() => void onSubmit()}
             >
-              {step === "submitting" ? "Submitting…" : "Submit request"}
+              {step === "submitting" ? t("wallet.submitting") : t("wallet.submit_request")}
             </Button>
           </div>
         </div>

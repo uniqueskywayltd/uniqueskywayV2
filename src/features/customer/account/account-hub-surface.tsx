@@ -11,11 +11,12 @@ import { AccountSurfaceNav } from "@/features/customer/account/account-surface-n
 import { AccountWelcomeHero } from "@/features/customer/account/account-welcome-hero";
 import { DashboardSignOutButton } from "@/features/customer/dashboard/dashboard-sign-out-button";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import type { CustomerSummary } from "@/features/customer/types";
 
-function HubFrameSkeleton() {
+function HubFrameSkeleton({ label }: { label: string }) {
   return (
-    <div className="space-y-8 sm:space-y-9" aria-busy="true" aria-label="Loading account">
+    <div className="space-y-8 sm:space-y-9" aria-busy="true" aria-label={label}>
       <Skeleton className="h-36 w-full rounded-2xl sm:h-40" />
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: 6 }).map((_, index) => (
@@ -33,6 +34,7 @@ function HubFrameSkeleton() {
 
 /** Account hub — answers what the member controls across Profile & Security. */
 export function AccountHubSurface() {
+  const { t } = useI18n();
   const [summary, setSummary] = useState<CustomerSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,22 +52,22 @@ export function AccountHubSurface() {
     };
   }, []);
 
-  if (loading) return <HubFrameSkeleton />;
+  if (loading) return <HubFrameSkeleton label={t("account.loading")} />;
 
   if (error && !summary) {
     return (
       <div className="space-y-8 sm:space-y-9">
         <AccountWelcomeHero
-          title="Account"
-          description="What do I control about my account? Profile, security, preferences, and sign-out."
+          title={t("account.title")}
+          description={t("account.hero_description")}
           icon={UserRound}
-          ariaLabel="Account header"
+          ariaLabel={t("account.title")}
         />
         <section
           className="rounded-xl border border-destructive/40 bg-destructive/5 p-6"
           role="alert"
         >
-          <h2 className="text-base font-semibold text-destructive">Account unavailable</h2>
+          <h2 className="text-base font-semibold text-destructive">{t("account.unavailable")}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{error}</p>
         </section>
       </div>
@@ -76,10 +78,10 @@ export function AccountHubSurface() {
     <div className="space-y-8 sm:space-y-9">
       <AccountReveal>
         <AccountWelcomeHero
-          title="Account"
-          description="What do I control about my account? Profile, security, preferences, and sign-out — money lives on Dashboard, Wallet, and Investments."
+          title={t("account.title")}
+          description={t("account.hero_description_full")}
           icon={UserRound}
-          ariaLabel="Account header"
+          ariaLabel={t("account.title")}
         />
       </AccountReveal>
 
@@ -90,69 +92,78 @@ export function AccountHubSurface() {
       <AccountReveal delayMs={80}>
         <section
           className="space-y-4 rounded-2xl border border-border/60 bg-card p-6 shadow-sm"
-          aria-label="Account status"
+          aria-label={t("account.status_section")}
         >
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Account status</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Certified membership facts from your summary — not client-computed scores.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("account.status_section")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("account.status_desc")}</p>
           </div>
           <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <InfoTile
-              label="Status"
+              label={t("account.status_label")}
               value={
                 summary?.account?.status === "active" || summary?.user.status === "active" ? (
-                  <Badge variant="success">Active</Badge>
+                  <Badge variant="success">{t("ui.active")}</Badge>
                 ) : (
                   (summary?.account?.status ?? summary?.user.status ?? "—")
                 )
               }
             />
-            <InfoTile label="Email" value={summary?.user.email ?? "—"} />
+            <InfoTile label={t("auth.email")} value={summary?.user.email ?? "—"} />
             <InfoTile
-              label="Email verified"
+              label={t("profile.email_verified")}
               value={
                 summary?.user.emailVerifiedAt ? (
                   <DateDisplay value={summary.user.emailVerifiedAt} />
                 ) : (
-                  "Pending"
+                  t("ui.pending")
                 )
               }
             />
             <InfoTile
-              label="Member since"
+              label={t("profile.member_since")}
               value={
                 summary?.account?.openedAt ? <DateDisplay value={summary.account.openedAt} /> : "—"
               }
             />
-            <InfoTile label="Verification (KYC)" value={summary?.profile?.kycStatus ?? "—"} />
-            <InfoTile label="Customer ID" value={summary?.account?.accountNumber ?? "—"} />
+            <InfoTile label={t("profile.kyc")} value={summary?.profile?.kycStatus ?? "—"} />
+            <InfoTile
+              label={t("profile.customer_id")}
+              value={summary?.account?.accountNumber ?? "—"}
+            />
           </dl>
         </section>
       </AccountReveal>
 
       <AccountReveal delayMs={100}>
-        <section className="space-y-4" aria-label="What you can control">
-          <h2 className="text-lg font-semibold text-foreground">What you can control</h2>
+        <section className="space-y-4" aria-label={t("account.what_you_control")}>
+          <h2 className="text-lg font-semibold text-foreground">{t("account.what_you_control")}</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <ControlLink href="/account/profile" title="Profile" body="Name, contact, avatar" />
+            <ControlLink
+              href="/account/profile"
+              title={t("nav.profile")}
+              body={t("account.control.profile")}
+            />
             <ControlLink
               href="/account/security"
-              title="Security"
-              body="Password, devices, sessions"
+              title={t("profile.security")}
+              body={t("account.control.security")}
             />
             <ControlLink
               href="/account/preferences"
-              title="Preferences"
-              body="Theme, language, notifications"
+              title={t("nav.preferences")}
+              body={t("account.control.preferences")}
             />
             <ControlLink
               href="/account/referrals"
-              title="Referrals"
-              body="Invitation code (when issued)"
+              title={t("referrals.title")}
+              body={t("account.control.referrals")}
             />
-            <ControlLink href="/dashboard" title="Dashboard" body="Your financial home" />
+            <ControlLink
+              href="/dashboard"
+              title={t("nav.dashboard")}
+              body={t("account.control.dashboard")}
+            />
           </div>
         </section>
       </AccountReveal>
@@ -160,10 +171,10 @@ export function AccountHubSurface() {
       <AccountReveal delayMs={120}>
         <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Sign out</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              End this browser session. Active sessions and trusted devices stay on Security.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">
+              {t("account.sign_out_section")}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("account.sign_out_desc")}</p>
           </div>
           <DashboardSignOutButton />
         </section>

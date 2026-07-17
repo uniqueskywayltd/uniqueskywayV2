@@ -20,10 +20,12 @@ import {
   remainingDaysLabel,
   useLiveAccrual,
 } from "@/features/customer/portfolio/use-live-accrual";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 /** PF3–PF5 — investment passport over certified detail read models only. */
 export function InvestmentDetailView({ investmentId }: { investmentId: string }) {
+  const { t } = useI18n();
   const [data, setData] = useState<PortfolioDetailResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,11 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
 
   if (loading) {
     return (
-      <div className="space-y-6 sm:space-y-8" aria-busy="true" aria-label="Loading investment">
+      <div
+        className="space-y-6 sm:space-y-8"
+        aria-busy="true"
+        aria-label={t("portfolio.loading.investment")}
+      >
         <Skeleton className="h-36 w-full rounded-2xl sm:h-40" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
@@ -90,19 +96,21 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
           <PieChart className="h-5 w-5" aria-hidden />
         </div>
-        <h1 className="mt-4 text-lg font-semibold text-foreground">Investment unavailable</h1>
+        <h1 className="mt-4 text-lg font-semibold text-foreground">
+          {t("portfolio.detail.unavailable")}
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {error ?? "We could not find that investment."}
+          {error ?? t("portfolio.detail.not_found")}
         </p>
         <Button asChild variant="outline" className="mt-4">
-          <Link href="/portfolio">Back to investments</Link>
+          <Link href="/portfolio">{t("portfolio.detail.back")}</Link>
         </Button>
       </section>
     );
   }
 
   const { schedule, lifecycle } = data;
-  const status = presentInvestmentStatus(investment.status);
+  const status = presentInvestmentStatus(investment.status, t);
   const progress = investment.progressPercent;
   const isActiveLike = investment.status === "active" || investment.status === "maturing";
   const activationDate = investment.activatedAt ?? investment.startAt;
@@ -112,11 +120,11 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
     String(BigInt(investment.principalMinor) + BigInt(investment.postedRoiMinor));
   const todayEarningsMinor = live?.todayEarningsMinor ?? "0";
   const dailyPct = ((investment.dailyRoiBps ?? 0) / 100).toFixed(2);
-  const daysRemaining = remainingDaysLabel(investment.maturityDate);
+  const daysRemaining = remainingDaysLabel(investment.maturityDate, t);
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <p className="sr-only">Primary question: Tell me everything about this investment.</p>
+      <p className="sr-only">{t("portfolio.detail.primary_question")}</p>
 
       <PortfolioReveal>
         <div className="flex flex-wrap gap-2">
@@ -125,13 +133,13 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
             className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
           >
             <ArrowLeft className="h-4 w-4" aria-hidden />
-            All investments
+            {t("portfolio.detail.all_investments")}
           </Link>
           <Link
             href="/ledger"
             className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-2")}
           >
-            Open ledger
+            {t("portfolio.detail.open_ledger")}
           </Link>
         </div>
       </PortfolioReveal>
@@ -139,7 +147,7 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
       <PortfolioReveal delayMs={40}>
         <section
           className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-7 md:p-8"
-          aria-label="Investment header"
+          aria-label={t("portfolio.detail.header_aria")}
         >
           <div
             className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_45%),linear-gradient(225deg,rgba(139,92,246,0.14)_0%,transparent_55%)] opacity-[0.18] dark:opacity-[0.28]"
@@ -147,20 +155,26 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
           />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <p className="text-xs font-medium tracking-wide text-primary/80">Current plan</p>
+              <p className="text-xs font-medium tracking-wide text-primary/80">
+                {t("portfolio.detail.current_plan")}
+              </p>
               <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                 {investment.planName}
               </h1>
               {isActiveLike ? (
                 <dl className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div>
-                    <dt className="text-xs text-muted-foreground">Days remaining</dt>
+                    <dt className="text-xs text-muted-foreground">
+                      {t("portfolio.card.days_remaining")}
+                    </dt>
                     <dd className="mt-0.5 text-lg font-semibold tabular-nums text-foreground">
                       {daysRemaining}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-muted-foreground">Maturity date</dt>
+                    <dt className="text-xs text-muted-foreground">
+                      {t("portfolio.card.maturity_date")}
+                    </dt>
                     <dd className="mt-0.5 text-lg font-semibold text-foreground">
                       {investment.maturityDate ? (
                         <DateDisplay value={investment.maturityDate} />
@@ -172,8 +186,7 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
                 </dl>
               ) : (
                 <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                  Wallet credits post at New York settlement or maturity — the ledger remains the
-                  source of truth.
+                  {t("portfolio.detail.wallet_credits_note")}
                 </p>
               )}
             </div>
@@ -198,14 +211,14 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
           className="rounded-xl border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground"
           role="note"
         >
-          Your investment is committed for the full investment period in accordance with the{" "}
+          {t("portfolio.detail.committed_terms_prefix")}{" "}
           <Link
             href="/legal/terms"
             className="font-medium text-foreground underline-offset-4 hover:underline"
           >
-            Terms of Service
+            {t("auth.terms_of_service")}
           </Link>{" "}
-          accepted during registration.
+          {t("portfolio.detail.committed_terms_suffix")}
         </section>
       ) : null}
 
@@ -213,64 +226,66 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
         <section
           className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5"
           role="status"
-          aria-label="Activation notice"
+          aria-label={t("portfolio.detail.activation_notice_aria")}
         >
-          <h2 className="text-sm font-semibold text-foreground">Activation in progress</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            {t("portfolio.detail.activation_progress")}
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">{status.explanation}</p>
         </section>
       ) : null}
 
       {isActiveLike ? (
-        <section aria-label="Live performance">
+        <section aria-label={t("portfolio.detail.live_performance")}>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Live performance
+            {t("portfolio.detail.live_performance")}
           </h2>
           <dl className="grid gap-4 rounded-xl border border-border/70 bg-card/90 p-5 text-sm shadow-sm sm:grid-cols-2 lg:grid-cols-3">
-            <DetailField label="Principal">
+            <DetailField label={t("portfolio.detail.principal")}>
               <CurrencyDisplay
                 amountMinor={Number(investment.principalMinor)}
                 currency={investment.currency}
               />
             </DetailField>
-            <DetailField label="Current investment value">
+            <DetailField label={t("portfolio.card.current_value")}>
               <CurrencyDisplay
                 amountMinor={Number(currentValueMinor)}
                 currency={investment.currency}
               />
             </DetailField>
-            <DetailField label="Live earnings">
+            <DetailField label={t("portfolio.card.live_earnings")}>
               <CurrencyDisplay
                 amountMinor={Number(totalEarningsMinor)}
                 currency={investment.currency}
               />
             </DetailField>
-            <DetailField label="Today's live earnings">
+            <DetailField label={t("portfolio.card.today_live")}>
               <CurrencyDisplay
                 amountMinor={Number(todayEarningsMinor)}
                 currency={investment.currency}
               />
             </DetailField>
-            <DetailField label="ROI credited (ledger)">
+            <DetailField label={t("portfolio.detail.roi_ledger")}>
               <CurrencyDisplay
                 amountMinor={Number(investment.postedRoiMinor)}
                 currency={investment.currency}
               />
             </DetailField>
-            <DetailField label="Daily ROI">
+            <DetailField label={t("portfolio.card.daily_roi")}>
               <span className="tabular-nums">{dailyPct}%</span>
             </DetailField>
-            <DetailField label="Days remaining">
+            <DetailField label={t("portfolio.card.days_remaining")}>
               <span className="font-semibold tabular-nums">{daysRemaining}</span>
             </DetailField>
-            <DetailField label="Next settlement">
+            <DetailField label={t("portfolio.card.next_settlement")}>
               <span className="font-mono tabular-nums">
                 {live ? formatCountdown(live.nextSettlementCountdownSeconds) : "—"}
               </span>
             </DetailField>
-            <DetailField label="Maturity date">
+            <DetailField label={t("portfolio.card.maturity_date")}>
               {investment.maturityDate ? <DateDisplay value={investment.maturityDate} /> : "—"}
             </DetailField>
-            <DetailField label="Expected total return">
+            <DetailField label={t("portfolio.detail.expected_return")}>
               {investment.expectedTotalReturnMinor ? (
                 <CurrencyDisplay
                   amountMinor={Number(investment.expectedTotalReturnMinor)}
@@ -284,46 +299,51 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
         </section>
       ) : null}
 
-      <section aria-label="Investment details">
+      <section aria-label={t("portfolio.detail.details")}>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Investment details
+          {t("portfolio.detail.details")}
         </h2>
         <dl className="grid gap-4 rounded-xl border border-border/70 bg-card/90 p-5 text-sm shadow-sm sm:grid-cols-2 lg:grid-cols-3">
-          <DetailField label="Principal">
+          <DetailField label={t("portfolio.detail.principal")}>
             <CurrencyDisplay
               amountMinor={Number(investment.principalMinor)}
               currency={investment.currency}
             />
           </DetailField>
-          <DetailField label="ROI credited">
+          <DetailField label={t("portfolio.card.roi_credited")}>
             <CurrencyDisplay
               amountMinor={Number(investment.postedRoiMinor)}
               currency={investment.currency}
             />
           </DetailField>
-          <DetailField label="Term">
-            <span className="tabular-nums">{investment.termDays} days</span>
+          <DetailField label={t("portfolio.detail.term")}>
+            <span className="tabular-nums">
+              {t("portfolio.detail.term_days", { count: investment.termDays })}
+            </span>
           </DetailField>
-          <DetailField label="Status">
+          <DetailField label={t("ui.status")}>
             <span>{status.label}</span>
           </DetailField>
-          <DetailField label="Start date">
+          <DetailField label={t("portfolio.card.start_date")}>
             {activationDate ? <DateDisplay value={activationDate} /> : "—"}
           </DetailField>
-          <DetailField label="Maturity date">
+          <DetailField label={t("portfolio.card.maturity_date")}>
             {investment.maturityDate ? <DateDisplay value={investment.maturityDate} /> : "—"}
           </DetailField>
-          <DetailField label="First settlement">
+          <DetailField label={t("portfolio.detail.first_settlement")}>
             {investment.firstSettlementDate ? (
               <DateDisplay value={investment.firstSettlementDate} />
             ) : (
               "—"
             )}
           </DetailField>
-          <DetailField label="Progress">
+          <DetailField label={t("portfolio.card.progress")}>
             <span className="tabular-nums">{progress === null ? "—" : `${progress}%`}</span>
           </DetailField>
-          <DetailField label="What happens next?" className="sm:col-span-2 lg:col-span-1">
+          <DetailField
+            label={t("portfolio.card.what_next")}
+            className="sm:col-span-2 lg:col-span-1"
+          >
             <span>
               {investment.nextMilestone.label}
               {investment.nextMilestone.date ? (
@@ -338,13 +358,13 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
       </section>
 
       {progress !== null ? (
-        <section aria-label="Progress">
+        <section aria-label={t("portfolio.card.progress")}>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Progress
+            {t("portfolio.card.progress")}
           </h2>
           <div className="rounded-xl border border-border/70 bg-card/90 p-5 shadow-sm">
             <div className="mb-2 flex justify-between text-xs text-muted-foreground">
-              <span>Toward maturity</span>
+              <span>{t("portfolio.detail.toward_maturity")}</span>
               <span className="tabular-nums">{progress}%</span>
             </div>
             <Progress
@@ -353,15 +373,15 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
                 isActiveLike && "[&_[data-slot=progress-indicator]]:bg-emerald-500",
                 investment.status === "matured" && "[&_[data-slot=progress-indicator]]:bg-sky-500",
               )}
-              aria-label={`Progress ${progress}%`}
+              aria-label={t("portfolio.card.progress_aria", { progress })}
             />
           </div>
         </section>
       ) : null}
 
-      <section aria-label="Lifecycle">
+      <section aria-label={t("portfolio.detail.lifecycle")}>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Lifecycle
+          {t("portfolio.detail.lifecycle")}
         </h2>
         <ol className="space-y-0 rounded-xl border border-border/70 bg-card/90 p-5 shadow-sm">
           {lifecycle.map((step, index) => {
@@ -390,12 +410,12 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
                     {step.label}
                     {!step.complete ? (
                       <span className="ml-2 text-xs font-normal text-muted-foreground">
-                        upcoming
+                        {t("portfolio.detail.upcoming")}
                       </span>
                     ) : null}
                   </p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    {step.at ? <DateDisplay value={step.at} /> : "Not yet"}
+                    {step.at ? <DateDisplay value={step.at} /> : t("portfolio.detail.not_yet")}
                   </p>
                 </div>
               </li>
@@ -404,32 +424,31 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
         </ol>
       </section>
 
-      <section aria-label="Settlement schedule">
+      <section aria-label={t("portfolio.detail.settlement_schedule")}>
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Settlement schedule
+              {t("portfolio.detail.settlement_schedule")}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Certified New York settlement days. Credited means posted — not a promise of future
-              amounts.
+              {t("portfolio.detail.settlement_hint")}
             </p>
           </div>
           <Link
             href="/ledger"
             className="text-xs font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            View ledger
+            {t("portfolio.detail.view_ledger")}
           </Link>
         </div>
         {schedule.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border/80 p-5 text-sm text-muted-foreground">
-            No schedule items yet.
+            {t("portfolio.detail.no_schedule")}
           </p>
         ) : (
           <ul className="divide-y divide-border/70 overflow-hidden rounded-xl border border-border/70 bg-card/90 shadow-sm">
             {schedule.map((item) => {
-              const scheduleStatus = presentScheduleStatus(item.status);
+              const scheduleStatus = presentScheduleStatus(item.status, t);
               return (
                 <li
                   key={item.id}
@@ -437,17 +456,20 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground">
-                      #{item.sequenceNumber}
+                      {t("portfolio.detail.schedule_sequence", { sequence: item.sequenceNumber })}
                       <span className="font-normal text-muted-foreground">
-                        {" · Earn "}
+                        {" · "}
+                        {t("portfolio.detail.schedule_earn")}{" "}
                         <DateDisplay value={item.earningDate} />
                       </span>
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      Settle <DateDisplay value={item.settlementDate} />
+                      {t("portfolio.detail.schedule_settle")}{" "}
+                      <DateDisplay value={item.settlementDate} />
                       {item.postedAt ? (
                         <>
-                          {" · Posted "}
+                          {" · "}
+                          {t("portfolio.detail.schedule_posted")}{" "}
                           <DateDisplay value={item.postedAt} />
                         </>
                       ) : null}
@@ -462,24 +484,17 @@ export function InvestmentDetailView({ investmentId }: { investmentId: string })
       </section>
 
       <section
-        aria-label="Important notices"
+        aria-label={t("portfolio.detail.notices.title")}
         className="rounded-xl border border-border/70 bg-muted/20 p-5 sm:p-6"
       >
-        <h2 className="text-sm font-semibold text-foreground">Important notices</h2>
+        <h2 className="text-sm font-semibold text-foreground">
+          {t("portfolio.detail.notices.title")}
+        </h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
           <li>{status.explanation}</li>
-          <li>
-            Live counters are visual only. Ledger postings happen on daily New York settlement or at
-            maturity.
-          </li>
-          <li>
-            Investments run for the full plan term. Principal and eligible earnings release
-            according to platform rules when the investment matures.
-          </li>
-          <li>
-            Returns are not guaranteed. Schedule rows are not withdrawable until credited to your
-            wallet.
-          </li>
+          <li>{t("portfolio.detail.notices.live_counters")}</li>
+          <li>{t("portfolio.detail.notices.full_term")}</li>
+          <li>{t("portfolio.detail.notices.not_guaranteed")}</li>
         </ul>
       </section>
     </div>

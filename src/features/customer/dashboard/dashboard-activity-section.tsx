@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import type { CustomerNotification } from "@/features/customer/types";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,7 @@ const RECENT_LIMIT = 6;
 
 /** DP3 — recent activity + notifications from certified read models only. */
 export function DashboardActivitySection() {
+  const { t } = useI18n();
   const [ledger, setLedger] = useState<LedgerPayload | null>(null);
   const [notifications, setNotifications] = useState<CustomerNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -70,7 +72,7 @@ export function DashboardActivitySection() {
 
   if (loading) {
     return (
-      <div className="grid gap-6 lg:grid-cols-2" aria-busy="true" aria-label="Loading activity">
+      <div className="grid gap-6 lg:grid-cols-2" aria-busy="true" aria-label={t("ui.loading")}>
         <Skeleton className="h-[240px] w-full rounded-xl" />
         <Skeleton className="h-[240px] w-full rounded-xl" />
       </div>
@@ -80,16 +82,18 @@ export function DashboardActivitySection() {
   if (error && !ledger && notifications.length === 0) {
     return (
       <p className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
-        Activity could not load. Open Ledger or Notifications directly, or refresh. {error}
+        {t("activity.load_error")} {error}
       </p>
     );
   }
 
   const recentEntries = (ledger?.entries ?? []).slice(0, RECENT_LIMIT);
   const recentNotifications = notifications.slice(0, RECENT_LIMIT);
+  const notificationWord =
+    unreadCount === 1 ? t("activity.notification_singular") : t("activity.notification_plural");
 
   return (
-    <section className="space-y-4" aria-label="Activity">
+    <section className="space-y-4" aria-label={t("nav.activity")}>
       {unreadCount > 0 ? (
         <div
           role="status"
@@ -97,34 +101,35 @@ export function DashboardActivitySection() {
           className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm"
         >
           <p className="text-foreground">
-            You have{" "}
-            <span className="font-semibold tabular-nums">{unreadCount}</span> unread{" "}
-            {unreadCount === 1 ? "notification" : "notifications"}.
+            {t("activity.unread_banner", {
+              count: unreadCount,
+              notifications: notificationWord,
+            })}
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
               href="/account/notifications"
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
-              Review alerts
+              {t("activity.review_alerts")}
             </Link>
             <Link
               href="/account/communications"
               className="font-medium text-muted-foreground underline-offset-4 hover:underline"
             >
-              Communication Center
+              {t("communications.center")}
             </Link>
           </div>
         </div>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <DashboardPanelCard title="Recent activity" href="/ledger" accent="sky">
+        <DashboardPanelCard title={t("activity.title")} href="/ledger" accent="sky">
           {recentEntries.length === 0 ? (
             <EmptyState
               icon={Activity}
-              title="No recent activity"
-              description="Ledger movements will appear here when funds are deposited, invested, or settled."
+              title={t("activity.empty")}
+              description={t("activity.ledger_empty_desc")}
               className="min-h-36 border-0 bg-transparent p-3 sm:p-4"
             />
           ) : (
@@ -132,9 +137,9 @@ export function DashboardActivitySection() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Activity</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead>{t("activity.table.activity")}</TableHead>
+                    <TableHead className="text-right">{t("activity.table.amount")}</TableHead>
+                    <TableHead>{t("activity.table.date")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -167,7 +172,7 @@ export function DashboardActivitySection() {
         </DashboardPanelCard>
 
         <DashboardPanelCard
-          title="Notifications"
+          title={t("notifications.title")}
           href="/account/notifications"
           accent="primary"
           badge={
@@ -181,8 +186,8 @@ export function DashboardActivitySection() {
           {recentNotifications.length === 0 ? (
             <EmptyState
               icon={Bell}
-              title="No notifications"
-              description="Security and money alerts will show here when something needs attention."
+              title={t("notifications.no_notifications")}
+              description={t("notifications.no_notifications_desc")}
               className="min-h-36 border-0 bg-transparent p-3 sm:p-4"
             />
           ) : (

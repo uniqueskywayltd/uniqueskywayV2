@@ -10,6 +10,7 @@ import { CopyButton } from "@/components/ui/copy-button";
 import type { StatusTone } from "@/components/ui/status-chip";
 import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 
 interface ReferralHubResponse {
   northStar: string;
@@ -53,6 +54,7 @@ type StatusFilter = "all" | "pending" | "qualified" | "rewarded" | "voided";
 type RewardFilter = "all" | "pending" | "posted" | "voided";
 
 export function ReferralHub() {
+  const { t } = useI18n();
   const [data, setData] = useState<ReferralHubResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,39 +100,39 @@ export function ReferralHub() {
       await navigator.clipboard.writeText(value);
       setCopyNote(note);
     } catch {
-      setCopyNote("Copy failed — select the text manually.");
+      setCopyNote(t("referrals.copy_failed"));
     }
   }
 
   async function nativeShare() {
     if (!data?.share.url || !data.share.text) return;
     if (typeof navigator.share !== "function") {
-      await copyText(data.share.text, "Copied invitation text.");
+      await copyText(data.share.text, t("referrals.copied_text"));
       return;
     }
     try {
       await navigator.share({
-        title: "Unique Sky Way invitation",
+        title: t("referrals.title"),
         text: data.share.text,
         url: data.share.url,
       });
-      setCopyNote("Share sheet opened — invite responsibly.");
+      setCopyNote(t("referrals.share_opened"));
     } catch {
       // User cancelled — stay quiet.
     }
   }
 
   if (loading) {
-    return <Skeleton className="h-48 w-full rounded-xl" aria-label="Loading referrals" />;
+    return <Skeleton className="h-48 w-full rounded-xl" aria-label={t("ui.loading")} />;
   }
 
   if (error) {
     return (
       <section className="rounded-xl border border-border/80 p-6">
-        <h2 className="text-base font-semibold">Referrals unavailable</h2>
+        <h2 className="text-base font-semibold">{t("referrals.unavailable")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{error}</p>
         <Button asChild variant="outline" className="mt-4">
-          <Link href="/account/help/support">Request support</Link>
+          <Link href="/account/help/support">{t("help.request_support")}</Link>
         </Button>
       </section>
     );
@@ -140,11 +142,13 @@ export function ReferralHub() {
     return (
       <EmptyState
         icon={Gift}
-        title="No invitation code yet"
-        description="When a referral code exists on your account, you can share it calmly — never with spam tools or invented rewards."
+        title={t("referrals.no_code")}
+        description={t("referrals.no_code_desc")}
         action={
           <Button asChild variant="outline">
-            <Link href="/account/learn/referrals-responsible">Learn responsible referrals</Link>
+            <Link href="/account/learn/referrals-responsible">
+              {t("referrals.learn_responsible")}
+            </Link>
           </Button>
         }
       />
@@ -162,23 +166,25 @@ export function ReferralHub() {
 
   return (
     <div className="space-y-8">
-      <p className="sr-only">Primary question: How do I recommend this platform responsibly?</p>
+      <p className="sr-only">{t("referrals.sr_question")}</p>
 
       <section className="rounded-xl border border-border/80 p-5 sm:p-6">
-        <h2 className="text-base font-semibold">Your invitation</h2>
+        <h2 className="text-base font-semibold">{t("referrals.your_invitation")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{data.understanding}</p>
         <p className="mt-4 font-mono text-2xl font-semibold tracking-wide">{data.code.code}</p>
         <p className="mt-1 break-all text-xs text-muted-foreground">{data.share.url}</p>
         <p className="mt-2 text-xs text-muted-foreground">{data.share.disclaimer}</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <CopyButton value={data.code!.code} label="Copy code" />
-          {data.share.url ? <CopyButton value={data.share.url} label="Copy link" /> : null}
+          <CopyButton value={data.code!.code} label={t("referrals.copy_code")} />
+          {data.share.url ? (
+            <CopyButton value={data.share.url} label={t("referrals.copy_link")} />
+          ) : null}
           <Button type="button" size="sm" variant="outline" onClick={() => void nativeShare()}>
-            Share
+            {t("referrals.share")}
           </Button>
           <Button asChild size="sm" variant="ghost">
-            <Link href={data.links.learnHref}>Guidance</Link>
+            <Link href={data.links.learnHref}>{t("referrals.guidance")}</Link>
           </Button>
         </div>
         {copyNote ? <p className="mt-2 text-sm text-muted-foreground">{copyNote}</p> : null}
@@ -188,34 +194,29 @@ export function ReferralHub() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={qrDataUrl}
-              alt="QR code for your responsible invitation link"
+              alt={t("referrals.qr_alt")}
               width={180}
               height={180}
               className="rounded-md border border-border/80 bg-white p-2"
             />
-            <p className="max-w-sm text-sm text-muted-foreground">
-              Optional QR for in-person sharing. Same honest link — no tracking theater, no mass-invite
-              tools.
-            </p>
+            <p className="max-w-sm text-sm text-muted-foreground">{t("referrals.qr_hint")}</p>
           </div>
         ) : null}
       </section>
 
       <div className="grid gap-3 sm:grid-cols-4">
-        <Stat label="Invitations" value={String(data.summary.referralCount)} />
-        <Stat label="Qualified" value={String(data.summary.qualifiedCount)} />
-        <Stat label="Rewarded" value={String(data.summary.rewardedCount)} />
+        <Stat label={t("referrals.stat_invitations")} value={String(data.summary.referralCount)} />
+        <Stat label={t("referrals.stat_qualified")} value={String(data.summary.qualifiedCount)} />
+        <Stat label={t("referrals.stat_rewarded")} value={String(data.summary.rewardedCount)} />
         <Stat
-          label="Credited rewards"
-          valueNode={
-            <CurrencyDisplay amountMinor={Number(data.summary.postedRewardAmountMinor)} />
-          }
+          label={t("referrals.stat_credited")}
+          valueNode={<CurrencyDisplay amountMinor={Number(data.summary.postedRewardAmountMinor)} />}
         />
       </div>
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-base font-semibold">Referral status</h2>
+          <h2 className="text-base font-semibold">{t("referrals.status_section")}</h2>
           <div className="flex flex-wrap gap-2">
             {(["all", "pending", "qualified", "rewarded", "voided"] as const).map((id) => (
               <Button
@@ -225,16 +226,17 @@ export function ReferralHub() {
                 variant={statusFilter === id ? "default" : "outline"}
                 onClick={() => setStatusFilter(id)}
               >
-                {id === "pending" ? "Registered" : id === "all" ? "All" : id}
+                {id === "pending"
+                  ? t("referrals.filter_registered")
+                  : id === "all"
+                    ? t("notifications.category.all")
+                    : id}
               </Button>
             ))}
           </div>
         </div>
         {referrals.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No referral rows yet. When someone registers with your code, privacy-safe status appears
-            here — never their balances.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("referrals.no_rows")}</p>
         ) : (
           <ul className="divide-y divide-border/70 rounded-xl border border-border/80">
             {referrals.map((row) => (
@@ -243,9 +245,9 @@ export function ReferralHub() {
                 className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
               >
                 <div>
-                  <p className="text-sm font-medium">Invitation</p>
+                  <p className="text-sm font-medium">{t("referrals.invitation_label")}</p>
                   <p className="text-xs text-muted-foreground">
-                    <DateDisplay value={row.createdAt} /> · identity hidden for privacy
+                    <DateDisplay value={row.createdAt} /> · {t("referrals.identity_hidden")}
                   </p>
                 </div>
                 <StatusChip tone={statusTone(row.status)}>{row.statusLabel}</StatusChip>
@@ -257,7 +259,7 @@ export function ReferralHub() {
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-base font-semibold">Rewards</h2>
+          <h2 className="text-base font-semibold">{t("referrals.rewards_section")}</h2>
           <div className="flex flex-wrap gap-2">
             {(["all", "pending", "posted", "voided"] as const).map((id) => (
               <Button
@@ -267,15 +269,17 @@ export function ReferralHub() {
                 variant={rewardFilter === id ? "default" : "outline"}
                 onClick={() => setRewardFilter(id)}
               >
-                {id === "posted" ? "Credited" : id === "all" ? "All" : id}
+                {id === "posted"
+                  ? t("referrals.filter_credited")
+                  : id === "all"
+                    ? t("notifications.category.all")
+                    : id}
               </Button>
             ))}
           </div>
         </div>
         {rewards.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No rewards yet. Credited amounts appear as ledger money when eligibility posts.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("referrals.no_rewards")}</p>
         ) : (
           <ul className="divide-y divide-border/70 rounded-xl border border-border/80">
             {rewards.map((reward) => (
@@ -294,12 +298,12 @@ export function ReferralHub() {
           </ul>
         )}
         <Button asChild variant="link" className="h-auto px-0">
-          <Link href={data.links.ledgerHref}>View ledger</Link>
+          <Link href={data.links.ledgerHref}>{t("referrals.view_ledger")}</Link>
         </Button>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-base font-semibold">Guidance</h2>
+        <h2 className="text-base font-semibold">{t("referrals.guidance_section")}</h2>
         <ul className="grid gap-3 sm:grid-cols-2">
           {data.guidance.map((item) => (
             <li key={item.id} className="rounded-xl border border-border/80 p-4">
@@ -310,13 +314,13 @@ export function ReferralHub() {
         </ul>
         <div className="flex flex-wrap gap-3">
           <Button asChild variant="outline" size="sm">
-            <Link href={data.links.learnHref}>Learning: responsible referrals</Link>
+            <Link href={data.links.learnHref}>{t("referrals.learn_link")}</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">
-            <Link href={data.links.helpHref}>Help Center</Link>
+            <Link href={data.links.helpHref}>{t("help.title")}</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">
-            <Link href={data.links.successHref}>Success Hub</Link>
+            <Link href={data.links.successHref}>{t("communications.hub.success")}</Link>
           </Button>
         </div>
       </section>

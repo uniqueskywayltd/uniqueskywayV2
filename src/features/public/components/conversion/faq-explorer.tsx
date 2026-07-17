@@ -10,9 +10,11 @@ import {
 } from "@/features/public/content/conversion-pages";
 import { PublicPageContainer } from "@/features/public/components/public-shell";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 export function FaqExplorer() {
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<FaqCategory | "All">("All");
   const [openQuestion, setOpenQuestion] = useState<string | null>(
@@ -38,25 +40,25 @@ export function FaqExplorer() {
   }, [category, deferredQuery]);
 
   return (
-    <section className="py-12 sm:py-14" aria-label="FAQ explorer">
+    <section className="py-12 sm:py-14" aria-label={t("nav.faq")}>
       <PublicPageContainer>
         <div className="mx-auto max-w-3xl">
           <label htmlFor="faq-search" className="text-sm font-medium text-foreground">
-            Search
+            {t("faq.search")}
           </label>
           <Input
             id="faq-search"
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search FAQs..."
+            placeholder={t("faq.search_placeholder")}
             className="mt-2"
             autoComplete="off"
-            aria-label="Search FAQs"
+            aria-label={t("faq.search_placeholder")}
           />
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="FAQ categories">
+        <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label={t("faq.categories")}>
           {(["All", ...FAQ_CATEGORIES] as const).map((item) => {
             const selected = category === item;
             return (
@@ -73,7 +75,7 @@ export function FaqExplorer() {
                     : "border-border/70 bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground",
                 )}
               >
-                {item}
+                {item === "All" ? t("faq.all") : item}
               </button>
             );
           })}
@@ -105,7 +107,7 @@ export function FaqExplorer() {
                           type="button"
                           aria-expanded={open}
                           aria-controls={panelId}
-                          className="flex w-full items-start justify-between gap-4 px-5 py-4 text-left text-sm font-semibold text-foreground transition-colors hover:bg-muted/30 sm:text-base"
+                          className="flex w-full items-start justify-between gap-4 px-5 py-4 text-start text-sm font-semibold text-foreground transition-colors hover:bg-muted/30 sm:text-base"
                           onClick={() =>
                             setOpenQuestion((current) =>
                               current === item.question ? null : item.question,
@@ -145,7 +147,7 @@ export function FaqExplorer() {
           })}
 
           {filtered.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground">{FAQ_COPY.empty}</p>
+            <p className="text-center text-sm text-muted-foreground">{t("faq.no_results")}</p>
           ) : null}
         </div>
       </PublicPageContainer>

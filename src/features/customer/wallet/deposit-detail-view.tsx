@@ -7,12 +7,14 @@ import { Button, Skeleton, StatusChip } from "@/components/ui";
 import { DashboardPanelCard } from "@/components/ui/dashboard-panel-card";
 import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { presentDepositStatus } from "@/features/customer/wallet/status-presentation";
 import type { TimelineStep, WalletDeposit } from "@/features/customer/wallet/types";
 import { cn } from "@/lib/utils";
 
 /** WP2 — deposit detail presentation over certified deposit timeline. */
 export function DepositDetailView({ depositId }: { depositId: string }) {
+  const { t } = useI18n();
   const [deposit, setDeposit] = useState<WalletDeposit | null>(null);
   const [timeline, setTimeline] = useState<TimelineStep[]>([]);
   const [canCancel, setCanCancel] = useState(false);
@@ -62,7 +64,7 @@ export function DepositDetailView({ depositId }: { depositId: string }) {
 
   if (loading) {
     return (
-      <div className="space-y-4" aria-busy="true" aria-label="Loading deposit">
+      <div className="space-y-4" aria-busy="true" aria-label={t("wallet.loading_deposit")}>
         <Skeleton className="h-28 w-full rounded-xl" />
         <Skeleton className="h-40 w-full rounded-xl" />
         <Skeleton className="h-56 w-full rounded-xl" />
@@ -73,22 +75,22 @@ export function DepositDetailView({ depositId }: { depositId: string }) {
   if (error || !deposit) {
     return (
       <section className="rounded-xl border border-border/80 bg-card p-6 shadow-sm">
-        <h2 className="text-base font-semibold">Deposit unavailable</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{error ?? "Not found."}</p>
+        <h2 className="text-base font-semibold">{t("wallet.deposit_unavailable")}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{error ?? t("ui.not_found")}</p>
         <Button asChild variant="outline" className="mt-4">
-          <Link href="/wallet/deposits">Back to deposits</Link>
+          <Link href="/wallet/deposits">{t("wallet.back_to_deposits")}</Link>
         </Button>
       </section>
     );
   }
 
-  const status = presentDepositStatus(deposit.status);
+  const status = presentDepositStatus(deposit.status, t);
 
   return (
     <div className="space-y-6">
       <section
         className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-7"
-        aria-label="Deposit summary"
+        aria-label={t("wallet.deposit_summary_aria")}
       >
         <div
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--primary)_0%,transparent_50%)] opacity-[0.12] dark:opacity-[0.2]"
@@ -97,7 +99,7 @@ export function DepositDetailView({ depositId }: { depositId: string }) {
         <div className="relative flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Deposit amount
+              {t("wallet.deposit_amount")}
             </p>
             <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
               <CurrencyDisplay
@@ -106,18 +108,18 @@ export function DepositDetailView({ depositId }: { depositId: string }) {
               />
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Submitted <DateDisplay value={deposit.createdAt} />
+              {t("wallet.submitted")} <DateDisplay value={deposit.createdAt} />
               {deposit.confirmedAt ? (
                 <>
                   {" · "}
-                  Approved <DateDisplay value={deposit.confirmedAt} />
+                  {t("wallet.approved")} <DateDisplay value={deposit.confirmedAt} />
                 </>
               ) : null}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Funding method:{" "}
+              {t("wallet.funding_method")}:{" "}
               {deposit.provider === "manual"
-                ? "Manual Crypto Deposit"
+                ? t("wallet.manual_crypto_deposit")
                 : deposit.provider.replaceAll("_", " ")}
             </p>
           </div>
@@ -125,15 +127,15 @@ export function DepositDetailView({ depositId }: { depositId: string }) {
         </div>
       </section>
 
-      <DashboardPanelCard title="Status explanation" accent="sky">
+      <DashboardPanelCard title={t("wallet.status_explanation")} accent="sky">
         <p className="text-sm text-muted-foreground">{status.explanation}</p>
         <p className="mt-3 text-sm text-foreground">
-          <span className="font-medium">Expected next step: </span>
+          <span className="font-medium">{t("wallet.expected_next_step")}: </span>
           {status.nextExpectedStep}
         </p>
       </DashboardPanelCard>
 
-      <DashboardPanelCard title="Timeline" accent="primary">
+      <DashboardPanelCard title={t("wallet.timeline")} accent="primary">
         <ol className="space-y-4">
           {timeline.map((step) => (
             <li key={step.key} className="flex gap-3">
@@ -166,7 +168,7 @@ export function DepositDetailView({ depositId }: { depositId: string }) {
         {deposit.providerAuthorizationUrl &&
         (deposit.status === "created" || deposit.status === "pending") ? (
           <Button asChild>
-            <a href={deposit.providerAuthorizationUrl}>Continue payment</a>
+            <a href={deposit.providerAuthorizationUrl}>{t("wallet.continue_payment")}</a>
           </Button>
         ) : null}
         {canCancel ? (
@@ -177,17 +179,17 @@ export function DepositDetailView({ depositId }: { depositId: string }) {
             aria-busy={cancelling}
             onClick={() => void cancelDeposit()}
           >
-            {cancelling ? "Cancelling…" : "Cancel deposit"}
+            {cancelling ? t("wallet.cancelling") : t("wallet.cancel_deposit")}
           </Button>
         ) : null}
         <Button asChild variant="ghost">
-          <Link href="/contact">Contact support</Link>
+          <Link href="/contact">{t("wallet.contact_support")}</Link>
         </Button>
         <Button asChild variant="ghost">
-          <Link href="/wallet/deposits">Deposits</Link>
+          <Link href="/wallet/deposits">{t("wallet.action.deposits")}</Link>
         </Button>
         <Button asChild variant="ghost">
-          <Link href="/wallet">Wallet</Link>
+          <Link href="/wallet">{t("wallet.title")}</Link>
         </Button>
       </div>
     </div>
