@@ -50,7 +50,6 @@ const FINANCE_ADMIN_ROLES = new Set([
 const DEPOSIT_EMAIL_TEMPLATES = {
   initiated: "deposit.initiated",
   adminInitiated: "admin.deposit_submitted",
-  adminApproved: "admin.deposit_approved",
   adminRejected: "admin.deposit_rejected",
   confirmed: "deposit.confirmed",
   failed: "deposit.failed",
@@ -739,22 +738,6 @@ export class DepositEngineService {
         metadata: depositEventPayload(deposit),
       });
     }
-
-    const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
-    const amountLabel = formatMoneyMinorUnits("en", Number(deposit.amountMinor), deposit.currency);
-    await enqueueAdminEmail(tx, this.deps.notificationRepository, {
-      eventType: "admin.deposit_approved",
-      idempotencyKey: `admin.deposit_approved:${deposit.id}`,
-      customerId: deposit.userId,
-      metadata: {
-        ...depositEventPayload(deposit),
-        customerName: (await this.resolveCustomerFirstName(deposit.userId)) ?? "Customer",
-        customerEmail: user?.email ?? null,
-        amount: amountLabel,
-        referenceId: deposit.providerIntentId,
-        adminDashboardUrl: `${appUrl}/admin/deposits/${deposit.id}`,
-      },
-    });
 
     await this.appendCustomerAudit(tx, deposit.userId, "deposit.confirmed", deposit.id, context, {
       ledgerTransactionId: deposit.confirmationLedgerTransactionId,

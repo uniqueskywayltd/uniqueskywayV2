@@ -450,19 +450,6 @@ export class IdentityAuthService {
           requestId: context.requestId,
         },
       });
-
-      const appUrl = resolvePublicAppUrl(getServerEnv().NEXT_PUBLIC_APP_URL);
-      await enqueueAdminEmail(tx, this.deps.notificationRepository, {
-        eventType: "admin.email_verified",
-        idempotencyKey: `admin.email_verified:${appUser.id}`,
-        customerId: appUser.id,
-        metadata: {
-          customerName: appUser.email.split("@")[0] ?? "Customer",
-          customerEmail: appUser.email,
-          customerId: appUser.id,
-          adminDashboardUrl: `${appUrl}/admin/customers/${appUser.id}`,
-        },
-      });
     });
 
     this.clearPendingVerifyCookie();
