@@ -8,6 +8,7 @@ export const LANGUAGE_CATALOG = [
   {
     code: "en",
     nativeName: "English",
+    shortLabel: "EN",
     englishName: "English",
     direction: "ltr",
     status: "production",
@@ -15,6 +16,7 @@ export const LANGUAGE_CATALOG = [
   {
     code: "ar",
     nativeName: "العربية",
+    shortLabel: "AR",
     englishName: "Arabic",
     direction: "rtl",
     status: "production",
@@ -22,6 +24,7 @@ export const LANGUAGE_CATALOG = [
   {
     code: "es",
     nativeName: "Español",
+    shortLabel: "ES",
     englishName: "Spanish",
     direction: "ltr",
     status: "production",
@@ -29,6 +32,7 @@ export const LANGUAGE_CATALOG = [
   {
     code: "fr",
     nativeName: "Français",
+    shortLabel: "FR",
     englishName: "French",
     direction: "ltr",
     status: "production",
@@ -36,6 +40,7 @@ export const LANGUAGE_CATALOG = [
 ] as const satisfies ReadonlyArray<{
   code: AppLanguage;
   nativeName: string;
+  shortLabel: string;
   englishName: string;
   direction: "ltr" | "rtl";
   status: "design" | "pilot" | "production" | "retired";

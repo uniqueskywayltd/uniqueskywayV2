@@ -115,7 +115,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
             </div>
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">
               <ThemeToggle compact className="size-11 sm:size-9" />
-              <LanguageSelector variant="auto" />
+              <LanguageSelector />
               <Link
                 href="/account/notifications"
                 className="relative inline-flex size-11 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:text-foreground sm:size-auto sm:px-3 sm:py-2"
@@ -163,12 +163,6 @@ export function CustomerShell({ children }: CustomerShellProps) {
                 summary={summary}
                 onNavigate={() => setMobileOpen(false)}
               />
-              <div className="border-t pt-3 sm:hidden">
-                <p className="mb-2 text-xs font-medium text-muted-foreground">
-                  {t("language.selector.label")}
-                </p>
-                <LanguageSelector variant="full" compact={false} />
-              </div>
             </nav>
           ) : null}
         </header>

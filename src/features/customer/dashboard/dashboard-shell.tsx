@@ -195,7 +195,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">
               <ThemeToggle compact className="size-11 sm:size-9" />
-              <LanguageSelector variant="auto" />
+              <LanguageSelector />
               <DashboardSignOutButton />
             </div>
           </header>

@@ -15,7 +15,7 @@ export function AuthChromeControls({ homeLink = true }: { homeLink?: boolean }) 
   return (
     <div className="ms-auto flex shrink-0 items-center gap-0.5 sm:gap-1.5">
       <ThemeToggle compact className="size-11 sm:size-9" />
-      <LanguageSelector variant="auto" />
+      <LanguageSelector />
       {homeLink ? (
         <Link
           href="/"
