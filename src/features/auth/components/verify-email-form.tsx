@@ -111,13 +111,13 @@ function VerifyEmailFormInner() {
 
   return (
     <form onSubmit={submit} className="space-y-5" aria-busy={pending}>
-      <AuthField label="Email address" htmlFor="email">
+      <AuthField label={t("auth.email")} htmlFor="email">
         <AuthInputIcon icon={<Mail className="h-4 w-4" aria-hidden />}>
           <Input
             id="email"
             name="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={t("auth.email_placeholder")}
             autoComplete="email"
             required
             disabled={pending}
@@ -127,7 +127,7 @@ function VerifyEmailFormInner() {
         </AuthInputIcon>
       </AuthField>
 
-      <AuthField label="Verification code" htmlFor="token">
+      <AuthField label={t("auth.verify_code")} htmlFor="token">
         <AuthInputIcon icon={<KeyRound className="h-4 w-4" aria-hidden />}>
           <Input
             id="token"
@@ -139,7 +139,7 @@ function VerifyEmailFormInner() {
             value={token}
             onChange={(event) => setToken(sanitizeOtpInput(event.target.value))}
             maxLength={OTP_MAX_LENGTH}
-            placeholder="Enter code from email"
+            placeholder={t("auth.verify_code_placeholder")}
           />
         </AuthInputIcon>
       </AuthField>
@@ -147,7 +147,7 @@ function VerifyEmailFormInner() {
       <div className="flex items-center gap-2.5">
         <Checkbox id="rememberMe" name="rememberMe" defaultChecked disabled={pending} />
         <label htmlFor="rememberMe" className="text-sm font-medium text-foreground/80">
-          Remember this browser
+          {t("auth.remember_browser")}
         </label>
       </div>
 
@@ -163,7 +163,7 @@ function VerifyEmailFormInner() {
       ) : null}
 
       <Button type="submit" className={authSubmitClass} disabled={pending}>
-        {pending ? "Verifying" : "Verify email"}
+        {pending ? t("auth.verifying_short") : t("auth.verify_email")}
       </Button>
     </form>
   );

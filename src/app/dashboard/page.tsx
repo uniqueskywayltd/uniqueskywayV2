@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 
 import { DashboardView } from "@/features/customer/dashboard/dashboard-view";
+import { getRequestLanguage } from "@/i18n/request-language";
+import { createTranslator } from "@/i18n/translate";
 
-export const metadata: Metadata = {
-  title: "Dashboard | Unique Sky Way",
-  description: "Your primary financial home — how you’re doing today.",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { language } = await getRequestLanguage();
+  const t = createTranslator(language);
+  return {
+    title: `${t("meta.dashboard.title")} | Unique Sky Way`,
+    description: t("meta.dashboard.description"),
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * Sprint B5 — Dashboard financial home.

@@ -3,11 +3,17 @@ import type { Metadata } from "next";
 import { DepositHistory } from "@/features/customer/wallet/deposit-history";
 import { DepositSurfaceHero } from "@/features/customer/wallet/deposit-surface-hero";
 import { WalletBackLink } from "@/features/customer/wallet/wallet-back-link";
+import { getRequestLanguage } from "@/i18n/request-language";
+import { createTranslator } from "@/i18n/translate";
 
-export const metadata: Metadata = {
-  title: "Deposits | Unique Sky Way",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { language } = await getRequestLanguage();
+  const t = createTranslator(language);
+  return {
+    title: `${t("meta.wallet.deposits.title")} | Unique Sky Way`,
+    robots: { index: false, follow: false },
+  };
+}
 
 /** WP2 — Deposit overview / history over certified deposit engine. */
 export default function DepositHistoryPage() {

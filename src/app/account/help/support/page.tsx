@@ -6,18 +6,23 @@ import { AccountWelcomeHero } from "@/features/customer/account/account-welcome-
 import { CommunicationsReveal } from "@/features/customer/communications/communications-motion";
 import { CommunicationsSurfaceNav } from "@/features/customer/communications/communications-surface-nav";
 import { SupportRequestForm } from "@/features/customer/components/support-request-form";
+import { getRequestLanguage } from "@/i18n/request-language";
+import { createTranslator } from "@/i18n/translate";
 
-export default function SupportPage() {
+export default async function SupportPage() {
+  const { language } = await getRequestLanguage();
+  const t = createTranslator(language);
+
   return (
     <div className="mx-auto max-w-3xl space-y-8 sm:space-y-9">
       <CommunicationsReveal>
         <AccountWelcomeHero
-          title="Support request"
-          description="What do I need to know right now? Tell us what you need — status updates still appear in Notifications."
+          title={t("support.page.title")}
+          description={t("support.page.description")}
           icon={LifeBuoy}
           accentClassName="bg-emerald-500/10 text-emerald-800 ring-emerald-500/20 dark:text-emerald-400"
           barClassName="via-emerald-500/70"
-          ariaLabel="Support request header"
+          ariaLabel={t("support.page.title")}
         />
       </CommunicationsReveal>
       <CommunicationsReveal delayMs={40}>
@@ -25,7 +30,7 @@ export default function SupportPage() {
       </CommunicationsReveal>
       <CommunicationsReveal delayMs={60}>
         <Button asChild variant="outline" size="sm">
-          <Link href="/account/help">Back to Help Center</Link>
+          <Link href="/account/help">{t("support.back_help_center")}</Link>
         </Button>
       </CommunicationsReveal>
       <CommunicationsReveal delayMs={80}>

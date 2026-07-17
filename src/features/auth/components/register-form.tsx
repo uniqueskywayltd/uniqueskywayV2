@@ -35,17 +35,17 @@ const PLAN_INTENT_STORAGE_KEY = "usw_plan_intent";
 const RESEND_COOLDOWN_SECONDS = 60;
 const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,24}$/;
 
-function getPasswordStrength(password: string) {
-  if (!password) return { score: 0, label: "", color: "bg-muted" };
+function getPasswordStrength(password: string): { score: number; labelKey: string; color: string } {
+  if (!password) return { score: 0, labelKey: "", color: "bg-muted" };
   let score = 0;
   if (password.length >= 8) score++;
   if (password.length >= 12) score++;
   if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
   if (/\d/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
-  if (score <= 2) return { score: 1, label: "Weak", color: "bg-red-500" };
-  if (score <= 3) return { score: 2, label: "Fair", color: "bg-amber-500" };
-  return { score: 3, label: "Strong", color: "bg-emerald-500" };
+  if (score <= 2) return { score: 1, labelKey: "auth.password.weak", color: "bg-red-500" };
+  if (score <= 3) return { score: 2, labelKey: "auth.password.fair", color: "bg-amber-500" };
+  return { score: 3, labelKey: "auth.password.strong", color: "bg-emerald-500" };
 }
 
 function RegisterFormInner() {
@@ -81,6 +81,7 @@ function RegisterFormInner() {
   const [resendSeconds, setResendSeconds] = useState(0);
 
   const strength = getPasswordStrength(password);
+  const strengthLabel = strength.labelKey ? t(strength.labelKey) : "";
   const captchaCorrect = isMathCaptchaCorrect(captchaA, captchaB, captchaAnswer);
   const captchaStatus =
     captchaAnswer.trim().length === 0 ? "idle" : captchaCorrect ? "correct" : "incorrect";
@@ -356,7 +357,14 @@ function RegisterFormInner() {
             />
           </AuthInputIcon>
           {password ? (
-            <div className="flex gap-1 pt-1" aria-label={`Password strength: ${strength.label}`}>
+            <div
+              className="flex gap-1 pt-1"
+              aria-label={
+                strengthLabel
+                  ? t("auth.password_strength_aria", { label: strengthLabel })
+                  : undefined
+              }
+            >
               {[1, 2, 3].map((level) => (
                 <div
                   key={level}
@@ -476,7 +484,7 @@ function RegisterFormInner() {
               value={otp}
               disabled={verifyPending}
               onChange={(event) => setOtp(sanitizeOtpInput(event.target.value))}
-              placeholder="Enter code from email"
+              placeholder={t("auth.verify_code_placeholder")}
             />
           </AuthField>
 

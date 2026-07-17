@@ -4,11 +4,13 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 import { Input } from "@/components/ui";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 type PasswordInputProps = Omit<React.ComponentProps<typeof Input>, "type">;
 
 export function PasswordInput({ className, ...props }: PasswordInputProps) {
+  const { t } = useI18n();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -23,9 +25,13 @@ export function PasswordInput({ className, ...props }: PasswordInputProps) {
         tabIndex={-1}
         onClick={() => setVisible((value) => !value)}
         className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-        aria-label={visible ? "Hide password" : "Show password"}
+        aria-label={visible ? t("auth.hide_password") : t("auth.show_password")}
       >
-        {visible ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+        {visible ? (
+          <EyeOff className="h-4 w-4" aria-hidden />
+        ) : (
+          <Eye className="h-4 w-4" aria-hidden />
+        )}
       </button>
     </div>
   );

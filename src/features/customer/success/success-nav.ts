@@ -1,92 +1,93 @@
-import {
-  Award,
-  BookOpen,
-  FileText,
-  Gift,
-  Compass,
-  type LucideIcon,
-} from "lucide-react";
+import { Award, BookOpen, FileText, Gift, Compass, type LucideIcon } from "lucide-react";
+
+import type { MessageKey } from "@/i18n/messages/en";
 
 /** Milestone 6 G1 — Success IA entries (`DEC-0046`). Shells only; no business logic. */
 export const SUCCESS_HUB_LINKS = [
   {
     href: "/account/learn",
-    title: "Learning",
-    description: "Understand the platform before you act — concepts, not hype.",
+    titleKey: "success.hub.link.learn.title",
+    descriptionKey: "success.hub.link.learn.description",
+    sprintNoteKey: "success.hub.link.learn.note",
     icon: BookOpen,
-    sprintNote: "Learning experience available now.",
   },
   {
     href: "/account/statements",
-    title: "Statements",
-    description: "Official records of your financial history when you need them.",
+    titleKey: "success.hub.link.statements.title",
+    descriptionKey: "success.hub.link.statements.description",
+    sprintNoteKey: "success.hub.link.statements.note",
     icon: FileText,
-    sprintNote: "Ledger-backed statements available now.",
   },
   {
     href: "/account/referrals",
-    title: "Referrals",
-    description: "Recommend Unique Sky Way responsibly and privately.",
+    titleKey: "success.hub.link.referrals.title",
+    descriptionKey: "success.hub.link.referrals.description",
+    sprintNoteKey: "success.hub.link.referrals.note",
     icon: Gift,
-    sprintNote: "Responsible referral hub available now.",
   },
   {
     href: "/account/milestones",
-    title: "Milestones",
-    description: "Quiet recognition of real progress you have already made.",
+    titleKey: "success.hub.link.milestones.title",
+    descriptionKey: "success.hub.link.milestones.description",
+    sprintNoteKey: "success.hub.link.milestones.note",
     icon: Award,
-    sprintNote: "Shell in G1 — no points economy.",
   },
   {
     href: "/account/help",
-    title: "Help Center",
-    description: "Search guidance first; request support when you are stuck.",
+    titleKey: "success.hub.link.help.title",
+    descriptionKey: "success.hub.link.help.description",
+    sprintNoteKey: "success.hub.link.help.note",
     icon: Compass,
-    sprintNote: "Existing B4 help — linked from Success Hub.",
   },
 ] as const satisfies ReadonlyArray<{
   href: string;
-  title: string;
-  description: string;
+  titleKey: MessageKey;
+  descriptionKey: MessageKey;
+  sprintNoteKey: MessageKey;
   icon: LucideIcon;
-  sprintNote: string;
 }>;
 
 /** Static progress pillars — educational framework only (no live scoring). */
 export const SUCCESS_PROGRESS_PILLARS = [
   {
     id: "orient",
-    title: "Know where your money is",
-    description: "Dashboard, portfolio, and wallet answer this every visit.",
+    titleKey: "success.pillar.orient.title",
+    descriptionKey: "success.pillar.orient.description",
     href: "/dashboard",
-    hrefLabel: "Open dashboard",
+    hrefLabelKey: "success.pillar.orient.href_label",
   },
   {
     id: "understand",
-    title: "Understand how money works here",
-    description: "Accrued ≠ credited ≠ available. Learn before you decide.",
+    titleKey: "success.pillar.understand.title",
+    descriptionKey: "success.pillar.understand.description",
     href: "/account/learn",
-    hrefLabel: "Open learning",
+    hrefLabelKey: "success.pillar.understand.href_label",
   },
   {
     id: "records",
-    title: "Keep clear records",
-    description: "Statements will reflect certified ledger totals — never invented figures.",
+    titleKey: "success.pillar.records.title",
+    descriptionKey: "success.pillar.records.description",
     href: "/account/statements",
-    hrefLabel: "Statements entry",
+    hrefLabelKey: "success.pillar.records.href_label",
   },
   {
     id: "share",
-    title: "Share accurately when ready",
-    description: "Referrals stay privacy-first. No pressure, no gamification.",
+    titleKey: "success.pillar.share.title",
+    descriptionKey: "success.pillar.share.description",
     href: "/account/referrals",
-    hrefLabel: "Referrals",
+    hrefLabelKey: "success.pillar.share.href_label",
   },
   {
     id: "milestones",
-    title: "Acknowledge real milestones",
-    description: "Recognition for facts that already happened — never fake streaks.",
+    titleKey: "success.pillar.milestones.title",
+    descriptionKey: "success.pillar.milestones.description",
     href: "/account/milestones",
-    hrefLabel: "Milestones",
+    hrefLabelKey: "success.pillar.milestones.href_label",
   },
-] as const;
+] as const satisfies ReadonlyArray<{
+  id: string;
+  titleKey: MessageKey;
+  descriptionKey: MessageKey;
+  href: string;
+  hrefLabelKey: MessageKey;
+}>;

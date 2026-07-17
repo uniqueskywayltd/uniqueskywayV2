@@ -4,59 +4,60 @@ import Image from "next/image";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { brandAssets } from "@/features/brand";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { LEGACY_ACCENT } from "@/features/public/legacy/tokens";
 import { cn } from "@/lib/utils";
 
-const PROJECTS = [
+const PROJECT_KEYS = [
   {
     image: brandAssets.projects.nfts,
-    sector: "NFTs Tokenization",
-    title: "Collectible Digital World",
+    sectorKey: "legacy.projects.sector.nfts",
+    titleKey: "legacy.projects.title.nfts",
   },
   {
     image: brandAssets.projects.realEstate,
-    sector: "Real Estate",
-    title: "Building to your Satisfaction",
+    sectorKey: "legacy.projects.sector.real_estate",
+    titleKey: "legacy.projects.title.real_estate",
   },
   {
     image: brandAssets.projects.realWorldAsset,
-    sector: "Real World Asset",
-    title: "Commodities on demand is our Priority Profitability Business",
+    sectorKey: "legacy.projects.sector.rwa",
+    titleKey: "legacy.projects.title.rwa",
   },
   {
     image: brandAssets.projects.corporate,
-    sector: "Corporate Management",
-    title: "We are here to serve you better",
+    sectorKey: "legacy.projects.sector.corporate",
+    titleKey: "legacy.projects.title.corporate",
   },
   {
     image: brandAssets.projects.financialInitiatives,
-    sector: "Financial Initiatives",
-    title: "Planning & Task Completion",
+    sectorKey: "legacy.projects.sector.financial_initiatives",
+    titleKey: "legacy.projects.title.financial_initiatives",
   },
   {
     image: brandAssets.projects.naturalEnergy,
-    sector: "Natural Energy",
-    title: "Planning & Task Completion",
+    sectorKey: "legacy.projects.sector.natural_energy",
+    titleKey: "legacy.projects.title.natural_energy",
   },
   {
     image: brandAssets.projects.financialLoan,
-    sector: "Financial Loan",
-    title: "Growing your Financial Firm",
+    sectorKey: "legacy.projects.sector.financial_loan",
+    titleKey: "legacy.projects.title.financial_loan",
   },
   {
     image: brandAssets.projects.crypto,
-    sector: "Crypto Mining & Trading",
-    title: "Digital Asset",
+    sectorKey: "legacy.projects.sector.crypto",
+    titleKey: "legacy.projects.title.crypto",
   },
   {
     image: brandAssets.projects.agriculture,
-    sector: "Tokenize Mechanized Agriculture",
-    title: "Huge Mechanized Project Completion",
+    sectorKey: "legacy.projects.sector.agriculture",
+    titleKey: "legacy.projects.title.agriculture",
   },
   {
     image: brandAssets.projects.financialGrant,
-    sector: "Financial Grant",
-    title: "Private Enterprize Building",
+    sectorKey: "legacy.projects.sector.financial_grant",
+    titleKey: "legacy.projects.title.financial_grant",
   },
 ] as const;
 
@@ -64,24 +65,14 @@ const PIE_STATS = [
   {
     value: 0.85,
     color: "#204619",
-    label: (
-      <>
-        Global Flexibility <br />
-        Investment
-      </>
-    ),
-    caption: "Upto 85% Asests",
+    labelKey: "legacy.projects.pie.flexibility",
+    captionKey: "legacy.projects.pie.flexibility_caption",
   },
   {
     value: 0.75,
     color: "#28a745",
-    label: (
-      <>
-        Security Financial <br />
-        Solutions
-      </>
-    ),
-    caption: "Upto 75% Efficient",
+    labelKey: "legacy.projects.pie.security",
+    captionKey: "legacy.projects.pie.security_caption",
   },
 ] as const;
 
@@ -122,6 +113,7 @@ function useItemsPerView() {
 }
 
 function ProjectCarouselInner({ itemsPerView }: { itemsPerView: number }) {
+  const { t } = useI18n();
   const [index, setIndex] = useState(0);
   const [animate, setAnimate] = useState(true);
   const reduced = usePrefersReducedMotion();
@@ -135,7 +127,7 @@ function ProjectCarouselInner({ itemsPerView }: { itemsPerView: number }) {
   }, [reduced]);
 
   useEffect(() => {
-    if (index < PROJECTS.length) return;
+    if (index < PROJECT_KEYS.length) return;
     const id = window.setTimeout(() => {
       setAnimate(false);
       setIndex(0);
@@ -146,13 +138,13 @@ function ProjectCarouselInner({ itemsPerView }: { itemsPerView: number }) {
     return () => window.clearTimeout(id);
   }, [index]);
 
-  const slides = [...PROJECTS, ...PROJECTS.slice(0, itemsPerView)];
+  const slides = [...PROJECT_KEYS, ...PROJECT_KEYS.slice(0, itemsPerView)];
   const itemWidthPct = 100 / itemsPerView;
 
   return (
     <section
       className="relative font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif]"
-      aria-label="Projects and sectors"
+      aria-label={t("legacy.projects.carousel_label")}
     >
       <div className="overflow-hidden">
         <div
@@ -180,7 +172,7 @@ function ProjectCarouselInner({ itemsPerView }: { itemsPerView: number }) {
                 />
                 <div className="absolute right-0 bottom-0 left-0 z-[1] px-[30px] pt-[30px] pb-[57px] sm:px-[75px]">
                   <p className="relative mb-[5px] inline-block pr-[58px] text-[15px] leading-7 text-white">
-                    {project.sector}
+                    {t(project.sectorKey)}
                     <span
                       className="absolute top-3 right-0 h-0.5 w-[45px]"
                       style={{ background: LEGACY_ACCENT }}
@@ -188,7 +180,7 @@ function ProjectCarouselInner({ itemsPerView }: { itemsPerView: number }) {
                     />
                   </p>
                   <h2 className="m-0 text-[24px] leading-[30px] font-normal text-white sm:text-[30px] sm:leading-10">
-                    {project.title}
+                    {t(project.titleKey)}
                   </h2>
                 </div>
               </div>
@@ -205,15 +197,7 @@ function ProjectCarousel() {
   return <ProjectCarouselInner key={itemsPerView} itemsPerView={itemsPerView} />;
 }
 
-function PieChart({
-  value,
-  color,
-  active,
-}: {
-  value: number;
-  color: string;
-  active: boolean;
-}) {
+function PieChart({ value, color, active }: { value: number; color: string; active: boolean }) {
   const radius = (PIE_SIZE - PIE_THICKNESS) / 2;
   const circumference = 2 * Math.PI * radius;
   const reduced = usePrefersReducedMotion();
@@ -237,7 +221,12 @@ function PieChart({
 
   return (
     <div className="relative mx-auto mb-4 size-[170px] sm:mb-[23px]">
-      <svg width={PIE_SIZE} height={PIE_SIZE} viewBox={`0 0 ${PIE_SIZE} ${PIE_SIZE}`} aria-hidden="true">
+      <svg
+        width={PIE_SIZE}
+        height={PIE_SIZE}
+        viewBox={`0 0 ${PIE_SIZE} ${PIE_SIZE}`}
+        aria-hidden="true"
+      >
         <circle
           cx={PIE_SIZE / 2}
           cy={PIE_SIZE / 2}
@@ -271,6 +260,7 @@ function PieChart({
 }
 
 function AnnualStats() {
+  const { t } = useI18n();
   const sectionRef = useRef<HTMLElement>(null);
   const reduced = usePrefersReducedMotion();
   const [inView, setInView] = useState(false);
@@ -297,38 +287,32 @@ function AnnualStats() {
     <section
       ref={sectionRef}
       className="relative px-4 py-[70px] font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif] sm:px-[15px] sm:py-[95px]"
-      aria-label="Annual statistics"
+      aria-label={t("legacy.projects.stats_label")}
     >
       <div className="mx-auto grid max-w-[1170px] items-start gap-12 lg:grid-cols-2 lg:gap-0">
         <div>
           <div className="mb-[27px] text-center">
             <p className="relative mb-2.5 inline-block px-[55px] text-[18px] leading-[26px] font-normal tracking-wide text-[#666] uppercase before:absolute before:top-3 before:left-0 before:h-0.5 before:w-[45px] before:bg-[#da2c46] before:content-[''] after:absolute after:top-3 after:right-0 after:h-0.5 after:w-[45px] after:bg-[#da2c46] after:content-['']">
-              Crew commitment to clients
+              {t("legacy.projects.commitment_eyebrow")}
             </p>
             <h2 className="text-[20px] leading-[30px] font-bold text-[#222]">
-              This company&apos;s crew are guided by a clear Purpose: To take a stand for all
-              investors, to treat them fairly, and to give them the best chance for investment
-              success.
+              {t("legacy.projects.commitment_title")}
             </h2>
           </div>
           <p className="mb-[54px] text-justify text-[15px] leading-7 text-[#666]">
-            In their interactions with our crew, our clients sense the values that set our company
-            apart. Foremost among our values - and the essence of our unique corporate structure -
-            is that our clients come first. We strive to provide exceptional service and expertly
-            designed investment products with superior long-term performance. Why? We recognize that
-            our clients are human beings with real needs and aspirations.
+            {t("legacy.projects.commitment_body")}
           </p>
           <div className="flex flex-col clear-both sm:flex-row">
             {PIE_STATS.map((stat) => (
               <div
-                key={stat.caption}
+                key={stat.captionKey}
                 className="mb-4 w-full text-center sm:mb-0 sm:max-w-[50%] sm:flex-1"
               >
                 <PieChart value={stat.value} color={stat.color} active={active} />
                 <h3 className="mb-[9px] text-[18px] leading-[21px] font-bold text-[#222]">
-                  {stat.label}
+                  {t(stat.labelKey)}
                 </h3>
-                <p className="m-0 text-[24px] font-normal text-[#222]">{stat.caption}</p>
+                <p className="m-0 text-[24px] font-normal text-[#222]">{t(stat.captionKey)}</p>
               </div>
             ))}
           </div>
@@ -368,7 +352,7 @@ function AnnualStats() {
                 className="mx-auto mb-2.5 h-auto w-[36px]"
               />
               <span className="block text-[11px] leading-4 text-white">
-                Financial & Consulting Award 2020-2021
+                {t("legacy.projects.award")}
               </span>
             </div>
           </div>

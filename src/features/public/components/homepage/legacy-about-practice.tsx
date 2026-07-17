@@ -1,49 +1,47 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Briefcase,
-  ClipboardList,
-  HandCoins,
-  Shield,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, Briefcase, ClipboardList, HandCoins, Shield, ShieldCheck } from "lucide-react";
 
 import { brandAssets } from "@/features/brand";
-
-const PRACTICE_ITEMS = [
-  {
-    title: "Company Accounting",
-    body: "We provide clear and useful financial information on the basis of which you can make the right decisions",
-    Icon: ClipboardList,
-  },
-  {
-    title: "Loan Acquisition",
-    body: "With a Portfolio Line of Credit, you can request to borrow in seconds at a very affordable rate and get money deposited in as little as 1 business day. If there's a simpler, faster way to borrow cash, we haven't seen it.",
-    Icon: HandCoins,
-  },
-  {
-    title: "High Reliability",
-    body: "We are trusted by a huge number of people. We are working hard constantly to improve the level of our security system and minimize possible risks.",
-    Icon: Shield,
-  },
-  {
-    title: "Company Insurance",
-    body: "Our Company is insured by world class leading insurance company, which is a prominent company when it comes to the field of investments.",
-    Icon: ShieldCheck,
-  },
-  {
-    title: "Quik Withdrawal",
-    body: "Withdrawal requests are treated spontaneously once received. There are high maximum limits. The minimum withdrawal amount is only $100.",
-    Icon: Briefcase,
-  },
-] as const;
+import { useI18n } from "@/features/i18n/i18n-provider";
 
 /**
  * HP3 — Anniversary strip + About / Areas of Practice (legacy visual parity).
  * Presentation only; maps Read more to `/about`. No product engines.
  */
 export function LegacyAboutPractice() {
+  const { t } = useI18n();
+
+  const practiceItems = [
+    {
+      titleKey: "legacy.about.practice.accounting.title",
+      bodyKey: "legacy.about.practice.accounting.body",
+      Icon: ClipboardList,
+    },
+    {
+      titleKey: "legacy.about.practice.loan.title",
+      bodyKey: "legacy.about.practice.loan.body",
+      Icon: HandCoins,
+    },
+    {
+      titleKey: "legacy.about.practice.reliability.title",
+      bodyKey: "legacy.about.practice.reliability.body",
+      Icon: Shield,
+    },
+    {
+      titleKey: "legacy.about.practice.insurance.title",
+      bodyKey: "legacy.about.practice.insurance.body",
+      Icon: ShieldCheck,
+    },
+    {
+      titleKey: "legacy.about.practice.withdrawal.title",
+      bodyKey: "legacy.about.practice.withdrawal.body",
+      Icon: Briefcase,
+    },
+  ] as const;
+
   return (
     <>
       <section
@@ -61,26 +59,29 @@ export function LegacyAboutPractice() {
                   9
                 </p>
                 <p className="text-[18px] leading-7 font-normal tracking-wide text-[#204669] uppercase sm:text-[22px]">
-                  Years
+                  {t("legacy.about.years")}
                 </p>
               </div>
               <h2 className="text-[28px] leading-9 font-bold text-[#222] sm:text-[36px] sm:leading-[42px]">
-                UniqueSkyWay Celebrates its 9TH YEAR SUCCESS IN BUSINESS.
+                {t("legacy.about.anniversary_title")}
               </h2>
             </div>
           </div>
           <div className="lg:col-span-5">
             <p className="mt-[18px] mb-[22px] text-justify text-[15px] leading-7 text-[#666]">
-              Our esteemed company offers a unique opportunity for portfolio diversification through
-              profitable business ventures and successful investment endeavors, ensuring long-term
-              financial growth and stability.
+              {t("legacy.about.anniversary_body")}
             </p>
             <Link
               href="/about"
               className="group inline-flex items-center gap-2 text-base font-bold text-[#222]"
             >
-              <ArrowRight className="size-3 transition group-hover:translate-x-0.5" aria-hidden="true" />
-              <span className="border-b border-[#222] leading-4">Read more</span>
+              <ArrowRight
+                className="size-3 transition group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+              <span className="border-b border-[#222] leading-4">
+                {t("legacy.about.read_more")}
+              </span>
             </Link>
           </div>
         </div>
@@ -93,7 +94,7 @@ export function LegacyAboutPractice() {
         <div className="mx-auto grid max-w-[1170px] items-start gap-12 lg:grid-cols-2">
           <div>
             <h3 className="mb-4 text-[22px] leading-8 font-bold tracking-wide text-[#222] uppercase">
-              BANKING SECTOR
+              {t("legacy.about.banking_sector")}
             </h3>
             <div className="group relative mr-0 overflow-hidden lg:mr-[70px] [clip-path:polygon(0%_0%,100%_0%,100%_100%,0%_90%,0%_0%)]">
               <Image
@@ -113,22 +114,19 @@ export function LegacyAboutPractice() {
           <div>
             <div className="mb-5">
               <p className="relative mb-2.5 inline-block pl-[55px] text-[18px] leading-[26px] font-normal tracking-wide text-[#666] uppercase before:absolute before:top-3 before:left-0 before:h-0.5 before:w-[45px] before:bg-[#da2c46] before:content-['']">
-                AREAS OF PRACTICE
+                {t("legacy.about.practice_eyebrow")}
               </p>
               <h3 className="text-[28px] leading-9 font-bold text-[#222] sm:text-[40px] sm:leading-[46px]">
-                What We Can Do for You
+                {t("legacy.about.practice_title")}
               </h3>
             </div>
             <p className="mb-8 text-[15px] leading-7 text-[#666]">
-              We get to know the real you. We put together a custom plan. We put your money to work.
+              {t("legacy.about.practice_lead")}
             </p>
 
             <ul>
-              {PRACTICE_ITEMS.map((item) => (
-                <li
-                  key={item.title}
-                  className="group relative mb-[31px] pl-[85px] last:mb-0"
-                >
+              {practiceItems.map((item) => (
+                <li key={item.titleKey} className="group relative mb-[31px] pl-[85px] last:mb-0">
                   <div className="absolute top-[5px] left-0 size-[60px]">
                     <span
                       className="absolute bottom-[-15px] left-[10px] h-[60px] w-10 origin-bottom-left -rotate-45 bg-[#f3dfe5] transition duration-500 group-hover:-rotate-90"
@@ -141,9 +139,9 @@ export function LegacyAboutPractice() {
                     />
                   </div>
                   <h4 className="mb-2.5 text-[18px] leading-7 font-bold text-[#222]">
-                    {item.title}
+                    {t(item.titleKey)}
                   </h4>
-                  <p className="text-[14px] leading-6 text-[#666]">{item.body}</p>
+                  <p className="text-[14px] leading-6 text-[#666]">{t(item.bodyKey)}</p>
                 </li>
               ))}
             </ul>

@@ -1,19 +1,24 @@
 import { AuthLink, AuthShell, AuthTrustBar } from "@/features/auth/components/auth-shell";
 import { ChangePasswordForm } from "@/features/auth/components/password-forms";
+import { getRequestLanguage } from "@/i18n/request-language";
+import { createTranslator } from "@/i18n/translate";
 
-export default function ChangePasswordPage() {
+export default async function ChangePasswordPage() {
+  const { language } = await getRequestLanguage();
+  const t = createTranslator(language);
+
   return (
     <AuthShell
-      title="Choose a new password"
-      description="Your account requires a password update before you continue."
-      panelTitle="Secure your account"
-      panelDescription="Set a password only you know. You will use it for future sign-ins."
+      title={t("auth.change_password_title")}
+      description={t("auth.change_password_description")}
+      panelTitle={t("auth.panel_change_password_title")}
+      panelDescription={t("auth.panel_change_password_description")}
       panelImage="/brand/security.webp"
-      panelImageAlt="Password change"
+      panelImageAlt={t("auth.panel.change_alt")}
       footer={
         <>
           <p className="text-center text-sm text-muted-foreground">
-            Back to <AuthLink href="/auth/login">sign in</AuthLink>
+            {t("auth.back_sign_in")} <AuthLink href="/auth/login">{t("auth.sign_in_cta")}</AuthLink>
           </p>
           <div className="mt-5">
             <AuthTrustBar />

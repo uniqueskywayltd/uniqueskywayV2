@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 
 import { DepositDetailView } from "@/features/customer/wallet/deposit-detail-view";
 import { DepositSurfaceHero } from "@/features/customer/wallet/deposit-surface-hero";
+import { getRequestLanguage } from "@/i18n/request-language";
+import { createTranslator } from "@/i18n/translate";
 
-export const metadata: Metadata = {
-  title: "Deposit detail | Unique Sky Way",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { language } = await getRequestLanguage();
+  const t = createTranslator(language);
+  return {
+    title: `${t("meta.wallet.deposit_detail.title")} | Unique Sky Way`,
+    robots: { index: false, follow: false },
+  };
+}
 
 interface PageProps {
   params: Promise<{ depositId: string }>;

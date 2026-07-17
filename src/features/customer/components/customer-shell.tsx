@@ -70,7 +70,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
         <div className="border-b p-5">
           <BrandMark surface="theme" />
         </div>
-        <nav className="flex-1 space-y-6 overflow-y-auto p-3" aria-label="Customer navigation">
+        <nav className="flex-1 space-y-6 overflow-y-auto p-3" aria-label={t("chrome.customer_nav")}>
           <NavGroup label={t("nav.money")} items={moneyNav} pathname={pathname} summary={summary} />
           <NavGroup
             label={t("nav.account_group")}
@@ -107,7 +107,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
                 aria-controls="customer-mobile-navigation"
               >
                 <Menu className="size-4" aria-hidden="true" />
-                <span className="sr-only">Toggle navigation</span>
+                <span className="sr-only">{t("chrome.toggle_nav")}</span>
               </Button>
               <div className="lg:hidden">
                 <BrandMark surface="theme" width={120} className="[&_img]:h-auto [&_img]:max-h-8" />
@@ -147,7 +147,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
             <nav
               id="customer-mobile-navigation"
               className="max-h-[70vh] space-y-4 overflow-y-auto border-t p-3 lg:hidden"
-              aria-label="Customer mobile navigation"
+              aria-label={t("chrome.customer_mobile_nav")}
             >
               <NavGroup
                 label={t("nav.money")}
@@ -176,7 +176,7 @@ export function CustomerShell({ children }: CustomerShellProps) {
       </div>
       <nav
         className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur lg:hidden"
-        aria-label="Primary mobile destinations"
+        aria-label={t("chrome.mobile_destinations")}
       >
         <ul className="grid grid-cols-5 gap-1 px-1 py-2">
           {CUSTOMER_MOBILE_BOTTOM_NAV.map((item) => {

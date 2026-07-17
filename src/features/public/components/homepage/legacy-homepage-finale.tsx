@@ -2,67 +2,60 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 
 import { brandAssets } from "@/features/brand";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { submitContactIntake } from "@/features/public/actions/contact-intake";
 import { cn } from "@/lib/utils";
 
-const TESTIMONIALS = [
+const TESTIMONIAL_DEFS = [
   {
-    quote:
-      "Very happy indeed with Harry Roberts' help. I had to surrender a couple issues earlier than intended and he was very helpful and efficient.",
+    quoteKey: "legacy.finale.t1.quote",
     name: "Robert Sneijder",
-    role: "Investor",
+    roleKey: "legacy.finale.role.investor",
     thumb: "/legacy/hp6/thumbs/IMG_2765.jpg",
   },
   {
-    quote:
-      "Investing in any new venture is always daunting,however, Charles and his team made this a wonderful experience. Throughout the process, Charles was at hand to advise but never imposing or pushing.",
+    quoteKey: "legacy.finale.t2.quote",
     name: "Christine Eva",
-    role: "Investor",
+    roleKey: "legacy.finale.role.investor",
     thumb: "/legacy/hp6/thumbs/IMG_2764.jpg",
   },
   {
-    quote:
-      "Was looking for an investment to park some funds. Charles's professional approach got the win. He does give necessary facts and figures as and when you do have a question.",
+    quoteKey: "legacy.finale.t3.quote",
     name: "Mohammad Ali",
-    role: "Shareholder",
+    roleKey: "legacy.finale.role.shareholder",
     thumb: "/legacy/hp6/thumbs/IMG_2771.jpg",
   },
   {
-    quote:
-      "I purchased an investment package and held it for a year. The whole experience was absolutely first class — Alex advised me every step of the way.",
+    quoteKey: "legacy.finale.t4.quote",
     name: "Ludmila alekseeva",
-    role: "Member",
+    roleKey: "legacy.finale.role.member",
     thumb: "/legacy/hp6/thumbs/IMG_2769.jpg",
   },
   {
-    quote:
-      "Really helpful, I was set up with a long strategy but they managed to get me a good outcome on short notice. Many thanks.",
+    quoteKey: "legacy.finale.t5.quote",
     name: "Tomas Tom",
-    role: "Marketer",
+    roleKey: "legacy.finale.role.marketer",
     thumb: "/legacy/hp6/thumbs/IMG_2766.jpg",
   },
   {
-    quote:
-      "Charles Keller approach gave me confidence... professional and informative who was able to give clear advice and guidance.",
+    quoteKey: "legacy.finale.t6.quote",
     name: "Roman Alekseeva",
-    role: "Investor",
+    roleKey: "legacy.finale.role.investor",
     thumb: "/legacy/hp6/thumbs/IMG_2773.jpg",
   },
   {
-    quote:
-      "Dealt with Irina Ashurov — great company to deal with — easy and professional.",
+    quoteKey: "legacy.finale.t7.quote",
     name: "Vikentijs Tarasenko",
-    role: "Shareholder",
+    roleKey: "legacy.finale.role.shareholder",
     thumb: "/legacy/hp6/thumbs/IMG_2720.jpg",
   },
   {
-    quote:
-      "My portfolio Director Charles has been incredibly helpful and insightful throughout the entire process. A seamless experience.",
+    quoteKey: "legacy.finale.t8.quote",
     name: "Irina Mashchenko",
-    role: "Investor",
+    roleKey: "legacy.finale.role.investor",
     thumb: "/legacy/hp6/thumbs/IMG_2719.jpg",
   },
 ] as const;
@@ -89,16 +82,12 @@ const CLIENT_LOGOS = [
   "IMG_2825.png",
 ] as const;
 
-/**
- * Fun-fact labels from legacy layout only.
- * Numeric AUM claims are NOT copied — figures await certified reporting.
- */
-const FUN_FACTS = [
-  { label: "Total funds management" },
-  { label: "Natural Energy" },
-  { label: "NFTs" },
-  { label: "Real Estate" },
-  { label: "Real Asset Fund" },
+const FUN_FACT_KEYS = [
+  "legacy.finale.fact.funds",
+  "legacy.finale.fact.energy",
+  "legacy.finale.fact.nfts",
+  "legacy.finale.fact.real_estate",
+  "legacy.finale.fact.real_asset",
 ] as const;
 
 function subscribeReducedMotion(onStoreChange: () => void) {
@@ -116,6 +105,7 @@ function usePrefersReducedMotion() {
 }
 
 function SupportSection() {
+  const { t } = useI18n();
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [hint, setHint] = useState<string | null>(null);
@@ -145,31 +135,28 @@ function SupportSection() {
     }
     setStatus("error");
     setHint(
-      result.error === "rate_limited"
-        ? "Please wait a moment before sending another message."
-        : "We could not accept that message. Please try again or use Contact.",
+      result.error === "rate_limited" ? t("legacy.finale.rate_limited") : t("legacy.finale.error"),
     );
   }
 
   return (
     <section
       className="relative z-[2] -mb-16 px-4 font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif] sm:px-[15px] lg:-mb-24"
-      aria-label="Support"
+      aria-label={t("legacy.finale.support_label")}
     >
       <div className="mx-auto max-w-[1170px] overflow-hidden bg-[#204669]">
         <div className="grid lg:grid-cols-12">
           <div className="px-6 py-14 text-white sm:px-12 lg:col-span-7 lg:px-20 lg:py-20">
             <h2 className="mb-3.5 text-[28px] leading-9 font-bold sm:text-[36px] sm:leading-[42px]">
-              Serving investors is what we do
+              {t("legacy.finale.support_title")}
             </h2>
             <p className="mb-10 text-justify text-[15px] leading-7 text-white/90">
-              Please get in touch - our expert team will help you. Choose the appropriate business
-              unit below, and your request will be directed to the right person.
+              {t("legacy.finale.support_body")}
             </p>
 
             {status === "success" ? (
               <p className="rounded bg-white/10 px-4 py-6 text-sm leading-6" role="status">
-                Thanks — our team will connect with you soon through email.
+                {t("legacy.finale.support_success")}
               </p>
             ) : (
               <form onSubmit={onSubmit} className="space-y-6">
@@ -177,7 +164,7 @@ function SupportSection() {
                   type="text"
                   name="name"
                   required
-                  placeholder="Your Name"
+                  placeholder={t("legacy.finale.name_placeholder")}
                   maxLength={120}
                   className="h-[55px] w-full border-2 border-white bg-white px-5 text-base text-[#222] outline-none focus:border-[#da2c46]"
                 />
@@ -185,20 +172,20 @@ function SupportSection() {
                   type="email"
                   name="email"
                   required
-                  placeholder="Email address"
+                  placeholder={t("legacy.finale.email_placeholder")}
                   maxLength={254}
                   className="h-[55px] w-full border-2 border-white bg-white px-5 text-base text-[#222] outline-none focus:border-[#da2c46]"
                 />
                 <input
                   type="tel"
                   name="phone"
-                  placeholder="Phone"
+                  placeholder={t("legacy.finale.phone_placeholder")}
                   className="h-[55px] w-full border-2 border-white bg-white px-5 text-base text-[#222] outline-none focus:border-[#da2c46]"
                 />
                 <textarea
                   name="message"
                   required
-                  placeholder="Message"
+                  placeholder={t("legacy.finale.message_placeholder")}
                   minLength={10}
                   maxLength={4000}
                   className="h-[168px] w-full resize-none border-2 border-white bg-white px-5 py-3 text-base text-[#222] outline-none focus:border-[#da2c46]"
@@ -209,7 +196,7 @@ function SupportSection() {
                   disabled={pending}
                   className="w-full bg-[#da2c46] px-[30px] py-[12.5px] text-base font-bold tracking-wide text-white uppercase transition hover:opacity-90 disabled:opacity-60"
                 >
-                  {pending ? "Submitting…" : "Submit"}
+                  {pending ? t("legacy.finale.submitting") : t("legacy.finale.submit")}
                 </button>
               </form>
             )}
@@ -246,41 +233,50 @@ function SupportSection() {
 }
 
 function TestimonialsSection() {
+  const { t } = useI18n();
   const [index, setIndex] = useState(0);
   const reduced = usePrefersReducedMotion();
-  const item = TESTIMONIALS[index] ?? TESTIMONIALS[0];
+
+  const testimonials = useMemo(
+    () =>
+      TESTIMONIAL_DEFS.map((entry) => ({
+        quote: t(entry.quoteKey),
+        name: entry.name,
+        role: t(entry.roleKey),
+        thumb: entry.thumb,
+      })),
+    [t],
+  );
+
+  const item = testimonials[index] ?? testimonials[0];
 
   useEffect(() => {
     if (reduced) return;
     const id = window.setInterval(() => {
-      setIndex((current) => (current + 1) % TESTIMONIALS.length);
+      setIndex((current) => (current + 1) % testimonials.length);
     }, 5500);
     return () => window.clearInterval(id);
-  }, [reduced]);
+  }, [reduced, testimonials.length]);
 
   return (
     <section
       className="relative bg-cover bg-center px-4 pt-28 pb-16 font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif] sm:px-[15px] sm:pt-36 sm:pb-20"
       style={{ backgroundImage: `url(${brandAssets.testimonialsBackground})` }}
-      aria-label="Testimonials"
+      aria-label={t("legacy.finale.testimonials_label")}
     >
       <div className="absolute inset-0 bg-[#0a1c2d]/75" aria-hidden="true" />
       <div className="relative z-[1] mx-auto max-w-[1170px]">
         <div className="mb-12 grid gap-8 lg:grid-cols-2 lg:items-end">
           <div>
             <p className="relative mb-2.5 inline-block pr-[55px] text-[18px] leading-[26px] font-normal tracking-wide text-white/80 uppercase before:absolute before:top-3 before:right-0 before:h-0.5 before:w-[45px] before:bg-[#da2c46] before:content-['']">
-              testimonials
+              {t("legacy.finale.testimonials_eyebrow")}
             </p>
             <h2 className="text-[28px] leading-9 font-bold text-white sm:text-[40px] sm:leading-[46px]">
-              What Our Loving <br />
-              Clients are Saying
+              {t("legacy.finale.testimonials_title")}
             </h2>
           </div>
           <p className="text-justify text-[15px] leading-7 text-white/85">
-            We had a brilliant experience with the company and Robert. He answered many questions
-            from my husband and i over email and the telegram. Not at any point did we feel under
-            prssure to make a decision. Our knowledge and confidence has ngrown, which is all down
-            to Robert.
+            {t("legacy.finale.testimonials_intro")}
           </p>
         </div>
 
@@ -291,7 +287,7 @@ function TestimonialsSection() {
         </div>
 
         <div className="mt-10 flex flex-wrap items-end justify-center gap-4 sm:gap-6">
-          {TESTIMONIALS.map((entry, thumbIndex) => {
+          {testimonials.map((entry, thumbIndex) => {
             const active = thumbIndex === index;
             return (
               <button
@@ -303,7 +299,7 @@ function TestimonialsSection() {
                   active ? "opacity-100" : "opacity-50 hover:opacity-80",
                 )}
                 aria-pressed={active}
-                aria-label={`${entry.name} testimonial`}
+                aria-label={t("legacy.finale.testimonial_aria", { name: entry.name })}
               >
                 <Image
                   src={entry.thumb}
@@ -331,6 +327,7 @@ function TestimonialsSection() {
 }
 
 function ClientsSection() {
+  const { t } = useI18n();
   const reduced = usePrefersReducedMotion();
   const [offset, setOffset] = useState(0);
 
@@ -342,15 +339,12 @@ function ClientsSection() {
     return () => window.clearInterval(id);
   }, [reduced]);
 
-  const visible = [
-    ...CLIENT_LOGOS.slice(offset),
-    ...CLIENT_LOGOS.slice(0, offset),
-  ].slice(0, 6);
+  const visible = [...CLIENT_LOGOS.slice(offset), ...CLIENT_LOGOS.slice(0, offset)].slice(0, 6);
 
   return (
     <section
       className="bg-white px-4 py-12 font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif] sm:px-[15px]"
-      aria-label="Clients"
+      aria-label={t("legacy.finale.clients_label")}
     >
       <div className="mx-auto flex max-w-[1170px] flex-wrap items-center justify-center gap-8 sm:gap-10">
         {visible.map((file) => (
@@ -369,11 +363,13 @@ function ClientsSection() {
 }
 
 function CtaSection() {
+  const { t } = useI18n();
+
   return (
     <section
       className="relative overflow-hidden px-4 py-[62px] font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif] sm:px-[15px]"
       style={{ background: "#204669" }}
-      aria-label="Call to action"
+      aria-label={t("legacy.finale.cta_label")}
     >
       <div
         className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-30"
@@ -382,13 +378,13 @@ function CtaSection() {
       />
       <div className="relative z-[1] mx-auto flex max-w-[1170px] flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
         <h2 className="max-w-2xl text-[24px] leading-8 font-bold text-white sm:text-[30px] sm:leading-10">
-          We help you to unlock & unleash the power within.
+          {t("legacy.finale.cta_title")}
         </h2>
         <Link
           href="/about"
           className="inline-block border-2 border-white px-10 py-2.5 text-base font-bold text-white uppercase transition hover:bg-white hover:text-[#204669]"
         >
-          Know more
+          {t("legacy.finale.know_more")}
         </Link>
       </div>
     </section>
@@ -396,24 +392,25 @@ function CtaSection() {
 }
 
 function FunFactsSection() {
+  const { t } = useI18n();
+
   return (
     <section
       className="border-b border-white/10 bg-[#0a1c2d] px-4 py-8 font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif] sm:px-[15px]"
-      aria-label="Fun facts"
+      aria-label={t("legacy.finale.facts_label")}
     >
       <div className="mx-auto grid max-w-[1170px] gap-8 sm:grid-cols-2 lg:grid-cols-5">
-        {FUN_FACTS.map((fact) => (
-          <div key={fact.label} className="text-center">
+        {FUN_FACT_KEYS.map((key) => (
+          <div key={key} className="text-center">
             <p className="text-[28px] leading-9 font-bold text-white sm:text-[36px] sm:leading-[44px]">
               —
             </p>
-            <p className="mt-1 text-sm text-[#888]">{fact.label}</p>
+            <p className="mt-1 text-sm text-[#888]">{t(key)}</p>
           </div>
         ))}
       </div>
       <p className="mx-auto mt-6 max-w-[1170px] text-center text-[12px] leading-5 text-white/50">
-        Figures appear from certified reporting when published. Legacy headline AUM numbers are not
-        displayed.
+        {t("legacy.finale.facts_disclaimer")}
       </p>
     </section>
   );

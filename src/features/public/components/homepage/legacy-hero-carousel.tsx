@@ -5,38 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { brandAssets } from "@/features/brand";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { LEGACY_NAVY } from "@/features/public/legacy/tokens";
 import { cn } from "@/lib/utils";
 
-const HERO_SLIDES = [
-  {
-    id: "join",
-    image: brandAssets.hero.slides[0]!,
-    title: "UniqueSkyWay",
-    body: "We facilitate Trade occurrence and thus we are committed to enhancing the global financial economy and constructing patterns of intergenerational investors through our strategic investment portfolio. Our exceptional sustainability characteristics allow for account succession to offspring through boundaries.\nJOIN US AND EXPERIENCE THE DELIGHTS OF INVESTMENT.",
-    cta: { label: "CREATE AN ACCOUNT", href: "/auth/register" },
-  },
-  {
-    id: "integrity",
-    image: brandAssets.hero.slides[1]!,
-    title: "",
-    body: "We are wholeheartedly Devoted to providing unparalleled Excellence and exceptional Services to Our Esteemed Investors. We firmly Assure absolute integrity, trustworthiness, and utmost transparency in all aspects of our operations, ensuring a solid foundation of credibility and accountability.",
-    cta: { label: "REGISTER", href: "/auth/register" },
-  },
-  {
-    id: "risk",
-    image: brandAssets.hero.slides[2]!,
-    title: "UniqueSkyWay",
-    body: "We employ a Strategic approach to diversify our investment portfolio, effectively mitigating and managing various forms of risk inherent in financial investments. Explore the opportunities presented by our comprehensive selection of Long and Short Term Investment Packages.",
-    cta: { label: "LOGIN", href: "/auth/login" },
-  },
-] as const;
-
-const FLOATING_NOTES = [
-  "Your dashboard updates after settlement.",
-  "Need help? Visit the Help Centre.",
-  "Complete verification to unlock all features.",
-  "Statements are available from your account.",
+const HERO_SLIDE_IDS = ["join", "integrity", "risk"] as const;
+const FLOATING_NOTE_KEYS = [
+  "legacy.hero.note.dashboard",
+  "legacy.hero.note.help",
+  "legacy.hero.note.verify",
+  "legacy.hero.note.statements",
 ] as const;
 
 /**
@@ -44,38 +22,63 @@ const FLOATING_NOTES = [
  * No Owl / jQuery — native interval + CSS.
  */
 export function LegacyHeroCarousel() {
+  const { t } = useI18n();
   const [index, setIndex] = useState(0);
   const [noteIndex, setNoteIndex] = useState(0);
   const [noteVisible, setNoteVisible] = useState(true);
 
+  const slides = [
+    {
+      id: "join" as const,
+      image: brandAssets.hero.slides[0]!,
+      title: t("legacy.hero.slide.join.title"),
+      body: t("legacy.hero.slide.join.body"),
+      cta: { label: t("legacy.hero.slide.join.cta"), href: "/auth/register" },
+    },
+    {
+      id: "integrity" as const,
+      image: brandAssets.hero.slides[1]!,
+      title: "",
+      body: t("legacy.hero.slide.integrity.body"),
+      cta: { label: t("legacy.hero.slide.integrity.cta"), href: "/auth/register" },
+    },
+    {
+      id: "risk" as const,
+      image: brandAssets.hero.slides[2]!,
+      title: t("legacy.hero.slide.risk.title"),
+      body: t("legacy.hero.slide.risk.body"),
+      cta: { label: t("legacy.hero.slide.risk.cta"), href: "/auth/login" },
+    },
+  ];
+
   useEffect(() => {
     const id = window.setInterval(() => {
-      setIndex((current) => (current + 1) % HERO_SLIDES.length);
+      setIndex((current) => (current + 1) % slides.length);
     }, 6500);
     return () => window.clearInterval(id);
-  }, []);
+  }, [slides.length]);
 
   useEffect(() => {
     const id = window.setInterval(() => {
       setNoteVisible(false);
       window.setTimeout(() => {
-        setNoteIndex((current) => (current + 1) % FLOATING_NOTES.length);
+        setNoteIndex((current) => (current + 1) % FLOATING_NOTE_KEYS.length);
         setNoteVisible(true);
       }, 350);
     }, 5000);
     return () => window.clearInterval(id);
   }, []);
 
-  const slide = HERO_SLIDES[index] ?? HERO_SLIDES[0];
+  const slide = slides[index] ?? slides[0];
 
   return (
     <section
       id="hero"
-      aria-label="Homepage banner"
+      aria-label={t("legacy.hero.banner_label")}
       className="relative font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif]"
     >
       <div className="relative overflow-hidden">
-        {HERO_SLIDES.map((item, slideIndex) => {
+        {slides.map((item, slideIndex) => {
           const active = slideIndex === index;
           return (
             <div
@@ -107,7 +110,7 @@ export function LegacyHeroCarousel() {
                     {item.title}
                   </h1>
                 ) : (
-                  <h1 className="sr-only">UniqueSkyWay</h1>
+                  <h1 className="sr-only">{t("legacy.hero.brand_sr")}</h1>
                 )}
                 <p className="mx-auto max-w-4xl whitespace-pre-line text-[15px] leading-7 font-normal text-white sm:text-[17px] sm:leading-8">
                   {item.body}
@@ -126,16 +129,19 @@ export function LegacyHeroCarousel() {
           );
         })}
 
-        <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2" aria-hidden="true">
-          {HERO_SLIDES.map((item, slideIndex) => (
+        <div
+          className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2"
+          aria-hidden="true"
+        >
+          {HERO_SLIDE_IDS.map((itemId, slideIndex) => (
             <button
-              key={item.id}
+              key={itemId}
               type="button"
               className={cn(
                 "size-2.5 rounded-full border border-white/70",
                 slideIndex === index ? "bg-white" : "bg-transparent",
               )}
-              aria-label={`Show slide ${slideIndex + 1}`}
+              aria-label={t("legacy.hero.show_slide", { number: slideIndex + 1 })}
               onClick={() => setIndex(slideIndex)}
             />
           ))}
@@ -149,7 +155,9 @@ export function LegacyHeroCarousel() {
         )}
         aria-live="polite"
       >
-        <p className="text-[12px] text-black">{FLOATING_NOTES[noteIndex]}</p>
+        <p className="text-[12px] text-black">
+          {t(FLOATING_NOTE_KEYS[noteIndex] ?? FLOATING_NOTE_KEYS[0])}
+        </p>
       </div>
 
       <span className="sr-only">Current slide: {slide?.id}</span>

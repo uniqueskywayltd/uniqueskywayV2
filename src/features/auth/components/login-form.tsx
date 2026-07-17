@@ -87,8 +87,8 @@ export function LoginForm() {
           : "/dashboard";
     setMessage(
       redirectTo === "/auth/change-password"
-        ? "Signed in. Choose a new password to continue."
-        : `Signed in as ${result.data?.email ?? "your account"}.`,
+        ? t("auth.signed_in_choose_password")
+        : t("auth.signed_in_as", { email: result.data?.email ?? t("chrome.account") }),
     );
     router.replace(appPath(redirectTo));
     router.refresh();

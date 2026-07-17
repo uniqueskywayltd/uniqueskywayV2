@@ -2,53 +2,26 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { brandAssets } from "@/features/brand";
-import {
-  CERTIFIED_PUBLIC_PLANS,
-  formatPlanMoney,
-} from "@/features/public/content/certified-plans";
+import { useI18n } from "@/features/i18n/i18n-provider";
+import { CERTIFIED_PUBLIC_PLANS, formatPlanMoney } from "@/features/public/content/certified-plans";
 import { cn } from "@/lib/utils";
-
-/**
- * Visual slots for the legacy plans carousel chrome.
- * Financial fields are certified placeholders only — never legacy PHP rates/deposits.
- */
-const PLAN_CARDS = [
-  ...CERTIFIED_PUBLIC_PLANS.map((plan) => ({
-    name: plan.name,
-    duration: `${plan.durationDays} days`,
-    eligibility: `Minimum ${formatPlanMoney(plan.minDeposit)}`,
-    earnings: `${plan.dailyRoiPercent}% daily return (certified terms)`,
-    status: "Active",
-  })),
-  {
-    name: "Featured plan",
-    duration: "Duration from certified catalog",
-    eligibility: "Eligibility from certified catalog",
-    earnings: "Earnings follow certified engine terms",
-    status: "Awaiting publish",
-  },
-] as const;
 
 const VIDEO_OPTIONS = [
   {
-    id: "english",
-    label: "English",
+    id: "english" as const,
+    labelKey: "legacy.plans.video.english",
     src: brandAssets.videos.english,
   },
   {
-    id: "spanish",
-    label: "Spanish",
+    id: "spanish" as const,
+    labelKey: "legacy.plans.video.spanish",
     src: brandAssets.videos.spanish,
   },
-  {
-    id: "french",
-    label: "French",
-    src: null,
-  },
-] as const;
+  { id: "french" as const, labelKey: "legacy.plans.video.french", src: null },
+];
 
 const AUTO_MS = 4500;
 const TRANSITION_MS = 1000;
@@ -79,9 +52,30 @@ function useItemsPerView() {
 }
 
 function PlansCarouselInner({ itemsPerView }: { itemsPerView: number }) {
+  const { t } = useI18n();
   const [index, setIndex] = useState(0);
   const [animate, setAnimate] = useState(true);
   const reduced = usePrefersReducedMotion();
+
+  const planCards = useMemo(
+    () => [
+      ...CERTIFIED_PUBLIC_PLANS.map((plan) => ({
+        name: plan.name,
+        duration: t("legacy.plans.duration_days", { count: plan.durationDays }),
+        eligibility: t("legacy.plans.min_deposit", { amount: formatPlanMoney(plan.minDeposit) }),
+        earnings: t("legacy.plans.daily_return", { percent: plan.dailyRoiPercent }),
+        status: t("legacy.plans.status_active"),
+      })),
+      {
+        name: t("legacy.plans.featured_name"),
+        duration: t("legacy.plans.duration_certified"),
+        eligibility: t("legacy.plans.eligibility_certified"),
+        earnings: t("legacy.plans.earnings_certified"),
+        status: t("legacy.plans.status_awaiting"),
+      },
+    ],
+    [t],
+  );
 
   useEffect(() => {
     if (reduced) return;
@@ -90,7 +84,7 @@ function PlansCarouselInner({ itemsPerView }: { itemsPerView: number }) {
   }, [reduced]);
 
   useEffect(() => {
-    if (index < PLAN_CARDS.length) return;
+    if (index < planCards.length) return;
     const id = window.setTimeout(() => {
       setAnimate(false);
       setIndex(0);
@@ -99,13 +93,13 @@ function PlansCarouselInner({ itemsPerView }: { itemsPerView: number }) {
       });
     }, TRANSITION_MS);
     return () => window.clearTimeout(id);
-  }, [index]);
+  }, [index, planCards.length]);
 
-  const slides = [...PLAN_CARDS, ...PLAN_CARDS.slice(0, itemsPerView)];
+  const slides = [...planCards, ...planCards.slice(0, itemsPerView)];
   const itemWidthPct = 100 / itemsPerView;
 
   return (
-    <div className="overflow-hidden px-1 py-2" aria-label="Investment plans carousel">
+    <div className="overflow-hidden px-1 py-2" aria-label={t("legacy.plans.carousel_label")}>
       <div
         className={cn("flex", animate && "transition-transform duration-1000 ease-in-out")}
         style={{ transform: `translateX(-${index * itemWidthPct}%)` }}
@@ -132,7 +126,7 @@ function PlansCarouselInner({ itemsPerView }: { itemsPerView: number }) {
                   </div>
                 </div>
                 <p className="px-4 text-[13px] leading-5 text-[#222]">
-                  Terms from the certified investment catalog when published.
+                  {t("legacy.plans.terms_note")}
                 </p>
               </div>
               <div className="px-[15px] py-7">
@@ -147,10 +141,10 @@ function PlansCarouselInner({ itemsPerView }: { itemsPerView: number }) {
                     <b>{plan.earnings}</b>
                   </li>
                   <li>
-                    <b>Returns are not guaranteed</b>
+                    <b>{t("legacy.plans.not_guaranteed")}</b>
                   </li>
                   <li>
-                    <b>See Risk Disclosure</b>
+                    <b>{t("legacy.plans.see_risk")}</b>
                   </li>
                 </ul>
               </div>
@@ -159,7 +153,7 @@ function PlansCarouselInner({ itemsPerView }: { itemsPerView: number }) {
                   href="/auth/register?intent=plan"
                   className="relative z-[1] inline-block overflow-hidden rounded-[30px] border-2 border-[#1c6ead] px-[57px] py-[10px] text-base leading-[26px] font-bold text-[#222] uppercase transition hover:bg-[#1c6ead] hover:text-white"
                 >
-                  BUY
+                  {t("legacy.plans.buy")}
                 </Link>
               </div>
             </div>
@@ -167,9 +161,9 @@ function PlansCarouselInner({ itemsPerView }: { itemsPerView: number }) {
         ))}
       </div>
       <p className="mt-4 px-3 text-center text-[12px] leading-5 text-[#666]">
-        Plan terms are sourced from the certified investment catalog (Silver, Gold, Classic, Master).{" "}
+        {t("legacy.plans.footer_note")}{" "}
         <Link href="/legal/risk" className="underline underline-offset-2">
-          Risk Disclosure
+          {t("legacy.plans.risk_disclosure")}
         </Link>
         .
       </p>
@@ -183,6 +177,7 @@ function PlansCarousel() {
 }
 
 function VideoPanel() {
+  const { t } = useI18n();
   const [activeId, setActiveId] = useState<(typeof VIDEO_OPTIONS)[number]["id"]>("english");
   const videoRef = useRef<HTMLVideoElement>(null);
   const active = VIDEO_OPTIONS.find((option) => option.id === activeId) ?? VIDEO_OPTIONS[0];
@@ -209,9 +204,7 @@ function VideoPanel() {
           </video>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-[#111] px-6 text-center">
-            <p className="text-sm leading-6 text-white/90">
-              French video is not available in the archived media set. Choose English or Spanish.
-            </p>
+            <p className="text-sm leading-6 text-white/90">{t("legacy.plans.video_unavailable")}</p>
           </div>
         )}
       </div>
@@ -227,7 +220,7 @@ function VideoPanel() {
             )}
             aria-pressed={activeId === option.id}
           >
-            {option.label}
+            {t(option.labelKey)}
           </button>
         ))}
       </div>
@@ -236,6 +229,7 @@ function VideoPanel() {
 }
 
 function CertificationModal() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -262,7 +256,7 @@ function CertificationModal() {
         onClick={() => setOpen(true)}
         className="mt-4 rounded-[5px] border-2 border-white bg-[#00004d] px-3 py-1.5 text-sm font-semibold text-white transition hover:opacity-90"
       >
-        View Certificate
+        {t("legacy.plans.view_certificate")}
       </button>
 
       {open ? (
@@ -278,20 +272,20 @@ function CertificationModal() {
             onClick={(event) => event.stopPropagation()}
           >
             <h2 id={titleId} className="sr-only">
-              Certification
+              {t("legacy.plans.certification_sr")}
             </h2>
             <button
               ref={closeRef}
               type="button"
               onClick={() => setOpen(false)}
               className="absolute top-[-36px] right-0 text-[30px] leading-none text-white"
-              aria-label="Close certificate"
+              aria-label={t("legacy.plans.close_certificate")}
             >
               ×
             </button>
             <Image
               src={brandAssets.plans.certificate}
-              alt="Company certification document"
+              alt={t("legacy.plans.cert_alt")}
               width={1200}
               height={1600}
               className="mx-auto h-auto max-h-[90vh] w-auto max-w-full object-contain"
@@ -306,13 +300,15 @@ function CertificationModal() {
 
 /**
  * HP5 — Plans carousel + multilingual video + certification modal (legacy visual parity).
- * Plan terms come from certified placeholders in PLANS_COPY — no legacy PHP financial values.
+ * Plan terms come from certified placeholders — no legacy PHP financial values.
  */
 export function LegacyPlansVideos() {
+  const { t } = useI18n();
+
   return (
     <section
       className="relative bg-white px-4 py-10 font-[family-name:var(--font-legacy-arimo),Arimo,sans-serif] sm:px-[15px] sm:py-12"
-      aria-label="Plans and videos"
+      aria-label={t("legacy.plans.section_label")}
     >
       <div className="mx-auto grid max-w-[1170px] gap-8 lg:grid-cols-12 lg:items-start">
         <div className="lg:col-span-4">

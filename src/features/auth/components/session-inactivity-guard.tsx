@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { postAuthJson } from "@/features/auth/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { appPath } from "@/lib/app-path";
 
 const INACTIVITY_MS = 15 * 60 * 1000;
@@ -37,6 +38,7 @@ type SessionInactivityGuardProps = {
  * Warns at 13 minutes; signs out at 15 minutes with no activity.
  */
 export function SessionInactivityGuard({ loginPath = "/auth/login" }: SessionInactivityGuardProps) {
+  const { t } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
   const [warningOpen, setWarningOpen] = useState(false);
@@ -130,9 +132,9 @@ export function SessionInactivityGuard({ loginPath = "/auth/login" }: SessionIna
     >
       <DialogContent className="sm:max-w-md" aria-describedby="session-timeout-desc">
         <DialogHeader>
-          <DialogTitle>Session expiring</DialogTitle>
+          <DialogTitle>{t("auth.session_expiring_title")}</DialogTitle>
           <DialogDescription id="session-timeout-desc">
-            Your session will expire in 2 minutes due to inactivity.
+            {t("auth.session_expiring_body")}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-2">
@@ -142,10 +144,10 @@ export function SessionInactivityGuard({ loginPath = "/auth/login" }: SessionIna
             disabled={signingOut}
             onClick={() => void performLogout()}
           >
-            Sign Out
+            {t("chrome.sign_out")}
           </Button>
           <Button type="button" disabled={signingOut} onClick={staySignedIn}>
-            Stay Signed In
+            {t("auth.session_stay_signed_in")}
           </Button>
         </DialogFooter>
       </DialogContent>

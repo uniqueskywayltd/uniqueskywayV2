@@ -11,6 +11,8 @@ import {
 } from "@/features/public/components/legal/legal-document-layout";
 import { estimateReadingMinutes } from "@/features/public/components/legal/legal-utils";
 import { LEGAL_PAGES, type LegalPageKey } from "@/features/public/content/legal-pages";
+import { translate } from "@/i18n";
+import { getRequestLanguage } from "@/i18n/request-language";
 import { buildPageMetadata, webPageJsonLd } from "@/lib/seo/metadata";
 import { JsonLdScript } from "@/lib/seo/structured-data";
 
@@ -25,13 +27,14 @@ export function buildLegalMetadata(key: LegalPageKey): Metadata {
   });
 }
 
-export function LegalDocumentPage({
+export async function LegalDocumentPage({
   pageKey,
   numberedSections = false,
 }: {
   pageKey: LegalPageKey;
   numberedSections?: boolean;
 }) {
+  const { language } = await getRequestLanguage();
   const page = LEGAL_PAGES[pageKey];
   const readingMinutes = estimateReadingMinutes(page.sections);
   const tocItems = buildTocFromSections(page.sections);
@@ -49,7 +52,7 @@ export function LegalDocumentPage({
       <LegalCounselBanner />
       <LegalPremiumHero
         purpose={page.purpose}
-        eyebrow="Legal"
+        eyebrow={translate(language, "legal.eyebrow")}
         title={page.title}
         lead={page.lead}
         lastUpdated={LEGAL_LAST_UPDATED}

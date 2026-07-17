@@ -93,7 +93,7 @@ export function LanguageSelector({ className, expanded = false }: LanguageSelect
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="z-[var(--z-dropdown)] min-w-[12.5rem] p-1.5"
+          className="z-[calc(var(--z-modal)+10)] min-w-[12.5rem] p-1.5"
           aria-label={t("language.selector.label")}
         >
           <DropdownMenuLabel className="px-2 py-1.5 text-xs font-medium text-muted-foreground">

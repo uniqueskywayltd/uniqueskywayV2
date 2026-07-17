@@ -1,6 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { DashboardActivitySection } from "@/features/customer/dashboard/dashboard-activity-section";
 import { useDashboardChrome } from "@/features/customer/dashboard/dashboard-chrome-context";
 import { DashboardGrowthSurface } from "@/features/customer/dashboard/dashboard-growth-surface";
@@ -12,8 +13,9 @@ import { DashboardWelcomeHero } from "@/features/customer/dashboard/dashboard-we
 import { getPersonFullName, getPersonHandle } from "@/lib/utils/person-display";
 
 function DashboardFrameSkeleton() {
+  const { t } = useI18n();
   return (
-    <div className="space-y-8" aria-busy="true" aria-label="Loading dashboard">
+    <div className="space-y-8" aria-busy="true" aria-label={t("dashboard.loading")}>
       <Skeleton className="h-36 w-full rounded-2xl sm:h-40" />
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: 4 }).map((_, index) => (

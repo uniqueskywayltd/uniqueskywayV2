@@ -11,17 +11,22 @@ export type ProgressPillar = {
 };
 
 /** Static success framing — no live scoring, streaks, or points (ENG / G1). */
-export function SuccessProgressFramework({ pillars }: { pillars: ReadonlyArray<ProgressPillar> }) {
+export function SuccessProgressFramework({
+  title,
+  description,
+  pillars,
+}: {
+  title: string;
+  description: string;
+  pillars: ReadonlyArray<ProgressPillar>;
+}) {
   return (
     <section aria-labelledby="success-progress-heading" className="space-y-3">
       <div>
         <h2 id="success-progress-heading" className="text-base font-semibold text-foreground">
-          Progress framework
+          {title}
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          These pillars describe how customers succeed here. They are not a game score, streak, or
-          points balance.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
       <ol className="space-y-3">
         {pillars.map((pillar, index) => (
@@ -41,7 +46,12 @@ export function SuccessProgressFramework({ pillars }: { pillars: ReadonlyArray<P
                 <p className="mt-1 text-sm text-muted-foreground">{pillar.description}</p>
               </div>
             </div>
-            <Button asChild variant="outline" size="sm" className="shrink-0 self-start sm:self-auto">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="shrink-0 self-start sm:self-auto"
+            >
               <Link href={pillar.href}>{pillar.hrefLabel}</Link>
             </Button>
           </li>

@@ -8,13 +8,15 @@ import {
   randomMathDigit,
 } from "@/features/auth/components/math-captcha-field";
 import { submitContactIntake } from "@/features/public/actions/contact-intake";
-import { CONTACT_COPY } from "@/features/public/content/conversion-pages";
+import { getContactTopics } from "@/features/public/content/i18n-public-content";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { Button } from "@/components/ui";
 import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function ContactForm() {
-  const copy = CONTACT_COPY.form;
+  const { t } = useI18n();
+  const topics = getContactTopics(t);
   const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorHint, setErrorHint] = useState<string | null>(null);
@@ -29,7 +31,7 @@ export function ContactForm() {
 
     if (!isMathCaptchaCorrect(captchaA, captchaB, captchaAnswer)) {
       setStatus("error");
-      setErrorHint("Check the sum and try again.");
+      setErrorHint(t("contact.form.captcha_error"));
       return;
     }
 
@@ -52,11 +54,9 @@ export function ContactForm() {
 
       setStatus("error");
       if (result.error === "rate_limited") {
-        setErrorHint("Please wait a moment before sending another message.");
-      } else if (result.error === "honeypot") {
-        setErrorHint(copy.errorBody);
+        setErrorHint(t("contact.form.rate_limited"));
       } else {
-        setErrorHint(copy.errorBody);
+        setErrorHint(t("contact.form.error_body"));
       }
     });
   }
@@ -68,10 +68,12 @@ export function ContactForm() {
         role="status"
         aria-live="polite"
       >
-        <p className="text-base font-semibold text-foreground">{copy.successTitle}</p>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">{copy.successBody}</p>
+        <p className="text-base font-semibold text-foreground">{t("contact.form.success_title")}</p>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          {t("contact.form.success_body")}
+        </p>
         <Button type="button" variant="outline" className="mt-6" onClick={() => setStatus("idle")}>
-          Send another message
+          {t("contact.form.send_another")}
         </Button>
       </div>
     );
@@ -84,11 +86,11 @@ export function ContactForm() {
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="contact-name">{copy.nameLabel}</Label>
+          <Label htmlFor="contact-name">{t("contact.form.name")}</Label>
           <Input id="contact-name" name="name" required autoComplete="name" maxLength={120} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="contact-email">{copy.emailLabel}</Label>
+          <Label htmlFor="contact-email">{t("contact.form.email")}</Label>
           <Input
             id="contact-email"
             name="email"
@@ -101,7 +103,7 @@ export function ContactForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="contact-topic">{copy.topicLabel}</Label>
+        <Label htmlFor="contact-topic">{t("contact.form.topic")}</Label>
         <select
           id="contact-topic"
           name="topic"
@@ -110,18 +112,18 @@ export function ContactForm() {
           defaultValue=""
         >
           <option value="" disabled>
-            Select a topic
+            {t("contact.form.select_topic")}
           </option>
-          {copy.topics.map((topic) => (
-            <option key={topic} value={topic}>
-              {topic}
+          {topics.map((topic) => (
+            <option key={topic.id} value={topic.label}>
+              {topic.label}
             </option>
           ))}
         </select>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="contact-message">{copy.messageLabel}</Label>
+        <Label htmlFor="contact-message">{t("contact.form.message")}</Label>
         <Textarea id="contact-message" name="message" required maxLength={4000} rows={6} />
       </div>
 
@@ -134,7 +136,7 @@ export function ContactForm() {
       />
 
       <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
-        <label htmlFor="companyWebsite">{copy.honeypotLabel}</label>
+        <label htmlFor="companyWebsite">{t("contact.form.honeypot")}</label>
         <input id="companyWebsite" name="companyWebsite" tabIndex={-1} autoComplete="off" />
       </div>
 
@@ -145,7 +147,7 @@ export function ContactForm() {
       ) : null}
 
       <Button type="submit" disabled={pending}>
-        {pending ? "Sending…" : copy.submitLabel}
+        {pending ? t("contact.form.sending") : t("contact.form.submit")}
       </Button>
     </form>
   );

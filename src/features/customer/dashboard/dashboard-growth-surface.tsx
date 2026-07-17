@@ -80,7 +80,7 @@ export function DashboardGrowthSurface() {
 
   if (loading) {
     return (
-      <Skeleton className="h-44 w-full rounded-2xl" aria-label="Loading investment guidance" />
+      <Skeleton className="h-44 w-full rounded-2xl" aria-label={t("dashboard.loading_guidance")} />
     );
   }
 

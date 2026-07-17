@@ -588,7 +588,7 @@ export function ChangePasswordForm() {
       return;
     }
 
-    setMessage("Password updated. Continuing…");
+    setMessage(t("auth.password_updated_continuing"));
     const redirectTo = result.data?.redirectTo === "/admin" ? "/admin" : "/dashboard";
     window.setTimeout(() => {
       router.replace(appPath(redirectTo));
@@ -605,7 +605,7 @@ export function ChangePasswordForm() {
         void submit();
       }}
     >
-      <AuthField label="Current password" htmlFor="currentPassword">
+      <AuthField label={t("auth.current_password")} htmlFor="currentPassword">
         <AuthInputIcon icon={<Lock className="h-4 w-4" aria-hidden />}>
           <PasswordInput
             id="currentPassword"
@@ -669,7 +669,7 @@ export function ChangePasswordForm() {
         className={authSubmitClass}
         disabled={pending || password.length < 8 || currentPassword.length < 8}
       >
-        {pending ? "Updating…" : "Save new password"}
+        {pending ? t("auth.updating") : t("auth.save_new_password")}
       </Button>
     </form>
   );

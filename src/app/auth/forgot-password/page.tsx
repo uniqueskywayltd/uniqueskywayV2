@@ -1,21 +1,26 @@
 import { AuthLink, AuthShell, AuthTrustBar } from "@/features/auth/components/auth-shell";
 import { ForgotPasswordForm } from "@/features/auth/components/password-forms";
+import { getRequestLanguage } from "@/i18n/request-language";
+import { createTranslator } from "@/i18n/translate";
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const { language } = await getRequestLanguage();
+  const t = createTranslator(language);
+
   return (
     <AuthShell
-      title="Forgot password?"
-      description="Enter your email and we'll send you a secure reset code."
-      panelTitle="Account recovery"
-      panelDescription="For your security, reset codes expire after a short period."
+      title={t("auth.forgot_title")}
+      description={t("auth.forgot_page_description")}
+      panelTitle={t("auth.panel.recovery_title")}
+      panelDescription={t("auth.panel_forgot_description")}
       panelImage="/brand/security.webp"
-      panelImageAlt="Password recovery"
+      panelImageAlt={t("auth.panel.recovery_alt")}
       footer={
         <>
           <p className="text-center text-sm text-muted-foreground">
-            <AuthLink href="/auth/login">Back to sign in</AuthLink>
+            <AuthLink href="/auth/login">{t("auth.back_sign_in")}</AuthLink>
             {" · "}
-            <AuthLink href="/auth/reset-password">Enter a code</AuthLink>
+            <AuthLink href="/auth/reset-password">{t("auth.enter_reset_code")}</AuthLink>
           </p>
           <div className="mt-5">
             <AuthTrustBar />

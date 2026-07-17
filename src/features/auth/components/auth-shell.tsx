@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -5,6 +7,7 @@ import { ShieldCheck, Sparkles } from "lucide-react";
 
 import { BrandMark } from "@/components/layout/brand-mark";
 import { AuthChromeControls } from "@/features/auth/components/auth-chrome";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 export interface AuthShellProps {
@@ -25,13 +28,18 @@ export function AuthShell({
   description,
   children,
   footer,
-  panelTitle = "Your portfolio, one secure login away",
-  panelDescription = "Track investments, monitor returns, and manage withdrawals from a single protected dashboard.",
+  panelTitle,
+  panelDescription,
   panelImage = "/brand/portfolio.webp",
-  panelImageAlt = "Investor portal",
+  panelImageAlt,
   panelHighlights,
   className,
 }: AuthShellProps) {
+  const { t } = useI18n();
+  const resolvedPanelTitle = panelTitle ?? t("auth.panel.default_title");
+  const resolvedPanelDescription = panelDescription ?? t("auth.panel.default_description");
+  const resolvedPanelImageAlt = panelImageAlt ?? t("auth.panel.default_alt");
+
   return (
     <main
       id="main-content"
@@ -44,7 +52,7 @@ export function AuthShell({
       <div className="relative hidden overflow-hidden border-r border-border/50 bg-muted/35 lg:block dark:bg-card/40">
         <Image
           src={panelImage}
-          alt={panelImageAlt}
+          alt={resolvedPanelImageAlt}
           fill
           className="object-cover opacity-[0.14] dark:opacity-[0.2]"
           sizes="55vw"
@@ -59,13 +67,15 @@ export function AuthShell({
           <div className="max-w-md">
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-medium tracking-[0.16em] text-amber-900 uppercase dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
               <Sparkles className="h-3 w-3 text-amber-600 dark:text-amber-400" aria-hidden />
-              Secure Platform
+              {t("auth.panel.secure_badge")}
             </div>
             <h2 className="mt-5 text-3xl font-semibold leading-tight text-foreground xl:text-4xl">
-              {panelTitle}
+              {resolvedPanelTitle}
             </h2>
-            {panelDescription ? (
-              <p className="mt-4 text-base leading-relaxed text-muted-foreground">{panelDescription}</p>
+            {resolvedPanelDescription ? (
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                {resolvedPanelDescription}
+              </p>
             ) : null}
 
             {panelHighlights?.length ? (
@@ -107,7 +117,9 @@ export function AuthShell({
                 <div className="mb-8">
                   <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
                   {description ? (
-                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                      {description}
+                    </p>
                   ) : null}
                 </div>
                 <div>{children}</div>
@@ -123,14 +135,16 @@ export function AuthShell({
 }
 
 export function AuthTrustBar() {
+  const { t } = useI18n();
+
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
       <span className="inline-flex items-center gap-1.5">
         <ShieldCheck className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden />
-        256-bit encryption
+        {t("auth.trust.encryption")}
       </span>
       <span className="hidden h-3 w-px bg-border sm:block" />
-      <span>Secure investor portal</span>
+      <span>{t("auth.trust.portal")}</span>
       <span className="hidden h-3 w-px bg-border sm:block" />
       <span>info@uniqueskyway.com</span>
     </div>

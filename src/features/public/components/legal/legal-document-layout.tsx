@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowUp, ChevronDown, Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { PublicPageContainer } from "@/features/public/components/public-shell";
 import {
   marketingOutlineBtn,
@@ -47,6 +48,7 @@ export function LegalScrollProgress() {
 }
 
 export function LegalBackToTop() {
+  const { t } = useI18n();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -66,7 +68,7 @@ export function LegalBackToTop() {
       size="icon"
       variant="outline"
       className="fixed right-4 bottom-6 z-40 size-11 rounded-full shadow-md sm:right-6"
-      aria-label="Back to top"
+      aria-label={t("legal.back_to_top")}
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
     >
       <ArrowUp className="size-4" aria-hidden />
@@ -89,10 +91,12 @@ export function LegalTableOfContents({
   activeId: string | null;
   className?: string;
 }) {
+  const { t } = useI18n();
+
   return (
-    <nav aria-label="Table of contents" className={className}>
+    <nav aria-label={t("legal.toc.label")} className={className}>
       <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-        On this page
+        {t("legal.toc.on_page")}
       </p>
       <ol className="mt-3 space-y-1">
         {items.map((item, index) => {
@@ -131,8 +135,9 @@ export function LegalMobileToc({
   items: LegalTocItem[];
   activeId: string | null;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
-  const activeTitle = items.find((item) => item.id === activeId)?.title ?? "Jump to section";
+  const activeTitle = items.find((item) => item.id === activeId)?.title ?? t("legal.toc.jump");
 
   return (
     <div className="lg:hidden">
@@ -144,7 +149,7 @@ export function LegalMobileToc({
       >
         <span className="flex items-center gap-2">
           <Menu className="size-4 text-muted-foreground" aria-hidden />
-          {open ? "Table of contents" : activeTitle}
+          {open ? t("legal.toc.label") : activeTitle}
         </span>
         <ChevronDown
           className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")}
@@ -228,27 +233,28 @@ export function LegalDocumentLayout({
 }
 
 export function LegalHelpSection({ className }: { className?: string }) {
+  const { t } = useI18n();
+
   return (
     <section
       className={cn(
         "rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/8 via-card to-card p-6 shadow-sm sm:p-8",
         className,
       )}
-      aria-label="Need help"
+      aria-label={t("legal.help.label")}
     >
       <h2 className="text-xl font-semibold tracking-tight text-foreground">
-        Still have questions?
+        {t("legal.help.title")}
       </h2>
       <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-        Need help understanding this policy? Our support team can walk you through what it means for
-        your account.
+        {t("legal.help.body")}
       </p>
       <div className="mt-5 flex flex-wrap gap-3">
         <Link href="/contact" className={marketingPrimaryBtn()}>
-          Contact Support
+          {t("legal.help.contact_support")}
         </Link>
         <Link href="/contact" className={marketingOutlineBtn()}>
-          Contact Us
+          {t("legal.help.contact_us")}
         </Link>
       </div>
     </section>

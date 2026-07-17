@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 
 import { WithdrawalDetailView } from "@/features/customer/wallet/withdrawal-detail-view";
 import { WithdrawalSurfaceHero } from "@/features/customer/wallet/withdrawal-surface-hero";
+import { getRequestLanguage } from "@/i18n/request-language";
+import { createTranslator } from "@/i18n/translate";
 
-export const metadata: Metadata = {
-  title: "Withdrawal detail | Unique Sky Way",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { language } = await getRequestLanguage();
+  const t = createTranslator(language);
+  return {
+    title: `${t("meta.wallet.withdrawal_detail.title")} | Unique Sky Way`,
+    robots: { index: false, follow: false },
+  };
+}
 
 interface PageProps {
   params: Promise<{ withdrawalId: string }>;

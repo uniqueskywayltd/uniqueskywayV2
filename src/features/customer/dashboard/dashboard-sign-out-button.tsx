@@ -6,9 +6,11 @@ import { LogOut } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { postAuthJson } from "@/features/auth/api-client";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { cn } from "@/lib/utils";
 
 export function DashboardSignOutButton() {
+  const { t } = useI18n();
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
@@ -35,7 +37,7 @@ export function DashboardSignOutButton() {
       }}
     >
       <LogOut className="h-4 w-4" aria-hidden />
-      <span className="hidden sm:inline">Sign out</span>
+      <span className="hidden sm:inline">{t("chrome.sign_out")}</span>
     </button>
   );
 }

@@ -1,17 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-import {
-  Alert,
-  AlertDescription,
-  Badge,
-  Button,
-  EmptyState,
-  DateDisplay,
-} from "@/components/ui";
-import { getAuthJson, postAuthJson } from "../api-client";
 import { MonitorSmartphone } from "lucide-react";
+
+import { Alert, AlertDescription, Badge, Button, EmptyState, DateDisplay } from "@/components/ui";
+import { useI18n } from "@/features/i18n/i18n-provider";
+
+import { getAuthJson, postAuthJson } from "../api-client";
 
 interface TrustedDevice {
   id: string;
@@ -33,6 +28,7 @@ interface SessionRecord {
 }
 
 export function TrustedDevicesClient() {
+  const { t } = useI18n();
   const [devices, setDevices] = useState<TrustedDevice[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +59,7 @@ export function TrustedDevicesClient() {
   }, []);
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading trusted devices…</p>;
+    return <p className="text-sm text-muted-foreground">{t("security.loading_devices")}</p>;
   }
 
   return (
@@ -76,8 +72,8 @@ export function TrustedDevicesClient() {
       {devices.length === 0 ? (
         <EmptyState
           icon={MonitorSmartphone}
-          title="No trusted devices"
-          description="Devices you trust will appear here after sign-in."
+          title={t("security.no_trusted_devices")}
+          description={t("security.no_trusted_devices_desc")}
         />
       ) : (
         devices.map((device) => (
@@ -87,21 +83,25 @@ export function TrustedDevicesClient() {
           >
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-base font-semibold text-foreground">
-                {device.label ?? "Trusted device"}
+                {device.label ?? t("security.trusted_device_default")}
               </h3>
               {device.revokedAt ? (
-                <Badge variant="outline">Revoked</Badge>
+                <Badge variant="outline">{t("security.status_revoked")}</Badge>
               ) : (
-                <Badge>Trusted</Badge>
+                <Badge>{t("security.status_trusted")}</Badge>
               )}
             </div>
             <div className="mt-3 space-y-1 text-sm text-muted-foreground">
               <p>
-                Last used:{" "}
-                {device.lastUsedAt ? <DateDisplay value={device.lastUsedAt} /> : "Never"}
+                {t("security.last_used")}{" "}
+                {device.lastUsedAt ? (
+                  <DateDisplay value={device.lastUsedAt} />
+                ) : (
+                  t("security.never")
+                )}
               </p>
               <p>
-                Expires: <DateDisplay value={device.expiresAt} />
+                {t("security.expires_label")} <DateDisplay value={device.expiresAt} />
               </p>
             </div>
             {!device.revokedAt ? (
@@ -111,7 +111,7 @@ export function TrustedDevicesClient() {
                 className="mt-4"
                 onClick={() => void revoke(device.id)}
               >
-                Revoke device
+                {t("security.revoke_device")}
               </Button>
             ) : null}
           </article>
@@ -122,6 +122,7 @@ export function TrustedDevicesClient() {
 }
 
 export function SessionsClient() {
+  const { t } = useI18n();
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -152,7 +153,7 @@ export function SessionsClient() {
   }, []);
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading sessions…</p>;
+    return <p className="text-sm text-muted-foreground">{t("security.loading_sessions")}</p>;
   }
 
   return (
@@ -164,14 +165,14 @@ export function SessionsClient() {
       ) : null}
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" onClick={() => void revoke("others")}>
-          Revoke other sessions
+          {t("security.revoke_other_sessions")}
         </Button>
       </div>
       {sessions.length === 0 ? (
         <EmptyState
           icon={MonitorSmartphone}
-          title="No active sessions"
-          description="Authenticated sessions for this account appear here."
+          title={t("security.no_active_sessions")}
+          description={t("security.no_active_sessions_desc")}
         />
       ) : (
         sessions.map((session) => (
@@ -180,20 +181,26 @@ export function SessionsClient() {
             className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm"
           >
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-base font-semibold text-foreground">Session</h3>
+              <h3 className="text-base font-semibold text-foreground">
+                {t("security.session_label")}
+              </h3>
               {session.current ? (
-                <Badge>Current</Badge>
+                <Badge>{t("security.status_current")}</Badge>
               ) : (
                 <Badge variant="outline">{session.status}</Badge>
               )}
             </div>
             <div className="mt-3 space-y-1 text-sm text-muted-foreground">
               <p>
-                Last activity:{" "}
-                {session.lastSeenAt ? <DateDisplay value={session.lastSeenAt} /> : "Unknown"}
+                {t("security.last_activity")}{" "}
+                {session.lastSeenAt ? (
+                  <DateDisplay value={session.lastSeenAt} />
+                ) : (
+                  t("security.unknown")
+                )}
               </p>
               <p>
-                Expires: <DateDisplay value={session.expiresAt} />
+                {t("security.expires_label")} <DateDisplay value={session.expiresAt} />
               </p>
             </div>
             {session.current ? (
@@ -203,7 +210,7 @@ export function SessionsClient() {
                 className="mt-4"
                 onClick={() => void revoke("current")}
               >
-                Sign out current session
+                {t("security.sign_out_current_session")}
               </Button>
             ) : null}
           </article>

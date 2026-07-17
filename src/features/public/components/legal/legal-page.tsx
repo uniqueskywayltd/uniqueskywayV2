@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -12,24 +14,24 @@ import {
   Wallet,
 } from "lucide-react";
 
-import {
-  LEGAL_BANNER,
-  type LegalClassification,
-  type LegalSection,
-} from "@/features/public/content/legal-pages";
+import { type LegalClassification, type LegalSection } from "@/features/public/content/legal-pages";
+import { useI18n } from "@/features/i18n/i18n-provider";
 import { PublicPageContainer } from "@/features/public/components/public-shell";
 import { FadeIn } from "@/features/public/components/motion";
 import { cn } from "@/lib/utils";
 
 import { slugifyLegalHeading } from "./legal-utils";
 
-const CALLOUT_COPY: Record<
-  LegalClassification,
-  { label: string; tone: "info" | "notice" | "neutral" }
-> = {
-  fact: { label: "", tone: "neutral" },
-  placeholder: { label: "Information pending final publication", tone: "info" },
-  counsel: { label: "Important notice — subject to legal counsel review", tone: "notice" },
+const CALLOUT_TONE: Record<LegalClassification, "info" | "notice" | "neutral"> = {
+  fact: "neutral",
+  placeholder: "info",
+  counsel: "notice",
+};
+
+const CALLOUT_KEYS: Record<LegalClassification, string | null> = {
+  fact: null,
+  placeholder: "legal.callout.placeholder",
+  counsel: "legal.callout.counsel",
 };
 
 const SECTION_ICONS: Record<string, LucideIcon> = {
@@ -51,15 +53,17 @@ const SECTION_ICONS: Record<string, LucideIcon> = {
 };
 
 export function LegalCounselBanner() {
+  const { t } = useI18n();
+
   return (
     <aside
       className="border-b border-amber-500/25 bg-amber-500/8 dark:bg-amber-500/10"
-      aria-label={LEGAL_BANNER.title}
+      aria-label={t("legal.banner.title")}
     >
       <PublicPageContainer className="py-4">
-        <p className="text-sm font-semibold text-foreground">{LEGAL_BANNER.title}</p>
-        <p className="mt-1 text-sm leading-6 text-muted-foreground">{LEGAL_BANNER.body}</p>
-        <p className="sr-only">Requires legal counsel review</p>
+        <p className="text-sm font-semibold text-foreground">{t("legal.banner.title")}</p>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">{t("legal.banner.body")}</p>
+        <p className="sr-only">{t("legal.banner.sr")}</p>
       </PublicPageContainer>
     </aside>
   );
@@ -80,6 +84,8 @@ export function LegalPremiumHero({
   lastUpdated: string;
   readingMinutes: number;
 }) {
+  const { t } = useI18n();
+
   return (
     <header
       className="relative overflow-hidden border-b border-border/70 bg-gradient-to-br from-primary/10 via-background to-background"
@@ -102,16 +108,16 @@ export function LegalPremiumHero({
           <dl className="mt-8 flex flex-wrap justify-center gap-6 text-sm lg:justify-start">
             <div>
               <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                Last Updated
+                {t("legal.last_updated")}
               </dt>
               <dd className="mt-1 font-medium text-foreground">{lastUpdated}</dd>
             </div>
             <div>
               <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                Reading Time
+                {t("legal.reading_time")}
               </dt>
               <dd className="mt-1 font-medium text-foreground">
-                {readingMinutes} {readingMinutes === 1 ? "minute" : "minutes"}
+                {readingMinutes} {readingMinutes === 1 ? t("legal.minute") : t("legal.minutes")}
               </dd>
             </div>
           </dl>
@@ -132,9 +138,12 @@ export function LegalSectionCard({
   numbered?: boolean;
   emphasize?: boolean;
 }) {
+  const { t } = useI18n();
   const id = slugifyLegalHeading(section.title);
   const Icon = SECTION_ICONS[id] ?? FileText;
-  const callout = CALLOUT_COPY[section.classification];
+  const calloutKey = CALLOUT_KEYS[section.classification];
+  const calloutTone = CALLOUT_TONE[section.classification];
+  const calloutLabel = calloutKey ? t(calloutKey) : "";
 
   return (
     <section
@@ -165,18 +174,18 @@ export function LegalSectionCard({
             {section.title}
           </h2>
 
-          {callout.label ? (
+          {calloutLabel ? (
             <div
               className={cn(
                 "mt-4 flex gap-2 rounded-xl border px-4 py-3 text-sm leading-relaxed",
-                callout.tone === "notice" &&
+                calloutTone === "notice" &&
                   "border-amber-500/30 bg-amber-500/8 text-foreground dark:bg-amber-500/10",
-                callout.tone === "info" &&
+                calloutTone === "info" &&
                   "border-sky-500/25 bg-sky-500/8 text-foreground dark:bg-sky-500/10",
               )}
               role="note"
             >
-              {callout.tone === "notice" ? (
+              {calloutTone === "notice" ? (
                 <AlertTriangle
                   className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400"
                   aria-hidden
@@ -187,7 +196,7 @@ export function LegalSectionCard({
                   aria-hidden
                 />
               )}
-              <p>{callout.label}</p>
+              <p>{calloutLabel}</p>
             </div>
           ) : null}
 
@@ -262,19 +271,21 @@ export function LegalPageHero(props: {
 
 /** @deprecated Use LegalSectionsBody inside LegalDocumentLayout */
 export function LegalPageBody({ sections }: { sections: readonly LegalSection[] }) {
+  const { t } = useI18n();
+
   return (
     <PublicPageContainer className="py-10 sm:py-12">
       <div className="mx-auto max-w-3xl space-y-6">
         <LegalSectionsBody sections={sections} />
       </div>
       <p className="mx-auto mt-10 max-w-3xl text-sm text-muted-foreground">
-        Questions? Visit{" "}
+        {t("legal.footer.questions")}{" "}
         <Link href="/contact" className="underline underline-offset-4">
-          Contact
+          {t("legal.footer.contact")}
         </Link>{" "}
-        or read{" "}
+        {t("legal.footer.or_read")}{" "}
         <Link href="/security" className="underline underline-offset-4">
-          Security
+          {t("legal.footer.security")}
         </Link>
         .
       </p>

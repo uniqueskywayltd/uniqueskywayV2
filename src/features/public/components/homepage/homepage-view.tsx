@@ -26,34 +26,34 @@ const homepageStats = [
 const practiceAreas = [
   {
     image: "/brand/banking.webp",
-    alt: "Banking and financial services",
+    altKey: "home.alt.banking",
     titleKey: "home.service.banking",
     descriptionKey: "home.service.banking_desc",
-    tag: "Core",
+    tagKey: "home.service.tag.core",
     href: "/services",
   },
   {
     image: "/brand/real-estate.webp",
-    alt: "Real estate investments",
+    altKey: "home.alt.real_estate",
     titleKey: "home.service.real_estate",
     descriptionKey: "home.service.real_estate_desc",
-    tag: "Assets",
+    tagKey: "home.service.tag.assets",
     href: "/services",
   },
   {
     image: "/brand/global-markets.webp",
-    alt: "Global market access",
+    altKey: "home.alt.markets",
     titleKey: "home.service.markets",
     descriptionKey: "home.service.markets_desc",
-    tag: "Global",
+    tagKey: "home.service.tag.global",
     href: "/services",
   },
   {
     image: "/brand/advisory.webp",
-    alt: "Financial advisory",
+    altKey: "home.alt.advisory",
     titleKey: "home.service.advisory",
     descriptionKey: "home.service.advisory_desc",
-    tag: "Advisory",
+    tagKey: "home.service.tag.advisory",
     href: "/services",
   },
 ] as const;
@@ -167,13 +167,13 @@ export function HomepageView() {
                 <div className="relative aspect-[4/3]">
                   <Image
                     src={item.image}
-                    alt={item.alt}
+                    alt={t(item.altKey)}
                     fill
                     className="object-cover"
                     sizes="(max-width: 1024px) 50vw, 25vw"
                   />
                   <span className="absolute top-3 left-3 rounded-md bg-background/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
-                    {item.tag}
+                    {t(item.tagKey)}
                   </span>
                 </div>
                 <div className={card.padding}>
@@ -194,7 +194,7 @@ export function HomepageView() {
             <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border/60 shadow-md">
               <Image
                 src="/brand/trust.webp"
-                alt="Professional financial team"
+                alt={t("home.alt.team")}
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"

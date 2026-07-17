@@ -1,7 +1,9 @@
 import { localeFromEnglish } from "./locale-from-english";
 import type { MessageCatalog } from "../types";
+import { frPublicSurface } from "./public-surface-locales";
 
 export const frMessages = localeFromEnglish({
+  ...frPublicSurface,
   "language.selector.label": "Langue",
   "language.selector.change": "Changer de langue — actuelle {language}",
   "language.selector.current": "Langue actuelle : {language}",
@@ -1326,4 +1328,585 @@ export const frMessages = localeFromEnglish({
   "email.subject.reinvestment_completed": "Réinvestissement terminé",
   "email.subject.daily_roi": "ROI quotidien crédité — {amount}",
   "email.subject.referral_commission": "Commission de parrainage gagnée",
+  "chrome.customer_nav": "Navigation client",
+  "chrome.customer_mobile_nav": "Navigation mobile client",
+  "chrome.mobile_destinations": "Destinations mobiles principales",
+  "dashboard.loading": "Chargement du tableau de bord",
+  "dashboard.loading_guidance": "Chargement des conseils d'investissement",
+  "meta.dashboard.title": "Tableau de bord",
+  "meta.dashboard.description":
+    "Votre foyer financier principal — comment vous vous en sortez aujourd'hui.",
+  "meta.wallet.title": "Portefeuille",
+  "meta.wallet.description":
+    "Comment déplacer l'argent en sécurité ? Soldes opérationnels, dépôts et retraits.",
+  "meta.portfolio.title": "Investissements",
+  "meta.portfolio.description":
+    "Comment performent mes investissements ? Positions certifiées, progrès et prochaines étapes.",
+  "meta.portfolio.detail.title": "Investissement",
+  "meta.portfolio.detail.description":
+    "Comment progresse cet investissement — détail en lecture seule.",
+  "meta.ledger.title": "Grand livre",
+  "meta.ledger.description":
+    "Qu'est-il arrivé exactement — historique financier appuyé sur le grand livre.",
+  "meta.wallet.deposits.title": "Dépôts",
+  "meta.wallet.new_deposit.title": "Nouveau dépôt",
+  "meta.wallet.deposit_detail.title": "Détail du dépôt",
+  "meta.wallet.withdrawals.title": "Retraits",
+  "meta.wallet.new_withdrawal.title": "Nouveau retrait",
+  "meta.wallet.withdrawal_detail.title": "Détail du retrait",
+  "learn.page.title": "Apprentissage",
+  "learn.page.description":
+    "Que dois-je apprendre ensuite ? Leçons calmes et honnêtes — jamais un labyrinthe LMS.",
+  "learn.page.loading": "Chargement de l'apprentissage",
+  "learn.lesson_page.title": "Leçon",
+  "learn.lesson_page.description":
+    "Lisez à votre rythme. Marquez terminé quand vous êtes prêt — sans points ni certificats.",
+  "success.page.title": "Réussite",
+  "success.page.description":
+    "Comment devenir plus performant ? Des conseils sans réinventer votre foyer financier.",
+  "referrals.page.description":
+    "Comment recommander cette plateforme responsablement ? Outils d'invitation — sans spam ni récompenses inventées.",
+  "success.milestones.page_description":
+    "Uniquement du progrès réel — pas de séries, points ou pression à déposer.",
+  "statements.page.title": "Relevés",
+  "statements.page.description":
+    "Puis-je comprendre mon historique financier ? Projections appuyées sur le grand livre — pas de totaux inventés.",
+  "statements.detail.page.title": "Relevé",
+  "statements.detail.page.description":
+    "Aperçu des totaux projetés pour cette période New York avant téléchargement.",
+  "support.page.title": "Demande de support",
+  "support.page.description":
+    "Que dois-je savoir maintenant ? Dites-nous — les mises à jour apparaissent dans Notifications.",
+  "support.back_help_center": "Retour au centre d'aide",
+  "ledger.page.title": "Grand livre",
+  "ledger.page.description":
+    "Qu'est-il arrivé exactement ? Mouvements enregistrés du grand livre certifié — jamais recalculés ici.",
+  "success.hub.sr_question": "Question principale : Comment devenir plus performant ?",
+  "success.hub.title": "Centre de réussite client",
+  "success.hub.intro":
+    "Des conseils pour réussir — apprendre, conserver des registres, recommander responsablement et remarquer le progrès réel.",
+  "success.hub.destinations_title": "Destinations de réussite",
+  "success.hub.open": "Ouvrir",
+  "success.progress.title": "Cadre de progrès",
+  "success.progress.description":
+    "Ces piliers décrivent comment les clients réussissent ici — ce n'est pas un score ni une série.",
+  "customer.loading.label": "Chargement de l'espace compte",
+  "customer.loading.sr": "Chargement de l'espace compte",
+  "security.sessions_title": "Sessions",
+  "security.sessions_description":
+    "Que contrôle-je sur mon compte ? Sessions d'authentification actives — révoquez si nécessaire.",
+  "security.sessions_back": "Retour à la sécurité",
+  "security.loading_devices": "Chargement des appareils de confiance…",
+  "security.loading_sessions": "Chargement des sessions…",
+
+  // i18n overlay sync (414 keys)
+  "auth.forgot_page_description":
+    "Saisissez votre e-mail et nous vous enverrons un code de réinitialisation sécurisé.",
+  "auth.reset_page_description":
+    "Utilisez votre code de réinitialisation pour choisir un nouveau mot de passe.",
+  "auth.verify_page_description":
+    "Saisissez le code de vérification envoyé à votre adresse e-mail.",
+  "auth.change_password_title": "Choisissez un nouveau mot de passe",
+  "auth.change_password_description":
+    "Votre compte nécessite une mise à jour du mot de passe avant de continuer.",
+  "auth.back_sign_in": "Retour à la connexion",
+  "auth.enter_reset_code": "Saisissez un code",
+  "auth.panel_default_title": "Votre portefeuille, à une connexion sécurisée",
+  "auth.panel_default_description":
+    "Suivez vos investissements, rendements et retraits depuis un tableau de bord protégé.",
+  "auth.panel_default_image_alt": "Portail investisseur",
+  "auth.panel_login_title": "Votre portefeuille, à une connexion sécurisée",
+  "auth.panel_login_description":
+    "Suivez vos investissements, rendements et retraits depuis un tableau de bord protégé.",
+  "auth.panel_login_image_alt": "Portail investisseur",
+  "auth.panel_login_highlight_portfolio": "Visibilité du portefeuille en temps réel",
+  "auth.panel_login_highlight_withdrawals": "Gestion sécurisée des retraits",
+  "auth.panel_login_highlight_referrals": "Suivi des gains de parrainage",
+  "auth.panel_login_highlight_support": "Support investisseur dédié",
+  "auth.panel_register_title": "Unique Sky Way",
+  "auth.panel_register_image_alt": "Commencer à investir",
+  "auth.panel_forgot_title": "Récupération de compte",
+  "auth.panel_forgot_description":
+    "Pour votre sécurité, les codes de réinitialisation expirent après un court délai.",
+  "auth.panel_forgot_image_alt": "Récupération de mot de passe",
+  "auth.panel_reset_title": "Réinitialisation sécurisée du mot de passe",
+  "auth.panel_reset_description":
+    "Choisissez un mot de passe robuste pour protéger votre compte investisseur.",
+  "auth.panel_reset_image_alt": "Réinitialisation du mot de passe",
+  "auth.panel_verify_title": "Confirmez votre identité",
+  "auth.panel_verify_description": "La vérification d'e-mail protège votre compte Unique Sky Way.",
+  "auth.panel_verify_image_alt": "Vérification d'e-mail",
+  "auth.panel_change_password_title": "Sécurisez votre compte",
+  "auth.panel_change_password_description":
+    "Définissez un mot de passe que vous seul connaissez. Vous l'utiliserez pour vos prochaines connexions.",
+  "auth.panel_change_password_image_alt": "Changement de mot de passe",
+  "auth.secure_platform": "Plateforme sécurisée",
+  "auth.trust_encryption": "Chiffrement 256 bits",
+  "auth.trust_portal": "Portail investisseur sécurisé",
+  "auth.session_expiring_title": "Session sur le point d'expirer",
+  "auth.session_expiring_body": "Votre session expirera dans 2 minutes en raison de l'inactivité.",
+  "auth.session_stay_signed_in": "Rester connecté",
+  "auth.signed_in_choose_password": "Connecté. Choisissez un nouveau mot de passe pour continuer.",
+  "auth.signed_in_as": "Connecté en tant que {email}.",
+  "auth.password_updated_continuing": "Mot de passe mis à jour. Poursuite…",
+  "auth.current_password": "Mot de passe actuel",
+  "auth.updating": "Mise à jour…",
+  "auth.save_new_password": "Enregistrer le nouveau mot de passe",
+  "auth.password_strength_weak": "Faible",
+  "auth.password_strength_fair": "Moyen",
+  "auth.password_strength_strong": "Fort",
+  "auth.password_strength_aria": "Force du mot de passe : {label}",
+  "auth.hide_password": "Masquer le mot de passe",
+  "auth.show_password": "Afficher le mot de passe",
+  "auth.verification_code": "Code de vérification",
+  "auth.error_csrf": "Impossible de créer le jeton de sécurité.",
+  "auth.error_request_failed": "La requête a échoué.",
+  "security.sessions_header_aria": "En-tête des sessions",
+  "security.trusted_devices_page_description":
+    "Que contrôle-je sur mon compte ? Navigateurs de confiance pour ce compte — révoquez ceux que vous ne reconnaissez pas.",
+  "security.trusted_devices_header_aria": "En-tête des appareils de confiance",
+  "security.no_trusted_devices": "Aucun appareil de confiance",
+  "security.no_trusted_devices_desc":
+    "Les appareils de confiance apparaîtront ici après connexion.",
+  "security.trusted_device_default": "Appareil de confiance",
+  "security.status_revoked": "Révoqué",
+  "security.status_trusted": "De confiance",
+  "security.last_used": "Dernière utilisation :",
+  "security.never": "Jamais",
+  "security.expires_label": "Expire :",
+  "security.revoke_device": "Révoquer l'appareil",
+  "security.revoke_other_sessions": "Révoquer les autres sessions",
+  "security.no_active_sessions": "Aucune session active",
+  "security.no_active_sessions_desc": "Les sessions authentifiées de ce compte apparaissent ici.",
+  "security.session_label": "Session",
+  "security.status_current": "Actuelle",
+  "security.unknown": "Inconnu",
+  "security.last_activity": "Dernière activité :",
+  "security.sign_out_current_session": "Déconnecter la session actuelle",
+  "success.hub.link.learn.title": "Apprentissage",
+  "success.hub.link.learn.description":
+    "Comprenez la plateforme avant d'agir — des concepts, pas du sensationnalisme.",
+  "success.hub.link.learn.note": "Expérience d'apprentissage disponible dès maintenant.",
+  "success.hub.link.statements.title": "Relevés",
+  "success.hub.link.statements.description":
+    "Registres officiels de votre historique financier lorsque vous en avez besoin.",
+  "success.hub.link.statements.note":
+    "Relevés appuyés sur le grand livre disponibles dès maintenant.",
+  "success.hub.link.referrals.title": "Parrainages",
+  "success.hub.link.referrals.description":
+    "Recommandez Unique Sky Way de manière responsable et privée.",
+  "success.hub.link.referrals.note": "Hub de parrainage responsable disponible dès maintenant.",
+  "success.hub.link.milestones.title": "Jalons",
+  "success.hub.link.milestones.description":
+    "Reconnaissance discrète des progrès réels que vous avez déjà accomplis.",
+  "success.hub.link.milestones.note": "Structure en G1 — pas d'économie de points.",
+  "success.hub.link.help.title": "Centre d'aide",
+  "success.hub.link.help.description":
+    "Consultez d'abord les guides ; demandez de l'aide si vous êtes bloqué.",
+  "success.hub.link.help.note": "Aide B4 existante — liée depuis le Centre de réussite.",
+  "success.pillar.orient.title": "Sachez où se trouve votre argent",
+  "success.pillar.orient.description":
+    "Tableau de bord, portefeuille et compte répondent à cela à chaque visite.",
+  "success.pillar.orient.href_label": "Ouvrir le tableau de bord",
+  "success.pillar.understand.title": "Comprenez comment l'argent fonctionne ici",
+  "success.pillar.understand.description":
+    "Acquis ≠ crédité ≠ disponible. Apprenez avant de décider.",
+  "success.pillar.understand.href_label": "Ouvrir l'apprentissage",
+  "success.pillar.records.title": "Conservez des registres clairs",
+  "success.pillar.records.description":
+    "Les relevés refléteront les totaux certifiés du grand livre — jamais de chiffres inventés.",
+  "success.pillar.records.href_label": "Accès aux relevés",
+  "success.pillar.share.title": "Partagez avec précision quand vous êtes prêt",
+  "success.pillar.share.description":
+    "Les parrainages restent axés sur la confidentialité. Pas de pression, pas de gamification.",
+  "success.pillar.share.href_label": "Parrainages",
+  "success.pillar.milestones.title": "Reconnaissez les vrais jalons",
+  "success.pillar.milestones.description":
+    "Reconnaissance pour des faits déjà survenus — jamais de fausses séries.",
+  "success.pillar.milestones.href_label": "Jalons",
+  "legacy.hero.slide.join.title": "UniqueSkyWay",
+  "legacy.hero.slide.join.body":
+    "Nous facilitons la survenance des transactions commerciales et, à ce titre, nous nous engageons à renforcer l'économie financière mondiale et à construire des modèles d'investisseurs intergénérationnels grâce à notre portefeuille d'investissement stratégique. Nos caractéristiques exceptionnelles de durabilité permettent la succession de comptes aux descendants dans les limites établies.\nREJOIGNEZ-NOUS ET DÉCOUVREZ LES AVANTAGES DE L'INVESTISSEMENT.",
+  "legacy.hero.slide.join.cta": "CRÉER UN COMPTE",
+  "legacy.hero.slide.integrity.body":
+    "Nous sommes entièrement dévoués à offrir une excellence inégalée et des services exceptionnels à nos investisseurs estimés. Nous garantissons fermement une intégrité absolue, la confiance et une transparence totale dans toutes nos opérations, assurant une base solide de crédibilité et de responsabilité.",
+  "legacy.hero.slide.integrity.cta": "S'INSCRIRE",
+  "legacy.hero.slide.risk.title": "UniqueSkyWay",
+  "legacy.hero.slide.risk.body":
+    "Nous employons une approche stratégique pour diversifier notre portefeuille d'investissement, atténuant et gérant efficacement diverses formes de risque inhérentes aux investissements financiers. Explorez les opportunités offertes par notre sélection complète de forfaits d'investissement à court et long terme.",
+  "legacy.hero.slide.risk.cta": "CONNEXION",
+  "legacy.hero.note.dashboard": "Votre tableau de bord se met à jour après le règlement.",
+  "legacy.hero.note.help": "Besoin d'aide ? Visitez le Centre d'aide.",
+  "legacy.hero.note.verify": "Complétez la vérification pour débloquer toutes les fonctionnalités.",
+  "legacy.hero.note.statements": "Les relevés sont disponibles depuis votre compte.",
+  "legacy.hero.banner_label": "Bannière de la page d'accueil",
+  "legacy.hero.show_slide": "Afficher la diapositive {number}",
+  "legacy.hero.brand_sr": "UniqueSkyWay",
+  "legacy.about.years": "Années",
+  "legacy.about.anniversary_title": "UniqueSkyWay célèbre sa 9e année de succès en affaires.",
+  "legacy.about.anniversary_body":
+    "Notre entreprise estimée offre une opportunité unique de diversification de portefeuille grâce à des activités commerciales rentables et des initiatives d'investissement réussies, assurant une croissance financière et une stabilité à long terme.",
+  "legacy.about.read_more": "En savoir plus",
+  "legacy.about.banking_sector": "SECTEUR BANCAIRE",
+  "legacy.about.practice_eyebrow": "DOMAINES D'EXPERTISE",
+  "legacy.about.practice_title": "Ce que nous pouvons faire pour vous",
+  "legacy.about.practice_lead":
+    "Nous apprenons à vous connaître. Nous élaborons un plan sur mesure. Nous mettons votre argent au travail.",
+  "legacy.about.practice.accounting.title": "Comptabilité d'entreprise",
+  "legacy.about.practice.accounting.body":
+    "Nous fournissons des informations financières claires et utiles sur lesquelles vous pouvez fonder les bonnes décisions",
+  "legacy.about.practice.loan.title": "Obtention de prêts",
+  "legacy.about.practice.loan.body":
+    "Avec une marge de crédit sur portefeuille, vous pouvez demander un emprunt en quelques secondes à un taux très abordable et recevoir les fonds en aussi peu qu'un jour ouvrable. S'il existe un moyen plus simple et plus rapide d'emprunter, nous ne l'avons pas vu.",
+  "legacy.about.practice.reliability.title": "Haute fiabilité",
+  "legacy.about.practice.reliability.body":
+    "Nous sommes la confiance d'un très grand nombre de personnes. Nous travaillons constamment à améliorer notre système de sécurité et à minimiser les risques possibles.",
+  "legacy.about.practice.insurance.title": "Assurance d'entreprise",
+  "legacy.about.practice.insurance.body":
+    "Notre entreprise est assurée par une compagnie d'assurance de premier plan mondial, reconnue dans le domaine des investissements.",
+  "legacy.about.practice.withdrawal.title": "Retrait rapide",
+  "legacy.about.practice.withdrawal.body":
+    "Les demandes de retrait sont traitées immédiatement à réception. Des plafonds élevés s'appliquent. Le montant minimum de retrait n'est que de 100 $.",
+  "legacy.projects.sector.nfts": "Tokenisation de NFT",
+  "legacy.projects.title.nfts": "Monde numérique collectionnable",
+  "legacy.projects.sector.real_estate": "Immobilier",
+  "legacy.projects.title.real_estate": "Construction à votre satisfaction",
+  "legacy.projects.sector.rwa": "Actifs du monde réel",
+  "legacy.projects.title.rwa":
+    "Matières premières à la demande : notre activité prioritaire de rentabilité",
+  "legacy.projects.sector.corporate": "Gestion d'entreprise",
+  "legacy.projects.title.corporate": "Nous sommes là pour mieux vous servir",
+  "legacy.projects.sector.financial_initiatives": "Initiatives financières",
+  "legacy.projects.title.financial_initiatives": "Planification et exécution des tâches",
+  "legacy.projects.sector.natural_energy": "Énergie naturelle",
+  "legacy.projects.title.natural_energy": "Planification et exécution des tâches",
+  "legacy.projects.sector.financial_loan": "Prêt financier",
+  "legacy.projects.title.financial_loan": "Développement de votre société financière",
+  "legacy.projects.sector.crypto": "Minage et trading de crypto",
+  "legacy.projects.title.crypto": "Actif numérique",
+  "legacy.projects.sector.agriculture": "Agriculture mécanisée tokenisée",
+  "legacy.projects.title.agriculture": "Achèvement de projets mécanisés à grande échelle",
+  "legacy.projects.sector.financial_grant": "Subvention financière",
+  "legacy.projects.title.financial_grant": "Développement d'entreprises privées",
+  "legacy.projects.carousel_label": "Projets et secteurs",
+  "legacy.projects.commitment_eyebrow": "Engagement de l'équipe envers les clients",
+  "legacy.projects.commitment_title":
+    "L'équipe de cette entreprise est guidée par un objectif clair : défendre tous les investisseurs, les traiter équitablement et leur offrir la meilleure chance de réussite.",
+  "legacy.projects.commitment_body":
+    "Dans leurs interactions avec notre équipe, nos clients perçoivent les valeurs qui nous distinguent. Parmi elles — et au cœur de notre structure d'entreprise — figure la priorité au client. Nous visons un service exceptionnel et des produits d'investissement conçus avec expertise et performance supérieure à long terme. Pourquoi ? Parce que nous reconnaissons que nos clients sont des personnes aux besoins et aspirations réels.",
+  "legacy.projects.pie.flexibility": "Investissement de flexibilité globale",
+  "legacy.projects.pie.flexibility_caption": "Jusqu'à 85 % d'actifs",
+  "legacy.projects.pie.security": "Solutions financières de sécurité",
+  "legacy.projects.pie.security_caption": "Jusqu'à 75 % d'efficacité",
+  "legacy.projects.award": "Prix finance et conseil 2020-2021",
+  "legacy.projects.stats_label": "Statistiques annuelles",
+  "legacy.plans.featured_name": "Plan en vedette",
+  "legacy.plans.duration_certified": "Durée du catalogue certifié",
+  "legacy.plans.eligibility_certified": "Éligibilité du catalogue certifié",
+  "legacy.plans.earnings_certified": "Les gains suivent les termes du moteur certifié",
+  "legacy.plans.status_active": "Actif",
+  "legacy.plans.status_awaiting": "En attente de publication",
+  "legacy.plans.duration_days": "{count} jours",
+  "legacy.plans.min_deposit": "Minimum {amount}",
+  "legacy.plans.daily_return": "{percent} % de rendement quotidien (termes certifiés)",
+  "legacy.plans.terms_note":
+    "Les termes proviennent du catalogue d'investissement certifié lors de la publication.",
+  "legacy.plans.not_guaranteed": "Les rendements ne sont pas garantis",
+  "legacy.plans.see_risk": "Voir la divulgation des risques",
+  "legacy.plans.buy": "ACHETER",
+  "legacy.plans.carousel_label": "Carrousel des plans d'investissement",
+  "legacy.plans.footer_note":
+    "Les termes des plans proviennent du catalogue d'investissement certifié (Silver, Gold, Classic, Master).",
+  "legacy.plans.risk_disclosure": "Divulgation des risques",
+  "legacy.plans.video.english": "Anglais",
+  "legacy.plans.video.spanish": "Espagnol",
+  "legacy.plans.video.french": "Français",
+  "legacy.plans.video_unavailable":
+    "La vidéo en français n'est pas disponible dans l'archive multimédia. Choisissez l'anglais ou l'espagnol.",
+  "legacy.plans.view_certificate": "Voir le certificat",
+  "legacy.plans.certification_sr": "Certification",
+  "legacy.plans.close_certificate": "Fermer le certificat",
+  "legacy.plans.cert_alt": "Document de certification de l'entreprise",
+  "legacy.plans.section_label": "Plans et vidéos",
+  "legacy.finale.support_label": "Support",
+  "legacy.finale.support_title": "Servir les investisseurs, c'est notre métier",
+  "legacy.finale.support_body":
+    "Contactez-nous : notre équipe d'experts vous aidera. Choisissez l'unité commerciale appropriée et votre demande sera dirigée vers la bonne personne.",
+  "legacy.finale.support_success": "Merci — notre équipe vous contactera bientôt par e-mail.",
+  "legacy.finale.name_placeholder": "Votre nom",
+  "legacy.finale.email_placeholder": "Adresse e-mail",
+  "legacy.finale.phone_placeholder": "Téléphone",
+  "legacy.finale.message_placeholder": "Message",
+  "legacy.finale.submitting": "Envoi…",
+  "legacy.finale.submit": "Envoyer",
+  "legacy.finale.rate_limited": "Veuillez patienter un instant avant d'envoyer un autre message.",
+  "legacy.finale.error": "Nous n'avons pas pu accepter ce message. Réessayez ou utilisez Contact.",
+  "legacy.finale.testimonials_label": "Témoignages",
+  "legacy.finale.testimonials_eyebrow": "témoignages",
+  "legacy.finale.testimonials_title": "Ce que disent nos clients",
+  "legacy.finale.testimonials_intro":
+    "Nous avons eu une excellente expérience avec l'entreprise et Robert. Il a répondu à de nombreuses questions de mon mari et de moi par e-mail et Telegram. À aucun moment n'avons-nous ressenti de pression pour décider. Notre connaissance et notre confiance ont grandi, grâce à Robert.",
+  "legacy.finale.testimonial_aria": "Témoignage de {name}",
+  "legacy.finale.role.investor": "Investisseur",
+  "legacy.finale.role.shareholder": "Actionnaire",
+  "legacy.finale.role.member": "Membre",
+  "legacy.finale.role.marketer": "Commercial",
+  "legacy.finale.t1.quote":
+    "Très satisfait de l'aide de Harry Roberts. J'ai dû céder quelques positions plus tôt que prévu et il a été très utile et efficace.",
+  "legacy.finale.t2.quote":
+    "Investir dans un nouveau projet est toujours intimidant ; cependant, Charles et son équipe ont fait de cela une merveilleuse expérience. Tout au long du processus, Charles était disponible pour conseiller sans imposer ni pousser.",
+  "legacy.finale.t3.quote":
+    "Je cherchais un investissement pour placer des fonds. L'approche professionnelle de Charles a fait la différence. Il fournit les faits et chiffres nécessaires lorsque vous posez une question.",
+  "legacy.finale.t4.quote":
+    "J'ai acheté un forfait d'investissement et l'ai conservé un an. Toute l'expérience a été absolument excellente — Alex m'a conseillé à chaque étape.",
+  "legacy.finale.t5.quote":
+    "Vraiment utile. J'étais engagé dans une stratégie longue, mais ils ont obtenu un bon résultat dans un délai court. Merci beaucoup.",
+  "legacy.finale.t6.quote":
+    "L'approche de Charles Keller m'a donné confiance — professionnel et informatif, capable de donner des conseils clairs.",
+  "legacy.finale.t7.quote":
+    "J'ai traité avec Irina Ashurov — excellente entreprise, facile et professionnelle.",
+  "legacy.finale.t8.quote":
+    "Charles, directeur de mon portefeuille, a été incroyablement utile et perspicace tout au long du processus. Une expérience fluide.",
+  "legacy.finale.clients_label": "Clients",
+  "legacy.finale.cta_label": "Appel à l'action",
+  "legacy.finale.cta_title": "Nous vous aidons à libérer la force qui est en vous.",
+  "legacy.finale.know_more": "En savoir plus",
+  "legacy.finale.facts_label": "Faits amusants",
+  "legacy.finale.fact.funds": "Gestion totale des fonds",
+  "legacy.finale.fact.energy": "Énergie naturelle",
+  "legacy.finale.fact.nfts": "NFT",
+  "legacy.finale.fact.real_estate": "Immobilier",
+  "legacy.finale.fact.real_asset": "Fonds d'actifs réels",
+  "legacy.finale.facts_disclaimer":
+    "Les chiffres apparaîtront des rapports certifiés lors de la publication. Les chiffres historiques d'AUM ne sont pas affichés.",
+  "home.plans.section_label": "Plans d'investissement",
+  "home.plans.structured_title": "Termes structurés. Fourchettes claires.",
+  "home.plans.structured_body":
+    "Uniquement des chiffres du catalogue certifié — durée, tranches de dépôt et taux de rendement quotidien publiés. Aucune projection inventée.",
+  "home.plans.compare_strip":
+    "Visibilité du grand livre, récompenses de parrainage et accès au tableau de bord sur chaque plan.",
+  "home.plans.full_details": "Détails complets",
+  "home.service.tag.core": "Principal",
+  "home.service.tag.assets": "Actifs",
+  "home.service.tag.global": "Global",
+  "home.service.tag.advisory": "Conseil",
+  "home.alt.banking": "Services bancaires et financiers",
+  "home.alt.real_estate": "Investissements immobiliers",
+  "home.alt.markets": "Accès aux marchés mondiaux",
+  "home.alt.advisory": "Conseil financier",
+  "home.alt.team": "Équipe financière professionnelle",
+  "faq.purpose": "Lever les objections.",
+  "faq.hero.eyebrow": "FAQ",
+  "faq.hero.title": "Des réponses sans bruit.",
+  "faq.hero.lead":
+    "Un langage clair aligné sur le comportement certifié de la plateforme. Si quelque chose n'est pas encore disponible, nous le disons.",
+  "faq.empty":
+    "Aucune question ne correspond à cette recherche. Essayez une autre phrase ou contactez-nous.",
+  "faq.cta.title": "Encore des doutes ?",
+  "faq.cta.support": "Posez une question à un humain — ou continuez quand vous vous sentez prêt.",
+  "faq.cta.contact": "Contact",
+  "faq.cta.get_started": "Commencer",
+  "faq.cat.getting_started": "Premiers pas",
+  "faq.cat.investments": "Investissements",
+  "faq.cat.deposits": "Dépôts",
+  "faq.cat.withdrawals": "Retraits",
+  "faq.cat.security": "Sécurité",
+  "faq.cat.verification": "Vérification",
+  "faq.cat.accounts": "Comptes",
+  "faq.cat.support": "Support",
+  "faq.item.create_account.q": "Comment créer un compte ?",
+  "faq.item.create_account.a":
+    "Utilisez Commencer pour vous inscrire avec vos coordonnées, puis vérifiez votre e-mail avant une participation complète.",
+  "faq.item.plan_immediately.q": "Dois-je choisir un plan immédiatement ?",
+  "faq.item.plan_immediately.a":
+    "Non. Vous pouvez d'abord explorer Comment ça marche, Sécurité et Plans. L'inscription n'oblige pas à investir.",
+  "faq.item.returns_guaranteed.q": "Les rendements sont-ils garantis ?",
+  "faq.item.returns_guaranteed.a":
+    "Non. Les investissements comportent des risques, y compris une perte possible du capital. Lisez toujours la divulgation des risques.",
+  "faq.item.plan_terms_source.q": "D'où viennent les termes des plans ?",
+  "faq.item.plan_terms_source.a":
+    "Les termes publiés proviennent du catalogue et du moteur d'investissement certifiés. Le site public n'invente ni ne recalcule le ROI.",
+  "faq.item.compare_plans.q": "Puis-je comparer les plans avant de m'inscrire ?",
+  "faq.item.compare_plans.a":
+    "Oui. La page Plans est conçue pour la comparaison. Les annonces en vedette apparaissent lorsque le catalogue certifié est publié.",
+  "faq.item.deposits_work.q": "Comment fonctionnent les dépôts ?",
+  "faq.item.deposits_work.a":
+    "Vous soumettez des fonds via des canaux approuvés. Les dépôts passent par des statuts de révision clairs avant confirmation — pas de traitement instantané artificiel.",
+  "faq.item.deposit_status.q": "Verrai-je un statut après avoir financé ?",
+  "faq.item.deposit_status.a":
+    "Oui. Attendez-vous à des statuts en langage clair tels que en attente/soumis, en cours d'examen, confirmé ou échoué — pour rester informé.",
+  "faq.item.withdrawals_work.q": "Comment fonctionnent les retraits ?",
+  "faq.item.withdrawals_work.a":
+    "Lorsque vous êtes éligible, vous demandez un virement. Les demandes suivent des statuts examinés jusqu'à achèvement. Les délais sont des attentes — pas des garanties de règlement instantané.",
+  "faq.item.balance_withdraw.q": "Puis-je retirer tout le solde immédiatement ?",
+  "faq.item.balance_withdraw.a":
+    "L'éligibilité dépend de l'état du compte et des règles certifiées de la plateforme. Le produit affiche clairement l'éligibilité plutôt que d'inventer des raccourcis.",
+  "faq.item.protect_account.q": "Comment protégez-vous mon compte ?",
+  "faq.item.protect_account.a":
+    "Contrôles de connexion, vérification d'e-mail et sensibilisation aux sessions. Consultez Sécurité pour des détails compréhensibles — sans badges d'audit inventés.",
+  "faq.item.security_certifications.q":
+    "Revendiquez-vous des certifications de sécurité externes ?",
+  "faq.item.security_certifications.a":
+    "Uniquement si nous pouvons les prouver. Nous n'inventons jamais de badges ISO, SOC ou similaires pour fabriquer la confiance.",
+  "faq.item.verify_email.q": "Pourquoi vérifiez-vous l'e-mail ?",
+  "faq.item.verify_email.a":
+    "Pour nous assurer de joindre la bonne personne avant de poursuivre une activité sensible de compte ou d'argent.",
+  "faq.item.identity_verification.q": "Une vérification d'identité approfondie est-elle requise ?",
+  "faq.item.identity_verification.a":
+    "La politique de la plateforme peut exiger des contrôles supplémentaires pour certaines actions. Lorsque requis, nous expliquons l'étape — nous ne simulons pas de KYC sur cette page.",
+  "faq.item.manage_sessions.q": "Puis-je gérer les sessions et appareils ?",
+  "faq.item.manage_sessions.a":
+    "Oui. Les paramètres authentifiés incluent la gestion des sessions et des appareils de confiance pour un accès intentionnel.",
+  "faq.item.forget_password.q": "Et si j'oublie mon mot de passe ?",
+  "faq.item.forget_password.a":
+    "Utilisez le flux de récupération depuis Connexion. La récupération est conçue pour être calme — pas alarmante.",
+  "faq.item.reach_us.q": "Comment contacter Unique Sky Way ?",
+  "faq.item.reach_us.a":
+    "Utilisez le formulaire de la page Contact. Nous publions les canaux publics approuvés uniquement lorsque le conseil juridique et les opérations sont prêts.",
+  "faq.item.response_time.q": "Quel est le délai de réponse attendu ?",
+  "faq.item.response_time.a":
+    "Nous visons une réponse sous 1 à 2 jours ouvrables une fois le canal de support actif. Les questions urgentes sont souvent répondues d'abord dans la FAQ.",
+  "contact.purpose": "Rendre l'entreprise accessible.",
+  "contact.hero.eyebrow": "Contact",
+  "contact.hero.title": "Demandez clairement. Nous répondons calmement.",
+  "contact.hero.lead":
+    "Contactez Unique Sky Way sans pression. Envoyez un message via le formulaire — nous répondons lorsque nous pouvons aider clairement.",
+  "contact.expectations.title": "À quoi s'attendre",
+  "contact.expectations.hours":
+    "Heures ouvrables : lundi–vendredi (America/New_York), hors jours fériés — en attente de confirmation formelle.",
+  "contact.expectations.response":
+    "Délai de réponse attendu : sous 1 à 2 jours ouvrables après réception de votre message.",
+  "contact.expectations.topics":
+    "Utilisez le formulaire pour les questions sur les comptes, plans, dépôts, retraits ou la diligence.",
+  "contact.form.title": "Envoyer un message",
+  "contact.form.name": "Nom complet",
+  "contact.form.email": "E-mail",
+  "contact.form.topic": "Sujet",
+  "contact.form.message": "Message",
+  "contact.form.submit": "Envoyer le message",
+  "contact.form.select_topic": "Sélectionnez un sujet",
+  "contact.form.success_title": "Message reçu.",
+  "contact.form.success_body":
+    "Merci. Votre soumission a été validée et acceptée. Nous visons une réponse sous 1 à 2 jours ouvrables lorsque le canal de support sera pleinement actif.",
+  "contact.form.error_body":
+    "Nous n'avons pas pu accepter cette soumission. Vérifiez les champs et réessayez.",
+  "contact.form.captcha_error": "Vérifiez la somme et réessayez.",
+  "contact.form.rate_limited": "Veuillez patienter un instant avant d'envoyer un autre message.",
+  "contact.form.send_another": "Envoyer un autre message",
+  "contact.form.sending": "Envoi…",
+  "contact.form.honeypot": "Site web de l'entreprise",
+  "contact.topic.general": "Question générale",
+  "contact.topic.plans": "Plans",
+  "contact.topic.deposits_withdrawals": "Dépôts et retraits",
+  "contact.topic.account_security": "Compte et sécurité",
+  "contact.topic.diligence": "Diligence / partenariat",
+  "contact.topic.other": "Autre",
+  "contact.cta.title": "Préférez-vous l'auto-service d'abord ?",
+  "contact.cta.support": "De nombreuses questions trouvent réponse dans la FAQ — sans attendre.",
+  "contact.cta.faq": "Voir la FAQ",
+  "contact.cta.get_started": "Commencer",
+  "contact.image_alt": "Contacter Unique Sky Way",
+  "conversion.plans.purpose":
+    "Aider les clients à comprendre les opportunités d'investissement disponibles.",
+  "conversion.plans.hero.eyebrow": "Investissements",
+  "conversion.plans.hero.title": "Des plans pour chaque taille de portefeuille",
+  "conversion.plans.hero.lead":
+    "Du Silver d'entrée de gamme au Master premium — chaque plan avec des termes clairs, des rendements transparents et une gestion professionnelle.",
+  "conversion.plans.feature.tracking.title": "Suivi en temps réel",
+  "conversion.plans.feature.tracking.text":
+    "Surveillez vos investissements, rendements et performance de portefeuille depuis un seul tableau de bord.",
+  "conversion.plans.feature.secure.title": "Transactions sécurisées",
+  "conversion.plans.feature.secure.text":
+    "Chaque dépôt et retrait est enregistré, audité et protégé par une sécurité de niveau entreprise.",
+  "conversion.plans.feature.duration.title": "Durées flexibles",
+  "conversion.plans.feature.duration.text":
+    "Choisissez parmi plusieurs durées conçues pour correspondre à votre horizon d'investissement.",
+  "conversion.plans.feature.withdraw.title": "Retraits faciles",
+  "conversion.plans.feature.withdraw.text":
+    "Demandez des retraits via votre tableau de bord avec une transparence totale sur le statut de traitement.",
+  "conversion.plans.portfolio_title": "Gestion professionnelle de portefeuille",
+  "conversion.plans.portfolio_subtitle":
+    "Termes transparents. Opérations sécurisées. Visibilité totale.",
+  "conversion.plans.portfolio_alt": "Gestion de portefeuille d'investissement",
+  "conversion.plans.image_alt": "Opportunités d'investissement",
+  "conversion.plans.lifecycle.title": "Et ensuite",
+  "conversion.plans.lifecycle.choose": "Choisir",
+  "conversion.plans.lifecycle.choose_detail":
+    "Sélectionnez un plan publié adapté à votre calendrier et capacité.",
+  "conversion.plans.lifecycle.activate": "Activer",
+  "conversion.plans.lifecycle.activate_detail":
+    "Une fois l'éligibilité de financement atteinte, activez dans votre compte.",
+  "conversion.plans.lifecycle.track": "Suivre",
+  "conversion.plans.lifecycle.track_detail":
+    "Suivez les statuts et l'activité comptabilisée au fil du plan.",
+  "conversion.plans.lifecycle.complete": "Terminer",
+  "conversion.plans.lifecycle.complete_detail":
+    "À la fin du terme, les soldes éligibles suivent le règlement certifié.",
+  "conversion.plans.step_label": "Étape {number}",
+  "conversion.plans.eligibility.title": "Puis-je investir ?",
+  "conversion.plans.eligibility.verified": "Compte vérifié (confirmation d'e-mail terminée).",
+  "conversion.plans.eligibility.balance":
+    "Solde disponible suffisant pour le minimum publié du plan, lorsqu'indiqué.",
+  "conversion.plans.eligibility.status":
+    "Le plan doit être disponible à l'activation — toutes les annonces ne sont pas toujours ouvertes.",
+  "conversion.plans.risk.title": "Ce que vous devez comprendre",
+  "conversion.plans.risk.body":
+    "Les investissements comportent des risques, y compris une perte possible du capital. Les rendements ne sont pas garantis. Lisez la divulgation des risques avant de vous inscrire.",
+  "conversion.plans.risk.label": "Divulgation des risques",
+  "conversion.plans.cta.title": "Prêt à investir ?",
+  "conversion.plans.cta.support":
+    "Créez votre compte gratuit et accédez à notre gamme complète de plans d'investissement.",
+  "conversion.plans.cta.primary": "Ouvrir votre compte",
+  "conversion.plans.cta.secondary": "Comment ça marche",
+  "legal.banner.title": "Sous réserve de l'examen du conseil juridique",
+  "legal.banner.body":
+    "Cette page décrit la posture de politique envisagée par Unique Sky Way. Le texte juridique contraignant nécessite l'approbation finale du conseil. Jusque-là, traitez le contenu comme un brouillon informatif — pas un substitut aux termes approuvés par le conseil certifié.",
+  "legal.banner.sr": "Nécessite l'examen du conseil juridique",
+  "legal.eyebrow": "Juridique",
+  "legal.last_updated": "Dernière mise à jour",
+  "legal.reading_time": "Temps de lecture",
+  "legal.minute": "minute",
+  "legal.minutes": "minutes",
+  "legal.callout.placeholder": "Information en attente de publication finale",
+  "legal.callout.counsel": "Avis important — sous réserve de l'examen du conseil juridique",
+  "legal.toc.label": "Table des matières",
+  "legal.toc.on_page": "Sur cette page",
+  "legal.toc.jump": "Aller à la section",
+  "legal.back_to_top": "Retour en haut",
+  "legal.help.label": "Besoin d'aide",
+  "legal.help.title": "Encore des questions ?",
+  "legal.help.body":
+    "Besoin d'aide pour comprendre cette politique ? Notre équipe de support peut vous expliquer ce qu'elle signifie pour votre compte.",
+  "legal.help.contact_support": "Contacter le support",
+  "legal.help.contact_us": "Nous contacter",
+  "legal.footer.questions": "Des questions ? Visitez",
+  "legal.footer.or_read": "ou lisez",
+  "legal.footer.contact": "Contact",
+  "legal.footer.security": "Sécurité",
+  "auth.panel.default_title": "Votre portefeuille, à une connexion sécurisée",
+  "auth.panel.default_description":
+    "Suivez vos investissements, rendements et retraits depuis un tableau de bord protégé.",
+  "auth.panel.default_alt": "Portail investisseur",
+  "auth.panel.secure_badge": "Plateforme sécurisée",
+  "auth.panel.register_title": "Unique Sky Way",
+  "auth.panel.register_alt": "Commencer à investir",
+  "auth.panel.recovery_title": "Récupération de compte",
+  "auth.panel.recovery_alt": "Récupération de mot de passe",
+  "auth.panel.reset_alt": "Réinitialisation du mot de passe",
+  "auth.panel.change_alt": "Changement de mot de passe",
+  "auth.panel.verify_alt": "Vérification d'e-mail",
+  "auth.highlight.portfolio": "Visibilité du portefeuille en temps réel",
+  "auth.highlight.withdrawals": "Gestion sécurisée des retraits",
+  "auth.highlight.referrals": "Suivi des gains de parrainage",
+  "auth.highlight.support": "Support investisseur dédié",
+  "auth.trust.encryption": "Chiffrement 256 bits",
+  "auth.trust.portal": "Portail investisseur sécurisé",
+  "auth.verify_code": "Code de vérification",
+  "auth.verify_code_placeholder": "Entrez le code reçu par e-mail",
+  "auth.verifying_short": "Vérification",
+  "auth.email_placeholder": "vous@exemple.com",
+  "auth.password.weak": "Faible",
+  "auth.password.fair": "Moyen",
+  "auth.password.strong": "Fort",
+  "auth.trusted_device": "Appareil de confiance",
 } satisfies MessageCatalog);

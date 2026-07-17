@@ -4,10 +4,12 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 import {
-  FAQ_CATEGORIES,
-  FAQ_COPY,
-  type FaqCategory,
-} from "@/features/public/content/conversion-pages";
+  FAQ_CATEGORY_IDS,
+  getFaqCategoryLabel,
+  getFaqItems,
+  type FaqCategoryId,
+  type FaqItemId,
+} from "@/features/public/content/i18n-public-content";
 import { PublicPageContainer } from "@/features/public/components/public-shell";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/features/i18n/i18n-provider";
@@ -15,29 +17,29 @@ import { cn } from "@/lib/utils";
 
 export function FaqExplorer() {
   const { t } = useI18n();
+  const items = useMemo(() => getFaqItems(t), [t]);
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<FaqCategory | "All">("All");
-  const [openQuestion, setOpenQuestion] = useState<string | null>(
-    FAQ_COPY.items[0]?.question ?? null,
-  );
+  const [category, setCategory] = useState<FaqCategoryId | "all">("all");
+  const [openQuestion, setOpenQuestion] = useState<FaqItemId | null>(items[0]?.id ?? null);
   const deferredQuery = useDeferredValue(query);
 
   const filtered = useMemo(() => {
     const q = deferredQuery.trim().toLowerCase();
-    return FAQ_COPY.items.filter((item) => {
-      if (category !== "All" && item.category !== category) {
+    return items.filter((item) => {
+      if (category !== "all" && item.category !== category) {
         return false;
       }
       if (!q) {
         return true;
       }
+      const categoryLabel = getFaqCategoryLabel(t, item.category).toLowerCase();
       return (
         item.question.toLowerCase().includes(q) ||
         item.answer.toLowerCase().includes(q) ||
-        item.category.toLowerCase().includes(q)
+        categoryLabel.includes(q)
       );
     });
-  }, [category, deferredQuery]);
+  }, [category, deferredQuery, items, t]);
 
   return (
     <section className="py-12 sm:py-14" aria-label={t("nav.faq")}>
@@ -59,8 +61,9 @@ export function FaqExplorer() {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label={t("faq.categories")}>
-          {(["All", ...FAQ_CATEGORIES] as const).map((item) => {
+          {(["all", ...FAQ_CATEGORY_IDS] as const).map((item) => {
             const selected = category === item;
+            const label = item === "all" ? t("faq.all") : getFaqCategoryLabel(t, item);
             return (
               <button
                 key={item}
@@ -75,31 +78,31 @@ export function FaqExplorer() {
                     : "border-border/70 bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground",
                 )}
               >
-                {item === "All" ? t("faq.all") : item}
+                {label}
               </button>
             );
           })}
         </div>
 
         <div className="mt-10 space-y-10">
-          {FAQ_CATEGORIES.filter((cat) => category === "All" || category === cat).map((cat) => {
-            const items = filtered.filter((item) => item.category === cat);
-            if (items.length === 0) {
+          {FAQ_CATEGORY_IDS.filter((cat) => category === "all" || category === cat).map((cat) => {
+            const categoryItems = filtered.filter((item) => item.category === cat);
+            if (categoryItems.length === 0) {
               return null;
             }
             return (
               <div key={cat}>
                 <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
-                  {cat}
+                  {getFaqCategoryLabel(t, cat)}
                 </h2>
                 <div className="mt-4 space-y-3">
-                  {items.map((item) => {
-                    const open = openQuestion === item.question;
-                    const panelId = `faq-panel-${slugFaqQuestion(item.question)}`;
-                    const buttonId = `faq-trigger-${slugFaqQuestion(item.question)}`;
+                  {categoryItems.map((item) => {
+                    const open = openQuestion === item.id;
+                    const panelId = `faq-panel-${item.id}`;
+                    const buttonId = `faq-trigger-${item.id}`;
                     return (
                       <div
-                        key={item.question}
+                        key={item.id}
                         className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm"
                       >
                         <button
@@ -109,9 +112,7 @@ export function FaqExplorer() {
                           aria-controls={panelId}
                           className="flex w-full items-start justify-between gap-4 px-5 py-4 text-start text-sm font-semibold text-foreground transition-colors hover:bg-muted/30 sm:text-base"
                           onClick={() =>
-                            setOpenQuestion((current) =>
-                              current === item.question ? null : item.question,
-                            )
+                            setOpenQuestion((current) => (current === item.id ? null : item.id))
                           }
                         >
                           <span>{item.question}</span>
@@ -153,11 +154,4 @@ export function FaqExplorer() {
       </PublicPageContainer>
     </section>
   );
-}
-
-function slugFaqQuestion(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
 }

@@ -1,12 +1,17 @@
 import { CustomerPageHeader } from "@/features/customer/components/page-header";
 import { ReferralHub } from "@/features/customer/referrals/referral-hub";
+import { getRequestLanguage } from "@/i18n/request-language";
+import { createTranslator } from "@/i18n/translate";
 
-export default function ReferralsPage() {
+export default async function ReferralsPage() {
+  const { language } = await getRequestLanguage();
+  const t = createTranslator(language);
+
   return (
     <>
       <CustomerPageHeader
-        title="Referrals"
-        description="How do I recommend this platform responsibly? Invitation tools over the frozen referral engine — no spam, no invented rewards."
+        title={t("referrals.title")}
+        description={t("referrals.page.description")}
       />
       <ReferralHub />
     </>
