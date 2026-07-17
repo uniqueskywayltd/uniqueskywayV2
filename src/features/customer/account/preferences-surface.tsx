@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Settings2 } from "lucide-react";
 
-import { LANGUAGE_COOKIE_NAME, listSelectableLanguages } from "@/i18n";
+import { listSelectableLanguages, type AppLanguage, isAppLanguage } from "@/i18n";
+import { writeLanguageCookie } from "@/features/i18n/persist-language";
 import {
   Alert,
   AlertDescription,
@@ -101,8 +102,8 @@ export function PreferencesSurface() {
     if (result.error) setError(result.error);
     else {
       setMessage(t("settings.saved"));
-      if (typeof document !== "undefined") {
-        document.cookie = `${LANGUAGE_COOKIE_NAME}=${encodeURIComponent(language)}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+      if (typeof document !== "undefined" && isAppLanguage(language)) {
+        writeLanguageCookie(language as AppLanguage, { explicit: true });
       }
     }
     setPending(false);

@@ -40,11 +40,11 @@ function NavLink({
         mobile ? "rounded-lg px-3 py-3 text-base" : "py-2 text-sm",
         active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
         !mobile &&
-          "after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:bg-primary after:transition-transform after:duration-200 after:content-['']",
+          "after:absolute after:bottom-0 after:start-0 after:h-px after:w-full after:bg-primary after:transition-transform after:duration-200 after:content-['']",
         !mobile &&
           (active
             ? "after:scale-x-100"
-            : "after:origin-left after:scale-x-0 hover:after:scale-x-100"),
+            : "after:origin-left after:scale-x-0 hover:after:scale-x-100 rtl:after:origin-right"),
         mobile && active && "bg-muted text-foreground",
       )}
     >
@@ -80,7 +80,7 @@ export function PublicHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
         <BrandMark
           surface="theme"
           width={128}
@@ -94,11 +94,26 @@ export function PublicHeader() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5">
-          <div className="hidden items-center gap-0.5 sm:gap-1.5 md:flex">
-            <ThemeToggle compact />
-            <LanguageSelector compact />
+          {/* Mobile: theme + globe + hamburger — single row */}
+          <div className="flex items-center gap-0.5 md:hidden">
+            <ThemeToggle compact className="size-11" />
+            <LanguageSelector variant="icon" />
+            <button
+              type="button"
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => setMobileOpen(true)}
+              aria-expanded={mobileOpen}
+              aria-controls="public-mobile-nav"
+              aria-label={t("chrome.open_nav")}
+            >
+              <Menu className="h-5 w-5" aria-hidden />
+            </button>
           </div>
+
+          {/* Desktop: theme + full language names + auth CTAs */}
           <div className="hidden items-center gap-1.5 md:flex">
+            <ThemeToggle compact />
+            <LanguageSelector variant="full" compact />
             <Link href="/auth/login" className={marketingHeaderOutlineBtn()}>
               {t("chrome.sign_in")}
             </Link>
@@ -106,16 +121,6 @@ export function PublicHeader() {
               {t("chrome.open_account")}
             </Link>
           </div>
-          <button
-            type="button"
-            className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
-            onClick={() => setMobileOpen(true)}
-            aria-expanded={mobileOpen}
-            aria-controls="public-mobile-nav"
-            aria-label={t("chrome.open_nav")}
-          >
-            <Menu className="h-5 w-5" aria-hidden />
-          </button>
         </div>
       </div>
 
@@ -127,15 +132,15 @@ export function PublicHeader() {
           aria-modal="true"
           aria-label={t("chrome.open_nav")}
         >
-          <div className="flex h-[4.25rem] items-center justify-between gap-3 border-b border-border/50 px-4">
+          <div className="flex h-[4.25rem] items-center justify-between gap-2 border-b border-border/50 px-4">
             <BrandMark
               surface="theme"
               width={112}
-              className="min-w-0 [&_img]:h-auto [&_img]:w-[100px]"
+              className="min-w-0 shrink [&_img]:h-auto [&_img]:w-[100px]"
             />
             <div className="flex shrink-0 items-center gap-0.5">
-              <ThemeToggle compact />
-              <LanguageSelector compact />
+              <ThemeToggle compact className="size-11" />
+              <LanguageSelector variant="icon" />
               <button
                 type="button"
                 className="inline-flex size-11 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

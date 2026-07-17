@@ -4,7 +4,13 @@ import type { MessageCatalog } from "../types";
 export const enMessages = {
   // Language / theme
   "language.selector.label": "Language",
-  "language.selector.change": "Change language",
+  "language.selector.change": "Change language — currently {language}",
+  "language.selector.current": "Current language: {language}",
+  "language.suggest.noticed": "We noticed your browser is set to {language}.",
+  "language.suggest.switch_prompt": "Switch the site to {language}?",
+  "language.suggest.switch": "Switch",
+  "language.suggest.not_now": "Not Now",
+  "language.suggest.dismiss": "Dismiss",
   "theme.toggle.light": "Switch to light mode",
   "theme.toggle.dark": "Switch to dark mode",
   "theme.toggle.system": "Switch to system theme",

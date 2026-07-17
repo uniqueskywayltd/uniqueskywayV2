@@ -113,19 +113,17 @@ export function CustomerShell({ children }: CustomerShellProps) {
                 <BrandMark surface="theme" width={120} className="[&_img]:h-auto [&_img]:max-h-8" />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <ThemeToggle compact />
-              <div className="hidden sm:block">
-                <LanguageSelector />
-              </div>
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <ThemeToggle compact className="size-11 sm:size-9" />
+              <LanguageSelector variant="auto" />
               <Link
                 href="/account/notifications"
-                className="relative rounded-md border px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="relative inline-flex size-11 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:text-foreground sm:size-auto sm:px-3 sm:py-2"
               >
                 <Bell className="size-4" aria-hidden="true" />
                 <span className="sr-only">{t("chrome.notifications")}</span>
                 {summary?.unreadNotificationCount ? (
-                  <span className="absolute -right-1 -top-1 size-2 rounded-full bg-destructive" />
+                  <span className="absolute -end-1 -top-1 size-2 rounded-full bg-destructive sm:end-0 sm:top-0" />
                 ) : null}
               </Link>
               {summary ? (
@@ -137,7 +135,10 @@ export function CustomerShell({ children }: CustomerShellProps) {
                     <AvatarImage src={summary.profile?.avatarUrl ?? brandAssets.icon} alt="" />
                     <AvatarFallback>{initials || "US"}</AvatarFallback>
                   </Avatar>
-                  <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
+                  <ChevronDown
+                    className="hidden size-4 text-muted-foreground sm:block"
+                    aria-hidden="true"
+                  />
                 </Link>
               ) : null}
             </div>
@@ -163,10 +164,10 @@ export function CustomerShell({ children }: CustomerShellProps) {
                 onNavigate={() => setMobileOpen(false)}
               />
               <div className="border-t pt-3 sm:hidden">
-                <div className="mb-3 flex items-center gap-2">
-                  <ThemeToggle compact />
-                </div>
-                <LanguageSelector compact={false} />
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                  {t("language.selector.label")}
+                </p>
+                <LanguageSelector variant="full" compact={false} />
               </div>
             </nav>
           ) : null}

@@ -193,9 +193,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              <ThemeToggle compact />
-              <LanguageSelector compact />
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <ThemeToggle compact className="size-11 sm:size-9" />
+              <LanguageSelector variant="auto" />
               <DashboardSignOutButton />
             </div>
           </header>
@@ -206,7 +206,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
               <DialogPrimitive.Content
                 id="dashboard-mobile-nav"
                 aria-describedby={undefined}
-                className="fixed inset-y-0 left-0 z-[var(--z-modal)] flex w-[min(100vw-1rem,20rem)] flex-col gap-0 border-r bg-card p-0 text-card-foreground shadow-[var(--elevation-3)] outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left motion-reduce:animate-none lg:hidden"
+                className="fixed inset-y-0 start-0 z-[var(--z-modal)] flex w-[min(100vw-1rem,20rem)] flex-col gap-0 border-e bg-card p-0 text-card-foreground shadow-[var(--elevation-3)] outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left rtl:data-[state=closed]:slide-out-to-right rtl:data-[state=open]:slide-in-from-right motion-reduce:animate-none lg:hidden"
               >
                 <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
                   <DialogPrimitive.Title className="px-1 text-sm font-semibold text-foreground">

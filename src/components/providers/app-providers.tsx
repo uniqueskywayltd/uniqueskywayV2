@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { SmartsuppChat } from "@/components/providers/smartsupp-chat";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { I18nProvider } from "@/features/i18n/i18n-provider";
+import { LanguageSuggestionBanner } from "@/features/i18n/language-suggestion-banner";
 import { SocialProofToasts } from "@/features/public/components/social-proof-toasts";
 import type { AppLanguage } from "@/i18n";
 
@@ -19,6 +20,7 @@ export function AppProviders({
     <ThemeProvider>
       <I18nProvider initialLanguage={language}>
         {children}
+        <LanguageSuggestionBanner />
         <SocialProofToasts />
         <SmartsuppChat />
       </I18nProvider>

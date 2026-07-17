@@ -16,12 +16,12 @@ describe("resolveLanguage", () => {
     ).toBe("ar");
   });
 
-  it("uses browser language when no preference is saved", () => {
+  it("does not auto-apply browser language without a saved preference", () => {
     expect(
       resolveLanguage({
         acceptLanguageHeader: "es-MX,es;q=0.9,en;q=0.8",
       }),
-    ).toBe("es");
+    ).toBe("en");
   });
 
   it("ignores retired language tags from Accept-Language", () => {
@@ -29,19 +29,19 @@ describe("resolveLanguage", () => {
     expect(firstSupportedFromAcceptLanguage("ja,en;q=0.8")).toBe("en");
   });
 
-  it("falls back to country then English", () => {
-    expect(resolveLanguage({ countryHint: "MX" })).toBe("es");
+  it("does not auto-apply country hints; defaults to English", () => {
+    expect(resolveLanguage({ countryHint: "MX" })).toBe("en");
     expect(resolveLanguage({ countryHint: "BR" })).toBe("en");
     expect(resolveLanguage({})).toBe("en");
   });
 
-  it("ignores unsupported preference tags", () => {
+  it("ignores unsupported preference tags and stays on English", () => {
     expect(
       resolveLanguage({
         savedPreference: "de",
         acceptLanguageHeader: "fr",
       }),
-    ).toBe("fr");
+    ).toBe("en");
   });
 
   it("ignores retired saved preferences", () => {
@@ -51,6 +51,14 @@ describe("resolveLanguage", () => {
         acceptLanguageHeader: "en",
       }),
     ).toBe("en");
+  });
+});
+
+describe("firstSupportedFromAcceptLanguage", () => {
+  it("detects supported browser languages for the suggestion banner", () => {
+    expect(firstSupportedFromAcceptLanguage("fr-FR,fr;q=0.9")).toBe("fr");
+    expect(firstSupportedFromAcceptLanguage("ar")).toBe("ar");
+    expect(firstSupportedFromAcceptLanguage("es-ES")).toBe("es");
   });
 });
 

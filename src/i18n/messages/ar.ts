@@ -3,7 +3,13 @@ import type { MessageCatalog } from "../types";
 
 export const arMessages = localeFromEnglish({
   "language.selector.label": "اللغة",
-  "language.selector.change": "تغيير اللغة",
+  "language.selector.change": "تغيير اللغة — الحالية {language}",
+  "language.selector.current": "اللغة الحالية: {language}",
+  "language.suggest.noticed": "لاحظنا أن متصفحك مضبوط على {language}.",
+  "language.suggest.switch_prompt": "هل تريد تحويل الموقع إلى {language}؟",
+  "language.suggest.switch": "تبديل",
+  "language.suggest.not_now": "ليس الآن",
+  "language.suggest.dismiss": "إغلاق",
   "theme.toggle.light": "التبديل إلى الوضع الفاتح",
   "theme.toggle.dark": "التبديل إلى الوضع الداكن",
   "theme.toggle.system": "استخدام سمة النظام",

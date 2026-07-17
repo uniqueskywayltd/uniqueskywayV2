@@ -9,24 +9,14 @@ export interface ResolveLanguageInput {
 }
 
 /**
- * Priority: saved preference → browser → optional country → English.
- * Unsupported legacy tags (pt, ja, etc.) are ignored and fall through.
+ * Active site language: saved preference only.
+ * Browser / country hints are used for the opt-in suggestion banner — never auto-applied.
  */
 export function resolveLanguage(input: ResolveLanguageInput): AppLanguage {
   const fallback = input.defaultLanguage ?? DEFAULT_LANGUAGE;
 
   if (isAppLanguage(input.savedPreference)) {
     return input.savedPreference;
-  }
-
-  const fromBrowser = firstSupportedFromAcceptLanguage(input.acceptLanguageHeader);
-  if (fromBrowser) {
-    return fromBrowser;
-  }
-
-  const fromCountry = languageFromCountryHint(input.countryHint);
-  if (fromCountry) {
-    return fromCountry;
   }
 
   return fallback;
@@ -56,7 +46,7 @@ export function firstSupportedFromAcceptLanguage(
   return null;
 }
 
-/** Optional, never stronger than preference or browser. */
+/** Optional geo hint for suggestion UX — never stronger than an explicit preference. */
 export function languageFromCountryHint(country: string | null | undefined): AppLanguage | null {
   if (!country) return null;
   const normalized = country.trim().toUpperCase();

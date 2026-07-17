@@ -2,57 +2,72 @@
 
 import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Languages } from "lucide-react";
+import { Check, Globe, Languages } from "lucide-react";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
-import { useI18n } from "@/features/i18n/i18n-provider";
 import {
-  getLanguageDirection,
-  getLanguageEntry,
-  LANGUAGE_COOKIE_NAME,
-  listSelectableLanguages,
-  type AppLanguage,
-} from "@/i18n";
-import { appPath } from "@/lib/app-path";
+  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useI18n } from "@/features/i18n/i18n-provider";
+import { persistLanguageChoice } from "@/features/i18n/persist-language";
+import { getLanguageEntry, listSelectableLanguages, type AppLanguage } from "@/i18n";
 import { cn } from "@/lib/utils";
-
-async function getCsrfToken(): Promise<string | null> {
-  try {
-    const response = await fetch(appPath("/api/auth/csrf"), { credentials: "include" });
-    if (!response.ok) return null;
-    const payload = (await response.json()) as { data?: { csrfToken?: string } };
-    return payload.data?.csrfToken ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function writeCookieLanguage(language: AppLanguage) {
-  const maxAge = 60 * 60 * 24 * 365;
-  const secure =
-    typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
-  document.cookie = `${LANGUAGE_COOKIE_NAME}=${encodeURIComponent(language)}; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`;
-}
-
-function applyDocumentLanguage(language: AppLanguage) {
-  document.documentElement.lang = language;
-  document.documentElement.dir = getLanguageDirection(language);
-}
 
 export interface LanguageSelectorProps {
   className?: string;
   compact?: boolean;
+  /**
+   * full — native names in a select (desktop).
+   * icon — compact globe button + premium picker (mobile).
+   * auto — icon below md, full from md up (default).
+   */
+  variant?: "auto" | "full" | "icon";
 }
 
-/** Premium language selector — native language names only (no EN/ES abbreviations). */
-export function LanguageSelector({ className, compact = true }: LanguageSelectorProps) {
+/** Premium language selector — native names; mobile uses a globe icon picker. */
+export function LanguageSelector({
+  className,
+  compact = true,
+  variant = "auto",
+}: LanguageSelectorProps) {
+  if (variant === "icon") {
+    return <LanguageIconPicker {...(className ? { className } : {})} />;
+  }
+  if (variant === "full") {
+    return <LanguageFullSelect {...(className ? { className } : {})} compact={compact} />;
+  }
+
+  return (
+    <>
+      <LanguageIconPicker
+        {...(className ? { className: cn("md:hidden", className) } : { className: "md:hidden" })}
+      />
+      <LanguageFullSelect
+        {...(className
+          ? { className: cn("hidden md:flex", className) }
+          : { className: "hidden md:flex" })}
+        compact={compact}
+      />
+    </>
+  );
+}
+
+function useLanguageChange() {
   const router = useRouter();
-  const labelId = useId();
-  const { language, setLanguage, t } = useI18n();
+  const { language, setLanguage } = useI18n();
   const [pending, setPending] = useState(false);
   const [, startTransition] = useTransition();
-  const options = listSelectableLanguages();
-  const current = getLanguageEntry(language);
 
   async function onChange(next: string) {
     const typed = next as AppLanguage;
@@ -60,31 +75,22 @@ export function LanguageSelector({ className, compact = true }: LanguageSelector
 
     setPending(true);
     setLanguage(typed);
-    writeCookieLanguage(typed);
-    applyDocumentLanguage(typed);
-
-    try {
-      const csrfToken = await getCsrfToken();
-      if (csrfToken) {
-        await fetch(appPath("/api/locale"), {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "content-type": "application/json",
-            "x-csrf-token": csrfToken,
-          },
-          body: JSON.stringify({ language: typed }),
-        });
-      }
-    } catch {
-      // Cookie + in-memory language already applied.
-    }
-
+    await persistLanguageChoice(typed);
     startTransition(() => {
       router.refresh();
     });
     setPending(false);
   }
+
+  return { language, pending, onChange };
+}
+
+function LanguageFullSelect({ className, compact }: { className?: string; compact: boolean }) {
+  const labelId = useId();
+  const { t } = useI18n();
+  const { language, pending, onChange } = useLanguageChange();
+  const options = listSelectableLanguages();
+  const current = getLanguageEntry(language);
 
   return (
     <div className={cn("flex shrink-0 items-center", className)}>
@@ -94,7 +100,7 @@ export function LanguageSelector({ className, compact = true }: LanguageSelector
       <Select value={language} onValueChange={onChange} disabled={pending}>
         <SelectTrigger
           aria-labelledby={labelId}
-          aria-label={t("language.selector.change")}
+          aria-label={t("language.selector.change", { language: current.nativeName })}
           className={cn(
             compact
               ? "h-9 min-w-[8.5rem] shrink-0 justify-between gap-2 border-border/60 bg-background/80 px-2.5 text-sm font-medium shadow-none"
@@ -124,5 +130,73 @@ export function LanguageSelector({ className, compact = true }: LanguageSelector
         </SelectContent>
       </Select>
     </div>
+  );
+}
+
+function LanguageIconPicker({ className }: { className?: string }) {
+  const { t } = useI18n();
+  const { language, pending, onChange } = useLanguageChange();
+  const options = listSelectableLanguages();
+  const current = getLanguageEntry(language);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          disabled={pending}
+          className={cn(
+            "size-11 shrink-0 text-muted-foreground hover:text-foreground md:size-9",
+            className,
+          )}
+          aria-label={t("language.selector.change", { language: current.nativeName })}
+          title={t("language.selector.current", { language: current.nativeName })}
+        >
+          <Globe className="size-4" aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="z-[var(--z-dropdown)] min-w-[12.5rem] p-1.5"
+        aria-label={t("language.selector.label")}
+      >
+        <DropdownMenuLabel className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+          {t("language.selector.label")}
+        </DropdownMenuLabel>
+        {options.map((option) => {
+          const active = option.code === language;
+          return (
+            <DropdownMenuItem
+              key={option.code}
+              disabled={pending}
+              className={cn(
+                "cursor-pointer gap-3 rounded-md px-2.5 py-2.5 text-sm font-medium",
+                active && "bg-accent/70",
+              )}
+              onSelect={() => {
+                void onChange(option.code);
+              }}
+              aria-current={active ? "true" : undefined}
+            >
+              <span
+                className="min-w-0 flex-1 truncate"
+                dir={option.direction === "rtl" ? "rtl" : "ltr"}
+              >
+                {option.nativeName}
+              </span>
+              <Check
+                className={cn(
+                  "size-4 shrink-0 text-primary transition-opacity",
+                  active ? "opacity-100" : "opacity-0",
+                )}
+                aria-hidden
+              />
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

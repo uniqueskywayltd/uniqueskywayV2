@@ -3,7 +3,13 @@ import type { MessageCatalog } from "../types";
 
 export const esMessages = localeFromEnglish({
   "language.selector.label": "Idioma",
-  "language.selector.change": "Cambiar idioma",
+  "language.selector.change": "Cambiar idioma — actual {language}",
+  "language.selector.current": "Idioma actual: {language}",
+  "language.suggest.noticed": "Notamos que tu navegador está en {language}.",
+  "language.suggest.switch_prompt": "¿Cambiar el sitio a {language}?",
+  "language.suggest.switch": "Cambiar",
+  "language.suggest.not_now": "Ahora no",
+  "language.suggest.dismiss": "Cerrar",
   "theme.toggle.light": "Cambiar a modo claro",
   "theme.toggle.dark": "Cambiar a modo oscuro",
   "theme.toggle.system": "Usar tema del sistema",

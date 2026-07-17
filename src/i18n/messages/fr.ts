@@ -3,7 +3,13 @@ import type { MessageCatalog } from "../types";
 
 export const frMessages = localeFromEnglish({
   "language.selector.label": "Langue",
-  "language.selector.change": "Changer de langue",
+  "language.selector.change": "Changer de langue — actuelle {language}",
+  "language.selector.current": "Langue actuelle : {language}",
+  "language.suggest.noticed": "Nous avons remarqué que votre navigateur est en {language}.",
+  "language.suggest.switch_prompt": "Passer le site en {language} ?",
+  "language.suggest.switch": "Changer",
+  "language.suggest.not_now": "Pas maintenant",
+  "language.suggest.dismiss": "Fermer",
   "theme.toggle.light": "Passer en mode clair",
   "theme.toggle.dark": "Passer en mode sombre",
   "theme.toggle.system": "Utiliser le thème du système",
