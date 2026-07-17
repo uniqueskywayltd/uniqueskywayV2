@@ -3,15 +3,13 @@
 import { Skeleton } from "@/components/ui";
 import { DashboardActivitySection } from "@/features/customer/dashboard/dashboard-activity-section";
 import { useDashboardChrome } from "@/features/customer/dashboard/dashboard-chrome-context";
+import { DashboardGrowthSurface } from "@/features/customer/dashboard/dashboard-growth-surface";
 import { DashboardInvestmentsSection } from "@/features/customer/dashboard/dashboard-investments-section";
 import { DashboardMoneyCards } from "@/features/customer/dashboard/dashboard-money-cards";
 import { DashboardReveal } from "@/features/customer/dashboard/dashboard-motion";
 import { DashboardQuickActions } from "@/features/customer/dashboard/dashboard-quick-actions";
 import { DashboardWelcomeHero } from "@/features/customer/dashboard/dashboard-welcome-hero";
-import {
-  getPersonFullName,
-  getPersonHandle,
-} from "@/lib/utils/person-display";
+import { getPersonFullName, getPersonHandle } from "@/lib/utils/person-display";
 
 function DashboardFrameSkeleton() {
   return (
@@ -67,13 +65,16 @@ export function DashboardView() {
       <DashboardReveal delayMs={40}>
         <DashboardQuickActions />
       </DashboardReveal>
-      <DashboardReveal delayMs={80}>
+      <DashboardReveal delayMs={70}>
+        <DashboardGrowthSurface />
+      </DashboardReveal>
+      <DashboardReveal delayMs={100}>
         <DashboardMoneyCards />
       </DashboardReveal>
-      <DashboardReveal delayMs={120}>
+      <DashboardReveal delayMs={140}>
         <DashboardInvestmentsSection />
       </DashboardReveal>
-      <DashboardReveal delayMs={160}>
+      <DashboardReveal delayMs={180}>
         <DashboardActivitySection />
       </DashboardReveal>
       <p className="sr-only">Primary question: How am I doing today?</p>

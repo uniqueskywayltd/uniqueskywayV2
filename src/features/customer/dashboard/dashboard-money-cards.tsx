@@ -5,15 +5,16 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   BriefcaseBusiness,
-  Clock,
   Lock,
   PiggyBank,
+  TrendingUp,
   Wallet,
 } from "lucide-react";
 
 import { Skeleton } from "@/components/ui";
 import { StatCard } from "@/components/ui/stat-card";
 import { getCustomerJson } from "@/features/customer/api-client";
+import type { PortfolioListResponse } from "@/features/customer/portfolio/types";
 import { formatMoneyMinorUnits } from "@/lib/money-format";
 
 interface WalletOverviewPayload {
@@ -28,14 +29,6 @@ interface WalletOverviewPayload {
   openWithdrawalCount: number;
 }
 
-interface PortfolioListPayload {
-  summary: {
-    totalCount: number;
-    activePrincipalMinor: string;
-    byStatus: Record<string, number>;
-  };
-}
-
 function formatMinorCurrency(amountMinor: string, currency: string) {
   return formatMoneyMinorUnits("en", amountMinor, currency, 2);
 }
@@ -43,7 +36,7 @@ function formatMinorCurrency(amountMinor: string, currency: string) {
 /** DP2 — money cards bound to certified wallet + portfolio read models only. */
 export function DashboardMoneyCards() {
   const [wallet, setWallet] = useState<WalletOverviewPayload | null>(null);
-  const [portfolio, setPortfolio] = useState<PortfolioListPayload | null>(null);
+  const [portfolio, setPortfolio] = useState<PortfolioListResponse["summary"] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -52,12 +45,12 @@ export function DashboardMoneyCards() {
 
     void Promise.all([
       getCustomerJson<WalletOverviewPayload>("/api/customer/wallet"),
-      getCustomerJson<PortfolioListPayload>("/api/customer/investments?bucket=all&sort=newest"),
+      getCustomerJson<PortfolioListResponse>("/api/customer/investments?bucket=all&sort=newest"),
     ]).then(([walletResult, portfolioResult]) => {
       if (!active) return;
       setError(walletResult.error ?? portfolioResult.error ?? null);
       setWallet(walletResult.data ?? null);
-      setPortfolio(portfolioResult.data ?? null);
+      setPortfolio(portfolioResult.data?.summary ?? null);
       setLoading(false);
     });
 
@@ -91,13 +84,15 @@ export function DashboardMoneyCards() {
     );
   }
 
-  const currency = wallet.balances.currency || "USD";
-  const activeCount =
-    (portfolio.summary.byStatus.active ?? 0) + (portfolio.summary.byStatus.maturing ?? 0);
+  const currency = wallet.balances.currency || portfolio.currency || "USD";
+  const activeCount = (portfolio.byStatus.active ?? 0) + (portfolio.byStatus.maturing ?? 0);
   const lockedDescription =
     wallet.balances.reservedBalanceMinor !== "0"
       ? `Includes reserved for withdrawal (${formatMinorCurrency(wallet.balances.reservedBalanceMinor, currency)}).`
       : "Principal currently locked in active investments.";
+  const todayEarnings = portfolio.todayEarningsMinor ?? "0";
+  const totalRoi = portfolio.totalEarningsMinor ?? portfolio.totalRoiMinor ?? "0";
+  const portfolioValue = portfolio.portfolioValueMinor ?? portfolio.activePrincipalMinor ?? "0";
 
   return (
     <div className="space-y-6">
@@ -105,8 +100,8 @@ export function DashboardMoneyCards() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             title="Portfolio value"
-            value={formatMinorCurrency(portfolio.summary.activePrincipalMinor, currency)}
-            description="Active principal from certified investments."
+            value={formatMinorCurrency(portfolioValue, currency)}
+            description="Wallet plus locked investment capital."
             icon={<Wallet />}
             href="/portfolio"
             accent="violet"
@@ -114,10 +109,10 @@ export function DashboardMoneyCards() {
           <StatCard
             title="Available balance"
             value={formatMinorCurrency(wallet.balances.availableBalanceMinor, currency)}
-            description="Withdrawable now from the certified ledger."
+            description="Ready to invest or withdraw from the ledger."
             icon={<PiggyBank />}
             href="/wallet"
-            accent="emerald"
+            accent="primary"
           />
           <StatCard
             title="Locked balance"
@@ -128,12 +123,12 @@ export function DashboardMoneyCards() {
             accent="amber"
           />
           <StatCard
-            title="Pending balance"
-            value={formatMinorCurrency(wallet.balances.pendingBalanceMinor, currency)}
-            description="Funds not yet available — awaiting confirmation."
-            icon={<Clock />}
-            href="/wallet"
-            accent="sky"
+            title="Today's earnings"
+            value={formatMinorCurrency(todayEarnings, currency)}
+            description="Accrued today — credited after settlement."
+            icon={<TrendingUp />}
+            href="/portfolio"
+            accent="emerald"
           />
         </div>
       </section>
@@ -141,20 +136,20 @@ export function DashboardMoneyCards() {
       <section aria-label="Investment summary">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
+            title="Total ROI earned"
+            value={formatMinorCurrency(totalRoi, currency)}
+            description="Live earnings across active investments."
+            icon={<TrendingUp />}
+            href="/portfolio"
+            accent="emerald"
+          />
+          <StatCard
             title="Active investments"
             value={String(activeCount)}
             description="Investments currently active or maturing."
             icon={<BriefcaseBusiness />}
             href="/portfolio"
             accent="violet"
-          />
-          <StatCard
-            title="Portfolio positions"
-            value={String(portfolio.summary.totalCount)}
-            description="All certified investment records."
-            icon={<Wallet />}
-            href="/portfolio"
-            accent="primary"
           />
           <StatCard
             title="Pending deposits"
@@ -165,12 +160,12 @@ export function DashboardMoneyCards() {
             accent="sky"
           />
           <StatCard
-            title="Open withdrawals"
+            title="Pending withdrawals"
             value={String(wallet.openWithdrawalCount)}
             description="Withdrawal requests still in progress."
             icon={<ArrowUpRight />}
             href="/wallet/withdrawals"
-            accent="rose"
+            accent="sky"
           />
         </div>
       </section>

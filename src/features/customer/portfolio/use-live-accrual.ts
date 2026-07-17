@@ -79,3 +79,67 @@ export function remainingDaysLabel(maturityDate: string | null, now = new Date()
   const days = Math.max(0, Math.ceil((end - now.getTime()) / 86_400_000));
   return days === 1 ? "1 day" : `${days} days`;
 }
+
+export type AggregatedLiveAccrualView = {
+  todayEarningsMinor: string;
+  totalLiveEarningsMinor: string;
+  currentValueMinor: string;
+  postedRoiMinor: string;
+  nextSettlementCountdownSeconds: number;
+  activeCount: number;
+  visualOnly: true;
+};
+
+/** Sum live accrual across active investments — one timer, no API/DB writes. */
+export function useAggregatedLiveAccrual(
+  sources: LiveAccrualSource[],
+): AggregatedLiveAccrualView | null {
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const activeSources = sources.filter(
+    (source) =>
+      Boolean(source.activatedAt) &&
+      (source.status === "active" || source.status === "maturing") &&
+      Number.isFinite(source.dailyRoiBps),
+  );
+
+  useEffect(() => {
+    if (activeSources.length === 0) return;
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [activeSources.length]);
+
+  if (activeSources.length === 0) return null;
+
+  const now = new Date(nowMs);
+  let todayEarningsMinor = 0n;
+  let totalLiveEarningsMinor = 0n;
+  let currentValueMinor = 0n;
+  let postedRoiMinor = 0n;
+
+  for (const source of activeSources) {
+    if (!source.activatedAt) continue;
+    postedRoiMinor += BigInt(source.postedRoiMinor);
+    const live = calculateContinuousLiveAccrual({
+      principalMinor: BigInt(source.principalMinor),
+      dailyRoiBps: source.dailyRoiBps,
+      activatedAt: new Date(source.activatedAt),
+      termDays: source.termDays,
+      postedRoiMinor: BigInt(source.postedRoiMinor),
+      promisedRoiMinor: source.promisedRoiMinor ? BigInt(source.promisedRoiMinor) : null,
+      now,
+    });
+    todayEarningsMinor += live.todayEarningsMinor;
+    totalLiveEarningsMinor += live.totalLiveEarningsMinor;
+    currentValueMinor += live.currentValueMinor;
+  }
+
+  return {
+    todayEarningsMinor: todayEarningsMinor.toString(),
+    totalLiveEarningsMinor: totalLiveEarningsMinor.toString(),
+    currentValueMinor: currentValueMinor.toString(),
+    postedRoiMinor: postedRoiMinor.toString(),
+    nextSettlementCountdownSeconds: secondsUntilNextNewYorkMidnight(now),
+    activeCount: activeSources.length,
+    visualOnly: true,
+  };
+}

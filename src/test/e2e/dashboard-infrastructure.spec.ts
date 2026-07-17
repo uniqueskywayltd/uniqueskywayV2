@@ -90,6 +90,13 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
               totalCount: 2,
               byStatus: { active: 1, pending: 1, maturing: 0, matured: 0, cancelled: 0, failed: 0 },
               activePrincipalMinor: "25000",
+              currency: "USD",
+              portfolioValueMinor: "37500",
+              todayEarningsMinor: "1148",
+              totalEarningsMinor: "2148",
+              totalRoiMinor: "1000",
+              currentInvestmentValueMinor: "26148",
+              nextSettlementCountdownSeconds: 3600,
             },
             investments: [
               {
@@ -98,6 +105,8 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
                 currency: "USD",
                 principalMinor: "25000",
                 postedRoiMinor: "1000",
+                promisedRoiMinor: "7500",
+                dailyRoiBps: 300,
                 termDays: 30,
                 status: "active",
                 startAt: "2026-07-01T00:00:00.000Z",
@@ -231,21 +240,25 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
   test("renders certified money cards", async ({ page }) => {
     await page.goto("/dashboard");
 
+    await expect(page.getByRole("region", { name: "Live earnings" })).toBeVisible();
+    await expect(page.getByText("Investment Active")).toBeVisible();
+    await expect(page.getByText("Accrued Today")).toBeVisible();
+
     const portfolio = page.getByRole("region", { name: "Portfolio balances" });
     await expect(portfolio.getByText("Portfolio value")).toBeVisible();
-    await expect(portfolio.getByRole("link", { name: /Portfolio value/ })).toContainText("$250.00");
+    await expect(portfolio.getByRole("link", { name: /Portfolio value/ })).toContainText("$375.00");
     await expect(portfolio.getByText("Available balance")).toBeVisible();
     await expect(portfolio.getByText("$120.00")).toBeVisible();
     await expect(portfolio.getByText("Locked balance")).toBeVisible();
     await expect(portfolio.getByRole("link", { name: /Locked balance/ })).toContainText("$250.00");
-    await expect(portfolio.getByText("Pending balance")).toBeVisible();
-    await expect(portfolio.getByText("$5.00")).toBeVisible();
+    await expect(portfolio.getByText("Today's earnings")).toBeVisible();
 
     const summary = page.getByRole("region", { name: "Investment summary" });
+    await expect(summary.getByText("Total ROI earned")).toBeVisible();
     await expect(summary.getByText("Active investments")).toBeVisible();
     await expect(summary.getByText("1", { exact: true }).first()).toBeVisible();
     await expect(summary.getByText("Pending deposits")).toBeVisible();
-    await expect(summary.getByText("Open withdrawals")).toBeVisible();
+    await expect(summary.getByText("Pending withdrawals")).toBeVisible();
   });
 
   test("renders certified activity and notifications", async ({ page }) => {

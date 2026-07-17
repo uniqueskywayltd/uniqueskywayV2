@@ -74,8 +74,7 @@ export function DashboardInvestmentsSection() {
   );
   const pendingInvestments = data.investments.filter((item) => item.status === "pending");
   const featured = [...activeInvestments, ...pendingInvestments].slice(0, DISPLAY_LIMIT);
-  const activeCount =
-    (data.summary.byStatus.active ?? 0) + (data.summary.byStatus.maturing ?? 0);
+  const activeCount = (data.summary.byStatus.active ?? 0) + (data.summary.byStatus.maturing ?? 0);
   const byStatus = data.summary.byStatus;
 
   return (
@@ -126,11 +125,11 @@ export function DashboardInvestmentsSection() {
       {featured.length === 0 ? (
         <EmptyState
           icon={PieChart}
-          title="No investments yet"
-          description="When you activate a plan, progress, settlements, and maturity cues will appear here."
+          title="Start investing today"
+          description="Start investing today and let your money begin earning daily returns."
           action={
             <Button asChild>
-              <Link href="/portfolio">Open portfolio</Link>
+              <Link href="/portfolio/activate">Start Investing</Link>
             </Button>
           }
         />
@@ -227,7 +226,9 @@ function InvestmentSummaryCard({ investment }: { investment: PortfolioInvestment
           </div>
           <Progress
             value={progress}
-            className={cn(investment.status === "active" && "[&_[data-slot=progress-indicator]]:bg-emerald-500")}
+            className={cn(
+              investment.status === "active" && "[&_[data-slot=progress-indicator]]:bg-emerald-500",
+            )}
             aria-label={`Progress ${progress}%`}
           />
         </div>

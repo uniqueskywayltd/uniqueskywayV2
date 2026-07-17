@@ -3,19 +3,9 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-export type StatCardAccent =
-  | "primary"
-  | "sky"
-  | "emerald"
-  | "amber"
-  | "violet"
-  | "rose"
-  | "slate";
+export type StatCardAccent = "primary" | "sky" | "emerald" | "amber" | "violet" | "rose" | "slate";
 
-const accentStyles: Record<
-  StatCardAccent,
-  { bar: string; icon: string; hover: string }
-> = {
+const accentStyles: Record<StatCardAccent, { bar: string; icon: string; hover: string }> = {
   primary: {
     bar: "from-primary/70 via-primary/40 to-transparent",
     icon: "bg-primary/10 text-primary ring-primary/15",
@@ -78,8 +68,14 @@ function StatCardBody({
   return (
     <Card
       className={cn(
-        "relative h-full overflow-hidden border-border/70 bg-card/90 shadow-sm transition-all duration-200",
-        clickable && cn("-translate-y-0 hover:-translate-y-0.5 hover:shadow-md", styles.hover),
+        "relative h-full overflow-hidden border-border/70 bg-card/90 shadow-sm",
+        "motion-safe:transition-[border-color,box-shadow,transform] motion-safe:duration-200 motion-reduce:transition-none",
+        clickable &&
+          cn(
+            "-translate-y-0 motion-safe:hover:-translate-y-0.5 hover:shadow-md",
+            "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:border before:border-transparent before:opacity-0 before:transition-opacity before:duration-200 motion-safe:group-hover:before:opacity-100 before:border-primary/25",
+            styles.hover,
+          ),
         className,
       )}
     >
