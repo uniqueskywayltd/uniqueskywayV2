@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@/config/server-env", () => ({
+  getServerEnv: () => ({
+    NEXT_PUBLIC_APP_URL: "https://example.com",
+    CONTACT_SUPPORT_EMAIL: "support@example.com",
+  }),
+}));
+
 import type { AuthenticatedUser } from "@/application/auth";
 
 import { AdminCustomerService } from "./admin-customer-service";
@@ -12,6 +19,44 @@ const auditContext = {
 };
 
 describe("AdminCustomerService", () => {
+  it("creates a customer by loading details through the open transaction", async () => {
+    const fixture = createCreateCustomerFixture();
+
+    const result = await fixture.service.createCustomer(
+      {
+        email: "new.customer@example.com",
+        username: "newcustomer",
+        legalName: "New Customer",
+        displayName: "newcustomer",
+        password: "TempPass123!",
+        confirmPassword: "TempPass123!",
+      },
+      auditContext,
+    );
+
+    expect(result.user.id).toBe("user_new");
+    expect(result.profile?.displayName).toBe("newcustomer");
+    expect(result.account?.accountNumber).toBe("USW-NEW");
+    expect(result.temporaryPassword).toBe("TempPass123!");
+    expect(fixture.identityProvider.adminCreateUser).toHaveBeenCalled();
+    expect(fixture.identityRepository.ensureUser).toHaveBeenCalled();
+    expect(fixture.identityRepository.withTransaction).toHaveBeenCalled();
+    expect(fixture.notificationRepository.enqueueEmail).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        templateKey: "auth.welcome",
+        metadata: expect.objectContaining({
+          temporaryPassword: "TempPass123!",
+          username: "newcustomer",
+          mustChangePassword: true,
+        }),
+      }),
+    );
+    // Outside-tx lookup must not be required for success (READ COMMITTED isolation).
+    expect(fixture.identityRepository.findUserById).not.toHaveBeenCalled();
+    expect(fixture.identityProvider.adminDeleteUser).not.toHaveBeenCalled();
+  });
+
   it("rejects unauthenticated access to search", async () => {
     const fixture = createFixture({ authenticated: false });
 
@@ -454,5 +499,160 @@ function createFixture(options: FixtureOptions = {}) {
     identityRepository,
     coreRepository,
     operationsRepository,
+  };
+}
+
+function createCreateCustomerFixture() {
+  const currentUser: AuthenticatedUser = {
+    authUserId: "00000000-0000-0000-0000-000000000099",
+    email: "admin@example.com",
+    emailVerifiedAt: new Date("2026-07-13T12:00:00.000Z"),
+    displayName: "Admin",
+    mustChangePassword: false,
+  };
+
+  const adminAppUser = {
+    id: "admin_1",
+    authUserId: currentUser.authUserId,
+    email: "admin@example.com",
+    emailVerifiedAt: currentUser.emailVerifiedAt,
+    status: "active" as const,
+    createdAt: new Date("2026-07-13T12:00:00.000Z"),
+    updatedAt: new Date("2026-07-13T12:00:00.000Z"),
+  };
+
+  const createdUser = {
+    id: "user_new",
+    authUserId: "00000000-0000-0000-0000-000000000777",
+    email: "new.customer@example.com",
+    emailVerifiedAt: new Date("2026-07-13T12:00:00.000Z"),
+    status: "active" as const,
+    createdAt: new Date("2026-07-13T12:00:00.000Z"),
+    updatedAt: new Date("2026-07-13T12:00:00.000Z"),
+  };
+
+  const createdProfile = {
+    id: "profile_new",
+    userId: createdUser.id,
+    legalName: "New Customer",
+    displayName: "newcustomer",
+    phone: null,
+    country: null,
+    stateRegion: null,
+    dateOfBirth: null,
+    avatarStoragePath: null,
+    avatarContentType: null,
+    avatarUpdatedAt: null,
+    onboardingStatus: "not_started" as const,
+    kycStatus: "not_started" as const,
+    riskStatus: "not_reviewed" as const,
+    termsAcceptedAt: null,
+    termsVersion: null,
+    createdAt: new Date("2026-07-13T12:00:00.000Z"),
+    updatedAt: new Date("2026-07-13T12:00:00.000Z"),
+  };
+
+  const createdAccount = {
+    id: "account_new",
+    userId: createdUser.id,
+    accountNumber: "USW-NEW",
+    status: "active" as const,
+    restrictionReason: null as string | null,
+    openedAt: new Date("2026-07-13T12:00:00.000Z"),
+    closedAt: null as Date | null,
+    createdAt: new Date("2026-07-13T12:00:00.000Z"),
+    updatedAt: new Date("2026-07-13T12:00:00.000Z"),
+  };
+
+  const identityProvider = {
+    getCurrentUser: vi.fn(async () => currentUser),
+    adminCreateUser: vi.fn(async () => ({
+      authUserId: createdUser.authUserId,
+      email: createdUser.email,
+    })),
+    adminDeleteUser: vi.fn(async () => undefined),
+  };
+
+  const identityTx = {
+    findUserById: vi.fn(async (userId: string) => (userId === createdUser.id ? createdUser : null)),
+  };
+
+  const coreTx = {
+    findCustomerProfileByUserId: vi.fn(async () => createdProfile),
+    findCustomerAccountByUserId: vi.fn(async () => createdAccount),
+  };
+
+  const identityRepository = {
+    findUserByAuthUserId: vi.fn(async (authUserId: string) =>
+      authUserId === adminAppUser.authUserId ? adminAppUser : null,
+    ),
+    findUserById: vi.fn(async () => null),
+    findUserByEmail: vi.fn(async () => null),
+    findAdminProfileByUserId: vi.fn(async (userId: string) =>
+      userId === adminAppUser.id
+        ? {
+            id: "admin_profile_1",
+            userId,
+            status: "active" as const,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }
+        : null,
+    ),
+    listActiveRoleKeysForUser: vi.fn(async () => ["platform_admin"]),
+    listActivePermissionKeysForUser: vi.fn(async () => permissionKeysForRoles(["platform_admin"])),
+    ensureUser: vi.fn(async () => createdUser),
+    withTransaction: vi.fn(() => identityTx),
+  };
+
+  const coreRepository = {
+    findCustomerProfileByDisplayName: vi.fn(async () => null),
+    findCustomerProfileByUserId: vi.fn(async () => null),
+    findCustomerAccountByUserId: vi.fn(async () => null),
+    ensureCustomerProfile: vi.fn(async () => createdProfile),
+    ensureCustomerAccount: vi.fn(async () => createdAccount),
+    ensureCustomerPreferences: vi.fn(async () => ({})),
+    withTransaction: vi.fn(() => coreTx),
+  };
+
+  const ledgerRepository = {
+    ensureWallet: vi.fn(async () => ({ id: "wallet_new" })),
+    ensureLedgerAccount: vi.fn(async (_tx: unknown, values: { accountType: string }) => ({
+      id: `${values.accountType}_1`,
+    })),
+    ensureWalletAccountLink: vi.fn(async () => ({})),
+    lockWalletByUserCurrency: vi.fn(),
+    findWalletBalanceByUserCurrencyInTransaction: vi.fn(),
+    findWalletAccountByCategoryInTransaction: vi.fn(),
+    postLedgerTransaction: vi.fn(),
+  };
+
+  const notificationRepository = {
+    enqueueEmail: vi.fn(async () => ({ id: "email_1" })),
+    upsertNotificationPreference: vi.fn(async () => ({})),
+  };
+
+  const operationsRepository = {
+    appendAuditLog: vi.fn(async () => ({ id: "audit_1" })),
+  };
+
+  const service = new AdminCustomerService({
+    identityProvider: identityProvider as never,
+    transactionManager: {
+      runInTransaction: async <TResult>(work: (tx: unknown) => Promise<TResult>) =>
+        work({ db: {}, transactionId: "tx_create" }),
+    } as never,
+    identityRepository: identityRepository as never,
+    coreRepository: coreRepository as never,
+    operationsRepository: operationsRepository as never,
+    ledgerRepository: ledgerRepository as never,
+    notificationRepository: notificationRepository as never,
+  });
+
+  return {
+    service,
+    identityProvider,
+    identityRepository,
+    notificationRepository,
   };
 }

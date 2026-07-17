@@ -136,8 +136,12 @@ function buildEmail(
             `Hi ${firstName},`,
             "",
             `Welcome to ${brand.name}. Your investor account is ready.`,
+            `Username: ${username}`,
             temporaryPassword ? `Temporary password: ${temporaryPassword}` : null,
             `Sign in: ${loginUrl}`,
+            Boolean(metadata.mustChangePassword)
+              ? "You must change this password after your first sign-in."
+              : null,
             "",
             `Reply to this email if you need help or have questions.`,
           ]

@@ -10,7 +10,7 @@ import {
   hashUserAgent,
   type RequestSecurityContext,
 } from "@/application/auth/security";
-import { AppError } from "@/application/errors";
+import { AppError, isAppError } from "@/application/errors";
 import { getServerEnv } from "@/config/server-env";
 import { resolvePublicAppUrl } from "@/config/public-app-url";
 import { assertBalancedLedgerPosting } from "@/domains/ledger/posting";
@@ -114,7 +114,7 @@ export class AdminCustomerService {
     if (existing) {
       throw new AppError({
         code: "VALIDATION_ERROR",
-        message: "This email address is already registered.",
+        message: "Email already exists.",
       });
     }
 
@@ -125,7 +125,7 @@ export class AdminCustomerService {
       if (existingUsername) {
         throw new AppError({
           code: "VALIDATION_ERROR",
-          message: "This username is already taken.",
+          message: "Username already exists.",
         });
       }
     }
@@ -135,13 +135,18 @@ export class AdminCustomerService {
     const legalName = input.legalName.trim();
     const username = input.username.trim();
 
-    const created = await this.deps.identityProvider.adminCreateUser({
-      email,
-      password: temporaryPassword,
-      displayName,
-      emailConfirmed: true,
-      mustChangePassword: true,
-    });
+    let created: { authUserId: string; email: string };
+    try {
+      created = await this.deps.identityProvider.adminCreateUser({
+        email,
+        password: temporaryPassword,
+        displayName,
+        emailConfirmed: true,
+        mustChangePassword: true,
+      });
+    } catch (error) {
+      throw mapCreateCustomerFailure(error);
+    }
 
     try {
       const details = await this.deps.transactionManager.runInTransaction(async (tx) => {
@@ -180,7 +185,9 @@ export class AdminCustomerService {
           },
         });
 
-        const account = await this.deps.coreRepository.findCustomerAccountByUserId(appUser.id);
+        const account = await this.deps.coreRepository
+          .withTransaction(tx)
+          .findCustomerAccountByUserId(appUser.id);
         const { enqueueAdminEmail } = await import("@/application/notifications/admin-email");
         await enqueueAdminEmail(tx, this.deps.notificationRepository, {
           eventType: "admin.customer_created",
@@ -208,7 +215,7 @@ export class AdminCustomerService {
       return { ...details, temporaryPassword };
     } catch (error) {
       await this.deps.identityProvider.adminDeleteUser?.(created.authUserId).catch(() => undefined);
-      throw error;
+      throw mapCreateCustomerFailure(error);
     }
   }
 
@@ -802,11 +809,46 @@ export class AdminCustomerService {
     return { user, profile, account };
   }
 
+  /**
+   * Must read via the open transaction. Uncommitted inserts are invisible to the
+   * default connection under READ COMMITTED — looking up outside the tx after
+   * `ensureUser` caused admin create to fail with "Customer was not found."
+   */
   private async loadCustomerDetailsInTx(
-    _tx: DrizzleTransactionContext,
+    tx: DrizzleTransactionContext,
     userId: string,
   ): Promise<CustomerDetails> {
-    return this.loadCustomerDetails(userId);
+    const identity = this.deps.identityRepository.withTransaction(tx);
+    const core = this.deps.coreRepository.withTransaction(tx);
+
+    const user = await identity.findUserById(userId);
+    if (!user) {
+      throw new AppError({
+        code: "INTERNAL_ERROR",
+        message: "Unable to create customer profile.",
+      });
+    }
+
+    const [profile, account] = await Promise.all([
+      core.findCustomerProfileByUserId(userId),
+      core.findCustomerAccountByUserId(userId),
+    ]);
+
+    if (!profile) {
+      throw new AppError({
+        code: "INTERNAL_ERROR",
+        message: "Unable to create customer profile.",
+      });
+    }
+
+    if (!account) {
+      throw new AppError({
+        code: "INTERNAL_ERROR",
+        message: "Unable to create customer profile.",
+      });
+    }
+
+    return { user, profile, account };
   }
 
   private async appendAdminAudit(
@@ -844,4 +886,55 @@ export function createAdminAuditContext(context: RequestSecurityContext): Reques
 function generateTemporaryPassword(): string {
   const raw = randomBytes(12).toString("base64url");
   return `UsW1!${raw.slice(0, 12)}`;
+}
+
+function mapCreateCustomerFailure(error: unknown): unknown {
+  const rawMessage = isAppError(error)
+    ? error.message
+    : error instanceof Error
+      ? error.message
+      : String(error);
+  const message = rawMessage.toLowerCase();
+
+  if (rawMessage === "Customer was not found.") {
+    return new AppError({
+      code: "INTERNAL_ERROR",
+      message: "Unable to create customer profile.",
+    });
+  }
+
+  if (
+    message.includes("already registered") ||
+    message.includes("already been registered") ||
+    message.includes("user already exists") ||
+    (message.includes("duplicate key") && message.includes("email"))
+  ) {
+    return new AppError({
+      code: "VALIDATION_ERROR",
+      message: "Email already exists.",
+    });
+  }
+  if (
+    message.includes("display_name") ||
+    (message.includes("username") && message.includes("unique"))
+  ) {
+    return new AppError({
+      code: "VALIDATION_ERROR",
+      message: "Username already exists.",
+    });
+  }
+  if (message.includes("wallet") || message.includes("ledger_account")) {
+    return new AppError({
+      code: "INTERNAL_ERROR",
+      message: "Unable to initialize customer wallet.",
+    });
+  }
+  if (message.includes("customer_profile") || message.includes("customer_profiles")) {
+    return new AppError({
+      code: "INTERNAL_ERROR",
+      message: "Unable to create customer profile.",
+    });
+  }
+
+  return error;
 }
