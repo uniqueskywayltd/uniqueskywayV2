@@ -3,7 +3,10 @@ import { fileURLToPath } from "node:url";
 
 import type { NextConfig } from "next";
 
+import { buildContentSecurityPolicy } from "./src/config/content-security-policy";
+
 const projectRoot = dirname(fileURLToPath(import.meta.url));
+const isProduction = process.env.NODE_ENV === "production";
 
 /** Subdirectory deploy at https://uniqueskyway.com/v2 — omit locally. */
 const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/$/, "");
@@ -16,6 +19,23 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), payment=()",
   },
+  {
+    key: "X-Robots-Tag",
+    value: "noindex, nofollow, noarchive, nosnippet, noimageindex",
+  },
+  ...(isProduction
+    ? [
+        {
+          key: "Content-Security-Policy",
+          value: buildContentSecurityPolicy(),
+        },
+      ]
+    : [
+        {
+          key: "Content-Security-Policy-Report-Only",
+          value: buildContentSecurityPolicy({ allowLocalhost: true }),
+        },
+      ]),
 ];
 
 const staticAssetCacheHeaders = [

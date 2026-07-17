@@ -1,18 +1,11 @@
 import type { MetadataRoute } from "next";
 
-import { getSiteUrl } from "@/lib/seo/metadata";
-
+/** Private platform — do not expose crawl targets to search engines. */
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = getSiteUrl();
   return {
-    rules: [
-      {
-        userAgent: "*",
-        allow: "/",
-        disallow: ["/api/", "/admin/", "/account/", "/dashboard/", "/portfolio/", "/wallet/", "/ledger/"],
-      },
-    ],
-    sitemap: `${siteUrl}/sitemap.xml`,
-    host: siteUrl,
+    rules: {
+      userAgent: "*",
+      disallow: "/",
+    },
   };
 }

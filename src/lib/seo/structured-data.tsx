@@ -1,21 +1,13 @@
-import { SEO_DEFAULTS, getSiteUrl, organizationJsonLd, websiteJsonLd } from "@/lib/seo/metadata";
+import { SEO_DEFAULTS, getSiteUrl } from "@/lib/seo/metadata";
 
+/** Structured data disabled — avoids search-engine discovery signals. */
 export function JsonLdScript({ data }: { data: Record<string, unknown> }) {
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
-  );
+  void data;
+  return null;
 }
 
 export function DefaultStructuredData() {
-  return (
-    <>
-      <JsonLdScript data={organizationJsonLd()} />
-      <JsonLdScript data={websiteJsonLd()} />
-    </>
-  );
+  return null;
 }
 
 export { SEO_DEFAULTS, getSiteUrl };

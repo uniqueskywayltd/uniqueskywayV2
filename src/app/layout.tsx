@@ -8,7 +8,6 @@ import { brandAssets } from "@/features/brand";
 import { legacyArimo } from "@/features/public/legacy/fonts";
 import { translate } from "@/i18n";
 import { getRequestLanguage } from "@/i18n/request-language";
-import { DefaultStructuredData } from "@/lib/seo/structured-data";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 
 import "./globals.css";
@@ -77,7 +76,6 @@ export default async function RootLayout({
           >
             {translate(language, "chrome.skip_to_content")}
           </a>
-          <DefaultStructuredData />
           {children}
         </AppProviders>
       </body>

@@ -23,7 +23,7 @@ export function buildPageMetadata({
   title,
   description = DEFAULT_DESCRIPTION,
   path = "/",
-  noIndex = false,
+  noIndex = true,
   imagePath = brandAssets.ogImage,
 }: PageMetadataInput): Metadata {
   const siteUrl = getSiteUrl();
@@ -64,6 +64,16 @@ export function buildPageMetadata({
       ? {
           index: false,
           follow: false,
+          nocache: true,
+          noarchive: true,
+          nosnippet: true,
+          noimageindex: true,
+          googleBot: {
+            index: false,
+            follow: false,
+            noimageindex: true,
+            nosnippet: true,
+          },
         }
       : {
           index: true,

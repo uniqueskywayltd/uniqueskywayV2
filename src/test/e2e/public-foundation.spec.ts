@@ -10,10 +10,14 @@ test.describe("sprint A1 public foundation", () => {
     await expect(page.getByRole("link", { name: "Unique Sky Way" }).first()).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
     await expect(
-      page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "About" }),
+      page
+        .getByRole("navigation", { name: "Main navigation" })
+        .getByRole("link", { name: "About" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Contact" }),
+      page
+        .getByRole("navigation", { name: "Main navigation" })
+        .getByRole("link", { name: "Contact" }),
     ).toBeVisible();
     await expect(page.getByRole("link", { name: "Open account" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Sign in" }).first()).toBeVisible();
@@ -59,16 +63,17 @@ test.describe("sprint A1 public foundation", () => {
     }
   });
 
-  test("exposes robots and sitemap framework", async ({ request }) => {
+  test("blocks search indexing via robots and empty sitemap", async ({ request }) => {
     const robots = await request.get("/robots.txt");
     expect(robots.ok()).toBeTruthy();
     const robotsBody = await robots.text();
-    expect(robotsBody).toContain("Sitemap:");
+    expect(robotsBody).toContain("Disallow: /");
+    expect(robotsBody).not.toContain("Sitemap:");
 
     const sitemap = await request.get("/sitemap.xml");
     expect(sitemap.ok()).toBeTruthy();
     const sitemapBody = await sitemap.text();
     expect(sitemapBody).toContain("<urlset");
-    expect(sitemapBody).toContain("auth/login");
+    expect(sitemapBody).not.toContain("auth/login");
   });
 });

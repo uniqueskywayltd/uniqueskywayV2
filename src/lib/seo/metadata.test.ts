@@ -16,7 +16,7 @@ describe("seo metadata helpers", () => {
     process.env.NEXT_PUBLIC_APP_URL = previous;
   });
 
-  it("builds canonical open graph and twitter metadata", () => {
+  it("builds canonical open graph and twitter metadata with noindex by default", () => {
     const metadata = buildPageMetadata({
       title: "Plans",
       description: "Compare investment plans.",
@@ -27,6 +27,7 @@ describe("seo metadata helpers", () => {
     expect(metadata.openGraph?.url).toContain("/plans");
     expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
     expect(String(metadata.title)).toContain("Unique Sky Way");
+    expect(metadata.robots).toMatchObject({ index: false, follow: false });
   });
 
   it("returns an organization json-ld document", () => {
@@ -46,9 +47,7 @@ describe("seo metadata helpers", () => {
   });
 
   it("returns an FAQ page json-ld document", () => {
-    const jsonLd = faqPageJsonLd([
-      { question: "Are returns guaranteed?", answer: "No." },
-    ]);
+    const jsonLd = faqPageJsonLd([{ question: "Are returns guaranteed?", answer: "No." }]);
     expect(jsonLd["@type"]).toBe("FAQPage");
     expect(jsonLd.mainEntity).toHaveLength(1);
   });
