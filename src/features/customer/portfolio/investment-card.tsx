@@ -107,7 +107,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
         {isActiveLike ? (
           <>
             <div>
-              <dt className="text-xs text-muted-foreground">Today</dt>
+              <dt className="text-xs text-muted-foreground">Today&apos;s live earnings</dt>
               <dd className="mt-0.5 font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
                 <CurrencyDisplay
                   amountMinor={Number(todayEarningsMinor)}
@@ -116,12 +116,24 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Current value</dt>
+              <dt className="text-xs text-muted-foreground">Current investment value</dt>
               <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
                 <CurrencyDisplay
                   amountMinor={Number(currentValueMinor)}
                   currency={investment.currency}
                 />
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Days remaining</dt>
+              <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
+                {remainingDaysLabel(investment.maturityDate)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Maturity date</dt>
+              <dd className="mt-0.5 text-sm font-semibold text-foreground">
+                {investment.maturityDate ? <DateDisplay value={investment.maturityDate} /> : "—"}
               </dd>
             </div>
           </>

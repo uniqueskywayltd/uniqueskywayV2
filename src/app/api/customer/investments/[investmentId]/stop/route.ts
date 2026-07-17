@@ -9,6 +9,10 @@ type RouteContext = {
   params: Promise<{ investmentId: string }>;
 };
 
+/**
+ * Customer early exit is retired. These handlers remain only to return a clear
+ * business-rule rejection if an outdated client still calls the endpoint.
+ */
 export async function GET(request: NextRequest, routeContext: RouteContext) {
   const context = createRequestContext(request);
 

@@ -489,22 +489,17 @@ export function ActivateInvestmentSurface() {
                 />
                 <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">
                   <p>
-                    Your investment principal will be locked for the duration of your selected
+                    Your investment principal is committed for the full duration of your selected
                     investment plan.
                   </p>
                   <p>
                     Daily earnings are calculated continuously and settled according to your
                     investment schedule.
                   </p>
-                  {selected?.earlyExitPolicy === "allowed_with_penalty" ? (
-                    <p>
-                      {(selected.earlyExitPenaltyBps ?? 0) > 0
-                        ? "Stopping an investment before maturity may apply an early-exit penalty according to platform rules."
-                        : "You may stop an investment before maturity. Final payout follows platform settlement rules."}
-                    </p>
-                  ) : (
-                    <p>Early termination may not be available for every plan.</p>
-                  )}
+                  <p>
+                    Your investment is committed for the full investment period in accordance with
+                    the Terms of Service accepted during registration. Funds release at maturity.
+                  </p>
                 </div>
               </div>
             </section>

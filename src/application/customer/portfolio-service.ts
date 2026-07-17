@@ -144,89 +144,27 @@ export class CustomerPortfolioService {
     }
   }
 
-  async stopInvestment(investmentId: string) {
-    const appUser = await this.requireCurrentAppUser();
-    const investment = await this.deps.investmentRepository.findInvestmentById(investmentId);
-
-    if (!investment || investment.userId !== appUser.id) {
-      throw new AppError({ code: "NOT_FOUND", message: "Investment was not found." });
-    }
-
-    const engine = this.createEngine();
-    const result = await engine.stopInvestment({
-      investmentId,
-      force: false,
-      actorUserId: appUser.id,
-      reason: "Customer early exit",
+  /**
+   * Customer early exit is retired. Investments run until maturity under the
+   * Terms of Service accepted at registration. Admin operational stop remains
+   * available through admin financial ops only.
+   */
+  async stopInvestment(_investmentId: string): Promise<never> {
+    void _investmentId;
+    throw new AppError({
+      code: "AUTHORIZATION_ERROR",
+      message:
+        "Investments are committed for the full investment period and cannot be stopped early. Funds release at maturity according to the Terms of Service.",
     });
-
-    return {
-      investment: await this.toPortfolioCard(result.investment),
-      accruedRoiMinor: result.accruedRoiMinor.toString(),
-      penaltyMinor: result.penaltyMinor.toString(),
-      creditRoiMinor: result.creditRoiMinor.toString(),
-      principalReleasedMinor: result.principalReleasedMinor.toString(),
-      idempotent: result.idempotent,
-    };
   }
 
-  async previewStopInvestment(investmentId: string) {
-    const appUser = await this.requireCurrentAppUser();
-    const investment = await this.deps.investmentRepository.findInvestmentById(investmentId);
-
-    if (!investment || investment.userId !== appUser.id) {
-      throw new AppError({ code: "NOT_FOUND", message: "Investment was not found." });
-    }
-
-    if (investment.status !== "active" && investment.status !== "maturing") {
-      throw new AppError({
-        code: "INVALID_STATE",
-        message: "Only active investments can be stopped.",
-      });
-    }
-
-    if (!investment.activatedAt) {
-      throw new AppError({ code: "INVALID_STATE", message: "Investment is not activated." });
-    }
-
-    const planVersion = await this.deps.coreRepository.findInvestmentPlanVersionById(
-      investment.planVersionId,
-    );
-    if (!planVersion) {
-      throw new AppError({ code: "NOT_FOUND", message: "Investment plan version was not found." });
-    }
-
-    const canStop = planVersion.earlyExitPolicy === "allowed_with_penalty";
-    const penaltyBps = readPenaltyBps(planVersion.metadata);
-    const postedRoiMinor = await this.deps.settlementRepository.sumPostedRoiMinorByInvestment(
-      investment.id,
-    );
-    const live = calculateContinuousLiveAccrual({
-      principalMinor: investment.principalMinor,
-      dailyRoiBps: investment.dailyRoiBps,
-      activatedAt: investment.activatedAt,
-      termDays: investment.termDays,
-      postedRoiMinor,
-      promisedRoiMinor: investment.promisedRoiMinor,
-      now: this.deps.clock.now(),
+  async previewStopInvestment(_investmentId: string): Promise<never> {
+    void _investmentId;
+    throw new AppError({
+      code: "AUTHORIZATION_ERROR",
+      message:
+        "Investments are committed for the full investment period and cannot be stopped early. Funds release at maturity according to the Terms of Service.",
     });
-    const penaltyMinor = (live.unpostedAccruedMinor * BigInt(penaltyBps)) / 10_000n;
-    const creditRoiMinor =
-      live.unpostedAccruedMinor > penaltyMinor ? live.unpostedAccruedMinor - penaltyMinor : 0n;
-    const finalAmountMinor = investment.principalMinor + creditRoiMinor;
-
-    return {
-      canStop,
-      earlyExitPolicy: planVersion.earlyExitPolicy,
-      principalMinor: investment.principalMinor.toString(),
-      accruedRoiMinor: live.unpostedAccruedMinor.toString(),
-      postedRoiMinor: postedRoiMinor.toString(),
-      penaltyBps,
-      penaltyMinor: penaltyMinor.toString(),
-      creditRoiMinor: creditRoiMinor.toString(),
-      finalAmountMinor: finalAmountMinor.toString(),
-      currency: investment.currency,
-    };
   }
 
   async listInvestments(input: ListCustomerInvestmentsInput = {}) {
@@ -277,19 +215,16 @@ export class CustomerPortfolioService {
       throw new AppError({ code: "NOT_FOUND", message: "Investment was not found." });
     }
 
-    const [card, scheduleItems, stopPreview] = await Promise.all([
+    const [card, scheduleItems] = await Promise.all([
       this.toPortfolioCard(investment),
       this.deps.investmentRepository.listRoiScheduleItemsByInvestmentId(investmentId),
-      investment.status === "active" || investment.status === "maturing"
-        ? this.previewStopInvestment(investmentId).catch(() => null)
-        : Promise.resolve(null),
     ]);
 
     return {
       investment: card,
       schedule: scheduleItems.map(serializeScheduleItem),
       lifecycle: buildLifecycle(investment),
-      stopPreview,
+      stopPreview: null,
     };
   }
 
@@ -369,7 +304,7 @@ export class CustomerPortfolioService {
       nextMilestone: resolveNextMilestone(investment),
       earlyExitPolicy: planMeta.earlyExitPolicy,
       earlyExitPenaltyBps: planMeta.earlyExitPenaltyBps,
-      canStop: isActiveLike && planMeta.earlyExitPolicy === "allowed_with_penalty",
+      canStop: false,
       nextSettlementCountdownSeconds: isActiveLike ? secondsUntilNextNewYorkMidnight(now) : null,
       expectedTotalReturnMinor: promisedRoiMinor
         ? (investment.principalMinor + promisedRoiMinor).toString()

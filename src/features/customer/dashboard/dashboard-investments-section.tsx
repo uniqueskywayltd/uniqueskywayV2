@@ -143,6 +143,11 @@ export function DashboardInvestmentsSection() {
               <Link href="/portfolio">View investments</Link>
             </Button>
           </div>
+          {activeInvestments.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Active investments are committed for the full plan term under the Terms of Service.
+            </p>
+          ) : null}
           <div className="grid gap-4">
             {featured.map((investment) => (
               <InvestmentSummaryCard key={investment.id} investment={investment} />
