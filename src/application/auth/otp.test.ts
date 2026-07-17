@@ -35,24 +35,23 @@ describe("public app url", () => {
   it("rewrites localhost action links to the production redirect", () => {
     const sanitized = sanitizeAuthActionLink(
       "https://lngjjttkiuqlclalccah.supabase.co/auth/v1/verify?token=abc&type=signup&redirect_to=http%3A%2F%2Flocalhost%3A3000",
-      "https://uniqueskyway-v2.vercel.app/auth/verify-email",
+      "https://uniqueskyway.com/auth/verify-email",
     );
-    expect(sanitized).toContain(
-      "redirect_to=https%3A%2F%2Funiqueskyway-v2.vercel.app%2Fauth%2Fverify-email",
-    );
+    expect(sanitized).toContain("redirect_to=https%3A%2F%2Funiqueskyway.com%2Fauth%2Fverify-email");
     expect(sanitized).not.toContain("localhost");
   });
 
-  it("treats localhost as non-production", () => {
+  it("treats localhost and legacy Vercel hosts as non-production", () => {
     expect(isNonProductionRedirect("http://localhost:3000/auth/verify-email")).toBe(true);
     expect(isNonProductionRedirect("https://uniqueskyway-v2.vercel.app/auth/verify-email")).toBe(
-      false,
+      true,
     );
+    expect(isNonProductionRedirect("https://uniqueskyway.com/auth/verify-email")).toBe(false);
   });
 
   it("falls back to production URL when configured value is localhost in production", () => {
     vi.stubEnv("NODE_ENV", "production");
-    expect(resolvePublicAppUrl("http://localhost:3000")).toBe("https://uniqueskyway-v2.vercel.app");
+    expect(resolvePublicAppUrl("http://localhost:3000")).toBe("https://uniqueskyway.com");
   });
 });
 
@@ -67,7 +66,7 @@ describe("branded auth email links", () => {
       },
       flow: "signup",
       email: "investor@example.com",
-      appUrl: "https://uniqueskyway-v2.vercel.app",
+      appUrl: "https://uniqueskyway.com",
     });
 
     expect(built.otp).toBe("48291367");
@@ -76,7 +75,7 @@ describe("branded auth email links", () => {
         tokenHash: "hashedtoken123",
         flow: "signup",
         email: "investor@example.com",
-        appUrl: "https://uniqueskyway-v2.vercel.app",
+        appUrl: "https://uniqueskyway.com",
       }),
     );
     expect(built.actionLink).toContain("/auth/verify-email");

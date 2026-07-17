@@ -2,19 +2,21 @@
   "name": "Unique Sky Way",
   "short_name": "USW",
   "description": "Structured investment with transparent processes and a clear investor dashboard.",
-  "start_url": "/",
+  "id": "https://uniqueskyway.com/",
+  "start_url": "https://uniqueskyway.com/",
+  "scope": "https://uniqueskyway.com/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "/brand/icon.webp",
+      "src": "https://uniqueskyway.com/brand/icon.webp",
       "sizes": "176x176",
       "type": "image/webp",
       "purpose": "any"
     },
     {
-      "src": "/brand/favicon.webp",
+      "src": "https://uniqueskyway.com/brand/favicon.webp",
       "sizes": "32x32",
       "type": "image/webp",
       "purpose": "any"

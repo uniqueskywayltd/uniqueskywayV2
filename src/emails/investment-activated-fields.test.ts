@@ -15,7 +15,7 @@ describe("buildInvestmentActivatedEmailFields", () => {
       activatedAt: new Date("2026-07-16T18:00:00.000Z"),
       firstSettlementDate: "2026-07-17",
       maturityDate: "2026-07-23",
-      appBaseUrl: "https://uniqueskyway-v2.vercel.app",
+      appBaseUrl: "https://uniqueskyway.com",
       timeZone: "America/New_York",
     });
 

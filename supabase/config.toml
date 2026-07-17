@@ -3,10 +3,8 @@
 
 [auth]
 enabled = true
-site_url = "https://uniqueskyway-v2.vercel.app"
+site_url = "https://uniqueskyway.com"
 additional_redirect_urls = [
-  "https://uniqueskyway-v2.vercel.app/**",
-  "https://uniqueskyway-v2-unique-sky-way.vercel.app/**",
   "https://uniqueskyway.com/**",
   "https://www.uniqueskyway.com/**",
   "http://localhost:3000/**",
@@ -33,3 +31,6 @@ verify_enabled = true
 [auth.mfa.phone]
 enroll_enabled = false
 verify_enabled = false
+
+[vector]
+enabled = false

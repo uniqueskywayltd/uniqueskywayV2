@@ -1,11 +1,9 @@
 import { PLATFORM_SUPPORT_EMAIL } from "@/config/email-identity";
 
-const PRODUCTION_HOSTS = new Set([
-  "uniqueskyway-v2.vercel.app",
-  "uniqueskyway-v2-unique-sky-way.vercel.app",
-  "uniqueskyway.com",
-  "www.uniqueskyway.com",
-]);
+/** Canonical production hosts — auth redirects and email links use these only. */
+const CANONICAL_PRODUCTION_ORIGIN = "https://uniqueskyway.com";
+
+const PRODUCTION_HOSTS = new Set(["uniqueskyway.com", "www.uniqueskyway.com"]);
 
 /**
  * Canonical public origin for auth redirects and email links.
@@ -14,14 +12,13 @@ const PRODUCTION_HOSTS = new Set([
 export function resolvePublicAppUrl(
   configured: string | undefined = process.env.NEXT_PUBLIC_APP_URL,
 ): string {
-  const fallbackProduction = "https://uniqueskyway-v2.vercel.app";
   const trimmed = (configured ?? "").trim();
 
   if (trimmed) {
     try {
       const url = new URL(trimmed);
       if (isLocalHostname(url.hostname) && process.env.NODE_ENV === "production") {
-        return fallbackProduction;
+        return CANONICAL_PRODUCTION_ORIGIN;
       }
       const path = url.pathname.replace(/\/$/, "");
       return path && path !== "/" ? `${url.origin}${path}` : url.origin;
@@ -31,7 +28,7 @@ export function resolvePublicAppUrl(
   }
 
   if (process.env.NODE_ENV === "production") {
-    return fallbackProduction;
+    return CANONICAL_PRODUCTION_ORIGIN;
   }
 
   return "http://localhost:3000";
@@ -51,7 +48,7 @@ export function isNonProductionRedirect(url: string): boolean {
     const parsed = new URL(url);
     if (isLocalHostname(parsed.hostname)) return true;
     if (PRODUCTION_HOSTS.has(parsed.hostname)) return false;
-    // Ephemeral Vercel preview deployments
+    // Legacy Vercel production alias and ephemeral preview deployments
     if (/\.vercel\.app$/i.test(parsed.hostname)) return true;
     return false;
   } catch {

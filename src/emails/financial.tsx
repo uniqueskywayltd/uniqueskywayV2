@@ -406,8 +406,8 @@ InvestmentActivatedEmail.PreviewProps = {
   maturityValue: "$41,550.00",
   nextSettlement: "07/17/2026, 12:00 AM EDT",
   referenceId: "inv_gold_preview_001",
-  investmentUrl: "https://uniqueskyway-v2.vercel.app/portfolio/inv_gold_preview_001",
-  dashboardUrl: "https://uniqueskyway-v2.vercel.app/dashboard",
+  investmentUrl: "https://uniqueskyway.com/portfolio/inv_gold_preview_001",
+  dashboardUrl: "https://uniqueskyway.com/dashboard",
   schedule: [
     { label: "Day 1", amount: "$1,650.00" },
     { label: "Day 2", amount: "$1,650.00" },

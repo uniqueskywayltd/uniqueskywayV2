@@ -4,7 +4,7 @@ import { resolvePublicAppUrl } from "@/config/public-app-url";
 /** Stable CDN logo used in production email HTML (email clients cache this host). */
 export const EMAIL_LOGO_CDN_URL = "https://uniqueskyway.com/brand/dark-logo.webp";
 
-const PRODUCTION_APP_URL = "https://uniqueskyway-v2.vercel.app";
+const PRODUCTION_APP_URL = "https://uniqueskyway.com";
 const MARKETING_SITE_URL = "https://uniqueskyway.com";
 
 function isLocalUrl(value: string): boolean {

@@ -49,6 +49,20 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    const canonical = "https://uniqueskyway.com";
+    const legacyHosts = [
+      "uniqueskyway-v2.vercel.app",
+      "uniqueskyway-v2-unique-sky-way.vercel.app",
+      "www.uniqueskyway.com",
+    ];
+    return legacyHosts.map((host) => ({
+      source: "/:path*",
+      has: [{ type: "host" as const, value: host }],
+      destination: `${canonical}/:path*`,
+      permanent: true,
+    }));
+  },
 };
 
 export default nextConfig;

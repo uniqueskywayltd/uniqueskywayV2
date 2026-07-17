@@ -11,7 +11,7 @@ describe("renderProductionEmail", () => {
       metadata: {
         name: "Alex Morgan",
         otp: "48291367",
-        actionLink: "https://uniqueskyway-v2.vercel.app/auth/verify-email",
+        actionLink: "https://uniqueskyway.com/auth/verify-email",
       },
     });
 

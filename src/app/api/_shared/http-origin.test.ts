@@ -9,7 +9,7 @@ function requestWith(origin: string | null, host?: string) {
   const headers = new Headers();
   if (origin) headers.set("origin", origin);
   if (host) headers.set("x-forwarded-host", host);
-  return new NextRequest("https://uniqueskyway-v2.vercel.app/api/auth/register", {
+  return new NextRequest("https://uniqueskyway.com/api/auth/register", {
     method: "POST",
     headers,
   });
@@ -21,26 +21,21 @@ describe("requireSameOrigin", () => {
   });
 
   it("allows the canonical APP_URL origin", () => {
-    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://uniqueskyway-v2.vercel.app");
-    expect(() =>
-      requireSameOrigin(requestWith("https://uniqueskyway-v2.vercel.app")),
-    ).not.toThrow();
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://uniqueskyway.com");
+    expect(() => requireSameOrigin(requestWith("https://uniqueskyway.com"))).not.toThrow();
   });
 
-  it("allows the request host when it differs from APP_URL (Vercel alias)", () => {
-    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://uniqueskyway-v2.vercel.app");
+  it("allows the request host when it differs from APP_URL (legacy Vercel alias)", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://uniqueskyway.com");
     expect(() =>
       requireSameOrigin(
-        requestWith(
-          "https://uniqueskyway-v2-unique-sky-way.vercel.app",
-          "uniqueskyway-v2-unique-sky-way.vercel.app",
-        ),
+        requestWith("https://uniqueskyway-v2.vercel.app", "uniqueskyway-v2.vercel.app"),
       ),
     ).not.toThrow();
   });
 
   it("rejects a foreign origin", () => {
-    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://uniqueskyway-v2.vercel.app");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://uniqueskyway.com");
     expect(() => requireSameOrigin(requestWith("https://evil.example"))).toThrow(AppError);
   });
 });
