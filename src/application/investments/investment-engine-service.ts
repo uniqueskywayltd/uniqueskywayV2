@@ -87,6 +87,19 @@ export class InvestmentEngineService {
       return { investment: existing, idempotent: true };
     }
 
+    return this.deps.transactionManager.runInTransaction((tx) =>
+      this.activateInvestmentInTransaction(tx, input),
+    );
+  }
+
+  /**
+   * Activate an investment inside an existing transaction (e.g. deposit approval auto-invest).
+   * Does not open a nested transaction. Caller must hold wallet locks when required.
+   */
+  async activateInvestmentInTransaction(
+    tx: DrizzleTransactionContext,
+    input: ActivateInvestmentInput & { skipWalletLock?: boolean },
+  ) {
     const planVersion = await this.deps.coreRepository.findInvestmentPlanVersionById(
       input.planVersionId,
     );
@@ -103,181 +116,198 @@ export class InvestmentEngineService {
       totalRoiBps: planVersion.totalRoiBps,
     });
 
-    return this.deps.transactionManager.runInTransaction(async (tx) => {
+    if (!input.skipWalletLock) {
       await this.deps.ledgerRepository.lockWalletByUserCurrency(
         tx,
         input.userId,
         planVersion.currency,
       );
-      const existingInTransaction =
-        await this.deps.investmentRepository.findInvestmentByIdempotencyKeyInTransaction(
-          tx,
-          input.idempotencyKey,
-        );
-      if (existingInTransaction) {
-        return { investment: existingInTransaction, idempotent: true };
-      }
+    }
 
-      const balance = await this.deps.ledgerRepository.findWalletBalanceByUserCurrencyInTransaction(
+    const existingInTransaction =
+      await this.deps.investmentRepository.findInvestmentByIdempotencyKeyInTransaction(
         tx,
-        input.userId,
-        planVersion.currency,
+        input.idempotencyKey,
       );
-      if (!balance) {
-        throw new AppError({ code: "INVALID_STATE", message: "Customer wallet was not found." });
-      }
-      if (balance.availableBalanceMinor < input.principalMinor) {
-        throw new AppError({
-          code: "INVALID_STATE",
-          message: "Insufficient available balance.",
-        });
-      }
+    if (existingInTransaction) {
+      return { investment: existingInTransaction, idempotent: true };
+    }
 
-      const [availableAccount, lockedAccount] = await Promise.all([
-        this.requireWalletAccount(balance.walletId, "available"),
-        this.requireWalletAccount(balance.walletId, "locked"),
-      ]);
-
-      const investment = await this.deps.investmentRepository.createInvestment(tx, {
-        userId: input.userId,
-        planVersionId: planVersion.id,
-        currency: planVersion.currency,
-        principalMinor: input.principalMinor,
-        dailyRoiBps: planVersion.dailyRoiBps,
-        totalRoiBps: planVersion.totalRoiBps,
-        promisedRoiMinor,
-        termDays: planVersion.termDays,
-        principalReturnPolicy: planVersion.principalReturnPolicy,
-        calculationVersion: "roi-v1",
-        idempotencyKey: input.idempotencyKey,
-        status: "pending",
+    const balance = await this.deps.ledgerRepository.findWalletBalanceByUserCurrencyInTransaction(
+      tx,
+      input.userId,
+      planVersion.currency,
+    );
+    if (!balance) {
+      throw new AppError({ code: "INVALID_STATE", message: "Customer wallet was not found." });
+    }
+    if (balance.availableBalanceMinor < input.principalMinor) {
+      throw new AppError({
+        code: "INVALID_STATE",
+        message: "Insufficient available balance.",
       });
+    }
 
-      const fundingEntries = createInvestmentFundingEntries({
-        availableAccountId: availableAccount.id,
-        lockedAccountId: lockedAccount.id,
-        amountMinor: input.principalMinor,
-        currency: planVersion.currency,
-      });
-      assertBalancedLedgerPosting({ entries: fundingEntries });
+    const [availableAccount, lockedAccount] = await Promise.all([
+      this.requireWalletAccount(balance.walletId, "available"),
+      this.requireWalletAccount(balance.walletId, "locked"),
+    ]);
 
-      const fundingLedger = await this.deps.ledgerRepository.postLedgerTransaction(tx, {
-        transaction: {
-          transactionType: "investment_funding",
-          idempotencyKey: `investment_funding:${input.idempotencyKey}`,
-          referenceType: "investment",
-          referenceId: investment.id,
-          description: "Investment principal lock",
-          metadata: {
-            invariantIds: ["FI-401", "FI-402", "FI-105"],
-            planVersionId: planVersion.id,
-          },
-        },
-        entries: fundingEntries,
-      });
-
-      for (const scheduleItem of generateRoiSchedule({
-        investmentId: investment.id,
-        principalMinor: input.principalMinor,
-        dailyRoiBps: planVersion.dailyRoiBps,
-        firstSettlementDate: firstEligibleDate,
-        termDays: planVersion.termDays,
-      })) {
-        await this.deps.investmentRepository.createRoiScheduleItem(tx, scheduleItem);
-      }
-
-      const activatedInvestment = await this.deps.investmentRepository.updateInvestmentActivation(
-        tx,
-        investment.id,
-        {
-          status: "active",
-          startAt: activatedAt,
-          activatedAt,
-          firstSettlementDate: firstEligibleDate,
-          maturityDate: finalEarningDate,
-          fundingLedgerTransactionId: fundingLedger.transaction.id,
-        },
-      );
-
-      if (this.deps.notificationRepository && this.deps.identityRepository) {
-        const plan = await this.deps.coreRepository.findInvestmentPlanById(planVersion.planId);
-        const preferences = await this.deps.coreRepository.findCustomerPreferencesByUserId(
-          input.userId,
-        );
-        const profile = await this.deps.coreRepository.findCustomerProfileByUserId(input.userId);
-        const { getBrand } = await import("@/emails/brand");
-        const { buildInvestmentActivatedEmailFields } =
-          await import("@/emails/investment-activated-fields");
-        const brand = getBrand();
-        const emailFields = buildInvestmentActivatedEmailFields({
-          planName: plan?.name ?? "Investment plan",
-          investmentId: activatedInvestment.id,
-          principalMinor: input.principalMinor,
-          currency: planVersion.currency,
-          dailyRoiBps: planVersion.dailyRoiBps,
-          termDays: planVersion.termDays,
-          promisedRoiMinor,
-          activatedAt,
-          firstSettlementDate: firstEligibleDate,
-          maturityDate: finalEarningDate,
-          appBaseUrl: brand.url,
-          timeZone: preferences?.timeZone ?? "America/New_York",
-        });
-
-        await this.enqueueInvestmentEmail(tx, input.userId, "investment.activated", {
-          investmentId: activatedInvestment.id,
-          principalMinor: String(input.principalMinor),
-          currency: planVersion.currency,
-          trigger: "investment.activated",
-          ...(profile?.legalName ? { name: profile.legalName, legalName: profile.legalName } : {}),
-          ...(profile?.displayName ? { displayName: profile.displayName } : {}),
-          planName: emailFields.planName,
-          principal: emailFields.principal,
-          dailyRate: emailFields.dailyRate,
-          dailyEarnings: emailFields.dailyEarnings,
-          duration: emailFields.duration,
-          startDateTime: emailFields.startDateTime,
-          maturityDateTime: emailFields.maturityDateTime,
-          expectedProfit: emailFields.expectedProfit,
-          maturityValue: emailFields.maturityValue,
-          nextSettlement: emailFields.nextSettlement,
-          referenceId: emailFields.reference,
-          investmentUrl: emailFields.investmentUrl,
-          dashboardUrl: emailFields.dashboardUrl,
-          schedule: emailFields.schedule,
-          currentYear: emailFields.currentYear,
-          amountMinor: String(input.principalMinor),
-        });
-
-        const { enqueueAdminEmail } = await import("@/application/notifications/admin-email");
-        await enqueueAdminEmail(tx, this.deps.notificationRepository, {
-          eventType: "admin.investment_started",
-          idempotencyKey: `admin.investment_started:${activatedInvestment.id}`,
-          customerId: input.userId,
-          metadata: {
-            customerName: profile?.legalName?.trim() || profile?.displayName?.trim() || "Customer",
-            planName: emailFields.planName,
-            amount: emailFields.principal,
-            dailyRoi: emailFields.dailyRate,
-            duration: emailFields.duration,
-            expectedRoi: emailFields.expectedProfit,
-            maturityValue: emailFields.maturityValue,
-            startDateTime: emailFields.startDateTime,
-            referenceId: emailFields.reference,
-            adminDashboardUrl: `${brand.url}/admin/investments/${activatedInvestment.id}`,
-          },
-        });
-      }
-
-      await this.enqueueReferralCommissionEmail(tx, {
-        referredUserId: input.userId,
-        investmentId: investment.id,
-        principalMinor: input.principalMinor,
-        currency: planVersion.currency,
-      });
-
-      return { investment: activatedInvestment, idempotent: false };
+    const investment = await this.deps.investmentRepository.createInvestment(tx, {
+      userId: input.userId,
+      planVersionId: planVersion.id,
+      currency: planVersion.currency,
+      principalMinor: input.principalMinor,
+      dailyRoiBps: planVersion.dailyRoiBps,
+      totalRoiBps: planVersion.totalRoiBps,
+      promisedRoiMinor,
+      termDays: planVersion.termDays,
+      principalReturnPolicy: planVersion.principalReturnPolicy,
+      calculationVersion: "roi-v1",
+      idempotencyKey: input.idempotencyKey,
+      status: "pending",
     });
+
+    const fundingEntries = createInvestmentFundingEntries({
+      availableAccountId: availableAccount.id,
+      lockedAccountId: lockedAccount.id,
+      amountMinor: input.principalMinor,
+      currency: planVersion.currency,
+    });
+    assertBalancedLedgerPosting({ entries: fundingEntries });
+
+    const fundingLedger = await this.deps.ledgerRepository.postLedgerTransaction(tx, {
+      transaction: {
+        transactionType: "investment_funding",
+        idempotencyKey: `investment_funding:${input.idempotencyKey}`,
+        referenceType: "investment",
+        referenceId: investment.id,
+        description: "Investment principal lock",
+        metadata: {
+          invariantIds: ["FI-401", "FI-402", "FI-105"],
+          planVersionId: planVersion.id,
+          autoInvest: Boolean(input.skipWalletLock),
+        },
+      },
+      entries: fundingEntries,
+    });
+
+    for (const scheduleItem of generateRoiSchedule({
+      investmentId: investment.id,
+      principalMinor: input.principalMinor,
+      dailyRoiBps: planVersion.dailyRoiBps,
+      firstSettlementDate: firstEligibleDate,
+      termDays: planVersion.termDays,
+    })) {
+      await this.deps.investmentRepository.createRoiScheduleItem(tx, scheduleItem);
+    }
+
+    const activatedInvestment = await this.deps.investmentRepository.updateInvestmentActivation(
+      tx,
+      investment.id,
+      {
+        status: "active",
+        startAt: activatedAt,
+        activatedAt,
+        firstSettlementDate: firstEligibleDate,
+        maturityDate: finalEarningDate,
+        fundingLedgerTransactionId: fundingLedger.transaction.id,
+      },
+    );
+
+    if (this.deps.notificationRepository && this.deps.identityRepository) {
+      const plan = await this.deps.coreRepository.findInvestmentPlanById(planVersion.planId);
+      const preferences = await this.deps.coreRepository.findCustomerPreferencesByUserId(
+        input.userId,
+      );
+      const profile = await this.deps.coreRepository.findCustomerProfileByUserId(input.userId);
+      const { getBrand } = await import("@/emails/brand");
+      const { buildInvestmentActivatedEmailFields } =
+        await import("@/emails/investment-activated-fields");
+      const brand = getBrand();
+      const emailFields = buildInvestmentActivatedEmailFields({
+        planName: plan?.name ?? "Investment plan",
+        investmentId: activatedInvestment.id,
+        principalMinor: input.principalMinor,
+        currency: planVersion.currency,
+        dailyRoiBps: planVersion.dailyRoiBps,
+        termDays: planVersion.termDays,
+        promisedRoiMinor,
+        activatedAt,
+        firstSettlementDate: firstEligibleDate,
+        maturityDate: finalEarningDate,
+        appBaseUrl: brand.url,
+        timeZone: preferences?.timeZone ?? "America/New_York",
+      });
+
+      await this.enqueueInvestmentEmail(tx, input.userId, "investment.activated", {
+        investmentId: activatedInvestment.id,
+        principalMinor: String(input.principalMinor),
+        currency: planVersion.currency,
+        trigger: "investment.activated",
+        assignmentLabel: "Investment Plan Assigned",
+        ...(profile?.legalName ? { name: profile.legalName, legalName: profile.legalName } : {}),
+        ...(profile?.displayName ? { displayName: profile.displayName } : {}),
+        planName: emailFields.planName,
+        principal: emailFields.principal,
+        dailyRate: emailFields.dailyRate,
+        dailyEarnings: emailFields.dailyEarnings,
+        duration: emailFields.duration,
+        startDateTime: emailFields.startDateTime,
+        maturityDateTime: emailFields.maturityDateTime,
+        expectedProfit: emailFields.expectedProfit,
+        maturityValue: emailFields.maturityValue,
+        nextSettlement: emailFields.nextSettlement,
+        referenceId: emailFields.reference,
+        investmentUrl: emailFields.investmentUrl,
+        dashboardUrl: emailFields.dashboardUrl,
+        schedule: emailFields.schedule,
+        currentYear: emailFields.currentYear,
+        amountMinor: String(input.principalMinor),
+      });
+
+      await this.deps.notificationRepository.createNotification(tx, {
+        userId: input.userId,
+        type: "investment.activated",
+        title: "Investment started",
+        body: `Your investment qualified for ${emailFields.planName} automatically.`,
+        priority: "success",
+        data: {
+          investmentId: activatedInvestment.id,
+          planName: emailFields.planName,
+          principalMinor: String(input.principalMinor),
+        },
+      });
+
+      const { enqueueAdminEmail } = await import("@/application/notifications/admin-email");
+      await enqueueAdminEmail(tx, this.deps.notificationRepository, {
+        eventType: "admin.investment_started",
+        idempotencyKey: `admin.investment_started:${activatedInvestment.id}`,
+        customerId: input.userId,
+        metadata: {
+          customerName: profile?.legalName?.trim() || profile?.displayName?.trim() || "Customer",
+          planName: emailFields.planName,
+          amount: emailFields.principal,
+          dailyRoi: emailFields.dailyRate,
+          duration: emailFields.duration,
+          expectedRoi: emailFields.expectedProfit,
+          maturityValue: emailFields.maturityValue,
+          startDateTime: emailFields.startDateTime,
+          referenceId: emailFields.reference,
+          autoInvested: true,
+          adminDashboardUrl: `${brand.url}/admin/investments/${activatedInvestment.id}`,
+        },
+      });
+    }
+
+    await this.enqueueReferralCommissionEmail(tx, {
+      referredUserId: input.userId,
+      investmentId: investment.id,
+      principalMinor: input.principalMinor,
+      currency: planVersion.currency,
+    });
+
+    return { investment: activatedInvestment, idempotent: false };
   }
 
   /**

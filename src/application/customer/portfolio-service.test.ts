@@ -60,14 +60,12 @@ describe("customer portfolio helpers", () => {
   });
 
   it("computes matured progress as 100%", () => {
-    expect(
-      computeProgressPercent(makeInvestment({ id: "m", status: "matured" })),
-    ).toBe(100);
+    expect(computeProgressPercent(makeInvestment({ id: "m", status: "matured" }))).toBe(100);
   });
 
   it("resolves pending milestone copy", () => {
     expect(resolveNextMilestone(makeInvestment({ id: "p", status: "pending" }))).toEqual({
-      label: "Awaiting activation",
+      label: "Awaiting start",
       date: null,
     });
   });

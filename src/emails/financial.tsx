@@ -272,6 +272,7 @@ export function InvestmentActivatedEmail(
     maturityValue?: string;
     nextSettlement?: string;
     investmentUrl?: string;
+    assignmentLabel?: string;
     schedule?: Array<{ label: string; amount: string }>;
     currentYear?: string;
   },
@@ -318,10 +319,14 @@ export function InvestmentActivatedEmail(
   return (
     <TransactionalEmail
       preview={`Your ${props.planName ?? "investment"} is now active and earning returns`}
-      heading="Your investment is now active"
+      heading="Investment started"
       badge={{ label: "Active", tone: "success" }}
       name={props.name}
-      intro="Congratulations! Your investment has been successfully activated and has started earning returns."
+      intro={
+        props.assignmentLabel
+          ? `${props.assignmentLabel}. Your investment qualified for ${props.planName ?? "your plan"} automatically and has started earning.`
+          : "Your investment has started and is earning returns according to the assigned plan."
+      }
       detailsTitle="Investment Summary"
       details={summary}
       supportLead="Need assistance? Email:"
@@ -721,15 +726,18 @@ export const financialPlainText = {
       maturityValue?: string;
       nextSettlement?: string;
       investmentUrl?: string;
+      assignmentLabel?: string;
       schedule?: Array<{ label: string; amount: string }>;
     },
   ) => {
     const lines: string[] = [
-      "Your investment is now active",
+      "Investment started",
       "",
       `Hello ${p.name},`,
       "",
-      "Congratulations! Your investment has been successfully activated and has started earning returns.",
+      p.assignmentLabel
+        ? `${p.assignmentLabel}. Your investment qualified for ${p.planName ?? "your plan"} automatically and has started earning.`
+        : "Your investment has started and is earning returns according to the assigned plan.",
       "",
       "— Investment Summary —",
     ];

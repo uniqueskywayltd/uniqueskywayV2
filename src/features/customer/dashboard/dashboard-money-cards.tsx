@@ -89,7 +89,7 @@ export function DashboardMoneyCards() {
   const lockedDescription =
     wallet.balances.reservedBalanceMinor !== "0"
       ? `Includes reserved for withdrawal (${formatMinorCurrency(wallet.balances.reservedBalanceMinor, currency)}).`
-      : "Principal currently locked in active investments.";
+      : "Principal currently earning in active investments.";
   const todayEarnings = portfolio.todayEarningsMinor ?? "0";
   const totalRoi = portfolio.totalEarningsMinor ?? portfolio.totalRoiMinor ?? "0";
   const portfolioValue = portfolio.portfolioValueMinor ?? portfolio.activePrincipalMinor ?? "0";
@@ -99,23 +99,27 @@ export function DashboardMoneyCards() {
       <section aria-label="Portfolio balances">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            title="Portfolio value"
+            title="Current investment value"
             value={formatMinorCurrency(portfolioValue, currency)}
-            description="Wallet plus locked investment capital."
+            description="Invested principal plus live earnings."
             icon={<Wallet />}
             href="/portfolio"
             accent="violet"
           />
           <StatCard
-            title="Available balance"
+            title="Available cash"
             value={formatMinorCurrency(wallet.balances.availableBalanceMinor, currency)}
-            description="Ready to invest or withdraw from the ledger."
+            description={
+              wallet.balances.availableBalanceMinor === "0"
+                ? "All approved funds are currently invested."
+                : "Ready to withdraw or fund a new deposit."
+            }
             icon={<PiggyBank />}
             href="/wallet"
             accent="primary"
           />
           <StatCard
-            title="Locked balance"
+            title="Invested principal"
             value={formatMinorCurrency(wallet.balances.lockedBalanceMinor, currency)}
             description={lockedDescription}
             icon={<Lock />}
@@ -123,7 +127,7 @@ export function DashboardMoneyCards() {
             accent="amber"
           />
           <StatCard
-            title="Today's earnings"
+            title="Today's live earnings"
             value={formatMinorCurrency(todayEarnings, currency)}
             description="Accrued today — credited after settlement."
             icon={<TrendingUp />}

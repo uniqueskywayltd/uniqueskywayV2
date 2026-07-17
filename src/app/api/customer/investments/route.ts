@@ -22,7 +22,7 @@ const listQuerySchema = z.object({
 });
 
 const activateInputSchema = z.object({
-  planVersionId: z.string().uuid(),
+  planVersionId: z.string().uuid().optional(),
   principalMinor: z
     .union([
       z.bigint(),
@@ -76,7 +76,11 @@ export async function POST(request: NextRequest) {
     await requireCsrf(request);
     const input = await parseJson(request, activateInputSchema);
     const service = await createCustomerPortfolioService();
-    const result = await service.activateInvestment(input);
+    const result = await service.activateInvestment({
+      principalMinor: input.principalMinor,
+      idempotencyKey: input.idempotencyKey,
+      ...(input.planVersionId ? { planVersionId: input.planVersionId } : {}),
+    });
     await dispatchQueuedEmails(25);
     return jsonOk(result, context.requestId, { status: 201 });
   } catch (error) {

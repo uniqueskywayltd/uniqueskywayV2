@@ -5,6 +5,11 @@ import type { IdentityProvider } from "@/application/auth";
 import type { Clock } from "@/application/ports";
 import { InvestmentEngineService } from "@/application/investments/investment-engine-service";
 import { calculateContinuousLiveAccrual } from "@/domains/investments";
+import {
+  planDisplayName,
+  resolvePlanSlugForPrincipalMinor,
+  type CertifiedPlanSlug,
+} from "@/domains/investments/plan-eligibility";
 import { secondsUntilNextNewYorkMidnight } from "@/domains/settlement";
 import type {
   CoreRepository,
@@ -33,7 +38,8 @@ export interface ListCustomerInvestmentsInput {
 }
 
 export interface ActivateCustomerInvestmentInput {
-  planVersionId: string;
+  /** Optional — ignored when amount-based assignment resolves a different eligible plan. */
+  planVersionId?: string;
   principalMinor: bigint;
   idempotencyKey: string;
 }
@@ -86,11 +92,15 @@ export class CustomerPortfolioService {
 
   async activateInvestment(input: ActivateCustomerInvestmentInput) {
     const appUser = await this.requireCurrentAppUser();
+    const planVersionId = await this.resolveEligiblePlanVersionId(
+      input.principalMinor,
+      input.planVersionId,
+    );
     const engine = this.createEngine();
 
     const result = await engine.activateInvestment({
       userId: appUser.id,
-      planVersionId: input.planVersionId,
+      planVersionId,
       principalMinor: input.principalMinor,
       idempotencyKey: input.idempotencyKey,
     });
@@ -226,6 +236,43 @@ export class CustomerPortfolioService {
       lifecycle: buildLifecycle(investment),
       stopPreview: null,
     };
+  }
+
+  /**
+   * Assigns the eligible plan from approved principal amount.
+   * Preferred/client planVersionId is used only when it already matches the amount band.
+   */
+  private async resolveEligiblePlanVersionId(
+    principalMinor: bigint,
+    preferredPlanVersionId?: string,
+  ): Promise<string> {
+    const planSlug = resolvePlanSlugForPrincipalMinor(principalMinor);
+    if (!planSlug) {
+      throw new AppError({
+        code: "VALIDATION_ERROR",
+        message: "Investment amount is below the platform minimum of $50.",
+      });
+    }
+
+    const published = await this.deps.coreRepository.listActivePublishedPlanVersions();
+    const match = published.find(
+      ({ plan, version }) => plan.slug === planSlug && version.status === "active",
+    );
+    if (!match) {
+      throw new AppError({
+        code: "INVALID_STATE",
+        message: `No active ${planDisplayName(planSlug as CertifiedPlanSlug)} is available.`,
+      });
+    }
+
+    if (preferredPlanVersionId) {
+      const preferred = published.find(({ version }) => version.id === preferredPlanVersionId);
+      if (preferred && preferred.plan.slug === planSlug) {
+        return preferred.version.id;
+      }
+    }
+
+    return match.version.id;
   }
 
   private createEngine() {
@@ -531,7 +578,7 @@ export function resolveNextMilestone(investment: InvestmentRecord): {
   date: string | null;
 } {
   if (investment.status === "pending") {
-    return { label: "Awaiting activation", date: null };
+    return { label: "Awaiting start", date: null };
   }
   if (investment.status === "matured") {
     return { label: "Matured", date: investment.maturityDate };
@@ -558,7 +605,7 @@ function buildLifecycle(investment: InvestmentRecord) {
     },
     {
       key: "activated",
-      label: "Activated",
+      label: "Investment started",
       at: investment.activatedAt?.toISOString() ?? null,
       complete: Boolean(investment.activatedAt),
     },

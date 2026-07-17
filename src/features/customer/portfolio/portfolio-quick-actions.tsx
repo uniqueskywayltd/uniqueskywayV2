@@ -5,9 +5,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const actions = [
-  { href: "/portfolio/activate", label: "Activate investment", icon: PieChart },
+  { href: "/portfolio", label: "Manage investments", icon: PieChart },
+  { href: "/wallet/deposits/new", label: "Deposit funds", icon: Wallet },
   { href: "/plans", label: "Explore plans", icon: Sparkles },
-  { href: "/wallet", label: "Wallet", icon: Wallet },
   { href: "/ledger", label: "Ledger", icon: ScrollText },
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
 ] as const;

@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Skeleton } from "@/components/ui";
-import { DashboardInvestCta } from "@/features/customer/dashboard/dashboard-invest-cta";
+import {
+  DashboardInvestAvailableCashCta,
+  DashboardInvestCta,
+} from "@/features/customer/dashboard/dashboard-invest-cta";
 import { DashboardLiveEarnings } from "@/features/customer/dashboard/dashboard-live-earnings";
 import { getCustomerJson } from "@/features/customer/api-client";
 import type { PortfolioListResponse } from "@/features/customer/portfolio/types";
@@ -139,8 +142,8 @@ export function DashboardGrowthSurface() {
   }
 
   if (available > 0n) {
-    return <DashboardInvestCta />;
+    return <DashboardInvestAvailableCashCta />;
   }
 
-  return null;
+  return <DashboardInvestCta />;
 }

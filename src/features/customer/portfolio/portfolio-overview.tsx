@@ -284,7 +284,7 @@ function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["sum
     >
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Portfolio value
+          Current investment value
         </p>
         <p className="mt-1 text-foreground">
           <CurrencyDisplay
@@ -295,7 +295,7 @@ function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["sum
       </div>
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Available
+          Available cash
         </p>
         <p className="mt-1 text-foreground">
           <CurrencyDisplay
@@ -305,7 +305,9 @@ function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["sum
         </p>
       </div>
       <div>
-        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Locked</p>
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          Invested principal
+        </p>
         <p className="mt-1 text-foreground">
           <CurrencyDisplay
             amountMinor={Number(summary.lockedBalanceMinor ?? summary.activePrincipalMinor)}
@@ -315,7 +317,7 @@ function PortfolioOrientation({ summary }: { summary: PortfolioListResponse["sum
       </div>
       <div>
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Today&apos;s earnings
+          Today&apos;s live earnings
         </p>
         <p className="mt-1 text-foreground">
           <CurrencyDisplay
@@ -397,14 +399,14 @@ function PortfolioEmptyState({
     <EmptyState
       icon={PieChart}
       title="No investments yet"
-      description="When you activate a published plan, it appears here with progress and settlement cues — Investments is where performance lives."
+      description="Submit a deposit. After approval, your investment starts automatically and appears here."
       action={
         <div className="flex flex-wrap justify-center gap-3">
           <Button asChild>
-            <Link href="/plans">Explore plans</Link>
+            <Link href="/wallet/deposits/new">Deposit funds</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/wallet">Open wallet</Link>
+            <Link href="/plans">Explore plans</Link>
           </Button>
         </div>
       }

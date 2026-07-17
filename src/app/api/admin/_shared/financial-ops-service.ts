@@ -59,6 +59,9 @@ export async function createAdminFinancialOpsService() {
     ledgerRepository,
     notificationRepository,
     operationsRepository,
+    investmentRepository,
+    settlementRepository,
+    referralRepository,
   });
 
   const withdrawalEngine = new WithdrawalEngineService({

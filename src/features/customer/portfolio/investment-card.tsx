@@ -68,7 +68,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Investment
+            Assigned plan
           </p>
           <h2 className="mt-1 truncate text-base font-semibold text-foreground">
             {investment.planName}
@@ -85,7 +85,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
 
       <dl className="mt-4 grid gap-3 sm:grid-cols-2">
         <div>
-          <dt className="text-xs text-muted-foreground">Principal</dt>
+          <dt className="text-xs text-muted-foreground">Investment amount</dt>
           <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
             <CurrencyDisplay
               amountMinor={Number(investment.principalMinor)}
@@ -140,7 +140,7 @@ export function InvestmentCard({ investment }: { investment: PortfolioInvestment
         ) : (
           <>
             <div>
-              <dt className="text-xs text-muted-foreground">Activated</dt>
+              <dt className="text-xs text-muted-foreground">Start date</dt>
               <dd className="mt-0.5 text-sm font-medium text-foreground">
                 {investment.activatedAt || investment.startAt ? (
                   <DateDisplay value={investment.activatedAt ?? investment.startAt!} />

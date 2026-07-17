@@ -249,13 +249,17 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
     );
 
     const portfolio = page.getByRole("region", { name: "Portfolio balances" });
-    await expect(portfolio.getByText("Portfolio value")).toBeVisible();
-    await expect(portfolio.getByRole("link", { name: /Portfolio value/ })).toContainText("$375.00");
-    await expect(portfolio.getByText("Available balance")).toBeVisible();
+    await expect(portfolio.getByText("Current investment value")).toBeVisible();
+    await expect(portfolio.getByRole("link", { name: /Current investment value/ })).toContainText(
+      "$375.00",
+    );
+    await expect(portfolio.getByText("Available cash")).toBeVisible();
     await expect(portfolio.getByText("$120.00")).toBeVisible();
-    await expect(portfolio.getByText("Locked balance")).toBeVisible();
-    await expect(portfolio.getByRole("link", { name: /Locked balance/ })).toContainText("$250.00");
-    await expect(portfolio.getByText("Today's earnings")).toBeVisible();
+    await expect(portfolio.getByText("Invested principal")).toBeVisible();
+    await expect(portfolio.getByRole("link", { name: /Invested principal/ })).toContainText(
+      "$250.00",
+    );
+    await expect(portfolio.getByText("Today's live earnings")).toBeVisible();
 
     const summary = page.getByRole("region", { name: "Investment summary" });
     await expect(summary.getByText("Total ROI earned")).toBeVisible();

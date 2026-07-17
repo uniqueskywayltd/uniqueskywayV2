@@ -761,7 +761,7 @@ function buildEmail(
       };
       return {
         previewId: "investment-activated",
-        subject: `🎉 Your Investment is Now Active — ${planName}`,
+        subject: `Investment Started — ${planName}`,
         text: financialPlainText.investmentActivated(activatedProps),
         element: InvestmentActivatedEmail(activatedProps),
       };

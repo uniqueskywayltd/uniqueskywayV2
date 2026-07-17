@@ -33,22 +33,22 @@ export type DashboardWidgetDefinition = {
 export const DEFAULT_DASHBOARD_WIDGETS: readonly DashboardWidgetDefinition[] = [
   {
     id: "portfolio-value",
-    title: "Portfolio value",
-    primaryQuestion: "What is my portfolio worth?",
+    title: "Current investment value",
+    primaryQuestion: "What is my investment worth right now?",
     hierarchyRank: 1,
     personalizable: true,
-    emptyTitle: "No portfolio value yet",
+    emptyTitle: "No investment value yet",
     emptyDescription:
-      "When you activate a published plan, certified portfolio figures will appear here.",
+      "When a deposit is approved, your investment starts automatically and figures appear here.",
   },
   {
     id: "available-balance",
-    title: "Available balance",
-    primaryQuestion: "How much can I use?",
+    title: "Available cash",
+    primaryQuestion: "How much cash can I use?",
     hierarchyRank: 2,
     personalizable: true,
-    emptyTitle: "Available balance",
-    emptyDescription: "Fund your wallet to see your available balance from the ledger.",
+    emptyTitle: "Available cash",
+    emptyDescription: "Fund your wallet to see your available cash from the ledger.",
   },
   {
     id: "todays-activity",

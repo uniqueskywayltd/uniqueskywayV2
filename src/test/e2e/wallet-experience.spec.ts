@@ -273,8 +273,8 @@ test.describe("sprint B3 wallet experience", () => {
     await page.goto("/wallet");
     await expect(page.getByRole("heading", { level: 1, name: "Wallet" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Balance hierarchy" })).toBeVisible();
-    await expect(page.getByText("Available", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("Withdrawable", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Available cash", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Withdrawable balance", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Pending", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Invested", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Ready to invest or withdraw.")).toBeVisible();

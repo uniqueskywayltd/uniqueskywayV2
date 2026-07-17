@@ -45,6 +45,15 @@ export async function POST(request: NextRequest, routeContext: RouteContext) {
       {
         depositIntent: serializeDepositIntent(result.depositIntent),
         idempotent: result.idempotent,
+        autoInvest: result.autoInvest
+          ? {
+              investmentId: result.autoInvest.investmentId,
+              planSlug: result.autoInvest.planSlug,
+              planName: result.autoInvest.planName,
+              principalMinor: result.autoInvest.principalMinor,
+              status: result.autoInvest.status,
+            }
+          : null,
       },
       context.requestId,
     );

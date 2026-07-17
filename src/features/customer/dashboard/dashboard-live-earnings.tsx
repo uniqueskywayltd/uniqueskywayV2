@@ -110,13 +110,13 @@ export function DashboardLiveEarnings({
           href="/portfolio"
           className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-primary/80"
         >
-          View investments
+          Manage investment
         </Link>
       </header>
 
       <div className="mt-3">
         <h2 className="text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
-          Live earnings
+          Today&apos;s live earnings
         </h2>
         <p
           className="mt-0.5 font-heading text-4xl font-extrabold leading-none text-emerald-600 tabular-nums sm:text-[2.75rem] dark:text-emerald-400"
@@ -133,27 +133,27 @@ export function DashboardLiveEarnings({
       <div className="my-3 border-t border-border/50" aria-hidden />
 
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-6">
-        <MetricCell label="Today's Earnings">
+        <MetricCell label="Today's Live Earnings">
           <span className="font-bold text-emerald-600 tabular-nums dark:text-emerald-400">
             {signedToday}
           </span>
         </MetricCell>
-        <MetricCell label="Total ROI Earned">
+        <MetricCell label="Total Earnings">
           <span className="font-bold text-foreground tabular-nums">{totalRoiLabel}</span>
         </MetricCell>
         <MetricCell label="Current Investment Value">
           <span className="font-bold text-foreground tabular-nums">{currentValueLabel}</span>
         </MetricCell>
-        <MetricCell label="Portfolio Value">
+        <MetricCell label="Current Investment">
           <span className="font-bold text-foreground tabular-nums">{portfolioValueLabel}</span>
         </MetricCell>
-        <MetricCell label="Next Credit">
+        <MetricCell label="Next Settlement">
           <span className="font-mono text-sm font-bold tabular-nums text-foreground">
             {countdown}
           </span>
-          <span className="sr-only">Next credit in {countdown}</span>
+          <span className="sr-only">Next settlement in {countdown}</span>
         </MetricCell>
-        <MetricCell label="Time Remaining">
+        <MetricCell label="Days Remaining">
           <span className="font-bold text-foreground tabular-nums">{timeRemaining}</span>
         </MetricCell>
       </dl>

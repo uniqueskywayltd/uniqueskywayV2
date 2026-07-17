@@ -9,10 +9,13 @@ import {
   CoreRepository,
   DrizzleTransactionManager,
   IdentityRepository,
+  InvestmentRepository,
   LedgerRepository,
   NotificationRepository,
   OperationsRepository,
   PaymentRepository,
+  ReferralRepository,
+  SettlementRepository,
   getDatabaseConnection,
 } from "@/infrastructure/database";
 import {
@@ -45,6 +48,9 @@ export async function createDepositEngineService(options: CreateDepositEngineSer
     ledgerRepository: new LedgerRepository(db),
     notificationRepository: new NotificationRepository(db),
     operationsRepository: new OperationsRepository(db),
+    investmentRepository: new InvestmentRepository(db),
+    settlementRepository: new SettlementRepository(db),
+    referralRepository: new ReferralRepository(db),
   });
 }
 
@@ -80,6 +86,19 @@ export function serializeDepositIntent(deposit: DepositIntentRecord) {
   const metadata = deposit.providerMetadata ?? {};
   const evidenceUrl = typeof metadata.evidenceUrl === "string" ? metadata.evidenceUrl : null;
   const walletAddress = typeof metadata.address === "string" ? metadata.address : null;
+  const autoInvestRaw =
+    metadata.autoInvest && typeof metadata.autoInvest === "object"
+      ? (metadata.autoInvest as Record<string, unknown>)
+      : null;
+  const autoInvest = autoInvestRaw
+    ? {
+        investmentId:
+          typeof autoInvestRaw.investmentId === "string" ? autoInvestRaw.investmentId : null,
+        planSlug: typeof autoInvestRaw.planSlug === "string" ? autoInvestRaw.planSlug : null,
+        planName: typeof autoInvestRaw.planName === "string" ? autoInvestRaw.planName : null,
+        status: typeof autoInvestRaw.status === "string" ? autoInvestRaw.status : "AUTO_INVESTED",
+      }
+    : null;
 
   return {
     id: deposit.id,
@@ -96,6 +115,7 @@ export function serializeDepositIntent(deposit: DepositIntentRecord) {
     walletAddress,
     providerAuthorizationUrl: deposit.providerAuthorizationUrl,
     confirmationLedgerTransactionId: deposit.confirmationLedgerTransactionId,
+    autoInvest,
     createdAt: deposit.createdAt.toISOString(),
     confirmedAt: deposit.confirmedAt?.toISOString() ?? null,
     updatedAt: deposit.updatedAt.toISOString(),

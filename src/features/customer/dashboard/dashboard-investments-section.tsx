@@ -125,11 +125,11 @@ export function DashboardInvestmentsSection() {
       {featured.length === 0 ? (
         <EmptyState
           icon={PieChart}
-          title="Start investing today"
-          description="Start investing today and let your money begin earning daily returns."
+          title="No active investments yet"
+          description="Submit a deposit. After approval, your investment starts automatically."
           action={
             <Button asChild>
-              <Link href="/portfolio/activate">Start Investing</Link>
+              <Link href="/wallet/deposits/new">Deposit funds</Link>
             </Button>
           }
         />

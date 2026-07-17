@@ -22,18 +22,27 @@ import type {
   DrizzleTransactionContext,
   DrizzleTransactionManager,
   IdentityRepository,
+  InvestmentRepository,
   LedgerRepository,
   NotificationRepository,
   OperationsRepository,
   PaymentRepository,
+  ReferralRepository,
+  SettlementRepository,
 } from "@/infrastructure/database";
 
+import { InvestmentEngineService } from "@/application/investments/investment-engine-service";
 import {
   enqueueAdminEmail,
   resolveAdminNotifyEmail,
 } from "@/application/notifications/admin-email";
 import { getServerEnv } from "@/config/server-env";
 import { resolvePublicAppUrl } from "@/config/public-app-url";
+import {
+  planDisplayName,
+  resolvePlanSlugForPrincipalMinor,
+  type CertifiedPlanSlug,
+} from "@/domains/investments/plan-eligibility";
 import { formatEmailDateTime } from "@/emails/format-datetime";
 import { formatMoneyMinorUnits } from "@/i18n/format";
 import { MANUAL_DEPOSIT_PROVIDER } from "./funding-constants";
@@ -67,6 +76,10 @@ export interface DepositEngineServiceDependencies {
   ledgerRepository: LedgerRepository;
   notificationRepository: NotificationRepository;
   operationsRepository: OperationsRepository;
+  /** Required for automatic investment on deposit approval. */
+  investmentRepository?: InvestmentRepository;
+  settlementRepository?: SettlementRepository;
+  referralRepository?: ReferralRepository;
 }
 
 export interface CreateDepositIntentCommand extends CreateDepositIntentInput {
@@ -86,9 +99,22 @@ export interface CreateDepositIntentResult {
   customerFirstName: string | null;
 }
 
+export type AutoInvestResult = {
+  investmentId: string;
+  planSlug: CertifiedPlanSlug;
+  planName: string;
+  principalMinor: string;
+  status: "active";
+};
+
+type AutoInvestInternalResult = AutoInvestResult & {
+  depositIntent: DepositIntentRecord;
+};
+
 export interface AdminDepositActionResult {
   depositIntent: DepositIntentRecord;
   idempotent: boolean;
+  autoInvest?: AutoInvestResult | null;
 }
 
 export interface ReverseDepositIntentOptions {
@@ -376,7 +402,7 @@ export class DepositEngineService {
         throw new AppError({ code: "NOT_FOUND", message: "Deposit intent was not found." });
       }
       if (current.status === "confirmed" && current.confirmationLedgerTransactionId) {
-        return { depositIntent: current, idempotent: true };
+        return { depositIntent: current, idempotent: true, autoInvest: null };
       }
       if (current.status !== "pending") {
         throw new AppError({
@@ -466,7 +492,21 @@ export class DepositEngineService {
       });
       await this.enqueueDepositConfirmedSideEffects(tx, confirmed, context);
 
-      return { depositIntent: confirmed, idempotent: false };
+      const autoInvest = await this.autoInvestApprovedDeposit(tx, confirmed, amountMinor, context);
+
+      return {
+        depositIntent: autoInvest?.depositIntent ?? confirmed,
+        idempotent: false,
+        autoInvest: autoInvest
+          ? {
+              investmentId: autoInvest.investmentId,
+              planSlug: autoInvest.planSlug,
+              planName: autoInvest.planName,
+              principalMinor: autoInvest.principalMinor,
+              status: autoInvest.status,
+            }
+          : null,
+      };
     });
   }
 
@@ -814,6 +854,111 @@ export class DepositEngineService {
       });
     }
     void context;
+  }
+
+  /**
+   * After wallet credit, assign an eligible plan by amount and activate investment
+   * in the same transaction. Returns null when amount is below the investable minimum.
+   */
+  private async autoInvestApprovedDeposit(
+    tx: DrizzleTransactionContext,
+    deposit: DepositIntentRecord,
+    amountMinor: bigint,
+    context: RequestAuditContext,
+  ): Promise<AutoInvestInternalResult | null> {
+    const planSlug = resolvePlanSlugForPrincipalMinor(amountMinor);
+    if (!planSlug) {
+      return null;
+    }
+
+    if (
+      !this.deps.investmentRepository ||
+      !this.deps.settlementRepository ||
+      !this.deps.referralRepository
+    ) {
+      return null;
+    }
+
+    const published = await this.deps.coreRepository.listActivePublishedPlanVersions();
+    const match = published.find(
+      ({ plan, version }) =>
+        plan.slug === planSlug &&
+        version.currency === deposit.currency &&
+        version.status === "active",
+    );
+    if (!match) {
+      throw new AppError({
+        code: "INVALID_STATE",
+        message: `No active ${planDisplayName(planSlug)} is available for automatic investment.`,
+      });
+    }
+
+    const engine = new InvestmentEngineService({
+      clock: this.deps.clock,
+      transactionManager: this.deps.transactionManager,
+      coreRepository: this.deps.coreRepository,
+      investmentRepository: this.deps.investmentRepository,
+      ledgerRepository: this.deps.ledgerRepository,
+      settlementRepository: this.deps.settlementRepository,
+      notificationRepository: this.deps.notificationRepository,
+      identityRepository: this.deps.identityRepository,
+      referralRepository: this.deps.referralRepository,
+    });
+
+    const activated = await engine.activateInvestmentInTransaction(tx, {
+      userId: deposit.userId,
+      planVersionId: match.version.id,
+      principalMinor: amountMinor,
+      idempotencyKey: `auto_invest:deposit:${deposit.id}`,
+      skipWalletLock: true,
+    });
+
+    const updatedDeposit = await this.deps.paymentRepository.updateDepositIntentProviderAction(
+      tx,
+      deposit.id,
+      {
+        status: "confirmed",
+        providerAuthorizationUrl: deposit.providerAuthorizationUrl,
+        providerAccessCode: deposit.providerAccessCode,
+        providerMetadata: {
+          ...deposit.providerMetadata,
+          autoInvest: {
+            investmentId: activated.investment.id,
+            planSlug,
+            planName: match.plan.name,
+            planVersionId: match.version.id,
+            status: "AUTO_INVESTED",
+          },
+        },
+      },
+    );
+
+    await this.deps.operationsRepository.appendAuditLog(tx, {
+      actorUserId: null,
+      actorType: "system",
+      action: "deposit.auto_invested",
+      targetType: "deposit_intent",
+      targetId: deposit.id,
+      metadata: {
+        investmentId: activated.investment.id,
+        planSlug,
+        planName: match.plan.name,
+        principalMinor: amountMinor.toString(),
+        status: "AUTO_INVESTED",
+      },
+      requestId: context.requestId,
+      ipAddressHash: context.ipAddressHash,
+      userAgentHash: context.userAgentHash,
+    });
+
+    return {
+      investmentId: activated.investment.id,
+      planSlug,
+      planName: match.plan.name,
+      principalMinor: amountMinor.toString(),
+      status: "active",
+      depositIntent: updatedDeposit,
+    };
   }
 
   private async appendCustomerAudit(

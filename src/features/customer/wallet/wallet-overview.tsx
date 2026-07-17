@@ -113,17 +113,25 @@ export function WalletOverview() {
         <section aria-label="Balance hierarchy">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              title="Available"
+              title="Available cash"
               value={formatMinorCurrency(balances.availableBalanceMinor, currency)}
-              description="Ready to invest or withdraw."
+              description={
+                balances.availableBalanceMinor === "0"
+                  ? "All approved funds are currently invested."
+                  : "Ready to withdraw or invest."
+              }
               icon={<Wallet />}
               href="/wallet/withdrawals/new"
               accent="emerald"
             />
             <StatCard
-              title="Withdrawable"
+              title="Withdrawable balance"
               value={formatMinorCurrency(balances.withdrawableBalanceMinor, currency)}
-              description="Cash you can send out now."
+              description={
+                balances.lockedBalanceMinor !== "0" && balances.withdrawableBalanceMinor === "0"
+                  ? "Your investment is currently active. Funds become withdrawable after settlement or maturity."
+                  : "Cash you can send out now."
+              }
               icon={<PiggyBank />}
               href="/wallet/withdrawals/new"
               accent="sky"
@@ -141,12 +149,12 @@ export function WalletOverview() {
               accent="amber"
             />
             <StatCard
-              title="Invested"
+              title="Invested principal"
               value={formatMinorCurrency(balances.lockedBalanceMinor, currency)}
               description={
                 balances.reservedBalanceMinor !== "0"
                   ? `Includes a withdrawal hold (${formatMinorCurrency(balances.reservedBalanceMinor, currency)}).`
-                  : "In investments or other holds."
+                  : "Principal currently earning in active investments."
               }
               icon={<Lock />}
               href="/portfolio"

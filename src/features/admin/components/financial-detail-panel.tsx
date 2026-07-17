@@ -51,6 +51,12 @@ type DepositRecord = {
   walletAddress?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  autoInvest?: {
+    investmentId?: string | null;
+    planSlug?: string | null;
+    planName?: string | null;
+    status?: string | null;
+  } | null;
 };
 
 type WithdrawalRecord = {
@@ -97,6 +103,12 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
   const [showFullWallet, setShowFullWallet] = useState(false);
   const [walletCopied, setWalletCopied] = useState(false);
 
+  const [autoInvestOutcome, setAutoInvestOutcome] = useState<{
+    planName?: string | null;
+    investmentId?: string | null;
+    status?: string | null;
+  } | null>(null);
+
   const base = kind === "deposit" ? `/api/admin/deposits/${id}` : `/api/admin/withdrawals/${id}`;
 
   const load = useCallback(async () => {
@@ -134,7 +146,14 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
     setBusy(true);
     setFeedback(null);
     const path = confirmAction === "complete" ? `${base}/complete` : `${base}/${confirmAction}`;
-    const result = await mutateAdminJson("POST", path, { reason: trimmed });
+    const result = await mutateAdminJson<{
+      depositIntent?: DepositRecord;
+      autoInvest?: {
+        planName?: string;
+        investmentId?: string;
+        status?: string;
+      } | null;
+    }>("POST", path, { reason: trimmed });
     setBusy(false);
     setConfirmAction(null);
     if (result.error) {
@@ -142,6 +161,14 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
       return;
     }
     if (confirmAction === "approve" || confirmAction === "reject") {
+      if (kind === "deposit" && confirmAction === "approve") {
+        setAutoInvestOutcome(
+          result.data?.autoInvest ?? result.data?.depositIntent?.autoInvest ?? null,
+        );
+        if (result.data?.depositIntent) {
+          setDeposit(result.data.depositIntent);
+        }
+      }
       setOutcome(confirmAction);
       return;
     }
@@ -218,7 +245,7 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
 
       {kind === "deposit" ? (
         <AdminInfoSection title="Deposit Information">
-          <AdminInfoRow label="Amount" value={amount} emphasize />
+          <AdminInfoRow label="Approved Amount" value={amount} emphasize />
           <AdminInfoRow label="Currency" value={currency} />
           <AdminInfoRow label="Funding Method" value={fundingMethodLabel(deposit?.provider)} />
           <AdminInfoRow label="Asset" value={deposit?.fundingAsset || "—"} />
@@ -228,7 +255,34 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
           <AdminInfoRow label="Submitted" value={formatAdminDateTime(deposit?.createdAt)} />
           <AdminInfoRow label="Reference" value={deposit?.providerIntentId || "—"} mono />
         </AdminInfoSection>
-      ) : (
+      ) : null}
+
+      {kind === "deposit" && (deposit?.autoInvest || status === "confirmed") ? (
+        <AdminInfoSection title="Automatic Investment">
+          <AdminInfoRow
+            label="Assigned Plan"
+            value={deposit?.autoInvest?.planName || "—"}
+            emphasize
+          />
+          <AdminInfoRow
+            label="Investment Created"
+            value={deposit?.autoInvest?.investmentId ? "Yes" : status === "confirmed" ? "—" : "No"}
+          />
+          <AdminInfoRow
+            label="Investment Started"
+            value={deposit?.autoInvest?.investmentId ? "Yes" : "—"}
+          />
+          <AdminInfoRow
+            label="Current Status"
+            value={
+              deposit?.autoInvest?.status ||
+              (status === "confirmed" ? "CONFIRMED" : status.toUpperCase())
+            }
+          />
+        </AdminInfoSection>
+      ) : null}
+
+      {kind === "deposit" ? null : (
         <AdminInfoSection title="Withdrawal Information">
           <AdminInfoRow label="Withdrawal Amount" value={amount} emphasize />
           <AdminInfoRow label="Currency" value={currency} />
@@ -455,7 +509,9 @@ function FinancialDetailView({ kind }: { kind: "deposit" | "withdrawal" }) {
             <DialogDescription>
               {outcome === "approve"
                 ? kind === "deposit"
-                  ? "The customer's wallet has been credited successfully. A confirmation email has been sent."
+                  ? autoInvestOutcome?.planName
+                    ? `Wallet credited and investment started automatically on ${autoInvestOutcome.planName}. Status: AUTO INVESTED.`
+                    : "The customer's wallet has been credited successfully. A confirmation email has been sent."
                   : "The withdrawal has been approved. Continue processing according to your payout steps."
                 : "The customer has been notified of the decision."}
             </DialogDescription>

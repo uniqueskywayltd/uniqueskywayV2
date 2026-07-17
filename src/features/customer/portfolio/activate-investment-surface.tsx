@@ -157,12 +157,19 @@ export function ActivateInvestmentSurface() {
     return () => window.clearInterval(id);
   }, []);
 
-  const selected = useMemo(
-    () => plans.find((plan) => plan.planVersionId === planVersionId) ?? null,
-    [plans, planVersionId],
-  );
-
   const principalMinor = useMemo(() => parsePositiveMoneyInputToMinorBigInt(amount), [amount]);
+
+  const selected = useMemo(() => {
+    if (principalMinor != null && plans.length > 0) {
+      const eligible = plans.find(
+        (plan) =>
+          principalMinor >= BigInt(plan.minPrincipalMinor) &&
+          principalMinor <= BigInt(plan.maxPrincipalMinor),
+      );
+      if (eligible) return eligible;
+    }
+    return plans.find((plan) => plan.planVersionId === planVersionId) ?? null;
+  }, [plans, planVersionId, principalMinor]);
 
   const liveSummary = useMemo(() => {
     if (!selected || principalMinor == null) return null;
@@ -223,7 +230,6 @@ export function ActivateInvestmentSurface() {
     const result = await postCustomerJson<{ investment: { id: string } }>(
       "/api/customer/investments",
       {
-        planVersionId: selected.planVersionId,
         principalMinor: principalMinor.toString(),
         idempotencyKey: `activate:${selected.planVersionId}:${principalMinor}`,
       },
@@ -276,11 +282,11 @@ export function ActivateInvestmentSurface() {
     <div className="mx-auto max-w-5xl space-y-6 sm:space-y-8">
       <header className="space-y-2">
         <h1 className="font-heading text-3xl tracking-tight text-foreground sm:text-4xl">
-          Start Your Investment
+          Invest available cash
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Choose an investment plan and begin earning daily returns from your available wallet
-          balance.
+          Use leftover available cash. Your investment plan is assigned automatically from the
+          amount — deposits start investments on approval without this step.
         </p>
       </header>
 
@@ -299,7 +305,7 @@ export function ActivateInvestmentSurface() {
           <p className="mt-3 text-xs text-muted-foreground">
             {lockedMinor > 0n ? (
               <>
-                Locked in investments:{" "}
+                Invested principal:{" "}
                 <CurrencyDisplay amountMinor={Number(lockedMinor)} currency={currency} />
               </>
             ) : null}
@@ -326,17 +332,20 @@ export function ActivateInvestmentSurface() {
           <div className="space-y-5">
             <section aria-label="Investment plans" className="space-y-3">
               <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-                Choose a plan
+                Investment plan assigned
               </h2>
+              <p className="text-sm text-muted-foreground">
+                Your investment qualifies for a plan automatically based on the amount you enter.
+              </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {plans.map((plan) => {
-                  const selectedPlan = plan.planVersionId === planVersionId;
+                  const selectedPlan = plan.planVersionId === selected?.planVersionId;
                   const recommended = plan.slug === "gold";
                   return (
                     <button
                       key={plan.planVersionId}
                       type="button"
-                      disabled={pending}
+                      disabled={pending || principalMinor != null}
                       onClick={() => setPlanVersionId(plan.planVersionId)}
                       className={cn(
                         "relative rounded-2xl border bg-card p-4 text-left shadow-sm",
@@ -344,6 +353,7 @@ export function ActivateInvestmentSurface() {
                         selectedPlan
                           ? "border-primary shadow-[var(--elevation-2)] ring-2 ring-primary/30"
                           : "border-border/70 hover:border-primary/30 motion-safe:hover:-translate-y-0.5",
+                        principalMinor != null ? "cursor-default" : null,
                       )}
                     >
                       {recommended ? (
@@ -437,7 +447,7 @@ export function ActivateInvestmentSurface() {
                 disabled={pending || !selected}
                 onClick={() => void submit()}
               >
-                {pending ? "Activating your investment..." : "🚀 Activate Investment"}
+                {pending ? "Starting your investment..." : "Confirm investment"}
               </Button>
             </section>
           </div>
@@ -577,10 +587,10 @@ function ActivationSuccessModal({
             <div className="space-y-5">
               <div className="space-y-2 text-center">
                 <DialogPrimitive.Title className="text-xl font-semibold tracking-tight">
-                  🎉 Investment Activated
+                  Investment started
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="text-sm text-muted-foreground">
-                  Your plan is live and earning according to the certified schedule.
+                  Your investment plan was assigned automatically and accrual has begun.
                 </DialogPrimitive.Description>
               </div>
               <dl className="space-y-2 rounded-xl border border-border/70 bg-muted/30 px-4 py-3 text-sm">

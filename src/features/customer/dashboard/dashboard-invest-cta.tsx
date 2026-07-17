@@ -6,11 +6,11 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
-/** Prominent invest CTA when wallet has funds and no active investments. */
+/** Deposit CTA when wallet has no active investments and no leftover cash. */
 export function DashboardInvestCta({ className }: { className?: string }) {
   return (
     <section
-      aria-label="Start investing"
+      aria-label="Fund your investment"
       className={cn(
         "relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/12 via-card to-card p-6 shadow-[var(--elevation-2)] sm:p-8",
         "motion-safe:transition-[box-shadow,transform,border-color] motion-safe:duration-300 motion-reduce:transition-none",
@@ -31,14 +31,14 @@ export function DashboardInvestCta({ className }: { className?: string }) {
         <div className="max-w-xl space-y-3">
           <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            Ready to invest
+            Ready to grow
           </p>
           <h2 className="font-heading text-2xl leading-tight text-foreground sm:text-3xl">
-            🚀 Start Growing Your Money
+            Submit a deposit to start earning
           </h2>
           <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Your wallet has available funds ready to invest. Choose an investment plan and start
-            earning returns immediately.
+            Once your deposit is approved, your investment plan is assigned automatically and
+            accrual begins immediately — no activation step.
           </p>
         </div>
 
@@ -52,15 +52,50 @@ export function DashboardInvestCta({ className }: { className?: string }) {
               "motion-safe:hover:scale-[1.02] motion-safe:hover:shadow-lg motion-safe:active:scale-[0.99]",
             )}
           >
-            <Link href="/portfolio/activate">
-              Start Investing
+            <Link href="/wallet/deposits/new">
+              Deposit funds
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </Button>
           <Button asChild variant="link" className="h-auto justify-center px-0 text-sm">
-            <Link href="/plans">View Investment Plans</Link>
+            <Link href="/plans">View investment plans</Link>
           </Button>
         </div>
+      </div>
+    </section>
+  );
+}
+
+/** Edge-case CTA when leftover available cash exists without an active investment. */
+export function DashboardInvestAvailableCashCta({ className }: { className?: string }) {
+  return (
+    <section
+      aria-label="Invest available cash"
+      className={cn(
+        "relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/12 via-card to-card p-6 shadow-[var(--elevation-2)] sm:p-8",
+        className,
+      )}
+    >
+      <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-xl space-y-3">
+          <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden />
+            Available cash
+          </p>
+          <h2 className="font-heading text-2xl leading-tight text-foreground sm:text-3xl">
+            Invest available cash
+          </h2>
+          <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+            You have leftover available cash. Your plan will be assigned automatically from the
+            amount.
+          </p>
+        </div>
+        <Button asChild size="lg" className="h-11 w-full gap-2 sm:min-w-[12.5rem]">
+          <Link href="/portfolio/activate">
+            Invest available cash
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </Button>
       </div>
     </section>
   );
