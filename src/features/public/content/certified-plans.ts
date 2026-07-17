@@ -4,6 +4,8 @@
  * the product authority catalog. Display only; no browser ROI math.
  */
 
+import { formatMoneyMajor } from "@/lib/money-format";
+
 export type CertifiedPublicPlan = {
   slug: "silver" | "gold" | "classic" | "master";
   name: string;
@@ -63,11 +65,7 @@ export const CERTIFIED_PUBLIC_PLANS: readonly CertifiedPublicPlan[] = [
 export function formatPlanMoney(amount: string): string {
   const value = Number(amount);
   if (!Number.isFinite(value)) return amount;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
+  return formatMoneyMajor("en", value, "USD", 2);
 }
 
 export function planTermYieldPercent(dailyRoiPercent: string, durationDays: number): string | null {

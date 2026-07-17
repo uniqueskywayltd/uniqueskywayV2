@@ -1,19 +1,23 @@
 import type { AppLanguage } from "./types";
+import {
+  formatMoneyMinorUnits as formatMoneyMinorUnitsShared,
+  formatUsdFromMinor as formatUsdFromMinorShared,
+} from "@/lib/money-format";
 
 /** Locale-aware money presentation — never mutates magnitude (MULTI_CURRENCY_PRESENTATION_GUIDE). */
 export function formatMoneyMinorUnits(
   locale: AppLanguage | string,
-  minorUnits: number,
+  minorUnits: number | string | bigint,
   currency = "USD",
   fractionDigits = 2,
 ): string {
-  const amount = minorUnits / 10 ** fractionDigits;
-  return new Intl.NumberFormat(localeForIntl(locale), {
-    style: "currency",
-    currency,
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  }).format(amount);
+  return formatMoneyMinorUnitsShared(locale, minorUnits, currency, fractionDigits);
+}
+
+export function formatUsdFromMinor(
+  amountMinor: string | number | bigint | null | undefined,
+): string {
+  return formatUsdFromMinorShared(amountMinor, "en");
 }
 
 export function formatDateTime(locale: AppLanguage | string, iso: string, timeZone?: string) {

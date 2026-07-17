@@ -15,6 +15,7 @@ export { ChartFrame } from "./chart-frame";
 export { Checkbox } from "./checkbox";
 export { CountdownTimer } from "./countdown-timer";
 export { CurrencyDisplay, DateDisplay, PercentageDisplay, RoiDisplay } from "./display";
+export { MoneyAmountInput } from "./money-amount-input";
 export {
   Dialog,
   DialogClose,

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { Button, Input, Label, Skeleton } from "@/components/ui";
 import { FormStepIndicator } from "@/components/ui/form-step-indicator";
+import { MoneyAmountInput } from "@/components/ui/money-amount-input";
 import {
   getCustomerJson,
   postCustomerForm,
@@ -16,7 +17,8 @@ import {
   type DepositSuccessSummary,
 } from "@/features/customer/wallet/deposit-success-modal";
 import { useI18n } from "@/features/i18n/i18n-provider";
-import { formatDateTime, formatMoneyMinorUnits } from "@/i18n/format";
+import { formatDateTime } from "@/i18n/format";
+import { formatMoneyMinorUnits, parsePositiveMoneyInputToMinor } from "@/lib/money-format";
 
 type FundingAsset = "BTC" | "ETH" | "USDT";
 
@@ -71,7 +73,7 @@ export function DepositJourney() {
     }
     return assetWallets[0] ?? null;
   }, [assetWallets, walletId]);
-  const amountMinor = dollarsToMinor(amount);
+  const amountMinor = parsePositiveMoneyInputToMinor(amount);
 
   useEffect(() => {
     let active = true;
@@ -304,11 +306,10 @@ export function DepositJourney() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="deposit-amount">Amount to credit (USD)</Label>
-            <Input
+            <MoneyAmountInput
               id="deposit-amount"
-              inputMode="decimal"
               value={amount}
-              onChange={(event) => setAmount(event.target.value)}
+              onValueChange={setAmount}
               disabled={step === "submitting"}
             />
             <p className="text-sm text-muted-foreground">
@@ -379,13 +380,4 @@ export function DepositJourney() {
       </Button>
     </div>
   );
-}
-
-function dollarsToMinor(value: string): number | null {
-  const trimmed = value.trim();
-  if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) return null;
-  const [whole, fraction = ""] = trimmed.split(".");
-  const cents = `${whole}${fraction.padEnd(2, "0")}`.replace(/^0+(?=\d)/, "");
-  const parsed = Number(cents);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }

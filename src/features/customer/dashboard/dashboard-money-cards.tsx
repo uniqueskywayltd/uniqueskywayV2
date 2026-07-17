@@ -14,6 +14,7 @@ import {
 import { Skeleton } from "@/components/ui";
 import { StatCard } from "@/components/ui/stat-card";
 import { getCustomerJson } from "@/features/customer/api-client";
+import { formatMoneyMinorUnits } from "@/lib/money-format";
 
 interface WalletOverviewPayload {
   balances: {
@@ -36,10 +37,7 @@ interface PortfolioListPayload {
 }
 
 function formatMinorCurrency(amountMinor: string, currency: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(Number(amountMinor) / 100);
+  return formatMoneyMinorUnits("en", amountMinor, currency, 2);
 }
 
 /** DP2 — money cards bound to certified wallet + portfolio read models only. */

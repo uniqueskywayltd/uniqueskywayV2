@@ -27,6 +27,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MoneyAmountInput } from "@/components/ui/money-amount-input";
+import { formatMoneyMinorUnits, parsePositiveMoneyInputToMinor } from "@/lib/money-format";
 
 import { getAdminJson, mutateAdminFormData, mutateAdminJson } from "../api-client";
 import {
@@ -704,8 +706,8 @@ export function CustomerDetailPanel() {
   }
 
   async function adjustWallet(direction: "credit" | "debit") {
-    const cents = Math.round(Number(walletAmount) * 100);
-    if (!Number.isFinite(cents) || cents <= 0 || !walletReason.trim()) {
+    const cents = parsePositiveMoneyInputToMinor(walletAmount);
+    if (cents == null || !walletReason.trim()) {
       setFeedback("Enter a positive amount and reason.");
       return;
     }
@@ -886,9 +888,9 @@ export function CustomerDetailPanel() {
       </Card>
       <Card className="mb-6 space-y-3 p-4">
         <h2 className="text-sm font-semibold">Wallet adjustment (ledger)</h2>
-        <Input
+        <MoneyAmountInput
           value={walletAmount}
-          onChange={(event) => setWalletAmount(event.target.value)}
+          onValueChange={setWalletAmount}
           aria-label="Amount USD"
           placeholder="Amount in USD (e.g. 25.00)"
         />
@@ -1655,12 +1657,12 @@ export function InvestmentsPanel() {
   }
 
   async function createInvestment() {
-    const dollars = Number(amountUsd);
-    if (!userId.trim() || !planVersionId || !Number.isFinite(dollars) || dollars <= 0) {
+    const principal = parsePositiveMoneyInputToMinor(amountUsd);
+    if (!userId.trim() || !planVersionId || principal == null) {
       setCreateFeedback("Enter a valid customer user ID, plan, and USD amount.");
       return;
     }
-    const principalMinor = String(Math.round(dollars * 100));
+    const principalMinor = String(principal);
     setCreateBusy(true);
     setCreateFeedback(null);
     const result = await mutateAdminJson<{ investment?: { id?: string } }>(
@@ -1774,11 +1776,10 @@ export function InvestmentsPanel() {
           </label>
           <label className="grid gap-1.5 text-sm">
             <span className="font-medium">Principal (USD)</span>
-            <Input
+            <MoneyAmountInput
               value={amountUsd}
-              onChange={(event) => setAmountUsd(event.target.value)}
-              inputMode="decimal"
-              placeholder="1000"
+              onValueChange={setAmountUsd}
+              placeholder="1,000.00"
             />
           </label>
           <label className="flex items-center gap-2 text-sm">
@@ -2156,8 +2157,8 @@ export function PlansPanel() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              Principal ${(Number(plan.minPrincipalMinor) / 100).toFixed(2)} – $
-              {(Number(plan.maxPrincipalMinor) / 100).toFixed(2)}
+              Principal {formatMoneyMinorUnits("en", plan.minPrincipalMinor, plan.currency)} –{" "}
+              {formatMoneyMinorUnits("en", plan.maxPrincipalMinor, plan.currency)}
             </p>
             <div className="flex flex-wrap gap-2">
               {plan.versionStatus !== "retired" ? (

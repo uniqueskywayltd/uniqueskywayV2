@@ -1,7 +1,7 @@
 import { calculateDailyRoi } from "@/domains/investments/roi-math";
 import { addNewYorkDays, newYorkDateAtMidnightUtc } from "@/domains/settlement/new-york-calendar";
 import { formatEmailDateTime } from "@/emails/format-datetime";
-import { formatMoneyMinorUnits } from "@/i18n/format";
+import { formatMoneyMinorUnits } from "@/lib/money-format";
 
 export type InvestmentActivatedScheduleDay = {
   label: string;
@@ -136,7 +136,7 @@ function compressScheduleForEmail(
 }
 
 function formatMoney(amountMinor: bigint, currency: string): string {
-  return formatMoneyMinorUnits("en", Number(amountMinor), currency);
+  return formatMoneyMinorUnits("en", amountMinor, currency);
 }
 
 function formatDailyRatePercent(dailyRoiBps: number): string {

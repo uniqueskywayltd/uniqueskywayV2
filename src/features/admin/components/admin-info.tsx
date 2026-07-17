@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoneyFieldValue } from "@/lib/money-format";
 import { cn } from "@/lib/utils";
 
 import { humanizeStatus, statusEmoji, statusTone } from "../lib/presentation";
@@ -94,7 +95,7 @@ export function AdminPlainRecord({
     .map((key) => ({
       key,
       label: humanizeFieldKey(key),
-      value: String(record[key]),
+      value: formatMoneyFieldValue(key, record[key], readCurrency(record)),
     }));
 
   if (rows.length === 0) return null;
@@ -106,6 +107,11 @@ export function AdminPlainRecord({
       ))}
     </AdminInfoSection>
   );
+}
+
+function readCurrency(record: Record<string, unknown>): string {
+  const currency = record.currency;
+  return typeof currency === "string" && currency.trim() ? currency.trim() : "USD";
 }
 
 function humanizeFieldKey(key: string): string {

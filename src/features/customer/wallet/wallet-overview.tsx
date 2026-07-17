@@ -12,12 +12,10 @@ import { WalletReveal } from "@/features/customer/wallet/wallet-motion";
 import { WalletQuickActions } from "@/features/customer/wallet/wallet-quick-actions";
 import { WalletWelcomeHero } from "@/features/customer/wallet/wallet-welcome-hero";
 import type { WalletOverviewResponse } from "@/features/customer/wallet/types";
+import { formatMoneyMinorUnits } from "@/lib/money-format";
 
 function formatMinorCurrency(amountMinor: string, currency: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(Number(amountMinor) / 100);
+  return formatMoneyMinorUnits("en", amountMinor, currency, 2);
 }
 
 function WalletFrameSkeleton() {

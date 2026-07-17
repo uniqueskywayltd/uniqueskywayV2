@@ -1,4 +1,5 @@
 import { FINANCIAL_TIME_ZONE } from "@/config/constants";
+import { formatMoneyMinorUnits } from "@/lib/money-format";
 import { cn } from "@/lib/utils";
 
 export interface CurrencyDisplayProps {
@@ -14,10 +15,7 @@ export function CurrencyDisplay({
   locale = "en-US",
   className,
 }: CurrencyDisplayProps) {
-  const value = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-  }).format(amountMinor / 100);
+  const value = formatMoneyMinorUnits(locale, amountMinor, currency, 2);
 
   return <span className={cn("font-mono tabular-nums", className)}>{value}</span>;
 }

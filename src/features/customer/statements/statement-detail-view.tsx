@@ -9,6 +9,7 @@ import { Button, EmptyState, Skeleton } from "@/components/ui";
 import { CurrencyDisplay, DateDisplay } from "@/components/ui/display";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
 import type { StatementDetail } from "@/features/customer/statements/types";
+import { formatMoneyMinorUnits } from "@/lib/money-format";
 
 export function StatementDetailView() {
   const params = useParams<{ statementId: string }>();
@@ -40,12 +41,12 @@ export function StatementDetailView() {
   async function downloadCsv() {
     if (!detail) return;
     const rows = [
-      ["posted_at", "label", "direction", "amount_minor", "currency", "wallet_category", "type"],
+      ["posted_at", "label", "direction", "amount", "currency", "wallet_category", "type"],
       ...detail.lines.map((line) => [
         line.postedAt,
         line.label,
         line.direction,
-        line.amountMinor,
+        formatMoneyMinorUnits("en", line.amountMinor, line.currency || "USD"),
         line.currency,
         line.walletCategory,
         line.transactionType,
@@ -151,7 +152,9 @@ export function StatementDetailView() {
           <Link href={detail.related.ledgerHref}>View live ledger</Link>
         </Button>
       </div>
-      {downloadNote ? <p className="text-sm text-muted-foreground print:hidden">{downloadNote}</p> : null}
+      {downloadNote ? (
+        <p className="text-sm text-muted-foreground print:hidden">{downloadNote}</p>
+      ) : null}
 
       <section className="space-y-2">
         <h3 className="text-sm font-semibold">Line items ({detail.lineCount})</h3>

@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation";
 import { Button, Input, Label, Skeleton } from "@/components/ui";
 import { CurrencyDisplay } from "@/components/ui/display";
 import { FormStepIndicator } from "@/components/ui/form-step-indicator";
+import { MoneyAmountInput } from "@/components/ui/money-amount-input";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
 import { useI18n } from "@/features/i18n/i18n-provider";
 import type { WalletOverviewResponse } from "@/features/customer/wallet/types";
+import { parsePositiveMoneyInputToMinor } from "@/lib/money-format";
 import {
   cryptoMethodLabel,
   networkDisplayLabel,
@@ -53,7 +55,7 @@ export function WithdrawalJourney() {
     };
   }, []);
 
-  const amountMinor = dollarsToMinor(amount);
+  const amountMinor = parsePositiveMoneyInputToMinor(amount);
   const available = availableMinor === null ? null : Number(availableMinor);
 
   function destinationReference(): string {
@@ -155,12 +157,7 @@ export function WithdrawalJourney() {
           </p>
           <div className="space-y-2">
             <Label htmlFor="withdraw-amount">{t("wallet.amount_usd")}</Label>
-            <Input
-              id="withdraw-amount"
-              inputMode="decimal"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-            />
+            <MoneyAmountInput id="withdraw-amount" value={amount} onValueChange={setAmount} />
           </div>
           <div className="space-y-2">
             <Label>Destination</Label>
@@ -323,13 +320,4 @@ export function WithdrawalJourney() {
       ) : null}
     </div>
   );
-}
-
-function dollarsToMinor(value: string): number | null {
-  const trimmed = value.trim();
-  if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) return null;
-  const [whole, fraction = ""] = trimmed.split(".");
-  const cents = `${whole}${fraction.padEnd(2, "0")}`.replace(/^0+(?=\d)/, "");
-  const parsed = Number(cents);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }

@@ -1,15 +1,6 @@
 /** Plain-English presentation helpers for admin UI (display only). */
 
-export function formatUsdFromMinor(
-  amountMinor: string | number | bigint | null | undefined,
-): string {
-  const value = Number(amountMinor ?? 0);
-  if (!Number.isFinite(value)) return "$0.00";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value / 100);
-}
+export { formatUsdFromMinor } from "@/lib/money-format";
 
 export function formatAdminDateTime(iso: string | null | undefined): string {
   if (!iso) return "—";

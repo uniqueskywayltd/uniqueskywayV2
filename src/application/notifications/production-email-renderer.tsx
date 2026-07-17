@@ -39,7 +39,7 @@ import PasswordResetEmail from "@/emails/password-reset";
 import RegistrationWelcomeEmail from "@/emails/registration-welcome";
 import VerifyEmail from "@/emails/verify-email";
 import WelcomeEmail from "@/emails/welcome";
-import { formatMoneyMinorUnits } from "@/i18n/format";
+import { formatMoneyMinorUnits } from "@/lib/money-format";
 
 export interface RenderProductionEmailInput {
   templateKey: string;

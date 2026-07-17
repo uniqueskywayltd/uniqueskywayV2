@@ -4,10 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Alert, AlertDescription, Button, Input, Skeleton } from "@/components/ui";
+import { Alert, AlertDescription, Button, Skeleton } from "@/components/ui";
 import { CurrencyDisplay } from "@/components/ui/display";
+import { MoneyAmountInput } from "@/components/ui/money-amount-input";
 import { getCustomerJson, postCustomerJson } from "@/features/customer/api-client";
 import { appPath } from "@/lib/app-path";
+import { parsePositiveMoneyInputToMinorBigInt } from "@/lib/money-format";
 
 type PublishedPlan = {
   planId: string;
@@ -27,14 +29,6 @@ type WalletBalances = {
   availableBalanceMinor: string;
   currency: string;
 };
-
-function dollarsToMinor(value: string): bigint | null {
-  const trimmed = value.trim();
-  if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) return null;
-  const [whole = "0", fraction = ""] = trimmed.split(".");
-  const cents = `${fraction}00`.slice(0, 2);
-  return BigInt(whole) * 100n + BigInt(cents);
-}
 
 /** Activate an investment from available wallet balance using certified plan versions. */
 export function ActivateInvestmentSurface() {
@@ -80,7 +74,7 @@ export function ActivateInvestmentSurface() {
 
   async function submit() {
     if (!selected) return;
-    const principalMinor = dollarsToMinor(amount);
+    const principalMinor = parsePositiveMoneyInputToMinorBigInt(amount);
     if (principalMinor === null) {
       setError("Enter a valid USD amount.");
       return;
@@ -175,12 +169,11 @@ export function ActivateInvestmentSurface() {
 
           <label className="block space-y-1.5 text-sm">
             <span className="font-medium">Principal (USD)</span>
-            <Input
-              inputMode="decimal"
+            <MoneyAmountInput
               placeholder="50.00"
               value={amount}
               disabled={pending}
-              onChange={(event) => setAmount(event.target.value)}
+              onValueChange={setAmount}
             />
           </label>
 

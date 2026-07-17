@@ -19,6 +19,7 @@ import type {
 
 import type { RequestAuditContext } from "./admin-customer-service";
 import { requireAdminActor } from "./require-admin";
+import { formatMoneyFieldValue, isMoneyMinorFieldKey } from "@/lib/money-format";
 
 const EXPORT_ROW_LIMIT = 10_000;
 const PENDING_DEPOSIT_STATUSES = ["created", "pending"] as const;
@@ -441,18 +442,32 @@ function flattenReportRows(payload: unknown): ExportRow[] {
 }
 
 function stringifyRow(row: Record<string, unknown>): ExportRow {
+  const currency =
+    typeof row.currency === "string" && row.currency.trim() ? row.currency.trim() : "USD";
   const output: ExportRow = {};
   for (const [key, value] of Object.entries(row)) {
-    if (value instanceof Date) output[key] = value.toISOString();
-    else if (typeof value === "bigint") output[key] = value.toString();
-    else if (
+    if (value instanceof Date) {
+      output[key] = value.toISOString();
+      continue;
+    }
+    if (isMoneyMinorFieldKey(key)) {
+      output[key] = formatMoneyFieldValue(key, value, currency);
+      continue;
+    }
+    if (typeof value === "bigint") {
+      output[key] = value.toString();
+      continue;
+    }
+    if (
       value === null ||
       typeof value === "string" ||
       typeof value === "number" ||
       typeof value === "boolean"
     ) {
       output[key] = value;
-    } else output[key] = JSON.stringify(value);
+      continue;
+    }
+    output[key] = JSON.stringify(value);
   }
   return output;
 }
