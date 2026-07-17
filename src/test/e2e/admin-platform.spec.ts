@@ -7,7 +7,9 @@ test.describe("admin platform console", () => {
 
   test("renders the admin shell and overview", async ({ page }) => {
     await page.goto("/admin");
-    await expect(page.getByRole("heading", { name: "Executive dashboard", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Executive dashboard", exact: true }),
+    ).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Admin navigation" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Customers" }).first()).toBeVisible();
     await expect(page.getByText("Pending deposits")).toBeVisible();
@@ -36,7 +38,10 @@ test.describe("admin platform console", () => {
     await expect(page.getByRole("button", { name: "Open admin menu" })).toBeVisible();
     await page.getByRole("button", { name: "Open admin menu" }).click();
     await expect(page.getByRole("navigation", { name: "Admin mobile navigation" })).toBeVisible();
-    await page.getByRole("navigation", { name: "Admin mobile navigation" }).getByRole("link", { name: "Security" }).click();
+    await page
+      .getByRole("navigation", { name: "Admin mobile navigation" })
+      .getByRole("link", { name: "Security" })
+      .click();
     await expect(page).toHaveURL(/\/admin\/security$/);
   });
 });
@@ -128,12 +133,24 @@ async function mockAdminApis(page: import("@playwright/test").Page) {
     await route.fulfill({
       json: {
         data: {
-          application: "ok",
-          version: "1.0.0",
-          gitCommit: "abc123",
-          releaseTag: "phase-8-admin-platform",
-          database: "ok",
-          queues: { pendingJobs: 0, failedJobs: 0, runningJobs: 0 },
+          health: {
+            application: "ok",
+            version: "1.0.0",
+            gitCommit: "abc1234567890",
+            releaseTag: "phase-8-admin-platform",
+            database: "ok",
+            queues: { pendingJobs: 0, failedJobs: 0, runningJobs: 0 },
+            webhooks: { failedProviderEvents: 0, deadLetteredProviderEvents: 0 },
+            memory: {
+              rss: 149_000_000,
+              heapTotal: 48_000_000,
+              heapUsed: 43_000_000,
+              external: 0,
+              arrayBuffers: 0,
+            },
+            loadAverage: [0.2, 0.3, 0.4],
+            uptimeSeconds: 477,
+          },
         },
       },
     });

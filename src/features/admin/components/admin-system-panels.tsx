@@ -4,11 +4,12 @@
    Loading state updates happen in async continuations equivalent to the customer shell pattern. */
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 
 import { Badge, Button, Card, Textarea } from "@/components/ui";
 import { appPath } from "@/lib/app-path";
+import { cn } from "@/lib/utils";
 
 import { getAdminJson, mutateAdminJson } from "../api-client";
 import { formatUsdFromMinor, humanizeStatus } from "../lib/presentation";
@@ -886,25 +887,38 @@ export function SettingsPanel() {
 export function SystemPanel() {
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState<{ message: string; status?: number } | null>(null);
-  const [health, setHealth] = useState<Record<string, unknown> | null>(null);
+  const [health, setHealth] = useState<SystemHealthSnapshot | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    const result = await getAdminJson<Record<string, unknown>>("/api/admin/system/health");
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (opts?.silent) setRefreshing(true);
+    const result = await getAdminJson<{ health: SystemHealthSnapshot }>("/api/admin/system/health");
     if (result.error) {
       setError({ message: result.error, ...(result.status ? { status: result.status } : {}) });
-      setState("error");
+      if (!opts?.silent) setState("error");
+      setRefreshing(false);
       return;
     }
-    setHealth(result.data ?? null);
+    setHealth(result.data?.health ?? null);
+    setError(null);
     setState("ready");
+    setRefreshing(false);
   }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      void load({ silent: true });
+    }, 30_000);
+    return () => window.clearInterval(id);
+  }, [load]);
+
   if (state === "loading") return <AdminLoadingBlock />;
-  if (state === "error" && error) {
+  if (state === "error" && error && !health) {
     return (
       <AdminErrorBlock
         message={error.message}
@@ -917,23 +931,309 @@ export function SystemPanel() {
     );
   }
 
+  if (!health) {
+    return (
+      <AdminEmptyBlock
+        title="System health unavailable"
+        description="No health snapshot was returned. Try refreshing."
+      />
+    );
+  }
+
+  const overall = deriveOverallStatus(health);
+  const queueHealthy =
+    health.queues.pendingJobs === 0 &&
+    health.queues.runningJobs === 0 &&
+    health.queues.failedJobs === 0;
+  const webhookHealthy =
+    health.webhooks.failedProviderEvents === 0 && health.webhooks.deadLetteredProviderEvents === 0;
+  const report = buildDiagnosticReport(health);
+  const shortCommit =
+    health.gitCommit && health.gitCommit !== "unknown" ? health.gitCommit.slice(0, 7) : "—";
+
+  async function copyReport() {
+    try {
+      await navigator.clipboard.writeText(report);
+      setCopyFeedback("Diagnostic report copied.");
+    } catch {
+      setCopyFeedback("Unable to copy report.");
+    }
+    window.setTimeout(() => setCopyFeedback(null), 2500);
+  }
+
+  function downloadReport() {
+    const blob = new Blob([report], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `system-health-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <AdminPageHeader
-        title="System health"
-        description="Application status and release information."
+        title="System Health"
+        description="Monitor the health and status of the Unique Sky Way platform."
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={refreshing}
+              onClick={() => void load({ silent: true })}
+            >
+              {refreshing ? "Refreshing…" : "Refresh"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => void copyReport()}>
+              Copy Diagnostic Report
+            </Button>
+            <Button type="button" variant="outline" onClick={downloadReport}>
+              Download Diagnostic Report
+            </Button>
+          </div>
+        }
       />
-      <AdminMetricGrid
-        metrics={[
-          { label: "Application", value: String(health?.application ?? "Unknown") },
-          { label: "Version", value: String(health?.version ?? "Unknown") },
-          { label: "Software Version", value: String(health?.gitCommit ?? "Unknown") },
-          { label: "Release", value: String(health?.releaseTag ?? "Unknown") },
-        ]}
-      />
-      <AdminPlainRecord title="Additional Status" record={health} />
+
+      {copyFeedback ? (
+        <p className="text-sm text-muted-foreground" role="status">
+          {copyFeedback}
+        </p>
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <HealthCard title="System Status" tone={overall.tone}>
+          <p className="text-2xl font-semibold tracking-tight">
+            {overall.emoji} {overall.label}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Auto-refreshes every 30 seconds</p>
+        </HealthCard>
+
+        <HealthCard title="Application" tone={statusToneFromOk(health.application === "ok")}>
+          <HealthRow label="Application" value="Unique Sky Way" />
+          <HealthRow
+            label="Status"
+            value={health.application === "ok" ? "Operational" : humanizeStatus(health.application)}
+          />
+          <HealthRow label="Version" value={health.version || "—"} />
+          <HealthRow label="Release" value={health.releaseTag || "—"} />
+          <HealthRow label="Commit" value={shortCommit} mono />
+        </HealthCard>
+
+        <HealthCard title="Database" tone={statusToneFromOk(health.database === "ok")}>
+          <p className="text-xl font-semibold tracking-tight">
+            {health.database === "ok" ? "🟢 Connected" : "🔴 Unavailable"}
+          </p>
+        </HealthCard>
+
+        <HealthCard title="Queue Health" tone={queueHealthy ? "success" : "danger"}>
+          <HealthRow label="Pending Jobs" value={String(health.queues.pendingJobs)} />
+          <HealthRow label="Running Jobs" value={String(health.queues.runningJobs)} />
+          <HealthRow label="Failed Jobs" value={String(health.queues.failedJobs)} />
+        </HealthCard>
+
+        <HealthCard title="Webhook Health" tone={webhookHealthy ? "success" : "warning"}>
+          <HealthRow label="Failed Events" value={String(health.webhooks.failedProviderEvents)} />
+          <HealthRow
+            label="Dead Letter Queue"
+            value={String(health.webhooks.deadLetteredProviderEvents)}
+          />
+        </HealthCard>
+
+        <HealthCard title="Server" tone={cpuLoadTone(health.loadAverage[0] ?? 0)}>
+          <HealthRow label="Server Uptime" value={formatUptime(health.uptimeSeconds)} />
+          <p className="pt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            Memory Usage
+          </p>
+          <HealthRow label="RSS" value={formatBytesAsMb(health.memory.rss)} />
+          <HealthRow label="Heap Used" value={formatBytesAsMb(health.memory.heapUsed)} />
+          <HealthRow label="Heap Total" value={formatBytesAsMb(health.memory.heapTotal)} />
+          <HealthRow label="CPU Load" value={formatCpuLoad(health.loadAverage[0] ?? 0)} />
+        </HealthCard>
+      </div>
     </div>
   );
+}
+
+type HealthTone = "success" | "warning" | "danger" | "neutral";
+
+type SystemHealthSnapshot = {
+  application: string;
+  version: string;
+  gitCommit: string;
+  releaseTag: string;
+  database: string;
+  queues: {
+    pendingJobs: number;
+    failedJobs: number;
+    runningJobs: number;
+  };
+  webhooks: {
+    failedProviderEvents: number;
+    deadLetteredProviderEvents: number;
+  };
+  memory: {
+    rss: number;
+    heapUsed: number;
+    heapTotal: number;
+    external?: number;
+    arrayBuffers?: number;
+  };
+  loadAverage: number[];
+  uptimeSeconds: number;
+};
+
+function HealthCard({
+  title,
+  tone,
+  children,
+}: {
+  title: string;
+  tone: HealthTone;
+  children: ReactNode;
+}) {
+  return (
+    <Card
+      className={cn(
+        "space-y-3 border p-5 shadow-sm",
+        tone === "success" && "border-emerald-500/30 bg-emerald-500/5",
+        tone === "warning" && "border-amber-500/30 bg-amber-500/5",
+        tone === "danger" && "border-destructive/30 bg-destructive/5",
+        tone === "neutral" && "border-border/70 bg-card",
+      )}
+    >
+      <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+        {title}
+      </h2>
+      <div className="space-y-2">{children}</div>
+    </Card>
+  );
+}
+
+function HealthRow({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={cn("text-right font-medium text-foreground", mono && "font-mono text-xs")}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function statusToneFromOk(ok: boolean): HealthTone {
+  return ok ? "success" : "danger";
+}
+
+function deriveOverallStatus(health: SystemHealthSnapshot): {
+  label: string;
+  emoji: string;
+  tone: HealthTone;
+} {
+  const critical =
+    health.application !== "ok" || health.database !== "ok" || health.queues.failedJobs > 0;
+  const warning =
+    health.webhooks.failedProviderEvents > 0 ||
+    health.webhooks.deadLetteredProviderEvents > 0 ||
+    health.queues.pendingJobs > 25 ||
+    health.queues.runningJobs > 10;
+
+  if (critical) return { label: "Critical", emoji: "🔴", tone: "danger" };
+  if (warning) return { label: "Warning", emoji: "🟡", tone: "warning" };
+  return { label: "Operational", emoji: "🟢", tone: "success" };
+}
+
+function formatUptime(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  const days = Math.floor(seconds / 86_400);
+  const hours = Math.floor((seconds % 86_400) / 3_600);
+  const minutes = Math.floor((seconds % 3_600) / 60);
+  const secs = seconds % 60;
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days} day${days === 1 ? "" : "s"}`);
+  if (hours > 0) parts.push(`${hours} hour${hours === 1 ? "" : "s"}`);
+  if (minutes > 0) parts.push(`${minutes} minute${minutes === 1 ? "" : "s"}`);
+  if (secs > 0 || parts.length === 0) parts.push(`${secs} second${secs === 1 ? "" : "s"}`);
+  return parts.join(" ");
+}
+
+function formatBytesAsMb(bytes: number): string {
+  return `${Math.round(bytes / (1024 * 1024))} MB`;
+}
+
+function formatCpuLoad(load: number): string {
+  if (load < 1) return "Normal";
+  if (load < 2) return "Elevated";
+  return "High";
+}
+
+function cpuLoadTone(load: number): HealthTone {
+  if (load < 1) return "success";
+  if (load < 2) return "warning";
+  return "danger";
+}
+
+function buildDiagnosticReport(health: SystemHealthSnapshot): string {
+  const overall = deriveOverallStatus(health);
+  const queueHealthy =
+    health.queues.pendingJobs === 0 &&
+    health.queues.runningJobs === 0 &&
+    health.queues.failedJobs === 0;
+  const shortCommit =
+    health.gitCommit && health.gitCommit !== "unknown" ? health.gitCommit.slice(0, 7) : "—";
+
+  return [
+    "System Status",
+    overall.label,
+    "",
+    "Application",
+    "Unique Sky Way",
+    "",
+    "Status",
+    health.application === "ok" ? "Operational" : humanizeStatus(health.application),
+    "",
+    "Version",
+    health.version || "—",
+    "",
+    "Release",
+    health.releaseTag || "—",
+    "",
+    "Commit",
+    shortCommit,
+    "",
+    "Database",
+    health.database === "ok" ? "Healthy" : humanizeStatus(health.database),
+    "",
+    "Queue",
+    queueHealthy ? "Healthy" : "Attention needed",
+    `Pending Jobs: ${health.queues.pendingJobs}`,
+    `Running Jobs: ${health.queues.runningJobs}`,
+    `Failed Jobs: ${health.queues.failedJobs}`,
+    "",
+    "Webhooks",
+    `Failed Events: ${health.webhooks.failedProviderEvents}`,
+    `Dead Letter Queue: ${health.webhooks.deadLetteredProviderEvents}`,
+    "",
+    "Memory",
+    `${formatBytesAsMb(health.memory.heapUsed)} Heap Used`,
+    `RSS ${formatBytesAsMb(health.memory.rss)}`,
+    `Heap Total ${formatBytesAsMb(health.memory.heapTotal)}`,
+    "",
+    "CPU Load",
+    formatCpuLoad(health.loadAverage[0] ?? 0),
+    "",
+    "Uptime",
+    formatUptime(health.uptimeSeconds),
+  ].join("\n");
 }
 
 export function AuditLogsPanel() {
