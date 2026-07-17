@@ -242,7 +242,12 @@ test.describe("dashboard DP1–DP2 frame and money cards", () => {
 
     await expect(page.getByRole("region", { name: "Live earnings" })).toBeVisible();
     await expect(page.getByText("Investment Active")).toBeVisible();
-    await expect(page.getByText("Accrued Today")).toBeVisible();
+    await expect(page.getByText("Today's live earnings")).toBeVisible();
+    await expect(page.getByText("Today's Accrual Progress")).toBeVisible();
+    await expect(page.getByRole("link", { name: "View Investments →" })).toHaveAttribute(
+      "href",
+      "/portfolio",
+    );
 
     const portfolio = page.getByRole("region", { name: "Portfolio balances" });
     await expect(portfolio.getByText("Portfolio value")).toBeVisible();

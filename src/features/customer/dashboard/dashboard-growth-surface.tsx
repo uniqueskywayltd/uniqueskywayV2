@@ -108,6 +108,20 @@ export function DashboardGrowthSurface() {
       .filter((date): date is string => Boolean(date))
       .sort()[0];
 
+    const primaryInvestment = activeInvestments.reduce((best, item) =>
+      BigInt(item.principalMinor) > BigInt(best.principalMinor) ? item : best,
+    );
+
+    const dailyTargetMinor = activeInvestments.reduce((sum, item) => {
+      if (item.dailyRoiMinor) {
+        return sum + BigInt(item.dailyRoiMinor);
+      }
+      if (item.dailyRoiBps !== undefined) {
+        return sum + (BigInt(item.principalMinor) * BigInt(item.dailyRoiBps)) / 10_000n;
+      }
+      return sum;
+    }, 0n);
+
     return (
       <DashboardLiveEarnings
         live={liveView}
@@ -116,6 +130,10 @@ export function DashboardGrowthSurface() {
           portfolio.summary.portfolioValueMinor ?? portfolio.summary.activePrincipalMinor
         }
         timeRemainingLabel={remainingDaysLabel(earliestMaturity ?? null)}
+        planName={primaryInvestment.planName}
+        dailyRoiBps={primaryInvestment.dailyRoiBps ?? 0}
+        activatedAt={primaryInvestment.activatedAt}
+        dailyTargetMinor={dailyTargetMinor.toString()}
       />
     );
   }
