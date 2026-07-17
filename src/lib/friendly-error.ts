@@ -18,10 +18,15 @@ export function friendlyClientError(message: string | null | undefined): string 
     lower.includes("econn") ||
     lower.includes("timeout") ||
     lower.includes("unable to complete this request") ||
+    lower.includes("couldn't complete your request") ||
     lower === "request failed." ||
     lower === "request failed"
   ) {
     return FRIENDLY_REQUEST_ERROR;
+  }
+
+  if (lower.includes("available balance is insufficient")) {
+    return "Insufficient available balance.";
   }
 
   return raw;

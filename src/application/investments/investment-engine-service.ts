@@ -129,7 +129,7 @@ export class InvestmentEngineService {
       if (balance.availableBalanceMinor < input.principalMinor) {
         throw new AppError({
           code: "INVALID_STATE",
-          message: "Available balance is insufficient for investment activation.",
+          message: "Insufficient available balance.",
         });
       }
 
@@ -1003,9 +1003,15 @@ function validatePlanVersion(
     principalMinor < planVersion.minPrincipalMinor ||
     principalMinor > planVersion.maxPrincipalMinor
   ) {
+    if (principalMinor < planVersion.minPrincipalMinor) {
+      throw new AppError({
+        code: "VALIDATION_ERROR",
+        message: "Investment amount is below the minimum for this plan.",
+      });
+    }
     throw new AppError({
       code: "VALIDATION_ERROR",
-      message: "Principal is outside the investment plan limits.",
+      message: "Investment amount exceeds this plan's maximum.",
     });
   }
 

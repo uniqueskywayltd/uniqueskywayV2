@@ -6,6 +6,17 @@ import { friendlyClientError } from "@/lib/friendly-error";
 export interface ApiResult<TData> {
   data?: TData;
   error?: string;
+  reference?: string;
+}
+
+function readApiError(payload: {
+  error?: { message?: string; requestId?: string; details?: { reference?: string } };
+}): { message: string; reference?: string } {
+  const reference = payload.error?.details?.reference ?? payload.error?.requestId ?? undefined;
+  return {
+    message: friendlyClientError(payload.error?.message ?? "Request failed."),
+    ...(reference ? { reference } : {}),
+  };
 }
 
 export async function getCustomerJson<TData>(url: string): Promise<ApiResult<TData>> {
@@ -16,11 +27,15 @@ export async function getCustomerJson<TData>(url: string): Promise<ApiResult<TDa
     });
     const payload = (await response.json()) as {
       data?: TData;
-      error?: { message?: string };
+      error?: { message?: string; requestId?: string; details?: { reference?: string } };
     };
 
     if (!response.ok) {
-      return { error: friendlyClientError(payload.error?.message ?? "Request failed.") };
+      const parsed = readApiError(payload);
+      return {
+        error: parsed.message,
+        ...(parsed.reference ? { reference: parsed.reference } : {}),
+      };
     }
 
     return payload.data === undefined ? {} : { data: payload.data };
@@ -56,11 +71,15 @@ export async function patchCustomerJson<TData>(
     });
     const payload = (await response.json()) as {
       data?: TData;
-      error?: { message?: string };
+      error?: { message?: string; requestId?: string; details?: { reference?: string } };
     };
 
     if (!response.ok) {
-      return { error: friendlyClientError(payload.error?.message ?? "Request failed.") };
+      const parsed = readApiError(payload);
+      return {
+        error: parsed.message,
+        ...(parsed.reference ? { reference: parsed.reference } : {}),
+      };
     }
 
     return payload.data === undefined ? {} : { data: payload.data };
@@ -98,11 +117,15 @@ export async function postCustomerJson<TData>(
     });
     const payload = (await response.json()) as {
       data?: TData;
-      error?: { message?: string };
+      error?: { message?: string; requestId?: string; details?: { reference?: string } };
     };
 
     if (!response.ok) {
-      return { error: friendlyClientError(payload.error?.message ?? "Request failed.") };
+      const parsed = readApiError(payload);
+      return {
+        error: parsed.message,
+        ...(parsed.reference ? { reference: parsed.reference } : {}),
+      };
     }
 
     return payload.data === undefined ? {} : { data: payload.data };
@@ -137,11 +160,15 @@ export async function postCustomerForm<TData>(
     });
     const payload = (await response.json()) as {
       data?: TData;
-      error?: { message?: string };
+      error?: { message?: string; requestId?: string; details?: { reference?: string } };
     };
 
     if (!response.ok) {
-      return { error: friendlyClientError(payload.error?.message ?? "Request failed.") };
+      const parsed = readApiError(payload);
+      return {
+        error: parsed.message,
+        ...(parsed.reference ? { reference: parsed.reference } : {}),
+      };
     }
 
     return payload.data === undefined ? {} : { data: payload.data };

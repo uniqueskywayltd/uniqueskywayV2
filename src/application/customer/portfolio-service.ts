@@ -19,6 +19,8 @@ import type {
   RoiScheduleItemRecord,
   SettlementRepository,
 } from "@/infrastructure/database";
+import { coerceBigInt } from "@/lib/coerce-bigint";
+import { logger } from "@/infrastructure/logging/logger";
 
 export type PortfolioBucket = "all" | "pending" | "active" | "completed" | "archived";
 export type PortfolioSort = "newest" | "maturity" | "status";
@@ -93,10 +95,53 @@ export class CustomerPortfolioService {
       idempotencyKey: input.idempotencyKey,
     });
 
-    return {
-      investment: await this.toPortfolioCard(result.investment),
-      idempotent: result.idempotent,
-    };
+    try {
+      return {
+        investment: await this.toPortfolioCard(result.investment),
+        idempotent: result.idempotent,
+      };
+    } catch (error) {
+      logger.error(
+        {
+          event: "portfolio.activation_enrichment_failed",
+          investmentId: result.investment.id,
+          cause: error instanceof Error ? error.message : String(error),
+          err: error,
+        },
+        "Investment activated but portfolio card enrichment failed",
+      );
+      // Activation already committed — never fail the client after funds are locked.
+      return {
+        investment: {
+          id: result.investment.id,
+          planName: "Investment plan",
+          currency: result.investment.currency,
+          principalMinor: result.investment.principalMinor.toString(),
+          postedRoiMinor: "0",
+          promisedRoiMinor: result.investment.promisedRoiMinor?.toString() ?? null,
+          dailyRoiBps: result.investment.dailyRoiBps,
+          dailyRoiMinor: (
+            (result.investment.principalMinor * BigInt(result.investment.dailyRoiBps)) /
+            10_000n
+          ).toString(),
+          totalRoiBps: result.investment.totalRoiBps,
+          termDays: result.investment.termDays,
+          status: result.investment.status,
+          startAt: result.investment.startAt?.toISOString() ?? null,
+          firstSettlementDate: result.investment.firstSettlementDate,
+          maturityDate: result.investment.maturityDate,
+          activatedAt: result.investment.activatedAt?.toISOString() ?? null,
+          maturedAt: result.investment.maturedAt?.toISOString() ?? null,
+          cancelledAt: result.investment.cancelledAt?.toISOString() ?? null,
+          createdAt: result.investment.createdAt.toISOString(),
+          progressPercent: null,
+          nextMilestone: { label: "Next settlement", date: result.investment.firstSettlementDate },
+          live: null,
+        },
+        idempotent: result.idempotent,
+        enrichmentDeferred: true,
+      };
+    }
   }
 
   async stopInvestment(investmentId: string) {
@@ -273,9 +318,10 @@ export class CustomerPortfolioService {
     },
   ) {
     const planMeta = await this.resolvePlanMeta(investment.planVersionId, options?.planMetaCache);
-    const postedRoiMinor =
+    const postedRoiMinor = coerceBigInt(
       options?.postedByInvestment?.get(investment.id) ??
-      (await this.deps.settlementRepository.sumPostedRoiMinorByInvestment(investment.id));
+        (await this.deps.settlementRepository.sumPostedRoiMinorByInvestment(investment.id)),
+    );
 
     const promisedRoiMinor =
       investment.promisedRoiMinor ??
@@ -398,7 +444,7 @@ export class CustomerPortfolioService {
     const now = this.deps.clock.now();
 
     for (const row of activeRows) {
-      const posted = postedMap.get(row.id) ?? 0n;
+      const posted = coerceBigInt(postedMap.get(row.id) ?? 0n);
       totalPostedRoiMinor += posted;
       if (row.activatedAt) {
         const live = calculateContinuousLiveAccrual({

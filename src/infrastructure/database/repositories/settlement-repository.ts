@@ -1,6 +1,8 @@
 import { and, desc, eq, gte, inArray, lt, lte, or, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
+import { coerceBigInt } from "@/lib/coerce-bigint";
+
 import { roiLedgerEntries, settlementItems, settlementRuns } from "../schema";
 import type { DrizzleTransactionContext } from "../transactions";
 import type { AppDatabaseExecutor } from "../types";
@@ -162,14 +164,14 @@ export class SettlementRepository extends BaseDrizzleRepository {
   async sumPostedRoiMinorByInvestment(investmentId: string): Promise<bigint> {
     const rows = await this.db
       .select({
-        total: sql<bigint>`coalesce(sum(${settlementItems.postedRoiMinor}), 0)::bigint`,
+        total: sql<string>`coalesce(sum(${settlementItems.postedRoiMinor}), 0)::text`,
       })
       .from(settlementItems)
       .where(
         and(eq(settlementItems.investmentId, investmentId), eq(settlementItems.status, "posted")),
       );
 
-    return rows[0]?.total ?? 0n;
+    return coerceBigInt(rows[0]?.total ?? "0");
   }
 
   /** Batch posted ROI totals — avoids N+1 on portfolio list. */
@@ -181,7 +183,7 @@ export class SettlementRepository extends BaseDrizzleRepository {
     const rows = await this.db
       .select({
         investmentId: settlementItems.investmentId,
-        total: sql<bigint>`coalesce(sum(${settlementItems.postedRoiMinor}), 0)::bigint`,
+        total: sql<string>`coalesce(sum(${settlementItems.postedRoiMinor}), 0)::text`,
       })
       .from(settlementItems)
       .where(
@@ -193,7 +195,7 @@ export class SettlementRepository extends BaseDrizzleRepository {
       .groupBy(settlementItems.investmentId);
 
     for (const row of rows) {
-      totals.set(row.investmentId, row.total ?? 0n);
+      totals.set(row.investmentId, coerceBigInt(row.total ?? "0"));
     }
     return totals;
   }
@@ -204,27 +206,27 @@ export class SettlementRepository extends BaseDrizzleRepository {
   ): Promise<bigint> {
     const rows = await context.db
       .select({
-        total: sql<bigint>`coalesce(sum(${settlementItems.postedRoiMinor}), 0)::bigint`,
+        total: sql<string>`coalesce(sum(${settlementItems.postedRoiMinor}), 0)::text`,
       })
       .from(settlementItems)
       .where(
         and(eq(settlementItems.investmentId, investmentId), eq(settlementItems.status, "posted")),
       );
 
-    return rows[0]?.total ?? 0n;
+    return coerceBigInt(rows[0]?.total ?? "0");
   }
 
   async sumRoiLedgerPostedMinorByInvestment(investmentId: string): Promise<bigint> {
     const rows = await this.db
       .select({
-        total: sql<bigint>`coalesce(sum(${roiLedgerEntries.postedRoiMinor}), 0)::bigint`,
+        total: sql<string>`coalesce(sum(${roiLedgerEntries.postedRoiMinor}), 0)::text`,
       })
       .from(roiLedgerEntries)
       .where(
         and(eq(roiLedgerEntries.investmentId, investmentId), eq(roiLedgerEntries.status, "posted")),
       );
 
-    return rows[0]?.total ?? 0n;
+    return coerceBigInt(rows[0]?.total ?? "0");
   }
 
   async listSettlementRuns(query: ListSettlementRunsQuery): Promise<ListSettlementRunsResult> {

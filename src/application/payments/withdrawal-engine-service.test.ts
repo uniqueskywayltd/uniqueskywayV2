@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@/config/server-env", () => ({
+  getServerEnv: () => ({
+    NEXT_PUBLIC_APP_URL: "https://example.com",
+    CONTACT_SUPPORT_EMAIL: "support@example.com",
+  }),
+}));
+
 import type { AuthenticatedUser } from "@/application/auth";
 import { AppError } from "@/application/errors";
 import type { WithdrawalRequestRecord } from "@/infrastructure/database";
@@ -242,6 +249,12 @@ function createFixture(options: { availableBalanceMinor?: bigint; withAdmin?: bo
       closedAt: null,
       createdAt: new Date("2026-07-13T12:00:00.000Z"),
       updatedAt: new Date("2026-07-13T12:00:00.000Z"),
+    })),
+    findCustomerProfileByUserId: vi.fn(async () => ({
+      id: "profile_1",
+      userId: "user_1",
+      legalName: "Test Customer",
+      displayName: "Test Customer",
     })),
   };
   const paymentRepository = {

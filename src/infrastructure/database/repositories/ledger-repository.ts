@@ -1,6 +1,8 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
+import { coerceBigInt } from "@/lib/coerce-bigint";
+
 import {
   ledgerAccounts,
   ledgerEntries,
@@ -62,11 +64,6 @@ function coerceDate(value: Date | string | number): Date {
     throw new Error(`Invalid ledger postedAt value: ${String(value)}`);
   }
   return parsed;
-}
-
-function coerceBigInt(value: bigint | number | string): bigint {
-  if (typeof value === "bigint") return value;
-  return BigInt(value);
 }
 
 function normalizeWalletLedgerEvent(row: WalletLedgerEventRecord): WalletLedgerEventRecord {
